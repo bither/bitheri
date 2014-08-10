@@ -5,7 +5,7 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>D663DADF-A114-4A1B-915C-8B344EB1326F</string>
+	<string>76A07553-7227-4388-B5DF-06E42C0F6068</string>
 	<key>IDESourceControlProjectName</key>
 	<string>Bitheri</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
@@ -14,11 +14,11 @@
 		<string>ssh://gitlab.com/bither/bitheri.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>Bitheri/Bitheri.xcworkspace</string>
+	<string>Bitheri.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>6411AEEC-2EB4-4358-99DC-E8EC02341AB4</key>
-		<string>../..</string>
+		<string>..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>ssh://gitlab.com/bither/bitheri.git</string>

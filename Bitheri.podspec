@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.summary  = 'bither\'s ios framework'
   s.homepage = 'http://bither.net'
   s.social_media_url = ''
-  s.authors  = { ‘bither’ => ‘bither@gmail.com' }
+  s.authors  = { 'bither' => 'bither@gmail.com' }
   s.source   = { :git => 'git@github.com:bither/bitheri.git', :submodules => true, :tag => "v#{s.version}"}
   s.requires_arc = true
 

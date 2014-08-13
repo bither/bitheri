@@ -17,6 +17,6 @@ Pod::Spec.new do |s|
   s.dependency 'OpenSSL', '1.0.1'
   s.dependency 'Reachability'
   s.dependency 'FMDB'
-  s.dependency 'CocoaLumberjack'
+  s.dependency 'CocoaLumberjack', '~> 1.9.1'
 
 end

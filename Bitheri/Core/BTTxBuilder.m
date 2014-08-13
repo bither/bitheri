@@ -117,12 +117,14 @@
 }
 
 + (BOOL)needMinFee:(NSArray *)amounts;{
-    for (NSNumber *amount in amounts) {
-        if ([[BTSettings instance] ensureMinRequiredFee] && [amount unsignedLongLongValue] < CENT) {
-            return YES;
-        }
-    }
-    return NO;
+    // note: for now must require fee because zero fee maybe cause the tx confirmed in long time
+    return YES;
+//    for (NSNumber *amount in amounts) {
+//        if ([[BTSettings instance] ensureMinRequiredFee] && [amount unsignedLongLongValue] < CENT) {
+//            return YES;
+//        }
+//    }
+//    return NO;
 }
 
 + (uint64_t)getAmount:(NSArray *)outs;{

@@ -539,13 +539,14 @@ static BTTxProvider *provider;
 - (NSArray *)getUnspendTxWithAddress:(NSString *)address;{
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *unspendOutSql = @"select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source "
+        NSString *unspendOutSql = @"select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth "
                 "from outs a,txs b where a.tx_hash=b.tx_hash"
                 " and a.out_address=? and a.out_status=?";
         FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent)];
         while ([rs next]) {
             BTTxItem *txItem = [self format:rs];
             BTOutItem *outItem = [self formatOut:rs];
+            outItem.coinDepth = [rs unsignedLongLongIntForColumn:@"coin_depth"];
             txItem.outs = [NSMutableArray new];
             [txItem.outs addObject:outItem];
             outItem.tx = txItem;

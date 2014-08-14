@@ -58,7 +58,7 @@
     NSArray *unspendTxs = [[BTTxProvider instance] getUnspendTxWithAddress:address];
     NSArray *unspendOuts = [BTTxBuilder getUnspendOutsFromTxs:unspendTxs];
     NSArray *canSpendOuts = [BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs];
-    NSArray *canNotSpendOuts = [BTTxBuilder getUnspendOutsFromTxs:unspendTxs];
+    NSArray *canNotSpendOuts = [BTTxBuilder getCanNotSpendOutsFromUnspendTxs:unspendTxs];
     if (value > [BTTxBuilder getAmount:unspendOuts]) {
         *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_NOT_ENOUGH_MONEY_CODE
                                  userInfo:@{ERR_TX_NOT_ENOUGH_MONEY_LACK : @(value - [BTTxBuilder getAmount:unspendOuts])}];
@@ -117,12 +117,14 @@
 }
 
 + (BOOL)needMinFee:(NSArray *)amounts;{
-    for (NSNumber *amount in amounts) {
-        if ([[BTSettings instance] ensureMinRequiredFee] && [amount unsignedLongLongValue] < CENT) {
-            return YES;
-        }
-    }
-    return NO;
+    // note: for now must require fee because zero fee maybe cause the tx confirmed in long time
+    return YES;
+//    for (NSNumber *amount in amounts) {
+//        if ([[BTSettings instance] ensureMinRequiredFee] && [amount unsignedLongLongValue] < CENT) {
+//            return YES;
+//        }
+//    }
+//    return NO;
 }
 
 + (uint64_t)getAmount:(NSArray *)outs;{
@@ -162,7 +164,7 @@
 + (NSArray *)getCanNotSpendOutsFromUnspendTxs:(NSArray *)txs;{
     NSMutableArray *result = [NSMutableArray new];
     for (BTTxItem *txItem in txs) {
-        if (txItem.blockNo == TX_UNCONFIRMED || txItem.source == 0) {
+        if (txItem.blockNo == TX_UNCONFIRMED && txItem.source == 0) {
             [result addObject:txItem.outs[0]];
         }
     }
@@ -174,8 +176,8 @@
 NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     BTOutItem *outItem1 = (BTOutItem *)obj1;
     BTOutItem *outItem2 = (BTOutItem *)obj2;
-    uint64_t coinDepth1 = [BTBlockChain instance].lastBlock.height * outItem1.outValue - outItem1.coinDepth;
-    uint64_t coinDepth2 = [BTBlockChain instance].lastBlock.height * outItem2.outValue - outItem2.coinDepth;
+    uint64_t coinDepth1 = [BTBlockChain instance].lastBlock.height * outItem1.outValue - outItem1.coinDepth + outItem1.outValue;
+    uint64_t coinDepth2 = [BTBlockChain instance].lastBlock.height * outItem2.outValue - outItem2.coinDepth + outItem2.outValue;
     if (coinDepth1 > coinDepth2) return NSOrderedAscending;
     if (coinDepth1 < coinDepth2) return NSOrderedDescending;
     if ([outItem1 outValue] > [outItem2 outValue]) return NSOrderedAscending;

@@ -58,7 +58,7 @@
     NSArray *unspendTxs = [[BTTxProvider instance] getUnspendTxWithAddress:address];
     NSArray *unspendOuts = [BTTxBuilder getUnspendOutsFromTxs:unspendTxs];
     NSArray *canSpendOuts = [BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs];
-    NSArray *canNotSpendOuts = [BTTxBuilder getUnspendOutsFromTxs:unspendTxs];
+    NSArray *canNotSpendOuts = [BTTxBuilder getCanNotSpendOutsFromUnspendTxs:unspendTxs];
     if (value > [BTTxBuilder getAmount:unspendOuts]) {
         *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_NOT_ENOUGH_MONEY_CODE
                                  userInfo:@{ERR_TX_NOT_ENOUGH_MONEY_LACK : @(value - [BTTxBuilder getAmount:unspendOuts])}];
@@ -164,7 +164,7 @@
 + (NSArray *)getCanNotSpendOutsFromUnspendTxs:(NSArray *)txs;{
     NSMutableArray *result = [NSMutableArray new];
     for (BTTxItem *txItem in txs) {
-        if (txItem.blockNo == TX_UNCONFIRMED || txItem.source == 0) {
+        if (txItem.blockNo == TX_UNCONFIRMED && txItem.source == 0) {
             [result addObject:txItem.outs[0]];
         }
     }

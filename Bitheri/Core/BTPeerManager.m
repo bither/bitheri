@@ -239,7 +239,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             BTPeer *p = peers.firstObject;//peers[(NSUInteger)(pow(lrand48() % peers.count, 2)/peers.count)];
 
             BOOL isInConnectedPeers = NO;
-            for (BTPeer *connectedPeer in self.connectedPeers) {
+            for (BTPeer *connectedPeer in [NSSet setWithSet:self.connectedPeers]) {
                 isInConnectedPeers |= connectedPeer.address == p.address;
             }
 
@@ -309,7 +309,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         [[UIApplication sharedApplication] endBackgroundTask:self.taskId];
         self.taskId = UIBackgroundTaskInvalid;
 
-        for (BTPeer *p in self.connectedPeers) { // after syncing, load filters and get mempools from the other peers
+        for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) { // after syncing, load filters and get mempools from the other peers
             if (p != self.downloadPeer) [p sendFilterLoadMessage:self.bloomFilter.data];
             for (BTTx *tx in self.publishedTx.allValues) {
                 if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
@@ -360,7 +360,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
     _bloomFilter = nil;
-    for (BTPeer *p in self.connectedPeers) {
+    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
         [p sendFilterLoadMessage:self.bloomFilter.data];
     }
 
@@ -466,7 +466,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
     // select the peer with the lowest ping time to download the chain from if we're behind
-    for (BTPeer *p in self.connectedPeers) {
+    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
         if ((p.pingTime < peer.pingTime && p.lastBlock >= peer.lastBlock) || p.lastBlock > peer.lastBlock)
             peer = p;
     }
@@ -599,7 +599,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (!isAlreadyInDb) {
             _bloomFilter = nil; // reset the filter so a new one will be created with the new wallet addresses
 
-            for (BTPeer *p in self.connectedPeers) {
+            for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
                 [p sendFilterLoadMessage:self.bloomFilter.data];
             }
         }

@@ -78,7 +78,7 @@
 }
 
 - (void)syncDone{
-    for (BTPeer *peer in [BTPeerManager sharedInstance].connectedPeers){
+    for (BTPeer *peer in [NSSet setWithSet:[BTPeerManager sharedInstance].connectedPeers]){
         [peer refetchBlocksFrom:[[@"00000000000000006b34a0ade7489801ab663b78147c126518ea9c499cb65953" hexToData] reverse]];
     }
 }

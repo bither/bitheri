@@ -27,10 +27,10 @@ static double saveTime;
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if ([obj1 blockHeight] > [obj2 blockHeight]) return NSOrderedAscending;
     if ([obj1 blockHeight] < [obj2 blockHeight]) return NSOrderedDescending;
-    if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
-    if ([obj1 txTime] < [obj2 txTime]) return NSOrderedDescending;
     if ([[obj1 inputHashes] containsObject:[obj2 txHash]]) return NSOrderedDescending;
     if ([[obj2 inputHashes] containsObject:[obj1 txHash]]) return NSOrderedAscending;
+    if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
+    if ([obj1 txTime] < [obj2 txTime]) return NSOrderedDescending;
     return NSOrderedSame;
 };
 

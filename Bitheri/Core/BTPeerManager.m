@@ -84,12 +84,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _connecting = NO;
 
     NSMutableArray *txs = [NSMutableArray new];
-    for (BTAddress *addr in [[BTAddressManager sharedInstance] privKeyAddresses]) {
+    for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]) {
         [txs addObjectsFromArray:addr.txs];
     }
 
     for (BTTx *tx in txs) {
-        if (tx.blockHeight != TX_UNCONFIRMED) break;
+        if (tx.blockHeight != TX_UNCONFIRMED) continue;
         self.publishedTx[tx.txHash] = tx; // add unconfirmed tx to mem pool
     }
 

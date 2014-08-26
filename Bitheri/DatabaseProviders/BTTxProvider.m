@@ -95,7 +95,7 @@ static BTTxProvider *provider;
         }
         [rs close];
 
-        sql = @"select b.* from addresses_txs a, outs b where a.tx_hash=b.tx_hash and a.out_address=? "
+        sql = @"select b.* from addresses_txs a, outs b where a.tx_hash=b.tx_hash and a.address=? "
                 "order by b.tx_hash,b.out_sn";
         rs = [db executeQuery:sql, address];
         while ([rs next]) {

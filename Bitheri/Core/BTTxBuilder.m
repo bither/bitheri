@@ -67,6 +67,11 @@
         *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_WAIT_CONFIRM_CODE
                                  userInfo:@{ERR_TX_WAIT_CONFIRM_AMOUNT : @([BTTxBuilder getAmount:canNotSpendOuts])}];
         return nil;
+    } else if (value == [BTTxBuilder getAmount:unspendOuts] && [BTTxBuilder getAmount:canNotSpendOuts] != 0) {
+        // there is some unconfirm tx, it will not empty wallet
+        *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_WAIT_CONFIRM_CODE
+                                 userInfo:@{ERR_TX_WAIT_CONFIRM_AMOUNT : @([BTTxBuilder getAmount:canNotSpendOuts])}];
+        return nil;
     }
 
     BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address WithUnspendTxs:unspendTxs
@@ -424,6 +429,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
 - (BTTx *)buildTxForAddress:(NSString *)address WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx; {
     uint64_t feeBase = [[BTSettings instance] feeBase];
     NSMutableArray *outs = [NSMutableArray arrayWithArray:[BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs]];
+    NSMutableArray *unspendOuts = [NSMutableArray arrayWithArray:[BTTxBuilder getUnspendOutsFromTxs:unspendTxs]];
 
     uint64_t value = 0;
     for (NSNumber *amount in tx.outputAmounts) {
@@ -431,7 +437,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     }
     BOOL needMinFee = [BTTxBuilder needMinFee:tx.outputAmounts];
 
-    if (value != [BTTxBuilder getAmount:outs]) {
+    if (value != [BTTxBuilder getAmount:unspendOuts] || value != [BTTxBuilder getAmount:outs]) {
         return nil;
     }
 

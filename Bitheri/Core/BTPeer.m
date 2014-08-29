@@ -47,7 +47,9 @@ typedef enum {
     merkleblock
 } inv_t;
 
-@interface BTPeer ()
+@interface BTPeer (){
+    BOOL _bloomFilterSent;
+}
 
 @property (nonatomic, strong) NSInputStream *inputStream;
 @property (nonatomic, strong) NSOutputStream *outputStream;
@@ -153,7 +155,7 @@ services:(uint64_t)services
     self.needToRequestDependencyDict = [NSMutableDictionary new];
 
     NSString *label = [NSString stringWithFormat:@"net.bither.peer.%@:%d", self.host, self.port];
-
+    _bloomFilterSent = NO;
     // use a private serial queue for processing socket io
     dispatch_async(dispatch_queue_create(label.UTF8String, NULL), ^{
         CFReadStreamRef readStream = NULL;
@@ -297,6 +299,7 @@ services:(uint64_t)services
 {
     self.filterBlockCount = 0;
     [self sendMessage:filter type:MSG_FILTERLOAD];
+    _bloomFilterSent = YES;
 }
 
 - (void)sendMemPoolMessage
@@ -594,6 +597,9 @@ services:(uint64_t)services
               MAX_GETDATA_HASHES);
         return;
     }
+    if(!_bloomFilterSent){
+        DDLogDebug(@"Peer %@ received inv. But we didn't send bloomfilter. Ignore", self.host);
+    }
     
     for (NSUInteger off = l; off < l + 36*count; off += 36) {
         inv_t type = (inv_t) [message UInt32AtOffset:off];
@@ -670,7 +676,6 @@ services:(uint64_t)services
             dispatch_async(self.delegateQueue, ^{
                 if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
             });
-            [self checkDependencyWith:tx];
         }
     } else {
         // check dependency

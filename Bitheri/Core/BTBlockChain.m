@@ -277,22 +277,7 @@ static BTBlockChain *blockChain;
         if (block.height > self.lastBlock.height) {
             BTBlock *b = [self getSameParent:block with:self.lastBlock];
             DDLogDebug(@"reorganizing chain from height %d, new height is %d", b.height, block.height);
-            [self forkMainChainFrom:b andLast:block];
-            // mark transactions after the join point as unconfirmed
-            [[BTTxProvider instance] unConfirmTxByBlockNo:b.height];
-
-            // need refetch block get tx hashes to set block's tx confirmed
-            BTBlock *b2 = b;
-            b = block;
-
-            // set transaction heights for new main chain
-            NSMutableArray *reloadHashes = [NSMutableArray new];
-            while (b.height > b2.height) {
-                [reloadHashes addObject:b.blockHash];
-                b = [self getBlock:b.prevBlock];
-            }
-
-            [peer sendGetDataMessageWithTxHashes:@[] andBlockHashes:[[reloadHashes reverseObjectEnumerator] allObjects]];
+            [self rollbackBlock:b.height];
         }
     }
 }

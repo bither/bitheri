@@ -467,7 +467,14 @@
     
     } // end @autoreleasepool
 }
-                 
+
+- (BOOL)isLogFile:(NSString *)fileName;{
+    if ([fileName hasSuffix:@".gz"]) {
+        fileName = [fileName substringToIndex:fileName.length - 3];
+    }
+    return [super isLogFile:fileName];
+}
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

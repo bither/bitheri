@@ -173,16 +173,6 @@ static BTBlockProvider *provider;
     return result;
 }
 
-- (void)addBlocks:(NSArray *)blocks; {
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        [db beginTransaction];
-        for (BTBlockItem *block in blocks) {
-            [self addBlock:block db:db];
-        }
-        [db commit];
-    }];
-}
-
 - (BOOL)blockExists:(NSData *)blockHash db:(FMDatabase *)db {
     NSString *sql = @"select count(0) cnt from blocks where block_hash=?";
     FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:blockHash]];
@@ -199,6 +189,23 @@ static BTBlockProvider *provider;
         if (![self blockExists:block.blockHash db:db]) {
             [self addBlock:block db:db];
         }
+    }];
+}
+
+- (void)addBlocks:(NSArray *)blocks; {
+    NSMutableArray *addBlocks = [NSMutableArray array];
+    NSArray *allBlocks = [self getAllBlocks];
+    for (BTBlockItem *blockItem in blocks) {
+        if (![allBlocks containsObject:blockItem]) {
+            [addBlocks addObject:blockItem];
+        }
+    }
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        [db beginTransaction];
+        for (BTBlockItem *block in addBlocks) {
+            [self addBlock:block db:db];
+        }
+        [db commit];
     }];
 }
 

@@ -38,6 +38,8 @@
 
 - (void)relayedBlock:(BTBlock *)block withPeer:(BTPeer *)peer andCallback:(void (^)(BTBlock *b, BOOL isConfirm))callback;
 
+- (int)relayedBlockHeadersForMainChain:(NSArray *) blocks;
+
 - (BOOL)rollbackBlock:(uint32_t)blockNo;
 
 @end

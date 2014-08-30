@@ -47,6 +47,8 @@
 
 - (void)addBlock:(BTBlockItem *)block;
 
+- (void)addBlocks:(NSArray *)blocks;
+
 - (void)updateBlock:(NSData *)blockHash withIsMain:(BOOL)isMain;
 
 - (BTBlockItem *)getOrphanBlockByPrevHash:(NSData *)prevHash;

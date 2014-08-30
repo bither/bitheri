@@ -107,6 +107,14 @@ static BTBlockChain *blockChain;
     [[BTBlockProvider instance] addBlock:[block formatToBlockItem]];
 }
 
+- (void)addBlocks:(NSArray *)blocks {
+    NSMutableArray *addBlocks = [NSMutableArray new];
+    for (BTBlock *block in blocks) {
+        [addBlocks addObject:[block formatToBlockItem]];
+    }
+    [[BTBlockProvider instance] addBlocks:addBlocks];
+}
+
 - (BOOL)isExist:(NSData *)blockHash; {
     return [[BTBlockProvider instance] isExist:blockHash];
 }
@@ -280,6 +288,42 @@ static BTBlockChain *blockChain;
             [self rollbackBlock:b.height];
         }
     }
+}
+
+- (int)relayedBlockHeadersForMainChain:(NSArray *) blocks;{
+    if (blocks.count == 0)
+        return 0;
+    NSMutableArray *blocksToAdd = [NSMutableArray new];
+    BTBlock *prev = self.lastBlock;
+    if (prev == nil)
+        return 0;
+    for (int i = 0; i < blocks.count; i++) {
+        BTBlock *block = blocks[i];
+        if (![block.blockHash isEqualToData:prev.blockHash]) {
+            BTBlock *alreadyIn = [self getBlock:block.blockHash];
+            if (alreadyIn == nil) {
+                continue;
+            } else {
+                self.singleBlocks[block.blockHash] = block;
+                break;
+            }
+        }
+        block.height = prev.height + 1;
+        NSTimeInterval transitionTime = [self getTransactionTime:block];
+        if (![block verifyDifficultyFromPreviousBlock:prev andTransitionTime:transitionTime]) {
+            break;
+        }
+
+        block.isMain = YES;
+        [blocksToAdd addObject:block];
+        prev = block;
+    }
+
+    if (blocksToAdd.count > 0) {
+        [self addBlocks:blocksToAdd];
+        _lastBlock = blocksToAdd[blocksToAdd.count - 1];
+    }
+    return blocksToAdd.count;
 }
 
 - (NSArray *)blockLocatorArray {

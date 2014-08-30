@@ -113,8 +113,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
 - (double)syncProgress {
     if (!self.downloadPeer) return (self.syncStartHeight == self.lastBlockHeight) ? 0.05 : 0.0;
-    if (self.lastBlockHeight >= self.downloadPeer.lastBlock) return 1.0;
-    return 0.1 + 0.9 * (self.lastBlockHeight - self.syncStartHeight) / (self.downloadPeer.lastBlock - self.syncStartHeight);
+    if (self.lastBlockHeight >= self.downloadPeer.versionLastBlock) return 1.0;
+    return 0.1 + 0.9 * (self.lastBlockHeight - self.syncStartHeight) / (self.downloadPeer.versionLastBlock - self.syncStartHeight);
 }
 
 - (BOOL)doneSyncFromSPV {
@@ -128,12 +128,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     self.filterUpdateHeight = self.lastBlockHeight;
     self.filterFpRate = BLOOM_DEFAULT_FALSEPOSITIVE_RATE;
 
-    if (self.lastBlockHeight + BLOCK_DIFFICULTY_INTERVAL < self.downloadPeer.lastBlock) {
+    if (self.lastBlockHeight + BLOCK_DIFFICULTY_INTERVAL < self.downloadPeer.versionLastBlock) {
         self.filterFpRate = BLOOM_REDUCED_FALSEPOSITIVE_RATE; // lower false positive rate during chain sync
     }
-    else if (self.lastBlockHeight < self.downloadPeer.lastBlock) { // partially lower fp rate if we're nearly synced
+    else if (self.lastBlockHeight < self.downloadPeer.versionLastBlock) { // partially lower fp rate if we're nearly synced
         self.filterFpRate -= (BLOOM_DEFAULT_FALSEPOSITIVE_RATE - BLOOM_REDUCED_FALSEPOSITIVE_RATE) *
-                (self.downloadPeer.lastBlock - self.lastBlockHeight) / BLOCK_DIFFICULTY_INTERVAL;
+                (self.downloadPeer.versionLastBlock - self.lastBlockHeight) / BLOCK_DIFFICULTY_INTERVAL;
     }
 
     NSArray *outs = [[BTAddressManager sharedInstance] outs];
@@ -437,7 +437,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 #pragma mark - BTPeerDelegate
 
 - (void)peerConnected:(BTPeer *)peer {
-    DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.port, peer.lastBlock);
+    DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.port, peer.versionLastBlock);
     if (!self.connecting) {
         [peer disconnectPeer];
         return;
@@ -447,15 +447,15 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     self.connectFailures = 0;
 //    peer.timestamp = [NSDate timeIntervalSinceReferenceDate]; // set last seen timestamp for peer
 
-    if (peer.lastBlock + 10 < self.lastBlockHeight) { // drop peers that aren't synced yet, we can't help them
+    if (peer.versionLastBlock + 10 < self.lastBlockHeight) { // drop peers that aren't synced yet, we can't help them
 //        [peer disconnectPeer];
         [self peerAbandon:peer];
         return;
     }
 
     [peer connectSucceed];
-    if (self.connected && (self.downloadPeer.lastBlock >= peer.lastBlock || self.lastBlockHeight >= peer.lastBlock)) {
-        if (self.lastBlockHeight < self.downloadPeer.lastBlock) return; // don't load bloom filter yet if we're syncing
+    if (self.connected && (self.downloadPeer.versionLastBlock >= peer.versionLastBlock || self.lastBlockHeight >= peer.versionLastBlock)) {
+        if (self.lastBlockHeight < self.downloadPeer.versionLastBlock) return; // don't load bloom filter yet if we're syncing
         [peer sendFilterLoadMessage:self.bloomFilter.data];
         for (BTTx *tx in self.publishedTx.allValues) {
             if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
@@ -468,7 +468,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     // select the peer with the lowest ping time to download the chain from if we're behind
     for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
-        if ((p.pingTime < peer.pingTime && p.lastBlock >= peer.lastBlock) || p.lastBlock > peer.lastBlock)
+        if ((p.pingTime < peer.pingTime && p.versionLastBlock >= peer.versionLastBlock) || p.versionLastBlock > peer.versionLastBlock)
             peer = p;
     }
 
@@ -484,7 +484,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _bloomFilter = nil; // make sure the bloom filter is updated with any newly generated addresses
     [peer sendFilterLoadMessage:self.bloomFilter.data];
 
-    if (self.lastBlockHeight < peer.lastBlock) { // start blockchain sync
+    if (self.lastBlockHeight < peer.versionLastBlock) { // start blockchain sync
         if (self.taskId == UIBackgroundTaskInvalid) { // start a background task for the chain sync
             self.taskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             }];
@@ -653,7 +653,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     [self.blockChain relayedBlock:block withPeer:peer andCallback:^(BTBlock *b, BOOL isConfirm) {
         if (isConfirm) {
-            if ((b.height % 500) == 0 || b.txHashes.count > 0 || b.height > peer.lastBlock) {
+            if ((b.height % 500) == 0 || b.txHashes.count > 0 || b.height > peer.versionLastBlock) {
                 DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.port, b.height, self.filterFpRate);
             }
             [self setBlockHeight:b.height forTxHashes:b.txHashes];
@@ -664,7 +664,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }
     }];
 
-    if (block.height == peer.lastBlock && block == self.blockChain.lastBlock) { // chain download is complete
+    if (block.height == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
         [self syncStopped];
         [peer sendGetAddrMessage]; // request a list of other bitcoin peers
         self.syncStartHeight = 0;

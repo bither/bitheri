@@ -60,7 +60,8 @@ typedef enum {
 @property (nonatomic, readonly) uint32_t version;
 @property (nonatomic, readonly) uint64_t nonce;
 @property (nonatomic, readonly) NSString *userAgent;
-@property (nonatomic, readonly) uint32_t lastBlock;
+@property (nonatomic, readonly) uint32_t versionLastBlock;
+@property (nonatomic, readonly) uint32_t displayLastBlock;
 @property (nonatomic, readonly) NSTimeInterval pingTime;
 @property (nonatomic, assign) NSTimeInterval timestamp; // last seen time (interval since reference date)
 @property (nonatomic, assign) NSTimeInterval peerTimestamp; // peer 's time stamp not local time stamp, these only use for shown

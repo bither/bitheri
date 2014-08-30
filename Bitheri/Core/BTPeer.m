@@ -50,6 +50,7 @@ typedef enum {
 
 @interface BTPeer (){
     BOOL _bloomFilterSent;
+    uint32_t _incrementalBlockHeight;
 }
 
 @property (nonatomic, strong) NSInputStream *inputStream;
@@ -233,7 +234,7 @@ services:(uint64_t)services
 {
     if (self.status != BTPeerStatusConnecting || ! self.sentVerAck || ! self.gotVerAck) return;
 
-    DDLogDebug(@"%@:%d handshake completed lastblock:%d", self.host, self.port, self.lastBlock);
+    DDLogDebug(@"%@:%d handshake completed lastblock:%d", self.host, self.port, self.versionLastBlock);
     [NSObject cancelPreviousPerformRequestsWithTarget:self]; // cancel pending handshake timeout
     _status = BTPeerStatusConnected;
     dispatch_async(self.delegateQueue, ^{
@@ -508,7 +509,7 @@ services:(uint64_t)services
         return;
     }
     
-    _lastBlock = [message UInt32AtOffset:80 + l];
+    _versionLastBlock = [message UInt32AtOffset:80 + l];
     
     DDLogDebug(@"%@:%d got version %d, useragent:\"%@\"", self.host, self.port, self.version, self.userAgent);
 
@@ -652,6 +653,10 @@ services:(uint64_t)services
             [self.currentBlockHashes
              removeObjectsInRange:NSMakeRange(0, self.currentBlockHashes.count - MAX_GETDATA_HASHES/2)];
         }
+    }
+    
+    if(blockHashes.count == 1){
+        _incrementalBlockHeight ++;
     }
 }
 
@@ -1256,6 +1261,10 @@ reset:          // reset for next message
     _connectedCnt = peerItem.peerConnectedCnt;
 
     return self;
+}
+
+-(uint32_t)displayLastBlock{
+    return self.versionLastBlock + _incrementalBlockHeight;
 }
 
 @end

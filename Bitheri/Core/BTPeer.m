@@ -26,6 +26,7 @@
 #import "BTTxProvider.h"
 #import "BTOutItem.h"
 #import "BTScript.h"
+#import "BTBlockChain.h"
 
 //#define USERAGENT [NSString stringWithFormat:@"/bitheri:%@/", NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]]
 //
@@ -609,8 +610,12 @@ services:(uint64_t)services
         
         switch (type) {
             case tx: [txHashes addObject:hash]; break;
-            case block: [blockHashes addObject:hash]; break;
-            case merkleblock: [blockHashes addObject:hash]; break;
+            case block:
+            case merkleblock:
+                if([BTPeerManager sharedInstance].downloadPeer == nil || [BTPeerManager sharedInstance].downloadPeer == self){
+                    [blockHashes addObject:hash];
+                }
+                break;
             default: break;
         }
     }
@@ -1034,6 +1039,9 @@ services:(uint64_t)services
             if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
         });
     }
+    if(self.currentBlockHashes.count == 0){
+        [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil]
+    }
 }
 
 // described in BIP61: https://gist.github.com/gavinandresen/7079034
@@ -1218,6 +1226,7 @@ reset:          // reset for next message
     self.connectedCnt = 1;
     self.timestamp = [[NSDate new] timeIntervalSinceReferenceDate];
     [[BTPeerProvider instance] connectSucceed:self.address];
+    [self sendFilterLoadMessage:[self.delegate peerBloomFilter:self]];
 }
 
 - (void)connectError;{

@@ -39,7 +39,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 @interface BTPeerManager ()
 
 @property (nonatomic, strong) NSMutableSet *abandonPeers;
-@property (nonatomic, strong) BTPeer *downloadPeer;
 @property (nonatomic, assign) uint32_t tweak, syncStartHeight, filterUpdateHeight;
 @property (nonatomic, strong) BTBloomFilter *bloomFilter;
 @property (nonatomic, assign) double filterFpRate;

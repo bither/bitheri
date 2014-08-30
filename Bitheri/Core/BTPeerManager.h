@@ -26,6 +26,7 @@
 @property (nonatomic, readonly) uint32_t lastBlockHeight;
 @property (nonatomic, readonly) double syncProgress;
 @property (nonatomic, strong) BTBlockChain * blockChain;
+@property (nonatomic, strong) BTPeer *downloadPeer;
 
 @property (readonly) BOOL doneSyncFromSPV;
 

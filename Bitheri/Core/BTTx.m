@@ -609,7 +609,7 @@ sequence:(uint32_t)sequence
     if (self.blockHeight == TX_UNCONFIRMED){
         return 0;
     } else {
-        return [[BTBlockChain instance] lastBlock].height - self.blockHeight + 1;
+        return [[BTBlockChain instance] lastBlock].blockNo - self.blockHeight + 1;
     }
 }
 

@@ -107,7 +107,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (uint32_t)lastBlockHeight {
-    return self.blockChain.lastBlock.height;
+    return self.blockChain.lastBlock.blockNo;
 }
 
 - (double)syncProgress {
@@ -653,18 +653,18 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     [self.blockChain relayedBlock:block withPeer:peer andCallback:^(BTBlock *b, BOOL isConfirm) {
         if (isConfirm) {
-            if ((b.height % 500) == 0 || b.txHashes.count > 0 || b.height > peer.versionLastBlock) {
-                DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.port, b.height, self.filterFpRate);
+            if ((b.blockNo % 500) == 0 || b.txHashes.count > 0 || b.blockNo > peer.versionLastBlock) {
+                DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.port, b.blockNo, self.filterFpRate);
             }
-            [self setBlockHeight:b.height forTxHashes:b.txHashes];
+            [self setBlockHeight:b.blockNo forTxHashes:b.txHashes];
         } else {
             DDLogDebug(@"%@:%d relayed block with invalid difficulty target %x, blockHash: %@", peer.host, peer.port,
-                            b.target, b.blockHash);
+                            b.blockBits, b.blockHash);
             [self peerAbandon:peer];
         }
     }];
 
-    if (block.height == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
+    if (block.blockNo == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
         [self syncStopped];
         [peer sendGetAddrMessage]; // request a list of other bitcoin peers
         self.syncStartHeight = 0;
@@ -704,11 +704,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
     }
 
-    int oldLastBlockNo = [BTBlockChain instance].lastBlock.height;
+    int oldLastBlockNo = [BTBlockChain instance].lastBlock.blockNo;
     int relayedCount = [[BTBlockChain instance] relayedBlockHeadersForMainChain:headers];
     if (relayedCount == headers.count) {
         DDLogDebug(@"Peer %@ relay %d block headers OK, last block No.%d, total block:%d", peer.host, relayedCount
-        , [BTBlockChain instance].lastBlock.height, [[BTBlockChain instance] getBlockCount]);
+        , [BTBlockChain instance].lastBlock.blockNo, [[BTBlockChain instance] getBlockCount]);
     } else {
         [self peerAbandon:peer];
         DDLogDebug(@"Peer %@ relay %d/%d block headers. drop this peer", peer.host, relayedCount
@@ -732,7 +732,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         });
     }
 
-    if (oldLastBlockNo != [BTBlockChain instance].lastBlock.height) {
+    if (oldLastBlockNo != [BTBlockChain instance].lastBlock.blockNo) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
         });

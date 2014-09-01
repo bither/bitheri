@@ -143,7 +143,7 @@
 + (uint64_t)getCoinDepth:(NSArray *)outs;{
     uint64_t coinDepth = 0;
     for (BTOutItem *outItem in outs) {
-        coinDepth += [BTBlockChain instance].lastBlock.height * outItem.outValue - outItem.coinDepth + outItem.outValue;
+        coinDepth += [BTBlockChain instance].lastBlock.blockNo * outItem.outValue - outItem.coinDepth + outItem.outValue;
     }
     return coinDepth;
 }
@@ -181,8 +181,8 @@
 NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     BTOutItem *outItem1 = (BTOutItem *)obj1;
     BTOutItem *outItem2 = (BTOutItem *)obj2;
-    uint64_t coinDepth1 = [BTBlockChain instance].lastBlock.height * outItem1.outValue - outItem1.coinDepth + outItem1.outValue;
-    uint64_t coinDepth2 = [BTBlockChain instance].lastBlock.height * outItem2.outValue - outItem2.coinDepth + outItem2.outValue;
+    uint64_t coinDepth1 = [BTBlockChain instance].lastBlock.blockNo * outItem1.outValue - outItem1.coinDepth + outItem1.outValue;
+    uint64_t coinDepth2 = [BTBlockChain instance].lastBlock.blockNo * outItem2.outValue - outItem2.coinDepth + outItem2.outValue;
     if (coinDepth1 > coinDepth2) return NSOrderedAscending;
     if (coinDepth1 < coinDepth2) return NSOrderedDescending;
     if ([outItem1 outValue] > [outItem2 outValue]) return NSOrderedAscending;

@@ -42,30 +42,32 @@
     return result;
 }
 
-+ (BTBlockItem *)getBlock:(int)index; {
++ (BTBlock *)getBlock:(int)index; {
     return [BTBlockTestData formatBlockItem:BTBlockTestData.blockData[(NSUInteger) index]];
 }
 
 + (BTBlock *)getMainBlock:(int)index;{
-    return [BTBlock blockWithBlockItem:[BTBlockTestData formatBlockItem:[BTBlockTestData blockData][(NSUInteger) index]]];
+    return [BTBlockTestData formatBlockItem:[BTBlockTestData blockData][(NSUInteger) index]];
 }
 
 + (BTBlock *)getOrphanBlock:(int)index;{
-    return [BTBlock blockWithBlockItem:[BTBlockTestData formatBlockItem:[BTBlockTestData orphanBlockData][(NSUInteger) index]]];
+    return [BTBlockTestData formatBlockItem:[BTBlockTestData orphanBlockData][(NSUInteger) index]];
 }
 
 
-+ (BTBlockItem *)formatBlockItem:(NSArray *)array; {
-    BTBlockItem *item = [BTBlockItem new];
-    item.blockNo = [array[0] unsignedIntValue];
-    item.blockHash = [[array[1] hexToData] reverse];
-    item.blockRoot = [[array[2] hexToData] reverse];
-    item.blockVer = [array[3] unsignedIntValue];
-    item.blockBits = [array[4] unsignedIntValue];
-    item.blockNonce = [array[5] unsignedIntValue];
-    item.blockTime = [array[6] unsignedIntValue];
-    item.blockPrev = [[array[7] hexToData] reverse];
-    return item;
++ (BTBlock *)formatBlockItem:(NSArray *)array; {
+    BTBlock *item = [BTBlock new];
+    uint32_t blockNo = [array[0] unsignedIntValue];
+    NSData *blockHash = [[array[1] hexToData] reverse];
+    NSData *blockRoot = [[array[2] hexToData] reverse];
+    uint32_t blockVer = [array[3] unsignedIntValue];
+    uint32_t blockBits = [array[4] unsignedIntValue];
+    uint32_t blockNonce = [array[5] unsignedIntValue];
+    uint32_t blockTime = [array[6] unsignedIntValue];
+    NSData *blockPrev = [[array[7] hexToData] reverse];
+    BOOL isMain = YES;
+    return [[BTBlock alloc] initWithBlockNo:blockNo blockHash:blockHash blockRoot:blockRoot blockVer:blockVer blockBits:blockBits
+                                        blockNonce:blockNonce blockTime:blockTime blockPrev:blockPrev isMain:isMain];
 }
 
 @end

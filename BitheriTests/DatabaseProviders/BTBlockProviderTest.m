@@ -51,7 +51,7 @@
 
 - (void)testAddBlock;{
     XCTAssertEqual(0, [provider getBlockCount]);
-    BTBlockItem *blockItem = [BTBlockTestData getBlock:0];
+    BTBlock *blockItem = [BTBlockTestData getBlock:0];
     [provider addBlock:blockItem];
     XCTAssert([blockItem isEqual:[provider getAllBlocks][0]]);
     XCTAssertEqual(1, [provider getBlockCount]);
@@ -71,7 +71,7 @@
 
 - (void)testIsExist;{
     XCTAssertEqual(0, [provider getBlockCount]);
-    BTBlockItem *blockItem = [BTBlockTestData getBlock:0];
+    BTBlock *blockItem = [BTBlockTestData getBlock:0];
     XCTAssertEqualObjects(nil, [provider getBlock:blockItem.blockHash]);
     [provider addBlock:blockItem];
     XCTAssert([blockItem isEqual:[provider getAllBlocks][0]]);

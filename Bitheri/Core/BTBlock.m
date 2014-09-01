@@ -105,17 +105,17 @@ static uint32_t getCompact(const BIGNUM *bn)
     NSUInteger off = 0, l = 0, len = 0;
 
     _blockHash = [message subdataWithRange:NSMakeRange(0, 80)].SHA256_2;
-    _version = [message UInt32AtOffset:off];
+    _blockVer = [message UInt32AtOffset:off];
     off += sizeof(uint32_t);
-    _prevBlock = [message hashAtOffset:off];
+    _blockPrev = [message hashAtOffset:off];
     off += CC_SHA256_DIGEST_LENGTH;
-    _merkleRoot = [message hashAtOffset:off];
+    _blockRoot = [message hashAtOffset:off];
     off += CC_SHA256_DIGEST_LENGTH;
     _blockTime = [message UInt32AtOffset:off];
     off += sizeof(uint32_t);
-    _target = [message UInt32AtOffset:off];
+    _blockBits = [message UInt32AtOffset:off];
     off += sizeof(uint32_t);
-    _nonce = [message UInt32AtOffset:off];
+    _blockNonce = [message UInt32AtOffset:off];
     off += sizeof(uint32_t);
     _totalTransactions = [message UInt32AtOffset:off];
     off += sizeof(uint32_t);
@@ -124,7 +124,7 @@ static uint32_t getCompact(const BIGNUM *bn)
     _hashes = off + len > message.length ? nil : [message subdataWithRange:NSMakeRange(off, len)];
     off += len;
     _flags = [message dataAtOffset:off length:&l];
-    _height = BLOCK_UNKNOWN_HEIGHT;
+    _blockNo = BLOCK_UNKNOWN_HEIGHT;
 
     return self;
 }
@@ -136,16 +136,16 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     if (! (self = [self init])) return nil;
     
     _blockHash = blockHash;
-    _version = version;
-    _prevBlock = prevBlock;
-    _merkleRoot = merkleRoot;
+    _blockVer = version;
+    _blockPrev = prevBlock;
+    _blockRoot = merkleRoot;
     _blockTime = (uint32_t) timestamp;
-    _target = target;
-    _nonce = nonce;
+    _blockBits = target;
+    _blockNonce = nonce;
     _totalTransactions = totalTransactions;
     _hashes = hashes;
     _flags = flags;
-    _height = height;
+    _blockNo = height;
 
     return self;
 }
@@ -167,7 +167,7 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
             return d.SHA256_2;
         }];
     
-    if (_totalTransactions > 0 && ! [merkleRoot isEqual:_merkleRoot]) return NO; // merkle root check failed
+    if (_totalTransactions > 0 && ![merkleRoot isEqual:_blockRoot]) return NO; // merkle root check failed
     
     //TODO: use estimated network time instead of system time (avoids timejacking attacks and misconfigured time)
     if (_blockTime-NSTimeIntervalSince1970 > [NSDate timeIntervalSinceReferenceDate] + MAX_TIME_DRIFT) return NO; // timestamp too far in future
@@ -175,7 +175,7 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     // check proof-of-work
     BN_init(&target);
     BN_init(&maxTarget);
-    setCompact(&target, _target);
+    setCompact(&target, _blockBits);
     setCompact(&maxTarget, MAX_PROOF_OF_WORK);
     if (BN_cmp(&target, BN_value_one()) < 0 || BN_cmp(&target, &maxTarget) > 0) return NO; // target out of range
 
@@ -189,13 +189,13 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
 - (NSData *)toData
 {
     NSMutableData *d = [NSMutableData data];
-    
-    [d appendUInt32:_version];
-    [d appendData:_prevBlock];
-    [d appendData:_merkleRoot];
+
+    [d appendUInt32:_blockVer];
+    [d appendData:_blockPrev];
+    [d appendData:_blockRoot];
     [d appendUInt32:_blockTime];
-    [d appendUInt32:_target];
-    [d appendUInt32:_nonce];
+    [d appendUInt32:_blockBits];
+    [d appendUInt32:_blockNonce];
     [d appendUInt32:_totalTransactions];
     [d appendVarInt:_hashes.length/CC_SHA256_DIGEST_LENGTH];
     [d appendData:_hashes];
@@ -242,15 +242,15 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
 // intuitively named MAX_PROOF_OF_WORK... since larger values are less difficult.
 - (BOOL)verifyDifficultyFromPreviousBlock:(BTBlock *)previous andTransitionTime:(NSTimeInterval)time
 {
-    if (! [_prevBlock isEqual:previous.blockHash] || _height != previous.height + 1) return NO;
-    if ((_height % BLOCK_DIFFICULTY_INTERVAL) == 0 && time == 0) return NO;
+    if (! [_blockPrev isEqual:previous.blockHash] || _blockNo != previous.blockNo + 1) return NO;
+    if ((_blockNo % BLOCK_DIFFICULTY_INTERVAL) == 0 && time == 0) return NO;
 
 #if BITCOIN_TESTNET
     //TODO: implement testnet difficulty rule check
     return YES; // don't worry about difficulty on testnet for now
 #endif
 
-    if ((_height % BLOCK_DIFFICULTY_INTERVAL) != 0) return _target == previous.target;
+    if ((_blockNo % BLOCK_DIFFICULTY_INTERVAL) != 0) return _blockBits == previous.blockBits;
 
     int32_t timespan = (int32_t)((int64_t)previous.blockTime - (int64_t)time);
     BIGNUM target, maxTarget, span, targetSpan, bn;
@@ -266,7 +266,7 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     BN_init(&span);
     BN_init(&targetSpan);
     BN_init(&bn);
-    setCompact(&target, previous.target);
+    setCompact(&target, previous.blockBits);
     setCompact(&maxTarget, MAX_PROOF_OF_WORK);
     BN_set_word(&span, (unsigned int) timespan);
     BN_set_word(&targetSpan, TARGET_TIMESPAN);
@@ -276,7 +276,7 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     
-    return _target == getCompact(&target);
+    return _blockBits == getCompact(&target);
 }
 
 // recursively walks the merkle tree in depth first order, calling leaf(hash, flag) for each stored hash, and
@@ -308,54 +308,80 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     return *(const NSUInteger *)_blockHash.bytes;
 }
 
-- (BOOL)isEqual:(id)object
-{
-    return self == object || ([object isKindOfClass:[BTBlock class]] && [[object blockHash] isEqual:_blockHash]);
+- (BOOL)isEqual:(id)object {
+    if (object == self) {
+        return YES;
+    }
+    if (![object isKindOfClass:[BTBlock class]]) {
+        return NO;
+    }
+    BTBlock *item = (BTBlock *) object;
+    return (self.blockNo == item.blockNo) && [self.blockHash isEqualToData:item.blockHash]
+            && (self.blockVer == item.blockVer) && (self.blockBits == item.blockBits)
+            && (self.blockNonce == item.blockNonce) && (self.blockTime == item.blockTime)
+            && self.isMain == item.isMain;
 }
 
 - (NSData *)toDataWithHash {
-    int size = (int) self.prevBlock.length + (int) self.merkleRoot.length + 64 * 4 + 4;
+    int size = (int) self.blockPrev.length + (int) self.blockRoot.length + 64 * 4 + 4;
     NSMutableData *d = [NSMutableData dataWithCapacity:(NSUInteger) size];
-    [d appendUInt32:self.version];
-    [d appendData:self.prevBlock];
-    [d appendData:self.merkleRoot];
+    [d appendUInt32:self.blockVer];
+    [d appendData:self.blockPrev];
+    [d appendData:self.blockRoot];
     [d appendUInt32:self.blockTime];
-    [d appendUInt32:self.target];
-    [d appendUInt32:self.nonce];
-//    DDLogDebug(@"data size %d", d.length);
+    [d appendUInt32:self.blockBits];
+    [d appendUInt32:self.blockNonce];
     return d;
 }
 
-- (BTBlockItem *)formatToBlockItem; {
-    BTBlockItem *blockItem = [BTBlockItem new];
-    blockItem.blockHash = self.blockHash;
-    blockItem.blockVer = self.version;
-    blockItem.blockPrev = self.prevBlock;
-    blockItem.blockRoot = self.merkleRoot;
-    blockItem.blockTime = self.blockTime;
-    blockItem.blockBits = self.target;
-    blockItem.blockNonce = self.nonce;
-    blockItem.blockNo = self.height;
-    blockItem.isMain = self.isMain;
-    return blockItem;
-}
+//- (BTBlockItem *)formatToBlockItem; {
+//    BTBlockItem *blockItem = [BTBlockItem new];
+//    blockItem.blockHash = self.blockHash;
+//    blockItem.blockVer = self.blockVer;
+//    blockItem.blockPrev = self.blockPrev;
+//    blockItem.blockRoot = self.blockRoot;
+//    blockItem.blockTime = self.blockTime;
+//    blockItem.blockBits = self.blockBits;
+//    blockItem.blockNonce = self.blockNonce;
+//    blockItem.blockNo = self.blockNo;
+//    blockItem.isMain = self.isMain;
+//    return blockItem;
+//}
 
-+ (instancetype)blockWithBlockItem:(BTBlockItem *)blockItem;{
-    return [[self alloc] initWithBlockItem:blockItem];
-}
+//+ (instancetype)blockWithBlockItem:(BTBlockItem *)blockItem;{
+//    return [[self alloc] initWithBlockItem:blockItem];
+//}
 
-- (instancetype)initWithBlockItem:(BTBlockItem *) blockItem;{
+//- (instancetype)initWithBlockItem:(BTBlockItem *) blockItem;{
+//    if (! (self = [self init])) return nil;
+//
+//    _blockHash = blockItem.blockHash;
+//    _blockVer = blockItem.blockVer;
+//    _blockPrev = blockItem.blockPrev;
+//    _blockRoot = blockItem.blockRoot;
+//    _blockTime = blockItem.blockTime;
+//    _blockBits = blockItem.blockBits;
+//    _blockNonce = blockItem.blockNonce;
+//    _blockNo = blockItem.blockNo;
+//    _isMain = blockItem.isMain;
+//
+//    return self;
+//}
+
+- initWithBlockNo:(uint32_t) blockNo blockHash:(NSData *)blockHash blockRoot:(NSData *)blockRoot blockVer:(uint32_t)blockVer
+        blockBits:(uint32_t)blockBits blockNonce:(uint32_t)blockNonce blockTime:(uint32_t)blockTime
+        blockPrev:(NSData *)blockPrev isMain:(BOOL)isMain;{
     if (! (self = [self init])) return nil;
 
-    _blockHash = blockItem.blockHash;
-    _version = blockItem.blockVer;
-    _prevBlock = blockItem.blockPrev;
-    _merkleRoot = blockItem.blockRoot;
-    _blockTime = blockItem.blockTime;
-    _target = blockItem.blockBits;
-    _nonce = blockItem.blockNonce;
-    _height = blockItem.blockNo;
-    _isMain = blockItem.isMain;
+    _blockNo = blockNo;
+    _blockHash = blockHash;
+    _blockRoot = blockRoot;
+    _blockVer = blockVer;
+    _blockTime = blockTime;
+    _blockBits = blockBits;
+    _blockNonce = blockNonce;
+    _blockPrev = blockPrev;
+    _isMain = isMain;
 
     return self;
 }
@@ -364,31 +390,15 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     if (!(self = [self init])) {
         return nil;
     }
-    _version = version;
-    _prevBlock = prevBlock;
-    _merkleRoot = merkleRoot;
+    _blockVer = version;
+    _blockPrev = prevBlock;
+    _blockRoot = merkleRoot;
     _blockTime = (uint32_t) timestamp;
-    _target = target;
-    _nonce = nonce;
-    _height = height;
+    _blockBits = target;
+    _blockNonce = nonce;
+    _blockNo = height;
     _blockHash = [[self toDataWithHash] SHA256_2];
 
     return self;
 }
-
-//- (BOOL)isEqual:(id)object {
-//    if (object == self) {
-//        return YES;
-//    }
-//    if (![object isKindOfClass:[BTBlock class]]) {
-//        return NO;
-//    }
-//    BTBlock *item = (BTBlock *) object;
-//    return (self.height == item.height) && [self.blockHash isEqualToData:item.blockHash]
-//            && [self.blockHash isEqualToData:item.blockHash] && [self.blockHash isEqualToData:item.blockHash]
-//            && (self.version == item.version) && (self.target == item.target)
-//            && (self.nonce == item.nonce) && (self.blockTime == item.blockTime)
-//            && [self.blockHash isEqualToData:item.blockHash];
-//}
-
 @end

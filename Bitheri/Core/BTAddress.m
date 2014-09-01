@@ -396,7 +396,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
 - (NSArray *)getRecentlyTxsWithConfirmationCntLessThan:(int)confirmationCnt andLimit:(int)limit; {
     NSMutableArray *txs = [NSMutableArray new];
-    int blockNo = [BTBlockChain instance].lastBlock.height - confirmationCnt + 1;
+    int blockNo = [BTBlockChain instance].lastBlock.blockNo - confirmationCnt + 1;
     for (BTTxItem *txItem in [[BTTxProvider instance] getRecentlyTxsByAddress:self.address
                                                         andGreaterThanBlockNo:blockNo andLimit:limit]) {
         [txs addObject:[BTTx txWithTxItem:txItem]];

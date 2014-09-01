@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTBlockItem.h"
+#import "BTBlock.h"
 
 
 @interface BTBlockProvider : NSObject
@@ -30,30 +30,24 @@
 
 - (NSMutableArray *)getBlocksFrom:(uint)blockNo;
 
-- (BTBlockItem *)getLastBlock;
-- (BTBlockItem *)getLastOrphanBlock;
+- (BTBlock *)getLastBlock;
+- (BTBlock *)getLastOrphanBlock;
 
-- (BTBlockItem *)getBlock:(NSData *)blockHash;
+- (BTBlock *)getBlock:(NSData *)blockHash;
 
-//- (void)clear;
-
-//- (void)deleteBlocksNotInHashes:(NSSet *) blockHashes;
-
-//- (NSArray *)exists:(NSSet *) blockHashes;
 
 - (BOOL)isExist:(NSData *)blockHash;
 
-//- (void)addBlocks:(NSArray *)blocks;
 
-- (void)addBlock:(BTBlockItem *)block;
+- (void)addBlock:(BTBlock *)block;
 
 - (void)addBlocks:(NSArray *)blocks;
 
 - (void)updateBlock:(NSData *)blockHash withIsMain:(BOOL)isMain;
 
-- (BTBlockItem *)getOrphanBlockByPrevHash:(NSData *)prevHash;
+- (BTBlock *)getOrphanBlockByPrevHash:(NSData *)prevHash;
 
-- (BTBlockItem *)getMainChainBlock:(NSData *)blockHash;
+- (BTBlock *)getMainChainBlock:(NSData *)blockHash;
 
 - (void)removeBlock:(NSData *)blockHash;
 

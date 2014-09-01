@@ -50,7 +50,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 @property (nonatomic, strong) dispatch_queue_t q;
 @property (nonatomic, strong) id activeObserver;
 @property BOOL synchronizing;
-@property BOOL connecting;
+@property BOOL running;
 
 @end
 
@@ -81,12 +81,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _publishedTx = [NSMutableDictionary dictionary];
     _publishedCallback = [NSMutableDictionary dictionary];
     _blockChain = [BTBlockChain instance];
-    _connecting = NO;
+    _running = NO;
+    _connected = NO;
 
-    NSMutableArray *txs = [NSMutableArray new];
-    for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]) {
-        [txs addObjectsFromArray:addr.txs];
-    }
+    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTTxProvider instance] getPublishedTxs]];
 
     for (BTTx *tx in txs) {
         if (tx.blockHeight != TX_UNCONFIRMED) continue;
@@ -138,7 +136,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
     NSArray *outs = [[BTAddressManager sharedInstance] outs];
-    NSUInteger elemCount = [[BTAddressManager sharedInstance] allAddresses].count + outs.count;
+    NSUInteger elemCount = [[BTAddressManager sharedInstance] allAddresses].count * 2 + outs.count;
 //    for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]){
 //        elemCount += addr.unspentOuts.count;
 //    }
@@ -150,13 +148,14 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]) { // add addresses to watch for any tx receiveing money to the wallet
         NSData *hash = addr.address.addressToHash160;
-
         if (hash && ![filter containsData:hash]) [filter insertData:hash];
+
+        if (addr.pubKey)
+            [filter insertData:addr.pubKey];
     }
 
     for (NSData *utxo in outs) {
         if (![filter containsData:utxo]) [filter insertData:utxo];
-
     }
 
     _bloomFilter = filter;
@@ -211,12 +210,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     // rebuild bloom filter
     _bloomFilter = nil;
     if (self.connectFailures >= MAX_CONNECT_FAILURES) self.connectFailures = 0; // this attempt is a manual retry
-    self.connecting = YES;
+    self.running = YES;
     [self reconnect];
 }
 
 - (void)reconnect {
-    if (!self.connecting)
+    if (!self.running)
         return;
     if (self.syncProgress < 1.0) {
         if (self.syncStartHeight == 0) self.syncStartHeight = self.lastBlockHeight;
@@ -270,7 +269,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (void)disconnect {
-    self.connecting = NO;
+    self.running = NO;
     self.connectFailures = MAX_CONNECT_FAILURES;
     // clear bloom filter
     _bloomFilter = nil;
@@ -439,7 +438,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
 - (void)peerConnected:(BTPeer *)peer {
     DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.port, peer.versionLastBlock);
-    if (!self.connecting) {
+    if (!self.running) {
         [peer disconnectPeer];
         return;
     }

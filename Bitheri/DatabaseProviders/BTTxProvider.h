@@ -59,4 +59,6 @@
 
 - (NSDictionary *)getTxDependencies:(BTTxItem *)txItem;
 
+- (NSArray *)getPublishedTxs;
+
 @end

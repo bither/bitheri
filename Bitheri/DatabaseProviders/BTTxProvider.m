@@ -152,6 +152,45 @@ static BTTxProvider *provider;
     return txs;
 }
 
+- (NSArray *)getPublishedTxs {
+    __block NSMutableArray *txs = nil;
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        txs = [NSMutableArray new];
+        NSMutableDictionary *txDict = [NSMutableDictionary new];
+        NSString *sql = @"select a.* from txs a where a.block_no is null order by a.tx_hash";
+        FMResultSet *rs = [db executeQuery:sql];
+        while ([rs next]) {
+            BTTxItem *txItem = [self format:rs];
+            txItem.ins = [NSMutableArray new];
+            txItem.outs = [NSMutableArray new];
+            [txs addObject:txItem];
+            txDict[txItem.txHash] = txItem;
+        }
+        [rs close];
+
+        sql = @"select b.* from txs a, ins b where a.tx_hash=b.tx_hash and a.block_no is null order by b.tx_hash,b.in_sn";
+        rs = [db executeQuery:sql];
+        while ([rs next]) {
+            BTInItem *inItem = [self formatIn:rs];
+            BTTxItem *txItem = txDict[inItem.txHash];
+            [txItem.ins addObject:inItem];
+            inItem.tx = txItem;
+        }
+        [rs close];
+
+        sql = @"select b.* from txs a, outs b where a.tx_hash=b.tx_hash and a.block_no is null order by b.tx_hash,b.out_sn";
+        rs = [db executeQuery:sql];
+        while ([rs next]) {
+            BTOutItem *outItem = [self formatOut:rs];
+            BTTxItem *txItem = txDict[outItem.txHash];
+            [txItem.outs addObject:outItem];
+            outItem.tx = txItem;
+        }
+        [rs close];
+    }];
+    return txs;
+}
+
 - (BTTxItem *)getTxDetailByTxHash:(NSData *)txHash; {
     __block BTTxItem *txItem = nil;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {

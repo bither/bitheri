@@ -235,7 +235,7 @@ static BTBlockChain *blockChain;
 
     if (!prev) {
         // block is an orphan
-        DDLogDebug(@"%@:%d relayed orphan block %@, previous %@, last block is %@, height %d", peer.host, peer.port,
+        DDLogDebug(@"%@:%d relayed orphan block %@, previous %@, last block is %@, height %d", peer.host, peer.peerPort,
                         block.blockHash, block.blockPrev, self.lastBlock.blockHash, self.lastBlock.blockNo);
 
         // ignore orphans older than one week ago
@@ -243,7 +243,7 @@ static BTBlockChain *blockChain;
         self.singleBlocks[block.blockPrev] = block;
         // call get blocks, unless we already did with the previous block, or we're still downloading the chain
         if (self.lastBlock.blockNo >= peer.versionLastBlock && ![self.lastOrphan.blockHash isEqual:block.blockPrev]) {
-            DDLogDebug(@"%@:%d calling getblocks", peer.host, peer.port);
+            DDLogDebug(@"%@:%d calling getblocks", peer.host, peer.peerPort);
             [peer sendGetBlocksMessageWithLocators:[self blockLocatorArray] andHashStop:nil];
         }
         return;

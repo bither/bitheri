@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTPeerItem.h"
+//#import "BTPeerItem.h"
 
 @class BTPeer, BTTx, BTBlock;
 
@@ -54,9 +54,13 @@ typedef enum {
 
 @property (nonatomic, readonly) BTPeerStatus status;
 @property (nonatomic, readonly) NSString *host;
-@property (nonatomic, readonly) uint32_t address;
-@property (nonatomic, readonly) uint16_t port;
-@property (nonatomic, readonly) uint64_t services;
+
+@property (nonatomic, readonly) uint32_t peerAddress;
+@property (nonatomic, assign) NSTimeInterval peerTimestamp; // peer 's time stamp not local time stamp, these only use for shown
+@property (nonatomic, readonly) uint16_t peerPort;
+@property (nonatomic, readonly) uint64_t peerServices;
+@property (nonatomic) int peerConnectedCnt;
+
 @property (nonatomic, readonly) uint32_t version;
 @property (nonatomic, readonly) uint64_t nonce;
 @property (nonatomic, readonly) NSString *userAgent;
@@ -64,9 +68,9 @@ typedef enum {
 @property (nonatomic, readonly) uint32_t displayLastBlock;
 @property (nonatomic, readonly) NSTimeInterval pingTime;
 @property (nonatomic, assign) NSTimeInterval timestamp; // last seen time (interval since reference date)
-@property (nonatomic, assign) NSTimeInterval peerTimestamp; // peer 's time stamp not local time stamp, these only use for shown
+
 //@property (nonatomic, assign) int16_t misbehavin;
-@property (nonatomic) int connectedCnt;
+
 
 //+ (instancetype)peerWithAddress:(uint32_t)address andPort:(uint16_t)port;
 //
@@ -85,9 +89,9 @@ typedef enum {
 - (void)refetchBlocksFrom:(NSData *)blockHash; // useful to get additional transactions after a bloom filter update
 - (void)sendGetDataMessageWithTxHashes:(NSArray *)txHashes andBlockHashes:(NSArray *)blockHashes;
 
-- (BTPeerItem *)formatToPeerItem;
-
-- (instancetype)initWithPeerItem:(BTPeerItem *) peerItem;
+//- (BTPeerItem *)formatToPeerItem;
+//
+//- (instancetype)initWithPeerItem:(BTPeerItem *) peerItem;
 
 //- (void)missBehaving;
 

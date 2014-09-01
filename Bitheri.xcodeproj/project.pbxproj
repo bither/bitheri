@@ -28,7 +28,6 @@
 		D61D0355FD98B828C6D39CB4 /* BTBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D089B4377A79F26061A12 /* BTBlock.m */; };
 		D61D036FA31594B9FFB2192D /* BTKey+Bitcoinj.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0B8F375121B1BF3A35A8 /* BTKey+Bitcoinj.m */; };
 		D61D037F8ED0453172682832 /* script_invalid.json in Resources */ = {isa = PBXBuildFile; fileRef = D61D0C81D9F1E5DE66B9D577 /* script_invalid.json */; };
-		D61D03C3CB18006260F82DA4 /* BTPeerItem.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0A8BFBB063F02E73814C /* BTPeerItem.m */; };
 		D61D044677DB5502A4D3E2EE /* BTScript.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D09477CB9EC34335869FA /* BTScript.m */; };
 		D61D044A9227BA831FEAA6B9 /* BTBloomFilterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0D74C1D4A51BC1A4147C /* BTBloomFilterTest.m */; };
 		D61D045042B58F1554DCB664 /* BTPeerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D015C8A7EC662AA9AE7D2 /* BTPeerTest.m */; };
@@ -71,7 +70,6 @@
 		DA41E64E1957D0900038AFDB /* BTTxItem.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01D1AECD5E1D932F4633 /* BTTxItem.m */; };
 		DA41E64F1957D0900038AFDB /* BTInItem.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0FA333C9EECC0B25B9D5 /* BTInItem.m */; };
 		DA41E6501957D0900038AFDB /* BTOutItem.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0FF5888C8CD1A69FE207 /* BTOutItem.m */; };
-		DA41E6511957D0900038AFDB /* BTPeerItem.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0A8BFBB063F02E73814C /* BTPeerItem.m */; };
 		DA41E6521957D0900038AFDB /* BTPasswordSeed.m in Sources */ = {isa = PBXBuildFile; fileRef = 428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */; };
 		DA41E6531957D0900038AFDB /* BTBlockChain.m in Sources */ = {isa = PBXBuildFile; fileRef = 42796BF519446739002BC454 /* BTBlockChain.m */; };
 		DA41E6541957D0910038AFDB /* BTTx.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0EE965EEBC3B077BB7F6 /* BTTx.m */; };
@@ -160,7 +158,6 @@
 		D61D0395809857FA9F31E395 /* BTScriptChunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTScriptChunk.h; sourceTree = "<group>"; };
 		D61D03A8F0CD67C5922F67F5 /* BTInItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTInItem.h; sourceTree = "<group>"; };
 		D61D03FEC147C37E607A6153 /* NSMutableData+Bitcoin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableData+Bitcoin.h"; sourceTree = "<group>"; };
-		D61D043341E3C85933A30C46 /* BTPeerItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPeerItem.h; sourceTree = "<group>"; };
 		D61D052EF26C3A60C89B988B /* NSData+Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+Hash.h"; sourceTree = "<group>"; };
 		D61D058092F5D84799554E2F /* BTTxProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTTxProvider.h; sourceTree = "<group>"; };
 		D61D0585E19052A13C844EA9 /* BTAddressManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTAddressManager.m; sourceTree = "<group>"; };
@@ -188,7 +185,6 @@
 		D61D09C99AC867DEB9BF3503 /* BTBloomFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBloomFilter.h; sourceTree = "<group>"; };
 		D61D09E80901B896AF916B0A /* BTSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTSettings.h; sourceTree = "<group>"; };
 		D61D0A53456E024C047459AD /* copy.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = copy.sh; sourceTree = "<group>"; };
-		D61D0A8BFBB063F02E73814C /* BTPeerItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTPeerItem.m; sourceTree = "<group>"; };
 		D61D0AF4412BF48A619BCCEF /* 1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR.tx */ = {isa = PBXFileReference; lastKnownFileType = file.tx; path = 1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR.tx; sourceTree = "<group>"; };
 		D61D0B24F7188664C434DD0B /* BTBlockTestData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBlockTestData.h; sourceTree = "<group>"; };
 		D61D0B6A8B753DA1D30565E3 /* BTBlockChainTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBlockChainTest.m; sourceTree = "<group>"; };
@@ -436,8 +432,6 @@
 				D61D03A8F0CD67C5922F67F5 /* BTInItem.h */,
 				D61D0FF5888C8CD1A69FE207 /* BTOutItem.m */,
 				D61D0073145E25051E7B9010 /* BTOutItem.h */,
-				D61D0A8BFBB063F02E73814C /* BTPeerItem.m */,
-				D61D043341E3C85933A30C46 /* BTPeerItem.h */,
 				428DB452194ECA9C00C81A4B /* BTPasswordSeed.h */,
 				428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */,
 			);
@@ -679,7 +673,6 @@
 				D61D033BB8444E7A60420971 /* BTOutItem.m in Sources */,
 				D61D0215776B2ABF5824B0C4 /* BTTxProvider.m in Sources */,
 				D61D0C20846F5D26782E4BC0 /* BTBlockProvider.m in Sources */,
-				D61D03C3CB18006260F82DA4 /* BTPeerItem.m in Sources */,
 				D61D01265EEC0A5F8F670EEB /* BTPeerProvider.m in Sources */,
 				D61D036FA31594B9FFB2192D /* BTKey+Bitcoinj.m in Sources */,
 				D61D08CF5B5B1A4F4D9C7E19 /* BTSettings.m in Sources */,
@@ -712,7 +705,6 @@
 				DA41E64E1957D0900038AFDB /* BTTxItem.m in Sources */,
 				DA41E64F1957D0900038AFDB /* BTInItem.m in Sources */,
 				DA41E6501957D0900038AFDB /* BTOutItem.m in Sources */,
-				DA41E6511957D0900038AFDB /* BTPeerItem.m in Sources */,
 				DA41E6521957D0900038AFDB /* BTPasswordSeed.m in Sources */,
 				DA41E6531957D0900038AFDB /* BTBlockChain.m in Sources */,
 				DA41E6541957D0910038AFDB /* BTTx.m in Sources */,

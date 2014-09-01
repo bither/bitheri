@@ -170,11 +170,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         [[BTPeerProvider instance] addPeers:[self getDnsPeers]];
         bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
     }
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTPeerItem *peerItem in bestPeers) {
-        [result addObject:[[BTPeer alloc] initWithPeerItem:peerItem]];
-    }
-    return result;
+    return bestPeers;
+//    NSMutableArray *result = [NSMutableArray new];
+//    for (BTPeerItem *peerItem in bestPeers) {
+//        [result addObject:[[BTPeer alloc] initWithPeerItem:peerItem]];
+//    }
+//    return result;
 }
 
 - (NSArray *)getDnsPeers; {
@@ -187,8 +188,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             uint32_t addr = CFSwapInt32BigToHost(((struct in_addr *) h->h_addr_list[j])->s_addr);
 
             // give dns peers a timestamp between 3 and 7 days ago
-            [result addObject:[[[BTPeer alloc] initWithAddress:addr port:BITCOIN_STANDARD_PORT
-                                                     timestamp:now - 24 * 60 * 60 * (3 + drand48() * 4) services:NODE_NETWORK] formatToPeerItem]];
+            [result addObject:[[BTPeer alloc] initWithAddress:addr port:BITCOIN_STANDARD_PORT
+                                                     timestamp:now - 24 * 60 * 60 * (3 + drand48() * 4) services:NODE_NETWORK]];
         }
     }
     return result;
@@ -197,8 +198,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (void)addRelayedPeers:(NSArray *)peers; {
     NSMutableArray *result = [NSMutableArray new];
     for (BTPeer *peer in peers) {
-        if (![self.abandonPeers containsObject:@(peer.address)]) {
-            [result addObject:[peer formatToPeerItem]];
+        if (![self.abandonPeers containsObject:@(peer.peerAddress)]) {
+            [result addObject:peer];
         }
     }
     [[BTPeerProvider instance] addPeers:result];
@@ -241,7 +242,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
             BOOL isInConnectedPeers = NO;
             for (BTPeer *connectedPeer in [NSSet setWithSet:self.connectedPeers]) {
-                isInConnectedPeers |= connectedPeer.address == p.address;
+                isInConnectedPeers |= connectedPeer.peerAddress == p.peerAddress;
             }
 
             if (p && !isInConnectedPeers) {
@@ -292,7 +293,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         [self performSelector:@selector(syncTimeout) withObject:nil
                    afterDelay:PROTOCOL_TIMEOUT - (now - self.lastRelayTime)];
     } else {
-        DDLogDebug(@"%@:%d chain sync timed out", self.downloadPeer.host, self.downloadPeer.port);
+        DDLogDebug(@"%@:%d chain sync timed out", self.downloadPeer.host, self.downloadPeer.peerPort);
         self.synchronizing = NO;
 //        [self.peers removeObject:self.downloadPeer];
         [self.downloadPeer disconnectPeer];
@@ -336,7 +337,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (void)peerAbandon:(BTPeer *)peer; {
     [peer connectError];
     [self.connectedPeers removeObject:peer];
-    [self.abandonPeers addObject:@(peer.address)];
+    [self.abandonPeers addObject:@(peer.peerAddress)];
     [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE
                                               userInfo:@{NSLocalizedDescriptionKey : @"peer is abandon"}]];
     [self reconnect];
@@ -437,7 +438,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 #pragma mark - BTPeerDelegate
 
 - (void)peerConnected:(BTPeer *)peer {
-    DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.port, peer.versionLastBlock);
+    DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.peerPort, peer.versionLastBlock);
     if (!self.running) {
         [peer disconnectPeer];
         return;
@@ -528,7 +529,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     if (error == nil) {
         [peer connectFail];
     } else if ([error.domain isEqual:@"bitheri"] && error.code == ERR_PEER_TIMEOUT_CODE) {
-        if(peer.connectedCnt > MAX_FAILED_COUNT){
+        if(peer.peerConnectedCnt > MAX_FAILED_COUNT){
             // Failed too many times, we don't want to play with it any more.
             [self peerAbandon:peer];
         }else {
@@ -565,7 +566,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (void)peer:(BTPeer *)peer relayedPeers:(NSArray *)peers {
-    DDLogDebug(@"%@:%d relayed %d peer(s)", peer.host, peer.port, (int) peers.count);
+    DDLogDebug(@"%@:%d relayed %d peer(s)", peer.host, peer.peerPort, (int) peers.count);
     if (peer == self.downloadPeer)
         self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
     if ([peers count] > MAX_PEERS_COUNT) {
@@ -654,11 +655,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     [self.blockChain relayedBlock:block withPeer:peer andCallback:^(BTBlock *b, BOOL isConfirm) {
         if (isConfirm) {
             if ((b.blockNo % 500) == 0 || b.txHashes.count > 0 || b.blockNo > peer.versionLastBlock) {
-                DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.port, b.blockNo, self.filterFpRate);
+                DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.peerPort, b.blockNo, self.filterFpRate);
             }
             [self setBlockHeight:b.blockNo forTxHashes:b.txHashes];
         } else {
-            DDLogDebug(@"%@:%d relayed block with invalid difficulty target %x, blockHash: %@", peer.host, peer.port,
+            DDLogDebug(@"%@:%d relayed block with invalid difficulty target %x, blockHash: %@", peer.host, peer.peerPort,
                             b.blockBits, b.blockHash);
             [self peerAbandon:peer];
         }

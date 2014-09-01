@@ -20,6 +20,7 @@
 #import "BTBlockProvider.h"
 #import "BTTxProvider.h"
 #import "BTSettings.h"
+#import "BTPeer.h"
 
 static BTBlockChain *blockChain;
 
@@ -241,7 +242,7 @@ static BTBlockChain *blockChain;
         if (block.blockTime - NSTimeIntervalSince1970 < [NSDate timeIntervalSinceReferenceDate] - ONE_WEEK) return;
         self.singleBlocks[block.prevBlock] = block;
         // call get blocks, unless we already did with the previous block, or we're still downloading the chain
-        if (self.lastBlock.height >= peer.lastBlock && ![self.lastOrphan.blockHash isEqual:block.prevBlock]) {
+        if (self.lastBlock.height >= peer.versionLastBlock && ![self.lastOrphan.blockHash isEqual:block.prevBlock]) {
             DDLogDebug(@"%@:%d calling getblocks", peer.host, peer.port);
             [peer sendGetBlocksMessageWithLocators:[self blockLocatorArray] andHashStop:nil];
         }

@@ -1045,7 +1045,7 @@ services:(uint64_t)services
         });
     }
     if(self.currentBlockHashes.count == 0){
-        [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil]
+        [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil];
     }
 }
 

@@ -20,7 +20,8 @@
 #import "BTBlock.h"
 #import "NSString+Base58.h"
 #import "NSData+Hash.h"
-#import "BTPeer.h"
+
+@class BTPeer;
 
 @interface BTBlockChain : NSObject
 

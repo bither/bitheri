@@ -17,8 +17,11 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTPeer.h"
 #import "BTBlockChain.h"
+
+@protocol BTPeerDelegate;
+@class BTPeer;
+@class BTTx;
 
 @interface BTPeerManager : NSObject<BTPeerDelegate>
 

@@ -17,7 +17,6 @@
 //  limitations under the License.
 
 #import "BTPeerManager.h"
-#import "BTPeer.h"
 #import "BTBloomFilter.h"
 #import "BTTx.h"
 #import "BTAddressManager.h"

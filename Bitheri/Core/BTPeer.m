@@ -847,9 +847,13 @@ services:(uint64_t)services
     // immediately, and switching to requesting blocks when we receive a header newer than earliestKeyTime
     NSTimeInterval t = [message UInt32AtOffset:l + 81*(count - 1) + 68] - NSTimeIntervalSince1970;
 
-//    if (count >= 2000 || t + 7*24*60*60 >= self.earliestKeyTime - 2*60*60) {
+    if (count > 0) {
         NSData *firstHash = [message subdataWithRange:NSMakeRange(l, 80)].SHA256_2,
-               *lastHash = [message subdataWithRange:NSMakeRange(l + 81*(count - 1), 80)].SHA256_2;
+                *lastHash = [message subdataWithRange:NSMakeRange(l + 81*(count - 1), 80)].SHA256_2;
+        [self sendGetHeadersMessageWithLocators:@[lastHash, firstHash] andHashStop:nil];
+    }
+//    if (count >= 2000 || t + 7*24*60*60 >= self.earliestKeyTime - 2*60*60) {
+
 
 //        if (t + 7*24*60*60 >= self.earliestKeyTime - 2*60*60) { // request blocks for the remainder of the chain
 //            t = [message UInt32AtOffset:l + 81 + 68] - NSTimeIntervalSince1970;
@@ -866,7 +870,7 @@ services:(uint64_t)services
 //            [self sendGetBlocksMessageWithLocators:@[lastHash, firstHash] andHashStop:nil];
 //        }
 //        else
-            [self sendGetHeadersMessageWithLocators:@[lastHash, firstHash] andHashStop:nil];
+
 //    }
 
     DDLogDebug(@"%@:%u got %u headers", self.host, self.port, (int)count);

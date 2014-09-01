@@ -1,5 +1,5 @@
 //
-//  BTOutItem.h
+//  BTOut.h
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -14,18 +14,16 @@
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  limitations under the License.#import <Foundation/Foundation.h>
 
-#import <Foundation/Foundation.h>
 
-@class BTTxItem;
+@class BTTx;
+typedef enum {
+    unspent = 0,
+    spent = 1,
+} OUT_STATUS;
 
-//typedef enum {
-//    unspent = 0,
-//    spent = 1,
-//} OUT_STATUS;
-
-@interface BTOutItem : NSObject
+@interface BTOut : NSObject
 
 @property (nonatomic, copy) NSData *txHash;
 @property uint outSn;
@@ -36,6 +34,6 @@
 
 @property uint64_t coinDepth;
 
-@property (nonatomic, weak) BTTxItem *tx;
+@property (nonatomic, weak) BTTx *tx;
 
 @end

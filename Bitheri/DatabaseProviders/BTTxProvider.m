@@ -17,6 +17,8 @@
 //  limitations under the License.
 
 #import "BTTxProvider.h"
+#import "BTOut.h"
+#import "BTIn.h"
 #import "BTInItem.h"
 #import "BTOutItem.h"
 #import "NSString+Base58.h"

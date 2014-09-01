@@ -41,7 +41,11 @@
 
 @interface BTTx : NSObject
 
+@property (nonatomic, strong, readonly) NSMutableArray *ins;
+@property (nonatomic, strong, readonly) NSMutableArray *outs;
+
 @property (nonatomic, readonly) NSArray *inputAddresses;
+
 @property (nonatomic, readonly) NSArray *inputHashes;
 @property (nonatomic, readonly) NSArray *inputIndexes;
 @property (nonatomic, readonly) NSArray *inputScripts;
@@ -71,8 +75,8 @@
 + (instancetype)transactionWithMessage:(NSData *)message;
 
 - (instancetype)initWithMessage:(NSData *)message;
-- (instancetype)initWithInputHashes:(NSArray *)hashes inputIndexes:(NSArray *)indexes inputScripts:(NSArray *)scripts
-outputAddresses:(NSArray *)addresses outputAmounts:(NSArray *)amounts;
+//- (instancetype)initWithInputHashes:(NSArray *)hashes inputIndexes:(NSArray *)indexes inputScripts:(NSArray *)scripts
+//outputAddresses:(NSArray *)addresses outputAmounts:(NSArray *)amounts;
 
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script;
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script signature:(NSData *)signature

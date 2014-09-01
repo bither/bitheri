@@ -18,7 +18,6 @@
 
 #import <Foundation/Foundation.h>
 #import "BTPeerItem.h"
-#import "BTPeerManager.h"
 
 @class BTPeer, BTTx, BTBlock;
 

@@ -18,10 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BTBlockChain.h"
-
-@protocol BTPeerDelegate;
-@class BTPeer;
-@class BTTx;
+#import "BTPeer.h"
 
 @interface BTPeerManager : NSObject<BTPeerDelegate>
 

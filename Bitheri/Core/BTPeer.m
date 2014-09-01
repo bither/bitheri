@@ -27,6 +27,7 @@
 #import "BTOutItem.h"
 #import "BTScript.h"
 #import "BTBlockChain.h"
+#import "BTPeerManager.h"
 
 //#define USERAGENT [NSString stringWithFormat:@"/bitheri:%@/", NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]]
 //

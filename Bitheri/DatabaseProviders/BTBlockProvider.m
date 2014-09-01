@@ -127,7 +127,7 @@ static BTBlockProvider *provider;
 }
 
 - (BTBlock *)getMainChainBlock:(NSData *)blockHash;{
-    __block BTBlockItem *blockItem = nil;
+    __block BTBlock *blockItem = nil;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from blocks where block_hash=? and is_main=?";
         FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:blockHash], @(YES)];

@@ -20,14 +20,15 @@
 #import "BTUtils.h"
 #import "BTTxProvider.h"
 #import "BTOutItem.h"
+#import "BTIn.h"
 
-static NSData *txOutput(NSData *txHash, uint32_t n) {
-    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
-
-    [d appendData:txHash];
-    [d appendUInt32:n];
-    return d;
-}
+//static NSData *txOutput(NSData *txHash, uint32_t n) {
+//    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
+//
+//    [d appendData:txHash];
+//    [d appendUInt32:n];
+//    return d;
+//}
 
 @implementation BTAddressManager {
 
@@ -194,7 +195,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 - (NSArray *)outs; {
     NSMutableArray *result = [NSMutableArray new];
     for (BTOutItem *outItem in [[BTTxProvider instance] getOuts]) {
-        [result addObject:txOutput(outItem.txHash, outItem.outSn)];
+        [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;
 }

@@ -54,7 +54,7 @@
 @property (nonatomic, readonly) NSArray *outputAmounts;
 @property (nonatomic, readonly) NSArray *outputAddresses;
 @property (nonatomic, readonly) NSArray *outputScripts;
-@property (nonatomic, readonly) NSArray *inValues;
+//@property (nonatomic, readonly) NSArray *inValues;
 
 @property (nonatomic, assign) uint32_t version;
 @property (nonatomic, copy) NSData *txHash;

@@ -22,6 +22,7 @@
 #import "BTUtils.h"
 #import "BTBlockChain.h"
 #import "BTTxBuilder.h"
+#import "BTIn.h"
 
 static double saveTime;
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
@@ -34,13 +35,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return NSOrderedSame;
 };
 
-static NSData *txOutput(NSData *txHash, uint32_t n) {
-    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
-
-    [d appendData:txHash];
-    [d appendUInt32:n];
-    return d;
-}
+//static NSData *txOutput(NSData *txHash, uint32_t n) {
+//    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
+//
+//    [d appendData:txHash];
+//    [d appendUInt32:n];
+//    return d;
+//}
 
 @implementation BTAddress {
     NSString *_address;
@@ -95,7 +96,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 - (NSArray *)unspentOuts {
     NSMutableArray *result = [NSMutableArray new];
     for (BTOutItem *outItem in [[BTTxProvider instance] getUnSpendOutCanSpendWithAddress:self.address]) {
-        [result addObject:txOutput(outItem.txHash, outItem.outSn)];
+        [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;
 }
@@ -186,7 +187,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
         for (NSData *hash in tx.inputHashes) {
             n = [tx.inputIndexes[i++] unsignedIntValue];
-            [spent addObject:txOutput(hash, n)];
+            [spent addObject:getOutPoint(hash, n)];
         }
 
         // check if any inputs are invalid or already spent
@@ -201,7 +202,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
         for (NSString *address in tx.outputAddresses) { // add outputs to UTXO set
             if ([self containsAddress:address]) {
-                [utxos addObject:txOutput(tx.txHash, n)];
+                [utxos addObject:getOutPoint(tx.txHash, n)];
                 balance += [tx.outputAmounts[n] unsignedLongLongValue];
             }
             n++;

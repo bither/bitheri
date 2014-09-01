@@ -44,7 +44,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 @property (nonatomic, strong) BTBloomFilter *bloomFilter;
 @property (nonatomic, assign) double filterFpRate;
 @property (nonatomic, assign) NSUInteger taskId, connectFailures;
-@property (nonatomic, assign) NSTimeInterval earliestKeyTime, lastRelayTime;
+//@property (nonatomic, assign) NSTimeInterval earliestKeyTime;
+@property (nonatomic, assign) NSTimeInterval lastRelayTime;
 @property (nonatomic, strong) NSMutableDictionary *txRelays;
 @property (nonatomic, strong) NSMutableDictionary *publishedTx, *publishedCallback;
 @property (nonatomic, strong) dispatch_queue_t q;
@@ -71,7 +72,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (instancetype)init {
     if (!(self = [super init])) return nil;
 
-    _earliestKeyTime = [[BTAddressManager sharedInstance] creationTime];
+//    _earliestKeyTime = [[BTAddressManager sharedInstance] creationTime];
     _connectedPeers = [NSMutableSet set];
     _abandonPeers = [NSMutableSet set];
     _tweak = (uint32_t) mrand48();
@@ -248,7 +249,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             if (p && !isInConnectedPeers) {
                 p.delegate = self;
                 p.delegateQueue = self.q;
-                p.earliestKeyTime = self.earliestKeyTime;
+//                p.earliestKeyTime = self.earliestKeyTime;
                 [self.connectedPeers addObject:p];
                 [p connectPeer];
             }
@@ -635,7 +636,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     if (peer == self.downloadPeer) self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
 
     // ignore block headers that are newer than one week before earliestKeyTime (headers have 0 totalTransactions)
-    if (block.totalTransactions == 0 && block.blockTime - NSTimeIntervalSince1970 + ONE_WEEK > self.earliestKeyTime) return;
+//    if (block.totalTransactions == 0 && block.blockTime - NSTimeIntervalSince1970 + ONE_WEEK > self.earliestKeyTime) return;
 
     // track the observed bloom filter false positive rate using a low pass filter to smooth out variance
     if (peer == self.downloadPeer && block.totalTransactions > 0) {
@@ -691,6 +692,49 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
     if (!self.synchronizing && ![self.blockChain.lastBlock.blockHash isEqualToData:oldLastHash]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
+        });
+    }
+}
+
+- (void)peer:(BTPeer *)peer relayedHeaders:(NSArray *)headers {
+    if (headers == nil || headers.count == 0)
+        return;
+
+    if (peer == self.downloadPeer) {
+        self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
+    }
+
+    int oldLastBlockNo = [BTBlockChain instance].lastBlock.height;
+    int relayedCount = [[BTBlockChain instance] relayedBlockHeadersForMainChain:headers];
+    if (relayedCount == headers.count) {
+        DDLogDebug(@"Peer %@ relay %d block headers OK, last block No.%d, total block:%d", peer.host, relayedCount
+        , [BTBlockChain instance].lastBlock.height, [[BTBlockChain instance] getBlockCount]);
+    } else {
+        [self peerAbandon:peer];
+        DDLogDebug(@"Peer %@ relay %d/%d block headers. drop this peer", peer.host, relayedCount
+        , headers.count);
+    }
+
+    if (self.lastBlockHeight == peer.versionLastBlock) {
+        [self syncStopped];
+        [peer sendGetAddrMessage];
+        self.syncStartHeight = 0;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (!self.doneSyncFromSPV) {
+                NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+                [userDefaults setBool:YES forKey:BITHERI_DONE_SYNC_FROM_SPV];
+                [userDefaults synchronize];
+                [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFromSPVFinishedNotification object:nil];
+            } else {
+                [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFinishedNotification object:nil];
+            }
+        });
+    }
+
+    if (oldLastBlockNo != [BTBlockChain instance].lastBlock.height) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
         });

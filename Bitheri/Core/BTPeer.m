@@ -847,31 +847,33 @@ services:(uint64_t)services
     // immediately, and switching to requesting blocks when we receive a header newer than earliestKeyTime
     NSTimeInterval t = [message UInt32AtOffset:l + 81*(count - 1) + 68] - NSTimeIntervalSince1970;
 
-    if (count >= 2000 || t + 7*24*60*60 >= self.earliestKeyTime - 2*60*60) {
+//    if (count >= 2000 || t + 7*24*60*60 >= self.earliestKeyTime - 2*60*60) {
         NSData *firstHash = [message subdataWithRange:NSMakeRange(l, 80)].SHA256_2,
                *lastHash = [message subdataWithRange:NSMakeRange(l + 81*(count - 1), 80)].SHA256_2;
 
-        if (t + 7*24*60*60 >= self.earliestKeyTime - 2*60*60) { // request blocks for the remainder of the chain
-            t = [message UInt32AtOffset:l + 81 + 68] - NSTimeIntervalSince1970;
-
-            for (off = l; t > 0 && t + 7*24*60*60 < self.earliestKeyTime;) {
-                off += 81;
-                t = [message UInt32AtOffset:off + 81 + 68] - NSTimeIntervalSince1970;
-            }
-
-            lastHash = [message subdataWithRange:NSMakeRange(off, 80)].SHA256_2;
-
-            DDLogDebug(@"%@:%u calling getblocks with locators: %@", self.host, self.port
-                    , @[[NSString hexWithHash:lastHash], [NSString hexWithHash:firstHash]]);
-            [self sendGetBlocksMessageWithLocators:@[lastHash, firstHash] andHashStop:nil];
-        }
-        else [self sendGetHeadersMessageWithLocators:@[lastHash, firstHash] andHashStop:nil];
-    }
+//        if (t + 7*24*60*60 >= self.earliestKeyTime - 2*60*60) { // request blocks for the remainder of the chain
+//            t = [message UInt32AtOffset:l + 81 + 68] - NSTimeIntervalSince1970;
+//
+//            for (off = l; t > 0 && t + 7*24*60*60 < self.earliestKeyTime;) {
+//                off += 81;
+//                t = [message UInt32AtOffset:off + 81 + 68] - NSTimeIntervalSince1970;
+//            }
+//
+//            lastHash = [message subdataWithRange:NSMakeRange(off, 80)].SHA256_2;
+//
+//            DDLogDebug(@"%@:%u calling getblocks with locators: %@", self.host, self.port
+//                    , @[[NSString hexWithHash:lastHash], [NSString hexWithHash:firstHash]]);
+//            [self sendGetBlocksMessageWithLocators:@[lastHash, firstHash] andHashStop:nil];
+//        }
+//        else
+            [self sendGetHeadersMessageWithLocators:@[lastHash, firstHash] andHashStop:nil];
+//    }
 
     DDLogDebug(@"%@:%u got %u headers", self.host, self.port, (int)count);
     
     // schedule this on the runloop to ensure the above get message is sent first for faster chain download
     CFRunLoopPerformBlock([self.runLoop getCFRunLoop], kCFRunLoopCommonModes, ^{
+        NSMutableArray *headers = [NSMutableArray new];
         for (NSUInteger off = l; off < l + 81*count; off += 81) {
             BTBlock *block = [BTBlock blockWithMessage:[message subdataWithRange:NSMakeRange(off, 81)]];
     
@@ -879,11 +881,12 @@ services:(uint64_t)services
                 [self error:@"invalid block header %@", [NSString hexWithHash:block.blockHash]];
                 return;
             }
-
-            dispatch_async(self.delegateQueue, ^{
-                if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
-            });
+            [headers addObject:block];
         }
+        dispatch_async(self.delegateQueue, ^{
+            if (_status == BTPeerStatusConnected)
+                [self.delegate peer:self relayedHeaders:headers];
+        });
     });
     CFRunLoopWakeUp([self.runLoop getCFRunLoop]);
 }

@@ -31,6 +31,7 @@
 
 // called when the peer relays either a merkleblock or a block header, headers will have 0 totalTransactions
 - (void)peer:(BTPeer *)peer relayedBlock:(BTBlock *)block;
+- (void)peer:(BTPeer *)peer relayedHeaders:(NSArray *)headers;
 
 - (BTTx *)peer:(BTPeer *)peer requestedTransaction:(NSData *)txHash;
 - (NSData *)peerBloomFilter:(BTPeer *)peer;
@@ -49,7 +50,7 @@ typedef enum {
 @property (nonatomic, strong) dispatch_queue_t delegateQueue; // default is main queue
 
 // set this to the timestamp when the wallet was created to improve initial sync time (interval since refrence date)
-@property (nonatomic, assign) NSTimeInterval earliestKeyTime;
+//@property (nonatomic, assign) NSTimeInterval earliestKeyTime;
 
 @property (nonatomic, readonly) BTPeerStatus status;
 @property (nonatomic, readonly) NSString *host;

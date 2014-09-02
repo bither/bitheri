@@ -43,7 +43,7 @@
 #define MAX_PEERS_COUNT       100
 #define NODE_NETWORK          1  // services value indicating a node offers full blocks, not just headers
 #define PROTOCOL_TIMEOUT      30.0
-#define MAX_CONNECT_FAILURES 20 // notify user of network problems after this many connect failures in a row
+#define MAX_CONNECT_FAILURE_COUNT 20 // notify user of network problems after this many connect failures in a row
 
 #define ONE_WEEK            604800
 
@@ -137,6 +137,8 @@
 #define BTPeerManagerSyncFinishedNotification @"BTPeerManagerSyncFinishedNotification"
 #define BTPeerManagerSyncFromSPVFinishedNotification @"BTPeerManagerSyncFromSPVFinishedNotification"
 #define BTPeerManagerSyncFailedNotification   @"BTPeerManagerSyncFailedNotification"
+#define BTPeerManagerPeerStateNotification @"BTPeerManagerPeerStateNotification"
+#define BTPeerManagerConnectedChangedNotification @"BTPeerManagerConnectedChangedNotification"
 
 typedef enum {
     txSend = 0,

@@ -32,8 +32,8 @@
 
 + (instancetype)sharedInstance;
 
-- (void)connect;
-- (void)disconnect;
+- (void)start;
+- (void)stop;
 - (void)publishTransaction:(BTTx *)transaction completion:(void (^)(NSError *error))completion;
 
 // transaction is considered verified when all peers have relayed it

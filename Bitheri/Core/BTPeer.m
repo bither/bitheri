@@ -1094,8 +1094,7 @@ services:(uint64_t)services
 // two peer objects are equal if they share an ip address and port number
 - (BOOL)isEqual:(id)object
 {
-    return self == object || ([object isKindOfClass:[BTPeer class]] && self.peerAddress == [(BTPeer *) object peerAddress] &&
-                              self.peerPort == [(BTPeer *) object peerPort]);
+    return self == object || ([object isKindOfClass:[BTPeer class]] && self.peerAddress == [(BTPeer *) object peerAddress]);
 }
 
 #pragma mark - NSStreamDelegate

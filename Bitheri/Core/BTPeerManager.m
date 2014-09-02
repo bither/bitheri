@@ -42,7 +42,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 @property (nonatomic, assign) uint32_t tweak, syncStartHeight, filterUpdateHeight;
 @property (nonatomic, strong) BTBloomFilter *bloomFilter;
 @property (nonatomic, assign) double filterFpRate;
-@property (nonatomic, assign) NSUInteger taskId, connectFailures;
+@property (nonatomic, assign) NSUInteger taskId, connectFailure;
 //@property (nonatomic, assign) NSTimeInterval earliestKeyTime;
 @property (nonatomic, assign) NSTimeInterval lastRelayTime;
 @property (nonatomic, strong) NSMutableDictionary *txRelays;
@@ -94,9 +94,9 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _activeObserver =
             [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillResignActiveNotification object:nil
                                                                queue:nil usingBlock:^(NSNotification *note) {
-                if (self.syncProgress >= 1.0)
-                    [self.connectedPeers makeObjectsPerformSelector:@selector(disconnectPeer)];
-            }];
+                        if (self.syncProgress >= 1.0)
+                            [self.connectedPeers makeObjectsPerformSelector:@selector(disconnectPeer)];
+                    }];
 
     return self;
 }
@@ -171,11 +171,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
     }
     return bestPeers;
-//    NSMutableArray *result = [NSMutableArray new];
-//    for (BTPeerItem *peerItem in bestPeers) {
-//        [result addObject:[[BTPeer alloc] initWithPeerItem:peerItem]];
-//    }
-//    return result;
 }
 
 - (NSArray *)getDnsPeers; {
@@ -189,7 +184,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
             // give dns peers a timestamp between 3 and 7 days ago
             [result addObject:[[BTPeer alloc] initWithAddress:addr port:BITCOIN_STANDARD_PORT
-                                                     timestamp:now - 24 * 60 * 60 * (3 + drand48() * 4) services:NODE_NETWORK]];
+                                                    timestamp:now - 24 * 60 * 60 * (3 + drand48() * 4) services:NODE_NETWORK]];
         }
     }
     return result;
@@ -206,13 +201,16 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     [[BTPeerProvider instance] cleanPeers];
 }
 
-- (void)connect {
-    DDLogDebug(@"peer manager begin connect");
-    // rebuild bloom filter
-    _bloomFilter = nil;
-    if (self.connectFailures >= MAX_CONNECT_FAILURES) self.connectFailures = 0; // this attempt is a manual retry
-    self.running = YES;
-    [self reconnect];
+- (void)start {
+    if (!self.running) {
+        DDLogDebug(@"peer manager start");
+        self.running = YES;
+        // rebuild bloom filter
+        _bloomFilter = nil;
+        if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
+            self.connectFailure = 0; // this attempt is a manual retry
+        [self reconnect];
+    }
 }
 
 - (void)reconnect {
@@ -236,26 +234,19 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         NSMutableOrderedSet *peers = [NSMutableOrderedSet orderedSetWithArray:[self bestPeers]];
 
-        while (peers.count > 0 && self.connectedPeers.count < [BTSettings instance].maxPeerConnections) {
-            // pick a random peer biased towards peers with more recent timestamps
-            BTPeer *p = peers.firstObject;//peers[(NSUInteger)(pow(lrand48() % peers.count, 2)/peers.count)];
-
-            BOOL isInConnectedPeers = NO;
-            for (BTPeer *connectedPeer in [NSSet setWithSet:self.connectedPeers]) {
-                isInConnectedPeers |= connectedPeer.peerAddress == p.peerAddress;
+        for (BTPeer *peer in peers) {
+            if (self.connectedPeers.count >= [BTSettings instance].maxPeerConnections) {
+                break;
             }
-
-            if (p && !isInConnectedPeers) {
-                p.delegate = self;
-                p.delegateQueue = self.q;
-//                p.earliestKeyTime = self.earliestKeyTime;
-                [self.connectedPeers addObject:p];
-                [p connectPeer];
+            if (![self.connectedPeers containsObject:peer]) {
+                [self.connectedPeers addObject:peer];
+                peer.delegate = self;
+                peer.delegateQueue = self.q;
+                [peer connectPeer];
             }
-
-            [peers removeObject:p];
         }
 
+        [self sendPeerCountChangeNotification:self.connectedPeers.count];
         if (self.connectedPeers.count == 0) {
             [self syncStopped];
             self.syncStartHeight = 0;
@@ -269,20 +260,22 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     });
 }
 
-- (void)disconnect {
-    self.running = NO;
-    self.connectFailures = MAX_CONNECT_FAILURES;
-    // clear bloom filter
-    _bloomFilter = nil;
-    _connected = NO;
-    NSSet *set = [NSSet setWithSet:self.connectedPeers];
-    for (BTPeer *peer in set) {
-        [peer disconnectPeer];
+- (void)stop {
+    if (self.running) {
+        DDLogDebug(@"peer manager stop");
+        self.running = NO;
+        self.connectFailure = MAX_CONNECT_FAILURE_COUNT;
+        // clear bloom filter
+        _bloomFilter = nil;
+        _connected = NO;
+        [self sendConnectedChangeNotification];
+        dispatch_async(self.q, ^{
+            NSSet *set = [NSSet setWithSet:self.connectedPeers];
+            for (BTPeer *peer in set) {
+                [peer disconnectPeer];
+            }
+        });
     }
-    DDLogDebug(@"peer manager disconnect");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        // todo: disconnect notification
-    });
 }
 
 - (void)syncTimeout {
@@ -445,7 +438,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
 
-    self.connectFailures = 0;
+    self.connectFailure = 0;
 //    peer.timestamp = [NSDate timeIntervalSinceReferenceDate]; // set last seen timestamp for peer
 
     if (peer.versionLastBlock + 10 < self.lastBlockHeight) { // drop peers that aren't synced yet, we can't help them
@@ -529,17 +522,17 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     if (error == nil) {
         [peer connectFail];
     } else if ([error.domain isEqual:@"bitheri"] && error.code == ERR_PEER_TIMEOUT_CODE) {
-        if(peer.peerConnectedCnt > MAX_FAILED_COUNT){
+        if (peer.peerConnectedCnt > MAX_FAILED_COUNT) {
             // Failed too many times, we don't want to play with it any more.
             [self peerAbandon:peer];
-        }else {
+        } else {
             [peer connectFail];
         }
 //        [self peerNetworkError:peer]; // if it's protocol error other than timeout, the peer isn't following the rules
     } else { // timeout or some non-protocol related network error
         [peer connectError];
 //        [self.peers removeObject:peer];
-        self.connectFailures++;
+        self.connectFailure++;
     }
 
     for (NSData *txHash in self.txRelays.allKeys) {
@@ -550,17 +543,17 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         _connected = NO;
         self.downloadPeer = nil;
         [self syncStopped];
-        if (self.connectFailures > MAX_CONNECT_FAILURES)
-            self.connectFailures = MAX_CONNECT_FAILURES;
+        if (self.connectFailure > MAX_CONNECT_FAILURE_COUNT)
+            self.connectFailure = MAX_CONNECT_FAILURE_COUNT;
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (!self.connected && self.connectFailures == MAX_CONNECT_FAILURES) {
+        if (!self.connected && self.connectFailure == MAX_CONNECT_FAILURE_COUNT) {
             self.syncStartHeight = 0;
             [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
                                                                 object:nil userInfo:error ? @{@"error" : error} : nil];
         }
-        else if (self.connectFailures < MAX_CONNECT_FAILURES)
+        else if (self.connectFailure < MAX_CONNECT_FAILURE_COUNT)
             [self reconnect]; // try connecting to another peer
     });
 }
@@ -660,7 +653,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             [self setBlockHeight:b.blockNo forTxHashes:b.txHashes];
         } else {
             DDLogDebug(@"%@:%d relayed block with invalid difficulty target %x, blockHash: %@", peer.host, peer.peerPort,
-                            b.blockBits, b.blockHash);
+                    b.blockBits, b.blockHash);
             [self peerAbandon:peer];
         }
     }];
@@ -708,12 +701,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     int oldLastBlockNo = [BTBlockChain instance].lastBlock.blockNo;
     int relayedCount = [[BTBlockChain instance] relayedBlockHeadersForMainChain:headers];
     if (relayedCount == headers.count) {
-        DDLogDebug(@"Peer %@ relay %d block headers OK, last block No.%d, total block:%d", peer.host, relayedCount
-        , [BTBlockChain instance].lastBlock.blockNo, [[BTBlockChain instance] getBlockCount]);
+        DDLogDebug(@"Peer %@ relay %d block headers OK, last block No.%d, total block:%d", peer.host, relayedCount, [BTBlockChain instance].lastBlock.blockNo, [[BTBlockChain instance] getBlockCount]);
     } else {
         [self peerAbandon:peer];
-        DDLogDebug(@"Peer %@ relay %d/%d block headers. drop this peer", peer.host, relayedCount
-        , headers.count);
+        DDLogDebug(@"Peer %@ relay %d/%d block headers. drop this peer", peer.host, relayedCount, headers.count);
     }
 
     if (self.lastBlockHeight == peer.versionLastBlock) {
@@ -783,6 +774,21 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     self.filterFpRate = self.bloomFilter.falsePositiveRate;
     self.filterUpdateHeight = self.lastBlockHeight;
     return self.bloomFilter.data;
+}
+
+- (void)sendPeerCountChangeNotification:(int) peerNum; {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerPeerStateNotification
+                                                            object:@{@"num_peers" : @(peerNum)}];
+    });
+}
+
+- (void)sendConnectedChangeNotification;{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerConnectedChangedNotification
+                                                            object:@{@"connected" : @(self.connected)}];
+        DDLogDebug(@"peer manager availability changed to %d", self.connected);
+    });
 }
 
 @end

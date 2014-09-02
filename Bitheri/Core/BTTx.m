@@ -121,6 +121,7 @@ sequence:(uint32_t)sequence
     in.inSignature = signature;
     in.inSequence = sequence;
     in.tx = self;
+    in.inSn = self.ins.count;
     [self.ins addObject:in];
 }
 
@@ -137,6 +138,7 @@ sequence:(uint32_t)sequence
     [scriptPubKey appendScriptPubKeyForAddress:address];
     out.outScript = scriptPubKey;
     out.tx = self;
+    out.outSn = self.outs.count;
     [self.outs addObject:out];
 }
 
@@ -148,6 +150,7 @@ sequence:(uint32_t)sequence
     out.outScript = script;
     out.outAddress = address ?: nil;
     out.tx = self;
+    out.outSn = self.outs.count;
     [self.outs addObject:out];
 }
 

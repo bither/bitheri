@@ -300,7 +300,7 @@ static BTBlockChain *blockChain;
         return 0;
     for (int i = 0; i < blocks.count; i++) {
         BTBlock *block = blocks[i];
-        if (![block.blockHash isEqualToData:prev.blockHash]) {
+        if (![block.blockPrev isEqualToData:prev.blockHash]) {
             BTBlock *alreadyIn = [self getBlock:block.blockHash];
             if (alreadyIn == nil) {
                 continue;

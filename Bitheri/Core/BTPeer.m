@@ -24,10 +24,11 @@
 #import "BTSettings.h"
 #import "BTPeerProvider.h"
 #import "BTTxProvider.h"
-#import "BTOutItem.h"
+//#import "BTOutItem.h"
 #import "BTScript.h"
 #import "BTBlockChain.h"
 #import "BTPeerManager.h"
+#import "BTOut.h"
 
 //#define USERAGENT [NSString stringWithFormat:@"/bitheri:%@/", NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]]
 //
@@ -690,11 +691,11 @@ services:(uint64_t)services
         }
     } else {
         // check dependency
-        NSDictionary *dependency = [[BTTxProvider instance] getTxDependencies:[tx formatToTxItem]];
+        NSDictionary *dependency = [[BTTxProvider instance] getTxDependencies:tx];
         NSMutableArray *needToRequest = [NSMutableArray new];
         BOOL valid = YES;
         for (NSUInteger i = 0; i < tx.inputIndexes.count; i++) {
-            BTTxItem *prevTx = dependency[tx.inputHashes[i]];
+            BTTx *prevTx = dependency[tx.inputHashes[i]];
             if (prevTx == nil) {
                 [needToRequest addObject:tx.inputHashes[i]];
             } else {
@@ -702,7 +703,7 @@ services:(uint64_t)services
                     valid = NO;
                     break;
                 }
-                NSData *outScript = ((BTOutItem *)prevTx.outs[[tx.inputIndexes[i] unsignedIntegerValue]]).outScript;
+                NSData *outScript = ((BTOut *)prevTx.outs[[tx.inputIndexes[i] unsignedIntegerValue]]).outScript;
                 BTScript *pubKeyScript = [[BTScript alloc] initWithProgram:outScript];
                 BTScript *script = [[BTScript alloc] initWithProgram:tx.inputSignatures[i]];
                 script.tx = tx;

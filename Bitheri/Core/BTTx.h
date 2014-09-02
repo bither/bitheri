@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTTxItem.h"
+//#import "BTTxItem.h"
 
 #import "NSString+Base58.h"
 #import "NSMutableData+Bitcoin.h"
@@ -41,8 +41,16 @@
 
 @interface BTTx : NSObject
 
-@property (nonatomic, strong, readonly) NSMutableArray *ins;
-@property (nonatomic, strong, readonly) NSMutableArray *outs;
+@property (nonatomic, assign) uint32_t blockNo;
+@property (nonatomic, copy) NSData *txHash;
+@property (nonatomic, assign) uint32_t txVer;
+@property (nonatomic, assign) uint32_t txLockTime;
+@property (nonatomic, assign) uint32_t txTime;
+@property (nonatomic, assign) int source;
+@property (nonatomic, assign) int sawByPeerCnt;
+
+@property (nonatomic, strong) NSMutableArray *ins;
+@property (nonatomic, strong) NSMutableArray *outs;
 
 @property (nonatomic, readonly) NSArray *inputAddresses;
 
@@ -56,17 +64,14 @@
 @property (nonatomic, readonly) NSArray *outputScripts;
 //@property (nonatomic, readonly) NSArray *inValues;
 
-@property (nonatomic, assign) uint32_t version;
-@property (nonatomic, copy) NSData *txHash;
-@property (nonatomic, assign) uint32_t lockTime;
-@property (nonatomic, assign) uint32_t blockHeight;
+
+
+
 @property (nonatomic, readonly) size_t size;
 @property (nonatomic, readonly) uint64_t standardFee;
 @property (nonatomic, readonly) BOOL isSigned; // checks if all signatures exist, but does not verify them
 @property (nonatomic, readonly, getter = toData) NSData *data;
-@property (nonatomic, assign) int source;
-@property (nonatomic, assign) int sawByPeerCnt;
-@property (nonatomic, assign) uint txTime;
+
 
 @property (nonatomic, readonly) uint confirmationCnt;
 
@@ -99,10 +104,10 @@ sequence:(uint32_t)sequence;
 
 - (void)sawByPeer;
 
-- (BTTxItem *)formatToTxItem;
+//- (BTTxItem *)formatToTxItem;
 //- (BTTxItem *)formatToTxItemWithoutDetail;
 
-+ (instancetype)txWithTxItem:(BTTxItem *)txItem;
+//+ (instancetype)txWithTxItem:(BTTxItem *)txItem;
 //- (instancetype)initWithTxItem:(BTTxItem *)txItem;
 
 // returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)

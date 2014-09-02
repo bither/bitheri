@@ -19,14 +19,16 @@
 #import <XCTest/XCTest.h>
 //#import "BTDatabaseManager.h"
 #import "BTTxProvider.h"
-#import "BTInItem.h"
-#import "BTOutItem.h"
+//#import "BTInItem.h"
+//#import "BTOutItem.h"
 #import "NSString+Base58.h"
 #import "NSData+Hash.h"
 #import "BTAddress.h"
 #import "BTBlockChain.h"
 #import "BTBlockTestData.h"
 #import "BTTestHelper.h"
+#import "BTIn.h"
+#import "BTOut.h"
 
 @interface BTSendTest : XCTestCase
 
@@ -250,13 +252,13 @@
     return YES;
 }
 
-- (BTTxItem *)formatTx:(NSArray *)array;{
-    BTTxItem *txItem = [BTTxItem new];
+- (BTTx *)formatTx:(NSArray *)array;{
+    BTTx *txItem = [BTTx new];
     txItem.txHash = [[array[0] hexToData] reverse];
     txItem.blockNo = [array[1] unsignedIntValue];
     txItem.ins = [NSMutableArray new];
     for (NSArray *sub in array[2]) {
-        BTInItem *inItem = [BTInItem new];
+        BTIn *inItem = [BTIn new];
         inItem.txHash = txItem.txHash;
         inItem.inSn = [sub[0] unsignedIntValue];
         inItem.prevTxHash = [[sub[1] hexToData] reverse];
@@ -266,7 +268,7 @@
     }
     txItem.outs = [NSMutableArray new];
     for (NSArray *sub in array[3]) {
-        BTOutItem *outItem = [BTOutItem new];
+        BTOut *outItem = [BTOut new];
         outItem.txHash = txItem.txHash;
         outItem.outSn = [sub[0] unsignedIntValue];
         outItem.outScript = [[sub[1] hexToData] reverse];

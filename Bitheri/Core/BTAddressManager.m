@@ -19,8 +19,9 @@
 #import "BTAddressManager.h"
 #import "BTUtils.h"
 #import "BTTxProvider.h"
-#import "BTOutItem.h"
+//#import "BTOutItem.h"
 #import "BTIn.h"
+#import "BTOut.h"
 
 //static NSData *txOutput(NSData *txHash, uint32_t n) {
 //    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
@@ -169,7 +170,7 @@
 
 - (BOOL)isAddress:(NSString *)address containsTransaction:(BTTx *)transaction {
     if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:address]) return YES;
-    return [[BTTxProvider instance] isAddress:address containsTx:[transaction formatToTxItem]];
+    return [[BTTxProvider instance] isAddress:address containsTx:transaction];
 }
 
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
@@ -182,7 +183,7 @@
         BOOL isRel = [self isAddress:addr.address containsTransaction:tx];
         if (!needAdd && isRel) {
             needAdd = YES;
-            [[BTTxProvider instance] add:[tx formatToTxItem]];
+            [[BTTxProvider instance] add:tx];
             DDLogDebug(@"register tx %@", [NSString hexWithHash:tx.txHash]);
         }
         if (isRel) {
@@ -194,7 +195,7 @@
 
 - (NSArray *)outs; {
     NSMutableArray *result = [NSMutableArray new];
-    for (BTOutItem *outItem in [[BTTxProvider instance] getOuts]) {
+    for (BTOut *outItem in [[BTTxProvider instance] getOuts]) {
         [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;

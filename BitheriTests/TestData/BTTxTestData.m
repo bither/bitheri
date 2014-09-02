@@ -19,8 +19,8 @@
 #import "BTTxTestData.h"
 #import "NSString+Base58.h"
 #import "NSData+Hash.h"
-#import "BTInItem.h"
-#import "BTOutItem.h"
+#import "BTIn.h"
+#import "BTOut.h"
 
 @implementation BTTxTestData
 
@@ -1594,13 +1594,13 @@
             "0100000001aca65b5136b23c9fff015ad460a83a2f5837575392dc3ecabcb57c41e10e0fa1010000006a47304402202a6686876d07c13e9189b035e54ca91d56b89a67d86dcc012183d5b2d1e7244b02204f8ad90dd70c0f797877ad69fc543d6459be99dac9d325f3858486bf0975dd9a0121034285edc746e4c8b4e9f022ee0a561f0b9d5a29e1e44e87e77b2156ecf2c45265ffffffff0210270000000000001976a914773c8c5f0d5904d8755dfdd3207e3ed692966e7e88ac74400000000000001976a91479a7bf0bba8359561d4dab457042d7b632d5e64188ac00000000";
 }
 
-+ (BTTxItem *)formatTx:(NSArray *)array;{
-    BTTxItem *txItem = [BTTxItem new];
++ (BTTx *)formatTx:(NSArray *)array;{
+    BTTx *txItem = [BTTx new];
     txItem.txHash = [[array[0] hexToData] reverse];
     txItem.blockNo = [array[1] unsignedIntValue];
     txItem.ins = [NSMutableArray new];
     for (NSArray *sub in array[2]) {
-        BTInItem *inItem = [BTInItem new];
+        BTIn *inItem = [BTIn new];
         inItem.txHash = txItem.txHash;
         inItem.inSn = [sub[0] unsignedIntValue];
         inItem.prevTxHash = [[sub[1] hexToData] reverse];
@@ -1611,7 +1611,7 @@
     }
     txItem.outs = [NSMutableArray new];
     for (NSArray *sub in array[3]) {
-        BTOutItem *outItem = [BTOutItem new];
+        BTOut *outItem = [BTOut new];
         outItem.txHash = txItem.txHash;
         outItem.outSn = [sub[0] unsignedIntValue];
         outItem.outScript = [[sub[1] hexToData] reverse];
@@ -1625,7 +1625,7 @@
 }
 
 
-+ (BTTxItem *)getTx:(int) index;{
++ (BTTx *)getTx:(int) index;{
     return [BTTxTestData formatTx:[BTTxTestData txs][(NSUInteger) index]];
 }
 

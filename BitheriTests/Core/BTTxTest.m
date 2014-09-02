@@ -60,7 +60,7 @@
         XCTAssert([[[tx2 toData] SHA256_2] isEqualToData:tx2.txHash]);
         XCTAssert([tx1 isEqual:tx2]);
 
-        tx1.version += 1;
+        tx1.txVer += 1;
         XCTAssert(![[[tx1 toData] SHA256_2] isEqualToData:tx1.txHash]);
 //    XCTAssert(tx1.isSigned);
     }

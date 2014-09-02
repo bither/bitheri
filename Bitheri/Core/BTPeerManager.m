@@ -87,7 +87,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTTxProvider instance] getPublishedTxs]];
 
     for (BTTx *tx in txs) {
-        if (tx.blockHeight != TX_UNCONFIRMED) continue;
+        if (tx.blockNo != TX_UNCONFIRMED) continue;
         self.publishedTx[tx.txHash] = tx; // add unconfirmed tx to mem pool
     }
 
@@ -429,7 +429,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (void)removeUnrelayedTransactions {
     for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]) {
         for (BTTx *tx in addr.txs) {
-            if (tx.blockHeight != TX_UNCONFIRMED) break;
+            if (tx.blockNo != TX_UNCONFIRMED) break;
             if ([self.txRelays[tx.txHash] count] == 0 && tx.source == 0) [addr removeTx:tx.txHash];
         }
     }

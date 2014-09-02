@@ -18,23 +18,23 @@
 
 #import <Foundation/Foundation.h>
 #import "BTDatabaseManager.h"
-#import "BTTxItem.h"
+#import "BTTx.h"
 
 @interface BTTxProvider : NSObject
 
 + (instancetype)instance;
 
-- (void)add:(BTTxItem *)txItem;
+- (void)add:(BTTx *)txItem;
 
 - (void)addTxs:(NSArray *)txs;
 
 - (BOOL)isExist:(NSData *)txHash;
 
-- (BTTxItem *)getTxDetailByTxHash:(NSData *) txHash;
+- (BTTx *)getTxDetailByTxHash:(NSData *) txHash;
 
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address;
 
-- (bool)isAddress:(NSString *) address containsTx:(BTTxItem *) txItem;
+- (bool)isAddress:(NSString *) address containsTx:(BTTx *) txItem;
 
 - (void)confirmTx:(NSArray *)txHashes withBlockNo:(int) blockNo;
 
@@ -57,7 +57,7 @@
 
 - (NSArray *)txInValues:(NSData *)txHash;
 
-- (NSDictionary *)getTxDependencies:(BTTxItem *)txItem;
+- (NSDictionary *)getTxDependencies:(BTTx *)txItem;
 
 - (NSArray *)getPublishedTxs;
 

@@ -18,16 +18,17 @@
 
 #import "BTAddress.h"
 #import "BTTxProvider.h"
-#import "BTOutItem.h"
+//#import "BTOutItem.h"
 #import "BTUtils.h"
 #import "BTBlockChain.h"
 #import "BTTxBuilder.h"
 #import "BTIn.h"
+#import "BTOut.h"
 
 static double saveTime;
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
-    if ([obj1 blockHeight] > [obj2 blockHeight]) return NSOrderedAscending;
-    if ([obj1 blockHeight] < [obj2 blockHeight]) return NSOrderedDescending;
+    if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
+    if ([obj1 blockNo] < [obj2 blockNo]) return NSOrderedDescending;
     if ([[obj1 inputHashes] containsObject:[obj2 txHash]]) return NSOrderedDescending;
     if ([[obj2 inputHashes] containsObject:[obj1 txHash]]) return NSOrderedAscending;
     if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
@@ -95,18 +96,14 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (NSArray *)unspentOuts {
     NSMutableArray *result = [NSMutableArray new];
-    for (BTOutItem *outItem in [[BTTxProvider instance] getUnSpendOutCanSpendWithAddress:self.address]) {
+    for (BTOut *outItem in [[BTTxProvider instance] getUnSpendOutCanSpendWithAddress:self.address]) {
         [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;
 }
 
 - (NSArray *)txs {
-    NSMutableArray *txs = [NSMutableArray new];
-    for (BTTxItem *txItem in [[BTTxProvider instance] getTxAndDetailByAddress:self.address]) {
-        BTTx *tx = [BTTx txWithTxItem:txItem];
-        [txs addObject:tx];
-    }
+    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTTxProvider instance] getTxAndDetailByAddress:self.address]];
     [txs sortUsingComparator:txComparator];
     return txs;
 }
@@ -118,7 +115,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (BOOL)containsTransaction:(BTTx *)transaction {
     if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:self.address]) return YES;
-    return [[BTTxProvider instance] isAddress:self.address containsTx:[transaction formatToTxItem]];
+    return [[BTTxProvider instance] isAddress:self.address containsTx:transaction];
 }
 
 - (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
@@ -137,7 +134,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (BOOL)initTxs:(NSArray *)txs {
     NSMutableArray *txItemList = [NSMutableArray new];
     for (BTTx *tx  in txs) {
-        [txItemList addObject:[tx formatToTxItem]];
+        [txItemList addObject:tx];
     }
     [[BTTxProvider instance] addTxs:txItemList];
 
@@ -156,9 +153,9 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (void)setBlockHeight:(uint)height forTxHashes:(NSArray *)txHashes {
     NSMutableArray *needUpdateTxHash = [NSMutableArray new];
     for (NSData *hash in txHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
-        if (!tx || tx.blockHeight == height) continue;
-        tx.blockHeight = height;
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
+        if (!tx || tx.blockNo == height) continue;
+        tx.blockNo = height;
         [needUpdateTxHash addObject:tx.txHash];
     }
 
@@ -191,7 +188,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         }
 
         // check if any inputs are invalid or already spent
-        if (tx.blockHeight == TX_UNCONFIRMED &&
+        if (tx.blockNo == TX_UNCONFIRMED &&
                 ([spent intersectsSet:spentOutputs] || [[NSSet setWithArray:tx.inputHashes] intersectsSet:invalidTx])) {
             [invalidTx addObject:tx.txHash];
             continue;
@@ -213,7 +210,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         [spent intersectSet:spentOutputs];
 
         for (NSData *o in spent) { // remove any spent outputs from UTXO set
-            BTTx *transaction = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:[o hashAtOffset:0]]];
+            BTTx *transaction = [[BTTxProvider instance] getTxDetailByTxHash:[o hashAtOffset:0]];
             n = [o UInt32AtOffset:CC_SHA256_DIGEST_LENGTH];
 
             [utxos removeObject:o];
@@ -267,7 +264,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSUInteger i = 0;
 
     for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
 
         if (n < tx.outputAddresses.count && [self containsAddress:tx.outputAddresses[n]]) {
@@ -284,7 +281,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSUInteger i = 0;
 
     for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
 
         if (n >= tx.outputAmounts.count) return UINT64_MAX;
@@ -319,12 +316,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSUInteger i = 0;
 
     for (NSData *hash in transaction.inputHashes) { // get the amounts and block heights of all the transaction inputs
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
 
         if (n >= tx.outputAmounts.count) break;
         [amounts addObject:tx.outputAmounts[n]];
-        [heights addObject:@(tx.blockHeight)];
+        [heights addObject:@(tx.blockNo)];
     };
 
     return [transaction blockHeightUntilFreeForAmounts:amounts withBlockHeights:heights];
@@ -396,13 +393,8 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 //}
 
 - (NSArray *)getRecentlyTxsWithConfirmationCntLessThan:(int)confirmationCnt andLimit:(int)limit; {
-    NSMutableArray *txs = [NSMutableArray new];
     int blockNo = [BTBlockChain instance].lastBlock.blockNo - confirmationCnt + 1;
-    for (BTTxItem *txItem in [[BTTxProvider instance] getRecentlyTxsByAddress:self.address
-                                                        andGreaterThanBlockNo:blockNo andLimit:limit]) {
-        [txs addObject:[BTTx txWithTxItem:txItem]];
-    }
-    return txs;
+    return [[BTTxProvider instance] getRecentlyTxsByAddress:self.address andGreaterThanBlockNo:blockNo andLimit:limit];
 }
 
 //- (uint64_t)getAmount:(NSArray *)outs; {

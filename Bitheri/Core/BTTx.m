@@ -19,8 +19,8 @@
 #import "BTTx.h"
 #import "BTKey.h"
 
-#import "BTInItem.h"
-#import "BTOutItem.h"
+//#import "BTInItem.h"
+//#import "BTOutItem.h"
 #import "BTSettings.h"
 #import "BTTxProvider.h"
 #import "BTBlockChain.h"
@@ -55,7 +55,7 @@
 {
     if (! (self = [super init])) return nil;
     
-    _version = TX_VERSION;
+    _txVer = TX_VERSION;
     _ins = [NSMutableArray new];
     _outs = [NSMutableArray new];
 
@@ -67,8 +67,8 @@
 //    _outScripts = [NSMutableArray array];
 //    _signatures = [NSMutableArray array];
 //    _sequences = [NSMutableArray array];
-    _lockTime = TX_LOCKTIME;
-    _blockHeight = TX_UNCONFIRMED;
+    _txLockTime = TX_LOCKTIME;
+    _blockNo = TX_UNCONFIRMED;
     _txTime = (uint) [[NSDate date] timeIntervalSince1970];
 
     return self;
@@ -87,7 +87,7 @@
     NSData *d = nil;
 
     _txHash = message.SHA256_2;
-    _version = [message UInt32AtOffset:off]; // tx version
+    _txVer = [message UInt32AtOffset:off]; // tx version
     off += sizeof(uint32_t);
     count = [message varIntAtOffset:off length:&l]; // input count
     if (count == 0) return nil; // at least one input is required
@@ -134,7 +134,7 @@
         [self.outs addObject:out];
     }
     
-    _lockTime = [message UInt32AtOffset:off]; // tx locktime
+    _txLockTime = [message UInt32AtOffset:off]; // tx locktime
     
     return self;
 }
@@ -441,7 +441,7 @@ sequence:(uint32_t)sequence
 {
     NSMutableData *d = [NSMutableData dataWithCapacity:self.size];
 
-    [d appendUInt32:self.version];
+    [d appendUInt32:self.txVer];
     [d appendVarInt:self.ins.count];
 
     NSUInteger i = 0;
@@ -471,8 +471,8 @@ sequence:(uint32_t)sequence
         [d appendVarInt:out.outScript.length];
         [d appendData:out.outScript];
     }
-    
-    [d appendUInt32:self.lockTime];
+
+    [d appendUInt32:self.txLockTime];
     
     if (subscriptIndex != NSNotFound) {
         [d appendUInt32:SIG_HASH_ALL];
@@ -485,7 +485,7 @@ sequence:(uint32_t)sequence
 {
     NSMutableData *d = [NSMutableData dataWithCapacity:self.size];
 
-    [d appendUInt32:self.version];
+    [d appendUInt32:self.txVer];
     [d appendVarInt:self.ins.count];
 
     NSUInteger i = 0;
@@ -516,7 +516,7 @@ sequence:(uint32_t)sequence
         [d appendData:out.outScript];
     }
 
-    [d appendUInt32:self.lockTime];
+    [d appendUInt32:self.txLockTime];
 
     if (subscriptIndex != NSNotFound) {
         [d appendUInt32:SIG_HASH_ALL];
@@ -597,7 +597,7 @@ sequence:(uint32_t)sequence
     NSUInteger i = 0;
 
     for (NSData *hash in self.inputHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
 
         if (n >= tx.outputAmounts.count) return UINT64_MAX;
@@ -620,12 +620,12 @@ sequence:(uint32_t)sequence
     NSUInteger i = 0;
 
     for (NSData *hash in self.inputHashes) { // get the amounts and block heights of all the transaction inputs
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
 
         if (n >= tx.outputAmounts.count) break;
         [amounts addObject:tx.outputAmounts[n]];
-        [heights addObject:@(tx.blockHeight)];
+        [heights addObject:@(tx.blockNo)];
     };
 
     return [self blockHeightUntilFreeForAmounts:amounts withBlockHeights:heights];
@@ -651,7 +651,7 @@ sequence:(uint32_t)sequence
     NSUInteger i = 0;
 
     for (NSData *hash in self.inputHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
 
         if (n < tx.outputAddresses.count && [addr.address isEqualToString:tx.outputAddresses[n]]) {
@@ -688,7 +688,7 @@ sequence:(uint32_t)sequence
 
     i = 0;
     for (NSData *hash in self.inputHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
 
         if (n < tx.outputAddresses.count && [addr.address isEqualToString:tx.outputAddresses[n]]) {
@@ -699,10 +699,10 @@ sequence:(uint32_t)sequence
 }
 
 - (uint)confirmationCnt;{
-    if (self.blockHeight == TX_UNCONFIRMED){
+    if (self.blockNo == TX_UNCONFIRMED){
         return 0;
     } else {
-        return [[BTBlockChain instance] lastBlock].blockNo - self.blockHeight + 1;
+        return [[BTBlockChain instance] lastBlock].blockNo - self.blockNo + 1;
     }
 }
 
@@ -733,33 +733,67 @@ sequence:(uint32_t)sequence
     return *(const NSUInteger *)self.txHash.bytes;
 }
 
-- (BOOL)isEqual:(id)object
-{
-    return self == object || ([object isKindOfClass:[BTTx class]] && [[object txHash] isEqual:self.txHash]);
+- (BOOL)isEqual:(id)object {
+    if (object == self) {
+        return YES;
+    }
+    if (![object isKindOfClass:[BTTx class]]) {
+        DDLogVerbose(@"object is not instance of BTTxItem");
+        return NO;
+    }
+    BTTx *item = (BTTx *) object;
+    if ((self.blockNo == item.blockNo) && [self.txHash isEqualToData:item.txHash] && self.source == item.source
+            && self.sawByPeerCnt == item.sawByPeerCnt && self.txTime == item.txTime && self.txVer == item.txVer
+            && self.txLockTime == item.txLockTime) {
+        if (self.ins.count != item.ins.count){
+            DDLogVerbose(@"ins count is not match");
+            return NO;
+        }
+        if (self.outs.count != item.outs.count){
+            DDLogVerbose(@"outs count is not match");
+            return NO;
+        }
+        for (NSUInteger i = 0; i < self.ins.count; i++) {
+            if (![self.ins[i] isEqual:item.ins[i]]){
+                DDLogVerbose(@"ins[%lu] is not match", i);
+                return NO;
+            }
+        }
+        for (NSUInteger i = 0; i < self.outs.count; i++) {
+            if (![self.outs[i] isEqual:item.outs[i]]){
+                DDLogVerbose(@"outs[%lu] is not match", (unsigned long)i);
+                return NO;
+            }
+        }
+        return YES;
+    } else {
+        DDLogVerbose(@"tx base info is not match");
+        return NO;
+    }
 }
 
-- (BTTxItem *)formatToTxItem
-{
-    BTTxItem *txItem = [BTTxItem new];
-    txItem.txHash = self.txHash;
-    txItem.blockNo = self.blockHeight;
-    txItem.source = self.source;
-    txItem.sawByPeerCnt = self.sawByPeerCnt;
-    txItem.txTime = self.txTime;
-    txItem.txVer = self.version;
-    txItem.txLockTime = self.lockTime;
-    txItem.ins = [NSMutableArray new];
-    txItem.outs = [NSMutableArray new];
-    uint idx = 0;
-    while (idx < self.inputHashes.count){
-        [txItem.ins addObject:[self setInItemFromTx:self inSn:idx++]];
-    }
-    idx = 0;
-    while (idx < self.outputAddresses.count){
-        [txItem.outs addObject:[self setOutItemFromTx:self outSn:idx++]];
-    }
-    return txItem;
-}
+//- (BTTxItem *)formatToTxItem
+//{
+//    BTTxItem *txItem = [BTTxItem new];
+//    txItem.txHash = self.txHash;
+//    txItem.blockNo = self.blockNo;
+//    txItem.source = self.source;
+//    txItem.sawByPeerCnt = self.sawByPeerCnt;
+//    txItem.txTime = self.txTime;
+//    txItem.txVer = self.txVer;
+//    txItem.txLockTime = self.txLockTime;
+//    txItem.ins = [NSMutableArray new];
+//    txItem.outs = [NSMutableArray new];
+//    uint idx = 0;
+//    while (idx < self.inputHashes.count){
+//        [txItem.ins addObject:[self setInItemFromTx:self inSn:idx++]];
+//    }
+//    idx = 0;
+//    while (idx < self.outputAddresses.count){
+//        [txItem.outs addObject:[self setOutItemFromTx:self outSn:idx++]];
+//    }
+//    return txItem;
+//}
 
 //- (BTTxItem *)formatToTxItemWithoutDetail;{
 //    BTTxItem *txItem = [BTTxItem new];
@@ -772,55 +806,55 @@ sequence:(uint32_t)sequence
 //    return txItem;
 //}
 
-- (BTOutItem *)setOutItemFromTx:(BTTx *)tx outSn:(uint)outSn
-{
-    BTOutItem *outItem = [BTOutItem new];
-    outItem.txHash = tx.txHash;
-    outItem.outSn = outSn;
-    outItem.outAddress = tx.outputAddresses[outSn] == [NSNull null] ? nil : tx.outputAddresses[outSn];
-    outItem.outScript = tx.outputScripts[outSn];
-    outItem.outValue = [tx.outputAmounts[outSn] unsignedLongValue];
-    return outItem;
-}
+//- (BTOutItem *)setOutItemFromTx:(BTTx *)tx outSn:(uint)outSn
+//{
+//    BTOutItem *outItem = [BTOutItem new];
+//    outItem.txHash = tx.txHash;
+//    outItem.outSn = outSn;
+//    outItem.outAddress = tx.outputAddresses[outSn] == [NSNull null] ? nil : tx.outputAddresses[outSn];
+//    outItem.outScript = tx.outputScripts[outSn];
+//    outItem.outValue = [tx.outputAmounts[outSn] unsignedLongValue];
+//    return outItem;
+//}
 
-- (BTInItem *)setInItemFromTx:(BTTx *)tx inSn:(uint)inSn
-{
-    BTInItem *inItem = [BTInItem new];
-    inItem.txHash = tx.txHash;
-    inItem.inSn = inSn;
-//    inItem.inScript = tx.inputScripts[in_sn];
-    inItem.prevTxHash = tx.inputHashes[inSn];
-    inItem.prevOutSn = [tx.inputIndexes[inSn] unsignedIntValue];
-    inItem.inSignature = tx.inputSignatures[inSn];
-    inItem.inSequence = [tx.inputSequences[inSn] unsignedIntValue];
-    return inItem;
-}
+//- (BTInItem *)setInItemFromTx:(BTTx *)tx inSn:(uint)inSn
+//{
+//    BTInItem *inItem = [BTInItem new];
+//    inItem.txHash = tx.txHash;
+//    inItem.inSn = inSn;
+////    inItem.inScript = tx.inputScripts[in_sn];
+//    inItem.prevTxHash = tx.inputHashes[inSn];
+//    inItem.prevOutSn = [tx.inputIndexes[inSn] unsignedIntValue];
+//    inItem.inSignature = tx.inputSignatures[inSn];
+//    inItem.inSequence = [tx.inputSequences[inSn] unsignedIntValue];
+//    return inItem;
+//}
 
-+ (instancetype)txWithTxItem:(BTTxItem *)txItem;{
-    if (txItem == nil) return nil;
-    return [[self alloc] initWithTxItem:txItem];
-}
+//+ (instancetype)txWithTxItem:(BTTxItem *)txItem;{
+//    if (txItem == nil) return nil;
+//    return [[self alloc] initWithTxItem:txItem];
+//}
 
-- (instancetype)initWithTxItem:(BTTxItem *)txItem;{
-    if (! (self = [self init])) return nil;
-    _txHash = txItem.txHash;
-    _blockHeight = txItem.blockNo;
-    _source = txItem.source;
-    _sawByPeerCnt = txItem.sawByPeerCnt;
-    _txTime = txItem.txTime;
-    _version = txItem.txVer;
-    _lockTime = txItem.txLockTime;
-
-    for (BTInItem *inItem in txItem.ins) {
-        [self addInputHash:inItem.prevTxHash index:inItem.prevOutSn script:nil signature:inItem.inSignature
-                  sequence:inItem.inSequence];
-    }
-
-    for (BTOutItem *outItem in txItem.outs){
-        [self addOutputScript:outItem.outScript amount:outItem.outValue];
-    }
-    return self;
-}
+//- (instancetype)initWithTxItem:(BTTxItem *)txItem;{
+//    if (! (self = [self init])) return nil;
+//    _txHash = txItem.txHash;
+//    _blockNo = txItem.blockNo;
+//    _source = txItem.source;
+//    _sawByPeerCnt = txItem.sawByPeerCnt;
+//    _txTime = txItem.txTime;
+//    _txVer = txItem.txVer;
+//    _txLockTime = txItem.txLockTime;
+//
+//    for (BTInItem *inItem in txItem.ins) {
+//        [self addInputHash:inItem.prevTxHash index:inItem.prevOutSn script:nil signature:inItem.inSignature
+//                  sequence:inItem.inSequence];
+//    }
+//
+//    for (BTOutItem *outItem in txItem.outs){
+//        [self addOutputScript:outItem.outScript amount:outItem.outValue];
+//    }
+//    return self;
+//}
 
 - (NSData *) hashForSignature:(NSUInteger) inputIndex connectedScript:(NSData *) connectedScript sigHashType:(uint8_t) sigHashType; {
     NSMutableArray *inputHashes = [NSMutableArray arrayWithArray:self.inputHashes];
@@ -882,7 +916,7 @@ sequence:(uint32_t)sequence
 
     NSMutableData *d = [NSMutableData secureData];
 
-    [d appendUInt32:self.version];
+    [d appendUInt32:self.txVer];
     [d appendVarInt:inputHashes.count];
 
     for (NSUInteger i = 0; i < inputHashes.count; i++) {
@@ -901,7 +935,7 @@ sequence:(uint32_t)sequence
         [d appendData:outputScripts[i]];
     }
 
-    [d appendUInt32:self.lockTime];
+    [d appendUInt32:self.txLockTime];
 
     if (inputIndex != NSNotFound) {
         [d appendUInt32:sigHashType];

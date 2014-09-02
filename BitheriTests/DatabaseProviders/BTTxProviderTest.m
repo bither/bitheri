@@ -19,7 +19,7 @@
 #import <XCTest/XCTest.h>
 #import "BTTxProvider.h"
 #import "BTTxTestData.h"
-#import "BTOutItem.h"
+#import "BTOut.h"
 #import "BTSettings.h"
 #import "BTTestHelper.h"
 #import "BTAddressTestData.h"
@@ -79,7 +79,7 @@
     for (int i = 0; i < txCount; i++) {
         BTTxItem *item = [BTTxTestData getTx:i];
         if (i != txCount - 1) {
-            for (BTOutItem *outItem in item.outs) {
+            for (BTOut *outItem in item.outs) {
                 if (outItem.outAddress == bitheriAddress) {
                     outItem.outStatus = spent;
                 }

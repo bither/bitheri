@@ -208,7 +208,6 @@ static BTPeerProvider *provider;
 }
 
 -(BTPeer *)format:(FMResultSet * )rs{
-    BTPeer *peerItem =[[BTPeer alloc] init];
     uint32_t peerAddress = (uint32_t)[rs intForColumn:@"peer_address"];
     uint16_t peerPort = (uint16_t)[rs intForColumn:@"peer_port"];
     uint64_t peerServices = [rs unsignedLongLongIntForColumn:@"peer_services"];
@@ -217,7 +216,7 @@ static BTPeerProvider *provider;
     int peerConnectedCnt = [rs intForColumn:@"peer_connected_cnt"];
     BTPeer *peer = [[BTPeer alloc] initWithAddress:peerAddress port:peerPort timestamp:peerTimestamp services:peerServices];
     peer.peerConnectedCnt = peerConnectedCnt;
-    return peerItem;
+    return peer;
 }
 
 @end

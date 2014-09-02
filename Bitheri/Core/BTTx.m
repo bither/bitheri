@@ -120,6 +120,7 @@ sequence:(uint32_t)sequence
     in.inScript = script;
     in.inSignature = signature;
     in.inSequence = sequence;
+    in.tx = self;
     [self.ins addObject:in];
 }
 
@@ -135,6 +136,7 @@ sequence:(uint32_t)sequence
     NSMutableData *scriptPubKey = [NSMutableData data];
     [scriptPubKey appendScriptPubKeyForAddress:address];
     out.outScript = scriptPubKey;
+    out.tx = self;
     [self.outs addObject:out];
 }
 
@@ -145,6 +147,7 @@ sequence:(uint32_t)sequence
     out.outValue = amount;
     out.outScript = script;
     out.outAddress = address ?: nil;
+    out.tx = self;
     [self.outs addObject:out];
 }
 

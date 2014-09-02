@@ -42,4 +42,6 @@
 
 - (BOOL)rollbackBlock:(uint32_t)blockNo;
 
+-(NSArray *) getAllBlocks;
+
 @end

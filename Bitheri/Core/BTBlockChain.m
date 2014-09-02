@@ -375,5 +375,8 @@ static BTBlockChain *blockChain;
 //    }
     return YES;
 }
+-(NSArray *) getAllBlocks{
+    return [[BTBlockProvider instance] getAllBlocks];
+}
 
 @end

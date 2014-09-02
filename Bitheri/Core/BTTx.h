@@ -33,12 +33,6 @@
 #define TX_FEE_PER_KB        10000llu    // standard tx fee per kb of tx size, rounded up to the nearest kb
 #endif
 
-//#define TX_FREE_MAX_SIZE     1000llu     // tx must not be larger than this size in bytes without a fee
-//#define TX_FREE_MIN_PRIORITY 57600000llu // tx must not have a priority below this value without a fee
-//#define TX_MAX_SIZE          100000llu   // no tx can be larger than this size in bytes
-//#define TX_MIN_OUTPUT_AMOUNT 5460llu     // no tx output can be below this amount (or it won't be relayed)
-//#define TX_UNCONFIRMED       UINT32_MAX   // block height indicating transaction is unconfirmed
-
 @interface BTTx : NSObject
 
 @property (nonatomic, assign) uint32_t blockNo;
@@ -62,7 +56,7 @@
 @property (nonatomic, readonly) NSArray *outputAmounts;
 @property (nonatomic, readonly) NSArray *outputAddresses;
 @property (nonatomic, readonly) NSArray *outputScripts;
-//@property (nonatomic, readonly) NSArray *inValues;
+@property (nonatomic, readonly) NSArray *inValues;
 
 
 
@@ -75,13 +69,11 @@
 
 @property (nonatomic, readonly) uint confirmationCnt;
 
-- (BOOL)verifySignatures;
+
 
 + (instancetype)transactionWithMessage:(NSData *)message;
 
 - (instancetype)initWithMessage:(NSData *)message;
-//- (instancetype)initWithInputHashes:(NSArray *)hashes inputIndexes:(NSArray *)indexes inputScripts:(NSArray *)scripts
-//outputAddresses:(NSArray *)addresses outputAmounts:(NSArray *)amounts;
 
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script;
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script signature:(NSData *)signature
@@ -104,12 +96,6 @@ sequence:(uint32_t)sequence;
 
 - (void)sawByPeer;
 
-//- (BTTxItem *)formatToTxItem;
-//- (BTTxItem *)formatToTxItemWithoutDetail;
-
-//+ (instancetype)txWithTxItem:(BTTxItem *)txItem;
-//- (instancetype)initWithTxItem:(BTTxItem *)txItem;
-
 // returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)
 - (uint64_t)amountReceivedFrom:(BTAddress *)addr;;
 
@@ -129,11 +115,12 @@ sequence:(uint32_t)sequence;
 // returns the block height after which the transaction is likely to be processed without including a fee
 - (uint32_t)blockHeightUntilFree;
 
-- (NSArray *)unsignedInHashes;
-
-- (BOOL)signWithSignatures:(NSArray *)signatures;
-
-- (NSData *) hashForSignature:(NSUInteger) inputIndex connectedScript:(NSData *) connectedScript sigHashType:(uint8_t) sigHashType;
-- (BOOL)verify;
 - (void)setInScript:(NSData *)script forInHash:(NSData *)inHash andInIndex:(NSUInteger) inIndex;
+- (NSArray *)unsignedInHashes;
+- (BOOL)signWithSignatures:(NSArray *)signatures;
+- (NSData *) hashForSignature:(NSUInteger) inputIndex connectedScript:(NSData *) connectedScript sigHashType:(uint8_t) sigHashType;
+
+- (BOOL)verify;
+- (BOOL)verifySignatures;
+
 @end

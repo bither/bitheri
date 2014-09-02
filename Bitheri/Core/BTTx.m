@@ -18,9 +18,6 @@
 
 #import "BTTx.h"
 #import "BTKey.h"
-
-//#import "BTInItem.h"
-//#import "BTOutItem.h"
 #import "BTSettings.h"
 #import "BTTxProvider.h"
 #import "BTBlockChain.h"
@@ -30,19 +27,6 @@
 #import "BTScriptOpCodes.h"
 #import "BTIn.h"
 #import "BTOut.h"
-
-@interface BTTx ()
-
-//@property (nonatomic, strong) NSMutableArray *hashes;
-//@property (nonatomic, strong) NSMutableArray *indexes;
-//@property (nonatomic, strong) NSMutableArray *inScripts;
-//@property (nonatomic, strong) NSMutableArray *signatures;
-//@property (nonatomic, strong) NSMutableArray *sequences;
-//@property (nonatomic, strong) NSMutableArray *amounts;
-//@property (nonatomic, strong) NSMutableArray *addresses;
-//@property (nonatomic, strong) NSMutableArray *outScripts;
-
-@end
 
 @implementation BTTx
 
@@ -59,14 +43,6 @@
     _ins = [NSMutableArray new];
     _outs = [NSMutableArray new];
 
-//    _hashes = [NSMutableArray array];
-//    _indexes = [NSMutableArray array];
-//    _inScripts = [NSMutableArray array];
-//    _amounts = [NSMutableArray array];
-//    _addresses = [NSMutableArray array];
-//    _outScripts = [NSMutableArray array];
-//    _signatures = [NSMutableArray array];
-//    _sequences = [NSMutableArray array];
     _txLockTime = TX_LOCKTIME;
     _blockNo = TX_UNCONFIRMED;
     _txTime = (uint) [[NSDate date] timeIntervalSince1970];
@@ -98,19 +74,14 @@
         d = [message hashAtOffset:off]; // input tx hash
         if (! d) return nil; // required
         in.prevTxHash = d;
-//        [self.hashes addObject:d];
         off += CC_SHA256_DIGEST_LENGTH;
         in.prevOutSn = [message UInt32AtOffset:off];
-//        [self.indexes addObject:@([message UInt32AtOffset:off])]; // input index
         off += sizeof(uint32_t);
         in.inScript = nil;
-//        [self.inScripts addObject:[NSNull null]]; // placeholder for input script (comes from previous transaction)
         d = [message dataAtOffset:off length:&l];
         in.inSignature = d ?: nil;
-//        [self.signatures addObject:d ?: [NSNull null]]; // input signature
         off += l;
         in.inSequence = [message UInt32AtOffset:off];
-//        [self.sequences addObject:@([message UInt32AtOffset:off])]; // input sequence number (for replacement tx)
         [self.ins addObject:in];
         off += sizeof(uint32_t);
     }
@@ -121,16 +92,12 @@
     for (NSUInteger i = 0; i < count; i++) { // outputs
         BTOut *out = [BTOut new];
         out.outValue = [message UInt64AtOffset:off];
-//        [self.amounts addObject:@([message UInt64AtOffset:off])]; // output amount
         off += sizeof(uint64_t);
         d = [message dataAtOffset:off length:&l];
         out.outScript = d ?: nil;
-//        [self.outScripts addObject:d ?: [NSNull null]]; // output script
         off += l;
-//        address = [NSString addressWithScript:d]; // address from output script if applicable
         address = [[[BTScript alloc] initWithProgram:d] getToAddress];
         out.outAddress = address ?: nil;
-//        [self.addresses addObject:address ?: [NSNull null]];
         [self.outs addObject:out];
     }
     
@@ -138,39 +105,6 @@
     
     return self;
 }
-
-//- (instancetype)initWithInputHashes:(NSArray *)hashes inputIndexes:(NSArray *)indexes inputScripts:(NSArray *)scripts
-//outputAddresses:(NSArray *)addresses outputAmounts:(NSArray *)amounts
-//{
-//    if (hashes.count == 0 || hashes.count != indexes.count || hashes.count != scripts.count) return nil;
-//    if (addresses.count != amounts.count) return nil;
-//
-//    if (! (self = [super init])) return nil;
-//
-//    _version = TX_VERSION;
-//    _hashes = [NSMutableArray arrayWithArray:hashes];
-//    _indexes = [NSMutableArray arrayWithArray:indexes];
-//    _inScripts = [NSMutableArray arrayWithArray:scripts];
-//    _amounts = [NSMutableArray arrayWithArray:amounts];
-//    _addresses = [NSMutableArray arrayWithArray:addresses];
-//    _outScripts = [NSMutableArray arrayWithCapacity:addresses.count];
-//    for (NSUInteger i = 0; i < addresses.count; i++) {
-//        [self.outScripts addObject:[NSMutableData data]];
-//        [self.outScripts.lastObject appendScriptPubKeyForAddress:self.addresses[i]];
-//    }
-//
-//    _signatures = [NSMutableArray arrayWithCapacity:hashes.count];
-//    _sequences = [NSMutableArray arrayWithCapacity:hashes.count];
-//    for (NSInteger i = 0; i < hashes.count; i++) {
-//        [self.signatures addObject:[NSNull null]];
-//        [self.sequences addObject:@(TX_IN_SEQUENCE)];
-//    }
-//
-//    _lockTime = TX_LOCKTIME;
-//    _blockHeight = TX_UNCONFIRMED;
-//
-//    return self;
-//}
 
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script
 {
@@ -187,20 +121,10 @@ sequence:(uint32_t)sequence
     in.inSignature = signature;
     in.inSequence = sequence;
     [self.ins addObject:in];
-//    [self.hashes addObject:hash];
-//    [self.indexes addObject:@(index)];
-//    [self.inScripts addObject:script ?: [NSNull null]];
-//    [self.signatures addObject:signature ?: [NSNull null]];
-//    [self.sequences addObject:@(sequence)];
 }
 
 - (void)clearIns;{
     [self.ins removeAllObjects];
-//    _hashes = [NSMutableArray new];
-//    _indexes = [NSMutableArray new];
-//    _inScripts = [NSMutableArray new];
-//    _signatures = [NSMutableArray new];
-//    _sequences = [NSMutableArray new];
 }
 
 - (void)addOutputAddress:(NSString *)address amount:(uint64_t)amount
@@ -212,10 +136,6 @@ sequence:(uint32_t)sequence
     [scriptPubKey appendScriptPubKeyForAddress:address];
     out.outScript = scriptPubKey;
     [self.outs addObject:out];
-//    [self.amounts addObject:@(amount)];
-//    [self.addresses addObject:address];
-//    [self.outScripts addObject:[NSMutableData data]];
-//    [self.outScripts.lastObject appendScriptPubKeyForAddress:address];
 }
 
 - (void)addOutputScript:(NSData *)script amount:(uint64_t)amount;
@@ -226,9 +146,6 @@ sequence:(uint32_t)sequence
     out.outScript = script;
     out.outAddress = address ?: nil;
     [self.outs addObject:out];
-//    [self.amounts addObject:@(amount)];
-//    [self.outScripts addObject:script];
-//    [self.addresses addObject:address ?: [NSNull null]];
 }
 
 - (void)setInputAddress:(NSString *)address atIndex:(NSUInteger)index;
@@ -237,7 +154,6 @@ sequence:(uint32_t)sequence
     NSMutableData *d = [NSMutableData data];
     [d appendScriptPubKeyForAddress:address];
     in.inScript = d;
-//    self.inScripts[index] = d;
 }
 
 - (NSArray *)inputAddresses
@@ -420,7 +336,6 @@ sequence:(uint32_t)sequence
             in.inScript = d;
             [scripts addObject:script];
         }
-//        self.inScripts = inScripts;
         for (NSUInteger i = 0; i < self.ins.count; i++) {
             NSData *unSignHash = [self toDataWithSubscriptIndex:i withInScripts:inScripts].SHA256_2;
 //            NSData *unSignHash2 = [self toDataWithSubscriptIndex:i].SHA256_2;
@@ -583,7 +498,7 @@ sequence:(uint32_t)sequence
 
 - (uint64_t)standardFee
 {
-    return ((self.size + 999)/1000)*TX_FEE_PER_KB;
+    return ((self.size + 999) / 1000) * TX_FEE_PER_KB;
 }
 
 - (void)sawByPeer;{
@@ -771,90 +686,6 @@ sequence:(uint32_t)sequence
         return NO;
     }
 }
-
-//- (BTTxItem *)formatToTxItem
-//{
-//    BTTxItem *txItem = [BTTxItem new];
-//    txItem.txHash = self.txHash;
-//    txItem.blockNo = self.blockNo;
-//    txItem.source = self.source;
-//    txItem.sawByPeerCnt = self.sawByPeerCnt;
-//    txItem.txTime = self.txTime;
-//    txItem.txVer = self.txVer;
-//    txItem.txLockTime = self.txLockTime;
-//    txItem.ins = [NSMutableArray new];
-//    txItem.outs = [NSMutableArray new];
-//    uint idx = 0;
-//    while (idx < self.inputHashes.count){
-//        [txItem.ins addObject:[self setInItemFromTx:self inSn:idx++]];
-//    }
-//    idx = 0;
-//    while (idx < self.outputAddresses.count){
-//        [txItem.outs addObject:[self setOutItemFromTx:self outSn:idx++]];
-//    }
-//    return txItem;
-//}
-
-//- (BTTxItem *)formatToTxItemWithoutDetail;{
-//    BTTxItem *txItem = [BTTxItem new];
-//    txItem.txHash = self.txHash;
-//    txItem.blockNo = self.blockHeight;
-//    txItem.source = self.source;
-//    txItem.sawByPeerCnt = self.sawByPeerCnt;
-//    txItem.ins = [NSMutableArray new];
-//    txItem.outs = [NSMutableArray new];
-//    return txItem;
-//}
-
-//- (BTOutItem *)setOutItemFromTx:(BTTx *)tx outSn:(uint)outSn
-//{
-//    BTOutItem *outItem = [BTOutItem new];
-//    outItem.txHash = tx.txHash;
-//    outItem.outSn = outSn;
-//    outItem.outAddress = tx.outputAddresses[outSn] == [NSNull null] ? nil : tx.outputAddresses[outSn];
-//    outItem.outScript = tx.outputScripts[outSn];
-//    outItem.outValue = [tx.outputAmounts[outSn] unsignedLongValue];
-//    return outItem;
-//}
-
-//- (BTInItem *)setInItemFromTx:(BTTx *)tx inSn:(uint)inSn
-//{
-//    BTInItem *inItem = [BTInItem new];
-//    inItem.txHash = tx.txHash;
-//    inItem.inSn = inSn;
-////    inItem.inScript = tx.inputScripts[in_sn];
-//    inItem.prevTxHash = tx.inputHashes[inSn];
-//    inItem.prevOutSn = [tx.inputIndexes[inSn] unsignedIntValue];
-//    inItem.inSignature = tx.inputSignatures[inSn];
-//    inItem.inSequence = [tx.inputSequences[inSn] unsignedIntValue];
-//    return inItem;
-//}
-
-//+ (instancetype)txWithTxItem:(BTTxItem *)txItem;{
-//    if (txItem == nil) return nil;
-//    return [[self alloc] initWithTxItem:txItem];
-//}
-
-//- (instancetype)initWithTxItem:(BTTxItem *)txItem;{
-//    if (! (self = [self init])) return nil;
-//    _txHash = txItem.txHash;
-//    _blockNo = txItem.blockNo;
-//    _source = txItem.source;
-//    _sawByPeerCnt = txItem.sawByPeerCnt;
-//    _txTime = txItem.txTime;
-//    _txVer = txItem.txVer;
-//    _txLockTime = txItem.txLockTime;
-//
-//    for (BTInItem *inItem in txItem.ins) {
-//        [self addInputHash:inItem.prevTxHash index:inItem.prevOutSn script:nil signature:inItem.inSignature
-//                  sequence:inItem.inSequence];
-//    }
-//
-//    for (BTOutItem *outItem in txItem.outs){
-//        [self addOutputScript:outItem.outScript amount:outItem.outValue];
-//    }
-//    return self;
-//}
 
 - (NSData *) hashForSignature:(NSUInteger) inputIndex connectedScript:(NSData *) connectedScript sigHashType:(uint8_t) sigHashType; {
     NSMutableArray *inputHashes = [NSMutableArray arrayWithArray:self.inputHashes];

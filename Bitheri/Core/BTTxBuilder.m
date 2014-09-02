@@ -19,7 +19,6 @@
 
 #import "BTTx.h"
 #import "BTTxBuilder.h"
-//#import "BTOutItem.h"
 #import "BTBlockChain.h"
 #import "BTSettings.h"
 #import "BTTxProvider.h"

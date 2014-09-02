@@ -60,5 +60,6 @@
 - (NSDictionary *)getTxDependencies:(BTTx *)txItem;
 
 - (NSArray *)getPublishedTxs;
+-(void)clearAllTx;
 
 @end

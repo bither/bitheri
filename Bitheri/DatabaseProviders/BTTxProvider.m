@@ -779,7 +779,20 @@ static BTTxProvider *provider;
     }];
     return result;
 }
-
+-(void)clearAllTx{
+     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+         NSString *deleteTx = @"delete from txs ";
+         NSString *deleteIn = @"delete from ins";
+         NSString *deleteOut = @"delete from outs";
+         NSString *deleteAddressesTx = @"delete from addresses_txs";
+         [db beginTransaction];
+         [db executeUpdate:deleteTx];
+         [db executeUpdate:deleteIn];
+         [db executeUpdate:deleteOut];
+         [db executeUpdate:deleteAddressesTx];
+         [db commit];
+     }];
+}
 - (BTTx *)format:(FMResultSet *)rs {
     BTTx *txItem = [BTTx new];
     if ([rs columnIsNull:@"block_no"]) {

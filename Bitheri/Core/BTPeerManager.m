@@ -137,9 +137,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     NSArray *outs = [[BTAddressManager sharedInstance] outs];
     NSUInteger elemCount = [[BTAddressManager sharedInstance] allAddresses].count * 2 + outs.count;
-//    for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]){
-//        elemCount += addr.unspentOuts.count;
-//    }
     elemCount += 100;
     BTBloomFilter *filter = [[BTBloomFilter alloc] initWithFalsePositiveRate:self.filterFpRate
                                                              forElementCount:elemCount
@@ -167,13 +164,13 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (NSArray *)bestPeers; {
     NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
     if (bestPeers.count < [BTSettings instance].maxPeerConnections) {
-        [[BTPeerProvider instance] addPeers:[self getDnsPeers]];
+        [[BTPeerProvider instance] addPeers:[self getPeersFromDns]];
         bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
     }
     return bestPeers;
 }
 
-- (NSArray *)getDnsPeers; {
+- (NSArray *)getPeersFromDns; {
     NSMutableArray *result = [NSMutableArray new];
     NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
     for (int i = 0; i < sizeof(dns_seeds) / sizeof(*dns_seeds); i++) { // DNS peer discovery
@@ -295,26 +292,15 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
 - (void)syncStopped {
     self.synchronizing = NO;
-//    if ([[UIApplication sharedApplication] applicationState] == UIApplicationStateBackground) {
-//        [self.connectedPeers makeObjectsPerformSelector:@selector(disconnectPeer)];
-//        [self.connectedPeers removeAllObjects];
-//    }
 
     if (self.taskId != UIBackgroundTaskInvalid) {
         [[UIApplication sharedApplication] endBackgroundTask:self.taskId];
         self.taskId = UIBackgroundTaskInvalid;
+    }
 
-        for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) { // after syncing, load filters and get mempools from the other peers
-            if (p != self.downloadPeer) [p sendFilterLoadMessage:self.bloomFilter.data];
-            for (BTTx *tx in self.publishedTx.allValues) {
-                if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
-                    [p sendInvMessageWithTxHash:tx.txHash];
-                }
-            }
-            [p sendMemPoolMessage];
-            //BUG: XXXX sometimes a peer relays thousands of transactions after mempool msg, should detect and
-            // disconnect if it's more than BLOOM_DEFAULT_FALSEPOSITIVE_RATE*10*<typical mempool size>*2
-        }
+    self.bloomFilter = nil;
+    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
+        [p sendFilterLoadMessage:self.bloomFilter.data];
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -431,91 +417,69 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 #pragma mark - BTPeerDelegate
 
 - (void)peerConnected:(BTPeer *)peer {
-    DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.peerPort, peer.versionLastBlock);
     if (!self.running) {
         [peer disconnectPeer];
         return;
     }
-
-
-    self.connectFailure = 0;
-//    peer.timestamp = [NSDate timeIntervalSinceReferenceDate]; // set last seen timestamp for peer
-
     if (peer.versionLastBlock + 10 < self.lastBlockHeight) { // drop peers that aren't synced yet, we can't help them
-//        [peer disconnectPeer];
-        [self peerAbandon:peer];
+        dispatch_async(self.q, ^{
+            [self peerAbandon:peer];
+        });
         return;
     }
 
-    [peer connectSucceed];
-    if (self.connected && (self.downloadPeer.versionLastBlock >= peer.versionLastBlock || self.lastBlockHeight >= peer.versionLastBlock)) {
-        if (self.lastBlockHeight < self.downloadPeer.versionLastBlock) return; // don't load bloom filter yet if we're syncing
-        [peer sendFilterLoadMessage:self.bloomFilter.data];
+    dispatch_async(self.q, ^{
+        DDLogDebug(@"%@ connected with lastblock %d", peer.host, peer.versionLastBlock);
+        self.connectFailure = 0;
+        if (!_connected) {
+            _connected = YES;
+            [self sendConnectedChangeNotification];
+        }
+
+        _bloomFilter = nil; // make sure the bloom filter is updated
+        [peer connectSucceed];
         for (BTTx *tx in self.publishedTx.allValues) {
             if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
                 [peer sendInvMessageWithTxHash:tx.txHash];
             }
         }
         [peer sendMemPoolMessage];
-        return; // we're already connected to a download peer
-    }
 
-    // select the peer with the lowest ping time to download the chain from if we're behind
-    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
-        if ((p.pingTime < peer.pingTime && p.versionLastBlock >= peer.versionLastBlock) || p.versionLastBlock > peer.versionLastBlock)
-            peer = p;
-    }
+        if (self.downloadPeer.versionLastBlock >= peer.versionLastBlock
+                || self.lastBlockHeight >= peer.versionLastBlock) {
+            return; // we're already connected to a download peer or do not need to sync from this peer
+        }
 
-    [self.downloadPeer disconnectPeer];
-    self.downloadPeer = peer;
-    _connected = YES;
+        // select the peer with the lowest ping time to download the chain from if we're behind
+        BTPeer *dPeer = peer;
+        for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
+            if ((p.pingTime < dPeer.pingTime && p.versionLastBlock >= dPeer.versionLastBlock) || p.versionLastBlock > dPeer.versionLastBlock)
+                dPeer = p;
+        }
 
-    // every time a new wallet address is added, the bloom filter has to be rebuilt, and each address is only used for
-    // one transaction, so here we generate some spare addresses to avoid rebuilding the filter each time a wallet
-    // transaction is encountered during the blockchain download (generates twice the external gap limit for both
-    // address chains)
+        // start blockchain sync
+        if (self.downloadPeer == nil || ![self.downloadPeer isEqual:dPeer]) {
+            [self.downloadPeer disconnectPeer];
+            self.downloadPeer = dPeer;
+        }
 
-    _bloomFilter = nil; // make sure the bloom filter is updated with any newly generated addresses
-    [peer sendFilterLoadMessage:self.bloomFilter.data];
-
-    if (self.lastBlockHeight < peer.versionLastBlock) { // start blockchain sync
         if (self.taskId == UIBackgroundTaskInvalid) { // start a background task for the chain sync
             self.taskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             }];
         }
 
-        self.lastRelayTime = 0;
+        self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
+        self.synchronizing = YES;
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(syncTimeout) object:nil];
+        [self performSelector:@selector(syncTimeout) withObject:nil afterDelay:PROTOCOL_TIMEOUT];
 
-        dispatch_async(dispatch_get_main_queue(), ^{ // setup a timer to detect if the sync stalls
-            self.synchronizing = YES;
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(syncTimeout) object:nil];
-            [self performSelector:@selector(syncTimeout) withObject:nil afterDelay:PROTOCOL_TIMEOUT];
-
-            // request just block headers up to a week before earliestKeyTime, and then merkleblocks after that
-//            if (self.blockChain.lastBlock.blockTime-NSTimeIntervalSince1970 + ONE_WEEK >= self.earliestKeyTime) {
-            if (self.doneSyncFromSPV) {
-                [peer sendGetBlocksMessageWithLocators:[self.blockChain blockLocatorArray] andHashStop:nil];
-            } else {
-                [peer sendGetHeadersMessageWithLocators:[self.blockChain blockLocatorArray] andHashStop:nil];
-            }
-        });
-    }
-    else { // we're already synced
-        [self syncStopped];
-        [peer sendGetAddrMessage]; // request a list of other bitcoin peers
-        self.syncStartHeight = 0;
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (!self.doneSyncFromSPV) {
-                NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-                [userDefaults setBool:YES forKey:BITHERI_DONE_SYNC_FROM_SPV];
-                [userDefaults synchronize];
-                [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFromSPVFinishedNotification object:nil];
-            } else {
-                [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFinishedNotification object:nil];
-            }
-        });
-    }
+        // request just block headers up to a week before earliestKeyTime, and then merkleblocks after that
+        if (self.doneSyncFromSPV) {
+            [dPeer sendGetBlocksMessageWithLocators:[self.blockChain blockLocatorArray] andHashStop:nil];
+        } else {
+            [dPeer sendGetHeadersMessageWithLocators:[self.blockChain blockLocatorArray] andHashStop:nil];
+        }
+    });
 }
 
 - (void)peer:(BTPeer *)peer disconnectedWithError:(NSError *)error {

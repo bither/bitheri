@@ -82,6 +82,7 @@
         in.inSignature = d ?: nil;
         off += l;
         in.inSequence = [message UInt32AtOffset:off];
+        in.inSn = self.ins.count;
         [self.ins addObject:in];
         off += sizeof(uint32_t);
     }
@@ -98,6 +99,7 @@
         off += l;
         address = [[[BTScript alloc] initWithProgram:d] getToAddress];
         out.outAddress = address ?: nil;
+        out.outSn = self.outs.count;
         [self.outs addObject:out];
     }
     

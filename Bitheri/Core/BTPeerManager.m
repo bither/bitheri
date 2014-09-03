@@ -461,6 +461,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (self.downloadPeer == nil || ![self.downloadPeer isEqual:dPeer]) {
             [self.downloadPeer disconnectPeer];
             self.downloadPeer = dPeer;
+            DDLogDebug(@"%@ is downloading now", self.downloadPeer.host);
         }
 
         if (self.taskId == UIBackgroundTaskInvalid) { // start a background task for the chain sync

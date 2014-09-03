@@ -32,8 +32,7 @@
 - (NSInteger)addressCount;
 
 - (void)addAddress:(BTAddress *)address;
-- (void)saveAddress:(BTAddress *)address;
-- (void)updateAddressWithSyncTx:(BTAddress *)address;
+
 - (void)stopMonitor:(BTAddress *)address;
 
 - (NSMutableArray *)allAddresses;

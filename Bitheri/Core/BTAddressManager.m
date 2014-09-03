@@ -95,12 +95,12 @@
 - (void)addAddress:(BTAddress *)address {
     DDLogDebug(@"addAddress %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
     if (address.hasPrivKey) {
-        [address savePrivate:[BTUtils getPrivDir]];
-        //[self.privKeyAddresses addObject:address];
+        [address savePrivate];
+        [address savePrivateWithPubKey];
         [self.privKeyAddresses insertObject:address atIndex:0];
 
     } else {
-        [address saveWatchOnly:[BTUtils getWatchOnlyDir]];
+        [address saveWatchOnly];
         // [self.watchOnlyAddresses addObject:address];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
     }
@@ -109,7 +109,7 @@
 
 - (void)stopMonitor:(BTAddress *)address {
     DDLogDebug(@"stopMonitor %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
-    [address removeWatchOnly:[BTUtils getWatchOnlyDir]];
+    [address removeWatchOnly];
     [self.watchOnlyAddresses removeObject:address];
 
 }
@@ -121,22 +121,8 @@
     return allAddresses;
 }
 
-- (void)saveAddress:(BTAddress *)address {
-    if ([address hasPrivKey]) {
-        [address savePrivate:[BTUtils getPrivDir]];
-    } else {
-        [address saveWatchOnly:[BTUtils getWatchOnlyDir]];
-    }
-}
 
-- (void)updateAddressWithSyncTx:(BTAddress *)address {
-    if ([address hasPrivKey]) {
-        [address savePrivateWithPubKey:[BTUtils getPrivDir]];
-    } else {
-        [address saveWatchOnly:[BTUtils getWatchOnlyDir]];
-    }
 
-}
 
 - (BOOL)allSyncComplete {
     BOOL allSync = YES;
@@ -163,7 +149,7 @@
     for (NSUInteger i = 0; i < addresses.count; i++) {
         BTAddress *address = addresses[i];
         address.encryptPrivKey = encryptPrivKeys[i];
-        [address savePrivate:[BTUtils getPrivDir]];
+        [address savePrivate];
     }
     return YES;
 }

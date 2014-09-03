@@ -30,7 +30,7 @@
 
 @property (readonly) BOOL doneSyncFromSPV;
 
-+ (instancetype)sharedInstance;
++ (instancetype)instance;
 
 - (void)start;
 - (void)stop;

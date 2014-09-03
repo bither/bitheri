@@ -24,6 +24,7 @@
 #import "BTTxBuilder.h"
 #import "BTIn.h"
 #import "BTOut.h"
+#import "BTSettings.h"
 
 static double saveTime;
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
@@ -327,15 +328,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [transaction blockHeightUntilFreeForAmounts:amounts withBlockHeights:heights];
 }
 
-- (void)savePrivate:(NSString *)privateDir {
-    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, privateDir, self.address];
+- (void)savePrivate {
+    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
     [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
-
-    [self savePrivateWithPubKey:privateDir];
 }
 
-- (void)savePrivateWithPubKey:(NSString *)privateDir {
-    NSString *watchOnlyFullFileName = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, privateDir, self.address];
+- (void)savePrivateWithPubKey {
+    NSString *watchOnlyFullFileName = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
     NSString *watchOnlyContent = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
     [BTUtils writeFile:watchOnlyFullFileName content:watchOnlyContent];
     double time = [[NSDate new] timeIntervalSince1970] + saveTime;
@@ -344,9 +343,9 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 }
 
-- (void)saveWatchOnly:(NSString *)publicDir {
+- (void)saveWatchOnly {
     NSString *content = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
-    NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, publicDir, self.address];
+    NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
     [BTUtils writeFile:dir content:content];
     double time = [[NSDate new] timeIntervalSince1970] + saveTime;
     saveTime = saveTime + 1;
@@ -354,9 +353,17 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 }
 
-- (void)removeWatchOnly:(NSString *)publicDir {
-    NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, publicDir, self.address];
-    [BTUtils removeFile:dir];
+- (void)updateAddress{
+    if ([self hasPrivKey]) {
+        [self savePrivateWithPubKey];
+    } else {
+        [self saveWatchOnly];
+    }
+}
+
+- (void)removeWatchOnly{
+    NSString *file = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
+    [BTUtils removeFile:file];
 
 }
 

@@ -612,10 +612,14 @@ services:(uint64_t)services
         if (! hash) continue;
         
         switch (type) {
-            case tx: [txHashes addObject:hash]; break;
+            case tx:
+                if([BTPeerManager instance].downloadPeer != self || self.currentBlock) {
+                    [txHashes addObject:hash];
+                }
+                break;
             case block:
             case merkleblock:
-                if([BTPeerManager sharedInstance].downloadPeer == nil || [BTPeerManager sharedInstance].downloadPeer == self){
+                if([BTPeerManager instance].downloadPeer == nil || [BTPeerManager instance].downloadPeer == self){
                     [blockHashes addObject:hash];
                 }
                 break;

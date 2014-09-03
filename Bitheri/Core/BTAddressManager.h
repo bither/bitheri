@@ -26,14 +26,13 @@
 @property (nonatomic, strong) NSMutableArray *watchOnlyAddresses;
 @property (nonatomic, readonly) NSMutableArray *allAddresses;
 @property (nonatomic, readonly) NSTimeInterval creationTime; // interval since refrence date, 00:00:00 01/01/01 GMT
-+ (instancetype)sharedInstance;
++ (instancetype)instance;
 
 - (void)initAddress;
 - (NSInteger)addressCount;
 
 - (void)addAddress:(BTAddress *)address;
-- (void)saveAddress:(BTAddress *)address;
-- (void)updateAddressWithSyncTx:(BTAddress *)address;
+
 - (void)stopMonitor:(BTAddress *)address;
 
 - (NSMutableArray *)allAddresses;

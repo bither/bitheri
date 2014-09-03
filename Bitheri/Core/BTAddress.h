@@ -105,11 +105,12 @@
 - (uint32_t)blockHeightUntilFree:(BTTx *)transaction;
 
 
--(void)savePrivate:(NSString *) privateDir;
+-(void)savePrivate;
 
--(void)savePrivateWithPubKey:(NSString *)privateDir;
--(void)saveWatchOnly:(NSString *)publicDir;
--(void)removeWatchOnly:(NSString *)publicDir;
+-(void)savePrivateWithPubKey;
+-(void)saveWatchOnly;
+-(void)updateAddress;
+-(void)removeWatchOnly;
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase;
 

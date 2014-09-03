@@ -57,15 +57,15 @@
 //#define MAX_CONNECTIONS       1
     NSString *bitcoinjStr = @"06ABC638E15A2E4A3224F35C45C3BF653ACB3D217E9687641B3D118CEAFC1164B3AC4114472A14185802D19AA380BEA4:A4EAEB1E0C2F877A2869BD3823245BA1:B34C4A53489A4A9B";
  
-    BTAddressManager *addressManager=[BTAddressManager sharedInstance];
+    BTAddressManager *addressManager=[BTAddressManager instance];
    // [addressManager setPrivateKeyDir:self.privDir];
     //[addressManager setWatchOnlyDir:self.watchOnly];
     [addressManager initAddress];
     if ([addressManager privKeyAddresses].count==0) {
         BTAddress * address=[[BTAddress alloc] initWithBitcoinjKey:bitcoinjStr withPassphrase:@"111111"];
-        [[[BTAddressManager sharedInstance] privKeyAddresses] addObject:address];
+        [[[BTAddressManager instance] privKeyAddresses] addObject:address];
     }
-    [[BTPeerManager sharedInstance] start];
+    [[BTPeerManager instance] start];
 
     XCTAssertTrue([[BTAddressManager sharedInstance] privKeyAddresses].count>0, @"add private key success");
 

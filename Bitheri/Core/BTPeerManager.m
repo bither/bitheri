@@ -56,7 +56,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
 @implementation BTPeerManager
 
-+ (instancetype)sharedInstance {
++ (instancetype)instance {
     static id singleton = nil;
     static dispatch_once_t onceToken = 0;
 

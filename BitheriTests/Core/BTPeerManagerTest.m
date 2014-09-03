@@ -65,7 +65,7 @@
         BTAddress * address=[[BTAddress alloc] initWithBitcoinjKey:bitcoinjStr withPassphrase:@"111111"];
         [[[BTAddressManager sharedInstance] privKeyAddresses] addObject:address];
     }
-    [[BTPeerManager sharedInstance] start];
+    [[BTPeerManager instance] start];
 
     XCTAssertTrue([[BTAddressManager sharedInstance] privKeyAddresses].count>0, @"add private key success");
 

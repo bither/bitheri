@@ -1239,7 +1239,6 @@ reset:          // reset for next message
     self.peerConnectedCnt = 1;
     self.timestamp = [[NSDate new] timeIntervalSinceReferenceDate];
     [[BTPeerProvider instance] connectSucceed:self.peerAddress];
-    [self sendFilterLoadMessage:[self.delegate peerBloomFilter:self]];
 }
 
 - (void)connectError;{

@@ -299,8 +299,14 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
     self.bloomFilter = nil;
-    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
-        [p sendFilterLoadMessage:self.bloomFilter.data];
+    for (BTPeer *peer in [NSSet setWithSet:self.connectedPeers]) {
+        [peer sendFilterLoadMessage:[self peerBloomFilter:peer]];
+        for (BTTx *tx in self.publishedTx.allValues) {
+            if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
+                [peer sendInvMessageWithTxHash:tx.txHash];
+            }
+        }
+        [peer sendMemPoolMessage];
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -436,17 +442,19 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             [self sendConnectedChangeNotification];
         }
 
-        _bloomFilter = nil; // make sure the bloom filter is updated
         [peer connectSucceed];
-        for (BTTx *tx in self.publishedTx.allValues) {
-            if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
-                [peer sendInvMessageWithTxHash:tx.txHash];
-            }
-        }
-        [peer sendMemPoolMessage];
-
         if (self.downloadPeer.versionLastBlock >= peer.versionLastBlock
                 || self.lastBlockHeight >= peer.versionLastBlock) {
+            if (self.lastBlockHeight < self.downloadPeer.versionLastBlock)
+                return;
+            _bloomFilter = nil; // make sure the bloom filter is updated
+            [peer sendFilterLoadMessage:[self peerBloomFilter:peer]];
+            for (BTTx *tx in self.publishedTx.allValues) {
+                if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
+                    [peer sendInvMessageWithTxHash:tx.txHash];
+                }
+            }
+            [peer sendMemPoolMessage];
             return; // we're already connected to a download peer or do not need to sync from this peer
         }
 

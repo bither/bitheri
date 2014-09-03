@@ -135,15 +135,15 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 (self.downloadPeer.versionLastBlock - self.lastBlockHeight) / BLOCK_DIFFICULTY_INTERVAL;
     }
 
-    NSArray *outs = [[BTAddressManager sharedInstance] outs];
-    NSUInteger elemCount = [[BTAddressManager sharedInstance] allAddresses].count * 2 + outs.count;
+    NSArray *outs = [[BTAddressManager instance] outs];
+    NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count;
     elemCount += 100;
     BTBloomFilter *filter = [[BTBloomFilter alloc] initWithFalsePositiveRate:self.filterFpRate
                                                              forElementCount:elemCount
                                                                        tweak:self.tweak flags:BLOOM_UPDATE_ALL];
 
 
-    for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]) { // add addresses to watch for any tx receiveing money to the wallet
+    for (BTAddress *addr in [[BTAddressManager instance] allAddresses]) { // add addresses to watch for any tx receiveing money to the wallet
         NSData *hash = addr.address.addressToHash160;
         if (hash && ![filter containsData:hash]) [filter insertData:hash];
 
@@ -333,7 +333,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         return;
     }
 
-    [[BTAddressManager sharedInstance] registerTx:transaction withTxNotificationType:txSend];
+    [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txSend];
     self.publishedTx[transaction.txHash] = transaction;
 
     if (completion) {
@@ -380,7 +380,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         // update all tx in db
         [[BTTxProvider instance] confirmTx:txHashes withBlockNo:height];
         // update all address 's tx and balance
-        for (BTAddress *address in [[BTAddressManager sharedInstance] allAddresses]) {
+        for (BTAddress *address in [[BTAddressManager instance] allAddresses]) {
             [address setBlockHeight:height forTxHashes:txHashes];
         }
 
@@ -406,7 +406,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
 // unconfirmed transactions that aren't in the mempools of any of connected peers have likely dropped off the network
 - (void)removeUnrelayedTransactions {
-    for (BTAddress *addr in [[BTAddressManager sharedInstance] allAddresses]) {
+    for (BTAddress *addr in [[BTAddressManager instance] allAddresses]) {
         for (BTTx *tx in addr.txs) {
             if (tx.blockNo != TX_UNCONFIRMED) break;
             if ([self.txRelays[tx.txHash] count] == 0 && tx.source == 0) [addr removeTx:tx.txHash];
@@ -543,7 +543,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 //        }
 //    }
     BOOL isAlreadyInDb = [[BTTxProvider instance] isExist:transaction.txHash];
-    BOOL isRel = [[BTAddressManager sharedInstance] registerTx:transaction withTxNotificationType:txReceive];
+    BOOL isRel = [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txReceive];
 
     if (isRel) {
         if (self.publishedTx[transaction.txHash] == nil) {

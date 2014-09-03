@@ -26,7 +26,7 @@
 @property (nonatomic, strong) NSMutableArray *watchOnlyAddresses;
 @property (nonatomic, readonly) NSMutableArray *allAddresses;
 @property (nonatomic, readonly) NSTimeInterval creationTime; // interval since refrence date, 00:00:00 01/01/01 GMT
-+ (instancetype)sharedInstance;
++ (instancetype)instance;
 
 - (void)initAddress;
 - (NSInteger)addressCount;

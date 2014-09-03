@@ -35,7 +35,7 @@
 
 }
 
-+ (instancetype)sharedInstance; {
++ (instancetype)instance; {
     static id singleton = nil;
     static dispatch_once_t onceToken = 0;
     dispatch_once(&onceToken, ^{
@@ -165,7 +165,7 @@
         return YES;
     }
     BOOL needAdd = NO;
-    for (BTAddress *addr in [BTAddressManager sharedInstance].allAddresses) {
+    for (BTAddress *addr in [BTAddressManager instance].allAddresses) {
         BOOL isRel = [self isAddress:addr.address containsTransaction:tx];
         if (!needAdd && isRel) {
             needAdd = YES;

@@ -615,7 +615,7 @@ services:(uint64_t)services
             case tx: [txHashes addObject:hash]; break;
             case block:
             case merkleblock:
-                if([BTPeerManager sharedInstance].downloadPeer == nil || [BTPeerManager sharedInstance].downloadPeer == self){
+                if([BTPeerManager instance].downloadPeer == nil || [BTPeerManager instance].downloadPeer == self){
                     [blockHashes addObject:hash];
                 }
                 break;

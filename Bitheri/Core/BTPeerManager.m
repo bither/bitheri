@@ -650,7 +650,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         NSData *oldLastHash = self.blockChain.lastBlock.blockHash;
 
-        [self.blockChain relayedBlock:block withPeer:peer andCallback:^(BTBlock *b, BOOL isConfirm) {
+        [self.blockChain relayedBlock:block withCallback:^(BTBlock *b, BOOL isConfirm) {
             if (isConfirm) {
                 if ((b.blockNo % 500) == 0 || b.txHashes.count > 0 || b.blockNo > peer.versionLastBlock) {
                     DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.peerPort, b.blockNo, self.filterFpRate);

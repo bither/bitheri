@@ -47,7 +47,7 @@ typedef enum {
 @interface BTPeer : NSObject<NSStreamDelegate>
 
 @property (nonatomic, assign) id<BTPeerDelegate> delegate;
-@property (nonatomic, strong) dispatch_queue_t delegateQueue; // default is main queue
+//@property (nonatomic, strong) dispatch_queue_t delegateQueue; // default is main queue
 
 // set this to the timestamp when the wallet was created to improve initial sync time (interval since refrence date)
 //@property (nonatomic, assign) NSTimeInterval earliestKeyTime;

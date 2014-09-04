@@ -112,10 +112,10 @@ services:(uint64_t)services
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
 }
 
-- (dispatch_queue_t)delegateQueue
-{
-    return _delegateQueue ? _delegateQueue : dispatch_get_main_queue();
-}
+//- (dispatch_queue_t)delegateQueue
+//{
+//    return _delegateQueue ? _delegateQueue : dispatch_get_main_queue();
+//}
 
 - (NSString *)host
 {
@@ -213,9 +213,9 @@ services:(uint64_t)services
         
         self.gotVerAck = self.sentVerAck = NO;
         _status = BTPeerStatusDisconnected;
-        dispatch_async(self.delegateQueue, ^{
-            [self.delegate peer:self disconnectedWithError:error];
-        });
+//        dispatch_async(self.delegateQueue, ^{
+        [self.delegate peer:self disconnectedWithError:error];
+//        });
     });
     CFRunLoopWakeUp([self.runLoop getCFRunLoop]);
 }
@@ -239,9 +239,9 @@ services:(uint64_t)services
     DDLogDebug(@"%@:%d handshake completed lastblock:%d", self.host, self.peerPort, self.versionLastBlock);
     [NSObject cancelPreviousPerformRequestsWithTarget:self]; // cancel pending handshake timeout
     _status = BTPeerStatusConnected;
-    dispatch_async(self.delegateQueue, ^{
-        if (_status == BTPeerStatusConnected) [self.delegate peerConnected:self];
-    });
+//    dispatch_async(self.delegateQueue, ^{
+    if (_status == BTPeerStatusConnected) [self.delegate peerConnected:self];
+//    });
 }
 
 #pragma mark - send
@@ -580,9 +580,9 @@ services:(uint64_t)services
          services:services]];
     }
 
-    dispatch_async(self.delegateQueue, ^{
-        if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedPeers:peers];
-    });
+//    dispatch_async(self.delegateQueue, ^{
+    if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedPeers:peers];
+//    });
 }
 
 - (void)acceptInvMessage:(NSData *)message
@@ -678,9 +678,9 @@ services:(uint64_t)services
     DDLogDebug(@"%@:%u got tx %@", self.host, self.peerPort, [NSString hexWithHash:tx.txHash]);
 
     if (self.currentBlock) { // we're collecting tx messages for a merkleblock
-        dispatch_async(self.delegateQueue, ^{
-            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
-        });
+//        dispatch_async(self.delegateQueue, ^{
+        if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
+//        });
         [self.currentTxHashes removeObject:tx.txHash];
 
         if (self.currentTxHashes.count == 0) { // we received the entire block including all matched tx
@@ -689,9 +689,9 @@ services:(uint64_t)services
             self.currentBlock = nil;
             self.currentTxHashes = nil;
 
-            dispatch_async(self.delegateQueue, ^{
-                if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
-            });
+//            dispatch_async(self.delegateQueue, ^{
+            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
+//            });
         }
     } else {
         // check dependency
@@ -720,9 +720,9 @@ services:(uint64_t)services
         }
         valid &= [tx verify];
         if (valid && needToRequest.count == 0) {
-            dispatch_async(self.delegateQueue, ^{
-                if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
-            });
+//            dispatch_async(self.delegateQueue, ^{
+            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
+//            });
             [self checkDependencyWith:tx];
         } else if (valid && needToRequest.count > 0) {
             for (NSData *txHash in needToRequest) {
@@ -776,9 +776,9 @@ services:(uint64_t)services
                 }
             }
             if (!stillNeedDependency) {
-                dispatch_async(self.delegateQueue, ^{
-                    if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx];
-                });
+//                dispatch_async(self.delegateQueue, ^{
+                if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx];
+//                });
                 [checkedTxs addObject:eachTx];
             }
         } else {
@@ -812,9 +812,9 @@ services:(uint64_t)services
             }
         }
         if (!stillNeedDependency) {
-            dispatch_async(self.delegateQueue, ^{
-                if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx];
-            });
+//            dispatch_async(self.delegateQueue, ^{
+            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx];
+//            });
             [checkedTxs addObject:eachTx];
         }
     }
@@ -892,10 +892,10 @@ services:(uint64_t)services
             }
             [headers addObject:block];
         }
-        dispatch_async(self.delegateQueue, ^{
-            if (_status == BTPeerStatusConnected)
-                [self.delegate peer:self relayedHeaders:headers];
-        });
+//        dispatch_async(self.delegateQueue, ^{
+        if (_status == BTPeerStatusConnected)
+            [self.delegate peer:self relayedHeaders:headers];
+//        });
     });
     CFRunLoopWakeUp([self.runLoop getCFRunLoop]);
 }
@@ -924,41 +924,41 @@ services:(uint64_t)services
     
     DDLogDebug(@"%@:%u got getdata with %u items", self.host, self.peerPort, (int)count);
 
-    dispatch_async(self.delegateQueue, ^{
-        NSMutableData *notFound = [NSMutableData data];
-    
-        for (NSUInteger off = l; off < l + count*36; off += 36) {
-            inv_t type = [message UInt32AtOffset:off];
-            NSData *hash = [message hashAtOffset:off + sizeof(uint32_t)];
-            BTTx *transaction = nil;
-        
-            if (! hash) continue;
-        
-            switch (type) {
-                case tx:
-                    transaction = [self.delegate peer:self requestedTransaction:hash];
-                
-                    if (transaction) {
-                        [self sendMessage:transaction.data type:MSG_TX];
-                        break;
-                    }
-                
-                    // fall through
-                default:
-                    [notFound appendUInt32:type];
-                    [notFound appendData:hash];
-                    break;
-            }
-        }
+//    dispatch_async(self.delegateQueue, ^{
+    NSMutableData *notFound = [NSMutableData data];
 
-        if (notFound.length > 0) {
-            NSMutableData *msg = [NSMutableData data];
-        
-            [msg appendVarInt:notFound.length/36];
-            [msg appendData:notFound];
-            [self sendMessage:msg type:MSG_NOTFOUND];
+    for (NSUInteger off = l; off < l + count*36; off += 36) {
+        inv_t type = [message UInt32AtOffset:off];
+        NSData *hash = [message hashAtOffset:off + sizeof(uint32_t)];
+        BTTx *transaction = nil;
+
+        if (! hash) continue;
+
+        switch (type) {
+            case tx:
+                transaction = [self.delegate peer:self requestedTransaction:hash];
+
+                if (transaction) {
+                    [self sendMessage:transaction.data type:MSG_TX];
+                    break;
+                }
+
+                // fall through
+            default:
+                [notFound appendUInt32:type];
+                [notFound appendData:hash];
+                break;
         }
-    });
+    }
+
+    if (notFound.length > 0) {
+        NSMutableData *msg = [NSMutableData data];
+
+        [msg appendVarInt:notFound.length/36];
+        [msg appendData:notFound];
+        [self sendMessage:msg type:MSG_NOTFOUND];
+    }
+//    });
 }
 
 - (void)acceptNotFoundMessage:(NSData *)message
@@ -1053,9 +1053,9 @@ services:(uint64_t)services
         self.currentTxHashes = txHashes;
     }
     else {
-        dispatch_async(self.delegateQueue, ^{
-            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
-        });
+//        dispatch_async(self.delegateQueue, ^{
+        if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
+//        });
     }
     if(self.currentBlockHashes.count == 0){
         [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil];

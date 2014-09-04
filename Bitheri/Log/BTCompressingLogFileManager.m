@@ -83,6 +83,9 @@
 
 - (void)compressLogFile:(DDLogFileInfo *)logFile
 {
+    if (logFile.isCompressed)
+        return;;
+
     self.isCompressing = YES;
 
     BTCompressingLogFileManager * __weak weakSelf = self;

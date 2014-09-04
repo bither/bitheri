@@ -615,13 +615,11 @@ services:(uint64_t)services
         
         switch (type) {
             case tx:
-                if([BTPeerManager instance].downloadPeer != self || self.currentBlock) {
-                    [txHashes addObject:hash];
-                }
+                [txHashes addObject:hash];
                 break;
             case block:
             case merkleblock:
-                if([BTPeerManager instance].downloadPeer == nil || [BTPeerManager instance].downloadPeer == self){
+                if([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]){
                     [blockHashes addObject:hash];
                 }
                 break;
@@ -662,7 +660,7 @@ services:(uint64_t)services
              removeObjectsInRange:NSMakeRange(0, self.currentBlockHashes.count - MAX_GETDATA_HASHES/2)];
         }
     }
-    
+
     if(blockHashes.count == 1){
         _incrementalBlockHeight ++;
     }

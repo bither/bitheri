@@ -443,12 +443,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }
 
         [peer connectSucceed];
+        _bloomFilter = nil; // make sure the bloom filter is updated
+        [peer sendFilterLoadMessage:[self peerBloomFilter:peer]];
         if (self.downloadPeer.versionLastBlock >= peer.versionLastBlock
                 || self.lastBlockHeight >= peer.versionLastBlock) {
             if (self.lastBlockHeight < self.downloadPeer.versionLastBlock)
                 return;
-            _bloomFilter = nil; // make sure the bloom filter is updated
-            [peer sendFilterLoadMessage:[self peerBloomFilter:peer]];
             for (BTTx *tx in self.publishedTx.allValues) {
                 if (tx.source > 0 && tx.source <= MAX_PEERS_COUNT) {
                     [peer sendInvMessageWithTxHash:tx.txHash];

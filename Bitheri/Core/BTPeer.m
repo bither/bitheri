@@ -605,6 +605,7 @@ services:(uint64_t)services
     }
     if(!_bloomFilterSent){
         DDLogDebug(@"Peer %@ received inv. But we didn't send bloomfilter. Ignore", self.host);
+        return;
     }
     
     for (NSUInteger off = l; off < l + 36*count; off += 36) {

@@ -91,6 +91,8 @@
 		DA6F188219663F3300259A89 /* BTScriptBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D028E9EEAD28B9868E628 /* BTScriptBuilder.m */; };
 		DA6F188319663F3300259A89 /* BTScriptChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D059FF8F45BEECE09DF93 /* BTScriptChunk.m */; };
 		DA6F188419663F3300259A89 /* BTScriptOpCodes.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D06318199C5E6A411060F /* BTScriptOpCodes.m */; };
+		DAB2E12219B857DA00F791F1 /* BTIn.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D08AC899D8CE82F7D2AE5 /* BTIn.m */; };
+		DAB2E12319B857DA00F791F1 /* BTOut.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0C208885CF9FF3157351 /* BTOut.m */; };
 		DAC2DBFC1953D98000C67B0B /* BTTxProviderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DBFB1953D98000C67B0B /* BTTxProviderTest.m */; };
 		DAC2DBFF1953D9AB00C67B0B /* BTTxTestData.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DBFE1953D9AB00C67B0B /* BTTxTestData.m */; };
 		DAC2DC011953D9C400C67B0B /* BTTxTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DC001953D9C400C67B0B /* BTTxTest.m */; };
@@ -680,6 +682,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DAB2E12219B857DA00F791F1 /* BTIn.m in Sources */,
+				DAB2E12319B857DA00F791F1 /* BTOut.m in Sources */,
 				DA05F3C4198B70220013BBD6 /* BTTxBuilder.m in Sources */,
 				DA1543B4196FD5EB007F629E /* BTCompressingLogFileManager.m in Sources */,
 				DA6F188119663F3300259A89 /* BTScript.m in Sources */,

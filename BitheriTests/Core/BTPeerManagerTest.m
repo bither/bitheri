@@ -67,7 +67,7 @@
     }
     [[BTPeerManager instance] start];
 
-    XCTAssertTrue([[BTAddressManager sharedInstance] privKeyAddresses].count>0, @"add private key success");
+    XCTAssertTrue([[BTAddressManager instance] privKeyAddresses].count>0, @"add private key success");
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(syncDone) name:BTPeerManagerSyncFinishedNotification object:nil];
 
@@ -78,7 +78,7 @@
 }
 
 - (void)syncDone{
-    for (BTPeer *peer in [NSSet setWithSet:[BTPeerManager sharedInstance].connectedPeers]){
+    for (BTPeer *peer in [NSSet setWithSet:[BTPeerManager instance].connectedPeers]){
         [peer refetchBlocksFrom:[[@"00000000000000006b34a0ade7489801ab663b78147c126518ea9c499cb65953" hexToData] reverse]];
     }
 }

@@ -55,8 +55,8 @@
         BTTx *tx1 = [BTTx transactionWithMessage:[each hexToData]];
         XCTAssert([[[tx1 toData] SHA256_2] isEqualToData:tx1.txHash]);
         XCTAssert([tx1 verifySignatures]);
-        [[BTTxProvider instance] add:[tx1 formatToTxItem]];
-        BTTx *tx2 = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:tx1.txHash]];
+        [[BTTxProvider instance] add:tx1];
+        BTTx *tx2 = [[BTTxProvider instance] getTxDetailByTxHash:tx1.txHash];
         XCTAssert([[[tx2 toData] SHA256_2] isEqualToData:tx2.txHash]);
         XCTAssert([tx1 isEqual:tx2]);
 

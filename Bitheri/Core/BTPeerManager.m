@@ -492,42 +492,44 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (void)peer:(BTPeer *)peer disconnectedWithError:(NSError *)error {
-    if (error == nil) {
-        [peer connectFail];
-    } else if ([error.domain isEqual:@"bitheri"] && error.code == ERR_PEER_TIMEOUT_CODE) {
-        if (peer.peerConnectedCnt > MAX_FAILED_COUNT) {
-            // Failed too many times, we don't want to play with it any more.
-            [self peerAbandon:peer];
-        } else {
+    dispatch_async(self.q, ^{
+        if (error == nil) {
             [peer connectFail];
-        }
+        } else if ([error.domain isEqual:@"bitheri"] && error.code == ERR_PEER_TIMEOUT_CODE) {
+            if (peer.peerConnectedCnt > MAX_FAILED_COUNT) {
+                // Failed too many times, we don't want to play with it any more.
+                [self peerAbandon:peer];
+            } else {
+                [peer connectFail];
+            }
 //        [self peerNetworkError:peer]; // if it's protocol error other than timeout, the peer isn't following the rules
-    } else { // timeout or some non-protocol related network error
-        [peer connectError];
+        } else { // timeout or some non-protocol related network error
+            [peer connectError];
 //        [self.peers removeObject:peer];
-        self.connectFailure++;
-    }
-
-    for (NSData *txHash in self.txRelays.allKeys) {
-        [self.txRelays[txHash] removeObject:peer];
-    }
-
-    if ([self.downloadPeer isEqual:peer]) { // download peer disconnected
-        _connected = NO;
-        self.downloadPeer = nil;
-        [self syncStopped];
-        if (self.connectFailure > MAX_CONNECT_FAILURE_COUNT)
-            self.connectFailure = MAX_CONNECT_FAILURE_COUNT;
-    }
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (!self.connected && self.connectFailure == MAX_CONNECT_FAILURE_COUNT) {
-            self.syncStartHeight = 0;
-            [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
-                                                                object:nil userInfo:error ? @{@"error" : error} : nil];
+            self.connectFailure++;
         }
-        else if (self.connectFailure < MAX_CONNECT_FAILURE_COUNT)
-            [self reconnect]; // try connecting to another peer
+
+        for (NSData *txHash in self.txRelays.allKeys) {
+            [self.txRelays[txHash] removeObject:peer];
+        }
+
+        if ([self.downloadPeer isEqual:peer]) { // download peer disconnected
+            _connected = NO;
+            self.downloadPeer = nil;
+            [self syncStopped];
+            if (self.connectFailure > MAX_CONNECT_FAILURE_COUNT)
+                self.connectFailure = MAX_CONNECT_FAILURE_COUNT;
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (!self.connected && self.connectFailure == MAX_CONNECT_FAILURE_COUNT) {
+                self.syncStartHeight = 0;
+                [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
+                                                                    object:nil userInfo:error ? @{@"error" : error} : nil];
+            }
+            else if (self.connectFailure < MAX_CONNECT_FAILURE_COUNT)
+                [self reconnect]; // try connecting to another peer
+        });
     });
 }
 

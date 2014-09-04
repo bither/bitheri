@@ -154,6 +154,15 @@
     return YES;
 }
 
+- (BOOL)isTxRelated:(BTTx *)tx;{
+    for (BTAddress *address in self.allAddresses) {
+        if([self isAddress:address.address containsTransaction:tx]){
+            return true;
+        }
+    }
+    return false;
+}
+
 - (BOOL)isAddress:(NSString *)address containsTransaction:(BTTx *)transaction {
     if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:address]) return YES;
     return [[BTTxProvider instance] isAddress:address containsTx:transaction];

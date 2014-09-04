@@ -40,7 +40,7 @@
 - (BOOL)allSyncComplete;
 
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
-
+- (BOOL)isTxRelated:(BTTx *)tx;
 - (NSArray *)outs;
 
 @end

@@ -494,13 +494,14 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (void)peer:(BTPeer *)peer disconnectedWithError:(NSError *)error {
     dispatch_async(self.q, ^{
         if (error == nil) {
-            [peer connectFail];
+            [self peerNetworkError:peer];
         } else if ([error.domain isEqual:@"bitheri"] && error.code == ERR_PEER_TIMEOUT_CODE) {
             if (peer.peerConnectedCnt > MAX_FAILED_COUNT) {
                 // Failed too many times, we don't want to play with it any more.
                 [self peerAbandon:peer];
             } else {
-                [peer connectFail];
+                [self peerNetworkError:peer];
+//                [peer connectFail];
             }
 //        [self peerNetworkError:peer]; // if it's protocol error other than timeout, the peer isn't following the rules
         } else { // timeout or some non-protocol related network error

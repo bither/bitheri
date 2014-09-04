@@ -29,6 +29,7 @@
 #import "BTBlockChain.h"
 #import "BTPeerManager.h"
 #import "BTOut.h"
+#import "BTAddressManager.h"
 
 //#define USERAGENT [NSString stringWithFormat:@"/bitheri:%@/", NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]]
 //
@@ -53,6 +54,7 @@ typedef enum {
 @interface BTPeer (){
     BOOL _bloomFilterSent;
     uint32_t _incrementalBlockHeight;
+    int _unrelatedTxRelayCount;
 }
 
 @property (nonatomic, strong) NSInputStream *inputStream;
@@ -694,6 +696,19 @@ services:(uint64_t)services
 //            });
         }
     } else {
+        if (self.needToRequestDependencyDict[tx.txHash] == nil || ((NSArray *)self.needToRequestDependencyDict[tx.txHash]).count == 0) {
+            if ([[BTAddressManager instance] isTxRelated:tx]) {
+                _unrelatedTxRelayCount = 0;
+            } else {
+                _unrelatedTxRelayCount += 1;
+                if (_unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT) {
+                    [self disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_RELAY_TO_MUCH_UNRELAY_TX
+                                                                              userInfo:@{NSLocalizedDescriptionKey : @"connect timeout"}]];
+                    return;
+                }
+            }
+        }
+
         // check dependency
         NSDictionary *dependency = [[BTTxProvider instance] getTxDependencies:tx];
         NSMutableArray *needToRequest = [NSMutableArray new];

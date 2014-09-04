@@ -61,6 +61,7 @@
 // error
 #define ERR_PEER_TIMEOUT_CODE            1001
 #define ERR_PEER_DISCONNECT_CODE         500
+#define ERR_PEER_RELAY_TO_MUCH_UNRELAY_TX         501
 #define ERR_TX_DUST_OUT_CODE                 2001
 #define ERR_TX_NOT_ENOUGH_MONEY_CODE                 2002
 #define ERR_TX_WAIT_CONFIRM_CODE                 2003
@@ -125,7 +126,7 @@
 #define MAX_TIME_DRIFT    (2*60*60)     // the furthest in the future a block is allowed to be timestamped
 #define MAX_PROOF_OF_WORK 0x1d00ffffu   // highest value for difficulty target (higher values are less difficult)
 #define TARGET_TIMESPAN   (14*24*60*60) // the targeted timespan between difficulty target adjustments
-
+#define MAX_UNRELATED_TX_RELAY_COUNT 1000
 // address
 #define PRIVATE_KEY_FILE_NAME @"%@/%@.key"
 #define WATCH_ONLY_FILE_NAME @"%@/%@.pub"

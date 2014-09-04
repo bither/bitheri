@@ -82,6 +82,7 @@
         in.inSignature = d ?: nil;
         off += l;
         in.inSequence = [message UInt32AtOffset:off];
+        in.tx = self;
         in.inSn = self.ins.count;
         [self.ins addObject:in];
         off += sizeof(uint32_t);
@@ -99,6 +100,7 @@
         off += l;
         address = [[[BTScript alloc] initWithProgram:d] getToAddress];
         out.outAddress = address ?: nil;
+        out.tx = self;
         out.outSn = self.outs.count;
         [self.outs addObject:out];
     }
@@ -690,7 +692,7 @@ sequence:(uint32_t)sequence
         }
         return YES;
     } else {
-        DDLogVerbose(@"tx base info is not match");
+//        DDLogVerbose(@"tx base info is not match");
         return NO;
     }
 }

@@ -307,6 +307,13 @@ sequence:(uint32_t)sequence
     if (! [self isSigned]) return NO;
     
     _txHash = self.data.SHA256_2;
+    // update in & out 's tx hash
+    for (BTIn *in in self.ins) {
+        in.txHash = _txHash;
+    }
+    for (BTOut *out in self.outs) {
+        out.txHash = _txHash;
+    }
         
     return YES;
 }
@@ -648,6 +655,13 @@ sequence:(uint32_t)sequence
         return NO;
 
     _txHash = self.data.SHA256_2;
+    // update in & out 's tx hash
+    for (BTIn *in in self.ins) {
+        in.txHash = _txHash;
+    }
+    for (BTOut *out in self.outs) {
+        out.txHash = _txHash;
+    }
 
     return YES;
 }

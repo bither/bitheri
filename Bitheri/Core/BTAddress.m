@@ -328,39 +328,51 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [transaction blockHeightUntilFreeForAmounts:amounts withBlockHeights:heights];
 }
 
+
+
 - (void)savePrivate {
     NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
     [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
 }
 
-- (void)savePrivateWithPubKey {
+- (void)savePrivateWithPubKey :(BOOL) isSetModify{
     NSString *watchOnlyFullFileName = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
     NSString *watchOnlyContent = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
     [BTUtils writeFile:watchOnlyFullFileName content:watchOnlyContent];
-    double time = [[NSDate new] timeIntervalSince1970] + saveTime;
-    saveTime = saveTime + 1;
-    [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:watchOnlyFullFileName];
-
+    if (isSetModify) {
+        double time = [[NSDate new] timeIntervalSince1970] + saveTime;
+        saveTime = saveTime + 1;
+        [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:watchOnlyFullFileName];
+    }
 }
 
-- (void)saveWatchOnly {
+- (void)saveWatchOnly :(BOOL) isSetModify {
     NSString *content = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
     NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
     [BTUtils writeFile:dir content:content];
-    double time = [[NSDate new] timeIntervalSince1970] + saveTime;
-    saveTime = saveTime + 1;
-    [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:dir];
-
+    if (isSetModify) {
+        double time = [[NSDate new] timeIntervalSince1970] + saveTime;
+        saveTime = saveTime + 1;
+        [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:dir];
+    }
 }
 
 - (void)updateAddress{
     if ([self hasPrivKey]) {
-        [self savePrivateWithPubKey];
+        [self savePrivateWithPubKey:NO];
     } else {
-        [self saveWatchOnly];
+        [self saveWatchOnly:NO];
     }
 }
 
+-(void)saveNewAddress{
+    if ([self hasPrivKey]) {
+        [self savePrivate];
+        [self savePrivateWithPubKey:YES];
+    }else{
+        [self saveWatchOnly:YES];
+    }
+}
 - (void)removeWatchOnly{
     NSString *file = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
     [BTUtils removeFile:file];

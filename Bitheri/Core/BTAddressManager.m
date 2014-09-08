@@ -95,13 +95,10 @@
 - (void)addAddress:(BTAddress *)address {
     DDLogDebug(@"addAddress %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
     if (address.hasPrivKey) {
-        [address savePrivate];
-        [address savePrivateWithPubKey];
+        [address saveNewAddress];
         [self.privKeyAddresses insertObject:address atIndex:0];
-
     } else {
-        [address saveWatchOnly];
-        // [self.watchOnlyAddresses addObject:address];
+        [address saveNewAddress];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
     }
 

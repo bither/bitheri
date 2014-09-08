@@ -55,6 +55,7 @@ typedef enum {
     BOOL _bloomFilterSent;
     uint32_t _incrementalBlockHeight;
     int _unrelatedTxRelayCount;
+    NSString *_host;
 }
 
 @property (nonatomic, strong) NSInputStream *inputStream;
@@ -77,7 +78,7 @@ typedef enum {
 
 @implementation BTPeer
 
-@dynamic host;
+//@dynamic _host;
 
 //+ (instancetype)peerWithAddress:(uint32_t)address andPort:(uint16_t)port
 //{
@@ -121,10 +122,13 @@ services:(uint64_t)services
 
 - (NSString *)host
 {
-    struct in_addr addr = { CFSwapInt32HostToBig(self.peerAddress) };
-    char s[INET_ADDRSTRLEN];
+    if (_host == nil) {
+        struct in_addr addr = { CFSwapInt32HostToBig(self.peerAddress) };
+        char s[INET_ADDRSTRLEN];
 
-    return [NSString stringWithUTF8String:inet_ntop(AF_INET, &addr, s, INET_ADDRSTRLEN)];
+        _host = [NSString stringWithUTF8String:inet_ntop(AF_INET, &addr, s, INET_ADDRSTRLEN)];
+    }
+    return _host;
 }
 
 - (void)connectPeer
@@ -604,7 +608,7 @@ services:(uint64_t)services
         return;
     }
     if(!_bloomFilterSent){
-        DDLogDebug(@"Peer %@ received inv. But we didn't send bloomfilter. Ignore", self.host);
+        DDLogDebug(@"%@:%d received inv. But we didn't send bloomfilter. Ignore", self.host, self.peerPort);
         return;
     }
     
@@ -800,7 +804,7 @@ services:(uint64_t)services
         }
     }
     for (BTTx *eachTx in invalidTxs){
-        DDLogWarn(@"%u:%u tx:[%@] is invalid.", self.peerAddress, self.peerPort, [NSString hexWithHash:eachTx.txHash]);
+        DDLogWarn(@"%@:%u tx:[%@] is invalid.", self.host, self.peerPort, [NSString hexWithHash:eachTx.txHash]);
         [self clearInvalidTxFromDependencyDict:eachTx];
     }
     for (BTTx *eachTx in checkedTxs){
@@ -1053,7 +1057,7 @@ services:(uint64_t)services
     [self.requestedBlockHashes removeObject:block.blockHash];
     if ([self.requestedBlockHashes countForObject:block.blockHash] > 0) {
         // block was refetched, drop this one
-        DDLogDebug(@"dropping refetched block %@", [NSString hexWithHash:block.blockHash]);
+        DDLogDebug(@"%@:%d dropping refetched block %@", self.host, self.peerPort, [NSString hexWithHash:block.blockHash]);
         return;
     }
 

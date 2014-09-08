@@ -435,7 +435,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
     dispatch_async(self.q, ^{
-        DDLogDebug(@"%@ connected with lastblock %d", peer.host, peer.versionLastBlock);
+        DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.peerPort, peer.versionLastBlock);
         self.connectFailure = 0;
         if (!_connected) {
             _connected = YES;
@@ -469,7 +469,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (self.downloadPeer == nil || ![self.downloadPeer isEqual:dPeer]) {
             [self.downloadPeer disconnectPeer];
             self.downloadPeer = dPeer;
-            DDLogDebug(@"%@ is downloading now", self.downloadPeer.host);
+            DDLogDebug(@"%@:%d is downloading now", self.downloadPeer.host, self.downloadPeer.peerPort);
         }
 
         if (self.taskId == UIBackgroundTaskInvalid) { // start a background task for the chain sync
@@ -598,10 +598,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         int oldLastBlockNo = [BTBlockChain instance].lastBlock.blockNo;
         int relayedCount = [[BTBlockChain instance] relayedBlockHeadersForMainChain:headers];
         if (relayedCount == headers.count) {
-            DDLogDebug(@"Peer %@ relay %d block headers OK, last block No.%d, total block:%d", peer.host, relayedCount, [BTBlockChain instance].lastBlock.blockNo, [[BTBlockChain instance] getBlockCount]);
+            DDLogDebug(@"%@:%d relay %d block headers OK, last block No.%d, total block:%d", peer.host, peer.peerPort, relayedCount, [BTBlockChain instance].lastBlock.blockNo, [[BTBlockChain instance] getBlockCount]);
         } else {
             [self peerAbandon:peer];
-            DDLogDebug(@"Peer %@ relay %d/%d block headers. drop this peer", peer.host, relayedCount, headers.count);
+            DDLogDebug(@"%@:%d relay %d/%d block headers. drop this peer", peer.host, peer.peerPort, relayedCount, headers.count);
         }
 
         if (self.lastBlockHeight == peer.versionLastBlock) {

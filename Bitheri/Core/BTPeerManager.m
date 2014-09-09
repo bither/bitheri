@@ -94,7 +94,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _activeObserver =
             [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillResignActiveNotification object:nil
                                                                queue:nil usingBlock:^(NSNotification *note) {
-                        if (self.syncProgress >= 1.0 && self.syncProgress < 0.1)
+                        if (self.syncProgress >= 1.0 || self.syncProgress < 0.1)
                             [self.connectedPeers makeObjectsPerformSelector:@selector(disconnectPeer)];
                     }];
 

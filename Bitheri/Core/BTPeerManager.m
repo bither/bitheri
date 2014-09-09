@@ -281,6 +281,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         // clear bloom filter
         _bloomFilter = nil;
         _connected = NO;
+        self.syncStartHeight = 0;
         [self sendConnectedChangeNotification];
         dispatch_async(self.q, ^{
             NSSet *set = [NSSet setWithSet:self.connectedPeers];

@@ -94,7 +94,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _activeObserver =
             [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillResignActiveNotification object:nil
                                                                queue:nil usingBlock:^(NSNotification *note) {
-                        if (self.syncProgress >= 1.0)
+                        if (self.syncProgress >= 1.0 && self.syncProgress < 0.1)
                             [self.connectedPeers makeObjectsPerformSelector:@selector(disconnectPeer)];
                     }];
 
@@ -111,9 +111,25 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (double)syncProgress {
-    if (!self.downloadPeer) return (self.syncStartHeight == self.lastBlockHeight) ? 0.05 : 0.0;
-    if (self.lastBlockHeight >= self.downloadPeer.versionLastBlock) return 1.0;
-    return 0.1 + 0.9 * (self.lastBlockHeight - self.syncStartHeight) / (self.downloadPeer.versionLastBlock - self.syncStartHeight);
+    // 1. didn't connect any peer, value will be 0
+    // 2. do not need sync, value will be 0
+    // 3. need sync, but not yet complete, value will be >= 0.1
+    // 4. all sync completed, value will be >= 1.0
+    // 5. need sync but download peer is disconnect(nil), value will be 1
+    if (self.syncStartHeight == 0) {
+        return 0.0;
+    } else {
+        if (self.downloadPeer == nil) {
+            return 1.0;
+        } else {
+            return 0.1 + 0.9 * (self.lastBlockHeight - self.syncStartHeight) / (self.downloadPeer.versionLastBlock - self.syncStartHeight);
+        }
+    }
+
+
+//    if (!self.downloadPeer) return (self.syncStartHeight == self.lastBlockHeight) ? 0.05 : 0.0;
+//    if (self.lastBlockHeight >= self.downloadPeer.versionLastBlock) return 1.0;
+//    return 0.1 + 0.9 * (self.lastBlockHeight - self.syncStartHeight) / (self.downloadPeer.versionLastBlock - self.syncStartHeight);
 }
 
 - (BOOL)doneSyncFromSPV {
@@ -213,13 +229,13 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (void)reconnect {
     if (!self.running)
         return;
-    if (self.syncProgress < 1.0) {
-        if (self.syncStartHeight == 0) self.syncStartHeight = self.lastBlockHeight;
+//    if (self.syncProgress < 1.0) {
+//        if (self.syncStartHeight == 0) self.syncStartHeight = self.lastBlockHeight;
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncStartedNotification object:nil];
-        });
-    }
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncStartedNotification object:nil];
+//        });
+//    }
 
     dispatch_async(self.q, ^{
         [self.connectedPeers minusSet:[self.connectedPeers objectsPassingTest:^BOOL(id obj, BOOL *stop) {
@@ -246,7 +262,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         [self sendPeerCountChangeNotification:self.connectedPeers.count];
         if (self.connectedPeers.count == 0) {
             [self syncStopped];
-            self.syncStartHeight = 0;
+//            self.syncStartHeight = 0;
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
@@ -469,6 +485,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (self.downloadPeer == nil || ![self.downloadPeer isEqual:dPeer]) {
             [self.downloadPeer disconnectPeer];
             self.downloadPeer = dPeer;
+            self.syncStartHeight = self.lastBlockHeight;
             DDLogDebug(@"%@:%d is downloading now", self.downloadPeer.host, self.downloadPeer.peerPort);
         }
 
@@ -524,7 +541,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         dispatch_async(dispatch_get_main_queue(), ^{
             if (!self.connected && self.connectFailure == MAX_CONNECT_FAILURE_COUNT) {
-                self.syncStartHeight = 0;
+//                self.syncStartHeight = 0;
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
                                                                     object:nil userInfo:error ? @{@"error" : error} : nil];
             }
@@ -607,7 +624,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (self.lastBlockHeight == peer.versionLastBlock) {
             [self syncStopped];
             [peer sendGetAddrMessage];
-            self.syncStartHeight = 0;
+//            self.syncStartHeight = 0;
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (!self.doneSyncFromSPV) {
@@ -666,7 +683,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (block.blockNo == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
             [self syncStopped];
             [peer sendGetAddrMessage]; // request a list of other bitcoin peers
-            self.syncStartHeight = 0;
+//            self.syncStartHeight = 0;
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (!self.doneSyncFromSPV) {

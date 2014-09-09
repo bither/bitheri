@@ -117,11 +117,11 @@
     }
     
     NSUInteger i = count;
-    while (i > 0)
+    while (i > 1)
     {
         DDLogFileInfo *logFileInfo = sortedLogFileInfos[i - 1];
         
-        if (logFileInfo.isArchived && !logFileInfo.isCompressed)
+        if (!logFileInfo.isCompressed)
         {
             [self compressLogFile:logFileInfo];
             

@@ -76,8 +76,8 @@
     NSMutableSet * set =[NSMutableSet set];
     [set addObject:block.blockHash];
 //    [[BTBlockProvider instance] deleteBlocksNotInHashes:set];
-    [[BTBlockProvider instance] addBlock:[block formatToBlockItem ]];
-    BTBlockItem * blockItem=  [[BTBlockProvider instance] getBlock:block.blockHash];
+    [[BTBlockProvider instance] addBlock:block];
+    BTBlock * blockItem=  [[BTBlockProvider instance] getBlock:block.blockHash];
     XCTAssertTrue(blockItem, @"insert block success");
 //    [[BTBlockProvider instance] deleteBlocksNotInHashes:set];
     XCTAssertTrue([[NSString base58WithData:blockItem.blockHash] isEqualToString:[NSString base58WithData:block.blockHash]], @"delete block success ");

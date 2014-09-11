@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTPeerItem.h"
+#import "BTPeer.h"
 
 
 @interface BTPeerProvider : NSObject

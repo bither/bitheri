@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTPeerItem.h"
+//#import "BTPeerItem.h"
 
 @class BTPeer, BTTx, BTBlock;
 
@@ -31,6 +31,7 @@
 
 // called when the peer relays either a merkleblock or a block header, headers will have 0 totalTransactions
 - (void)peer:(BTPeer *)peer relayedBlock:(BTBlock *)block;
+- (void)peer:(BTPeer *)peer relayedHeaders:(NSArray *)headers;
 
 - (BTTx *)peer:(BTPeer *)peer requestedTransaction:(NSData *)txHash;
 - (NSData *)peerBloomFilter:(BTPeer *)peer;
@@ -46,25 +47,30 @@ typedef enum {
 @interface BTPeer : NSObject<NSStreamDelegate>
 
 @property (nonatomic, assign) id<BTPeerDelegate> delegate;
-@property (nonatomic, strong) dispatch_queue_t delegateQueue; // default is main queue
+//@property (nonatomic, strong) dispatch_queue_t delegateQueue; // default is main queue
 
 // set this to the timestamp when the wallet was created to improve initial sync time (interval since refrence date)
-@property (nonatomic, assign) NSTimeInterval earliestKeyTime;
+//@property (nonatomic, assign) NSTimeInterval earliestKeyTime;
 
 @property (nonatomic, readonly) BTPeerStatus status;
 @property (nonatomic, readonly) NSString *host;
-@property (nonatomic, readonly) uint32_t address;
-@property (nonatomic, readonly) uint16_t port;
-@property (nonatomic, readonly) uint64_t services;
+
+@property (nonatomic, readonly) uint32_t peerAddress;
+@property (nonatomic, assign) NSTimeInterval peerTimestamp; // peer 's time stamp not local time stamp, these only use for shown
+@property (nonatomic, readonly) uint16_t peerPort;
+@property (nonatomic, readonly) uint64_t peerServices;
+@property (nonatomic) int peerConnectedCnt;
+
 @property (nonatomic, readonly) uint32_t version;
 @property (nonatomic, readonly) uint64_t nonce;
 @property (nonatomic, readonly) NSString *userAgent;
-@property (nonatomic, readonly) uint32_t lastBlock;
+@property (nonatomic, readonly) uint32_t versionLastBlock;
+@property (nonatomic, readonly) uint32_t displayLastBlock;
 @property (nonatomic, readonly) NSTimeInterval pingTime;
 @property (nonatomic, assign) NSTimeInterval timestamp; // last seen time (interval since reference date)
-@property (nonatomic, assign) NSTimeInterval peerTimestamp; // peer 's time stamp not local time stamp, these only use for shown
+
 //@property (nonatomic, assign) int16_t misbehavin;
-@property (nonatomic) int connectedCnt;
+
 
 //+ (instancetype)peerWithAddress:(uint32_t)address andPort:(uint16_t)port;
 //
@@ -83,9 +89,9 @@ typedef enum {
 - (void)refetchBlocksFrom:(NSData *)blockHash; // useful to get additional transactions after a bloom filter update
 - (void)sendGetDataMessageWithTxHashes:(NSArray *)txHashes andBlockHashes:(NSArray *)blockHashes;
 
-- (BTPeerItem *)formatToPeerItem;
-
-- (instancetype)initWithPeerItem:(BTPeerItem *) peerItem;
+//- (BTPeerItem *)formatToPeerItem;
+//
+//- (instancetype)initWithPeerItem:(BTPeerItem *) peerItem;
 
 //- (void)missBehaving;
 

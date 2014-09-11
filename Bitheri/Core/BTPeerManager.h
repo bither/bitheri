@@ -17,8 +17,8 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTPeer.h"
 #import "BTBlockChain.h"
+#import "BTPeer.h"
 
 @interface BTPeerManager : NSObject<BTPeerDelegate>
 
@@ -26,13 +26,14 @@
 @property (nonatomic, readonly) uint32_t lastBlockHeight;
 @property (nonatomic, readonly) double syncProgress;
 @property (nonatomic, strong) BTBlockChain * blockChain;
+@property (nonatomic, strong) BTPeer *downloadPeer;
 
 @property (readonly) BOOL doneSyncFromSPV;
 
-+ (instancetype)sharedInstance;
++ (instancetype)instance;
 
-- (void)connect;
-- (void)disconnect;
+- (void)start;
+- (void)stop;
 - (void)publishTransaction:(BTTx *)transaction completion:(void (^)(NSError *error))completion;
 
 // transaction is considered verified when all peers have relayed it

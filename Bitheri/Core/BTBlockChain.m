@@ -20,6 +20,7 @@
 #import "BTBlockProvider.h"
 #import "BTTxProvider.h"
 #import "BTSettings.h"
+#import "BTPeer.h"
 
 static BTBlockChain *blockChain;
 
@@ -46,14 +47,14 @@ static BTBlockChain *blockChain;
     [[BTBlockProvider instance] cleanOldBlock];
     _singleBlocks = [NSMutableDictionary new];
 
-    BTBlockItem *blockItem = [[BTBlockProvider instance] getLastBlock];
-    if (blockItem) {
-        _lastBlock = [[BTBlock alloc] initWithBlockItem:blockItem];
-    }
-    BTBlockItem *orphanBlockItem = [[BTBlockProvider instance] getLastOrphanBlock];
-    if (orphanBlockItem) {
-        _lastOrphan = [[BTBlock alloc] initWithBlockItem:orphanBlockItem];
-    }
+    _lastBlock = [[BTBlockProvider instance] getLastBlock];
+//    if (blockItem) {
+//        _lastBlock = [[BTBlock alloc] initWithBlockItem:blockItem];
+//    }
+    _lastOrphan = [[BTBlockProvider instance] getLastOrphanBlock];
+//    if (orphanBlockItem) {
+//        _lastOrphan = [[BTBlock alloc] initWithBlockItem:orphanBlockItem];
+//    }
 
     return self;
 }
@@ -63,7 +64,7 @@ static BTBlockChain *blockChain;
     NSMutableDictionary *prevDict = [NSMutableDictionary new];
     NSMutableDictionary *blockDict = [NSMutableDictionary new];
     for (BTBlock *block in blocks) {
-        prevDict[block.prevBlock] = block;
+        prevDict[block.blockPrev] = block;
         blockDict[block.blockHash] = block;
     }
 
@@ -84,7 +85,7 @@ static BTBlockChain *blockChain;
         while (b != nil) {
             chain[b.blockHash] = block;
 //            b = prevDict[b.blockHash];
-            b = blockDict[b.prevBlock];
+            b = blockDict[b.blockPrev];
             len += 1;
         }
         if (lastBlock == nil) {
@@ -104,7 +105,15 @@ static BTBlockChain *blockChain;
 }
 
 - (void)addBlock:(BTBlock *)block {
-    [[BTBlockProvider instance] addBlock:[block formatToBlockItem]];
+    [[BTBlockProvider instance] addBlock:block];
+}
+
+- (void)addBlocks:(NSArray *)blocks {
+//    NSMutableArray *addBlocks = [NSMutableArray new];
+//    for (BTBlock *block in blocks) {
+//        [addBlocks addObject:[block formatToBlockItem]];
+//    }
+    [[BTBlockProvider instance] addBlocks:blocks];
 }
 
 - (BOOL)isExist:(NSData *)blockHash; {
@@ -112,30 +121,30 @@ static BTBlockChain *blockChain;
 }
 
 - (BTBlock *)getBlock:(NSData *)blockHash; {
-    BTBlockItem *blockItem = [[BTBlockProvider instance] getBlock:blockHash];
-    if (blockItem == nil) {
-        return nil;
-    } else {
-        return [BTBlock blockWithBlockItem:blockItem];
-    }
+    return [[BTBlockProvider instance] getBlock:blockHash];
+//    if (blockItem == nil) {
+//        return nil;
+//    } else {
+//        return [BTBlock blockWithBlockItem:blockItem];
+//    }
 }
 
 - (BTBlock *)getMainChainBlock:(NSData *)blockHash; {
-    BTBlockItem *blockItem = [[BTBlockProvider instance] getMainChainBlock:blockHash];
-    if (blockItem == nil) {
-        return nil;
-    } else {
-        return [BTBlock blockWithBlockItem:blockItem];
-    }
+    return [[BTBlockProvider instance] getMainChainBlock:blockHash];
+//    if (blockItem == nil) {
+//        return nil;
+//    } else {
+//        return [BTBlock blockWithBlockItem:blockItem];
+//    }
 }
 
 - (BTBlock *)getOrphanBlockByPrevHash:(NSData *)prevHash; {
-    BTBlockItem *blockItem = [[BTBlockProvider instance] getOrphanBlockByPrevHash:prevHash];
-    if (blockItem == nil) {
-        return nil;
-    } else {
-        return [BTBlock blockWithBlockItem:blockItem];
-    }
+    return  [[BTBlockProvider instance] getOrphanBlockByPrevHash:prevHash];
+//    if (blockItem == nil) {
+//        return nil;
+//    } else {
+//        return [BTBlock blockWithBlockItem:blockItem];
+//    }
 }
 
 - (int)getBlockCount {
@@ -145,10 +154,10 @@ static BTBlockChain *blockChain;
 - (NSTimeInterval)getTransactionTime:(BTBlock *)block; {
     NSTimeInterval transitionTime = 0;
     // hit a difficulty transition, find previous transition time
-    if ((block.height % BLOCK_DIFFICULTY_INTERVAL) == 0) {
+    if ((block.blockNo % BLOCK_DIFFICULTY_INTERVAL) == 0) {
         BTBlock *b = block;
         for (uint32_t i = 0; b && i < BLOCK_DIFFICULTY_INTERVAL; i++) {
-            b = [self getBlock:b.prevBlock];
+            b = [self getBlock:b.blockPrev];
         }
         transitionTime = b.blockTime;
     }
@@ -157,8 +166,8 @@ static BTBlockChain *blockChain;
 
 - (BOOL)inMainChain:(BTBlock *)block; {
     BTBlock *b = [self lastBlock];
-    while (b && b.height > block.height) {
-        b = [self getBlock:b.prevBlock];
+    while (b && b.blockNo > block.blockNo) {
+        b = [self getBlock:b.blockPrev];
     }
     return [b.blockHash isEqual:block.blockHash];
 }
@@ -168,9 +177,9 @@ static BTBlockChain *blockChain;
 
     // walk back to where the fork joins the main chain
     while (b && b2 && ![b.blockHash isEqual:b2.blockHash]) {
-        b = [self getBlock:b.prevBlock];
-        if (b.height < b2.height)
-            b2 = [self getBlock:b2.prevBlock];
+        b = [self getBlock:b.blockPrev];
+        if (b.blockNo < b2.blockNo)
+            b2 = [self getBlock:b2.blockPrev];
     }
     return b;
 }
@@ -185,7 +194,7 @@ static BTBlockChain *blockChain;
 }
 
 - (void)extendMainChain:(BTBlock *)block; {
-    if ([block.prevBlock isEqualToData:self.lastBlock.blockHash]) {
+    if ([block.blockPrev isEqualToData:self.lastBlock.blockHash]) {
         block.isMain = YES;
         [self addBlock:block];
         _lastBlock = block;
@@ -196,16 +205,16 @@ static BTBlockChain *blockChain;
     BTBlock *b = self.lastBlock;
     BTBlock *next = lastBlock;
     while (![b.blockHash isEqualToData:forkStartBlock.blockHash]) {
-        next = [self getOrphanBlockByPrevHash:b.prevBlock];
+        next = [self getOrphanBlockByPrevHash:b.blockPrev];
 
         [[BTBlockProvider instance] updateBlock:b.blockHash withIsMain:NO];
-        b = [self getMainChainBlock:b.prevBlock];
+        b = [self getMainChainBlock:b.blockPrev];
         _lastBlock = b;
     }
     b = next;
     [[BTBlockProvider instance] updateBlock:next.blockHash withIsMain:YES];
     _lastBlock = next;
-    while (![b.blockHash isEqualToData:lastBlock.prevBlock]) {
+    while (![b.blockHash isEqualToData:lastBlock.blockPrev]) {
         [[BTBlockProvider instance] updateBlock:b.blockHash withIsMain:YES];
         _lastBlock = b;
         b = [self getOrphanBlockByPrevHash:b.blockHash];
@@ -221,26 +230,25 @@ static BTBlockChain *blockChain;
     self.lastOrphan = block;
 }
 
-- (void)relayedBlock:(BTBlock *)block withPeer:(BTPeer *)peer andCallback:(void (^)(BTBlock *b, BOOL isConfirm))callback; {
-    BTBlock *prev = [self getBlock:block.prevBlock];
+- (void)relayedBlock:(BTBlock *)block withCallback:(void (^)(BTBlock *b, BOOL isConfirm))callback {
+    BTBlock *prev = [self getBlock:block.blockPrev];
 
     if (!prev) {
         // block is an orphan
-        DDLogDebug(@"%@:%d relayed orphan block %@, previous %@, last block is %@, height %d", peer.host, peer.port,
-                        block.blockHash, block.prevBlock, self.lastBlock.blockHash, self.lastBlock.height);
+        DDLogDebug(@"orphan block %@, previous %@, last block is %@, height %d", block.blockHash, block.blockPrev, self.lastBlock.blockHash, self.lastBlock.blockNo);
 
         // ignore orphans older than one week ago
         if (block.blockTime - NSTimeIntervalSince1970 < [NSDate timeIntervalSinceReferenceDate] - ONE_WEEK) return;
-        self.singleBlocks[block.prevBlock] = block;
-        // call get blocks, unless we already did with the previous block, or we're still downloading the chain
-        if (self.lastBlock.height >= peer.lastBlock && ![self.lastOrphan.blockHash isEqual:block.prevBlock]) {
-            DDLogDebug(@"%@:%d calling getblocks", peer.host, peer.port);
-            [peer sendGetBlocksMessageWithLocators:[self blockLocatorArray] andHashStop:nil];
-        }
+        self.singleBlocks[block.blockPrev] = block;
+//        // call get blocks, unless we already did with the previous block, or we're still downloading the chain
+//        if (self.lastBlock.blockNo >= peer.versionLastBlock && ![self.lastOrphan.blockHash isEqual:block.blockPrev]) {
+//            DDLogDebug(@"%@:%d calling getblocks", peer.host, peer.peerPort);
+//            [peer sendGetBlocksMessageWithLocators:[self blockLocatorArray] andHashStop:nil];
+//        }
         return;
     }
 
-    block.height = prev.height + 1;
+    block.blockNo = prev.blockNo + 1;
     NSTimeInterval transitionTime = [self getTransactionTime:block];
 
     // verify block difficulty
@@ -249,7 +257,7 @@ static BTBlockChain *blockChain;
         return;
     }
 
-    if ([block.prevBlock isEqual:self.lastBlock.blockHash]) {
+    if ([block.blockPrev isEqual:self.lastBlock.blockHash]) {
         // new block extends main chain
         [self extendMainChain:block];
         callback(block, YES);
@@ -260,41 +268,62 @@ static BTBlockChain *blockChain;
     }
     else {
         // new block is on a fork
-        if (block.height <= BITCOIN_REFERENCE_BLOCK_HEIGHT) { // fork is older than the most recent checkpoint
+        if (block.blockNo <= BITCOIN_REFERENCE_BLOCK_HEIGHT) { // fork is older than the most recent checkpoint
             DDLogDebug(@"ignoring block on fork older than most recent checkpoint, fork height: %d, blockHash: %@",
-                            block.height, block.blockHash);
+                            block.blockNo, block.blockHash);
             return;
         }
 
         // special case, if a new block is mined while we're rescaning the chain, mark as orphan til we're caught up
-        if (block.height <= self.lastBlock.height) {
+        if (block.blockNo <= self.lastBlock.blockNo) {
             [self addOrphan:block];
             return;
         }
 
-        DDLogDebug(@"chain fork to height %d", block.height);
+        DDLogDebug(@"chain fork to height %d", block.blockNo);
         // if fork is shorter than main chain, ingore it for now
-        if (block.height > self.lastBlock.height) {
+        if (block.blockNo > self.lastBlock.blockNo) {
             BTBlock *b = [self getSameParent:block with:self.lastBlock];
-            DDLogDebug(@"reorganizing chain from height %d, new height is %d", b.height, block.height);
-            [self forkMainChainFrom:b andLast:block];
-            // mark transactions after the join point as unconfirmed
-            [[BTTxProvider instance] unConfirmTxByBlockNo:b.height];
-
-            // need refetch block get tx hashes to set block's tx confirmed
-            BTBlock *b2 = b;
-            b = block;
-
-            // set transaction heights for new main chain
-            NSMutableArray *reloadHashes = [NSMutableArray new];
-            while (b.height > b2.height) {
-                [reloadHashes addObject:b.blockHash];
-                b = [self getBlock:b.prevBlock];
-            }
-
-            [peer sendGetDataMessageWithTxHashes:@[] andBlockHashes:[[reloadHashes reverseObjectEnumerator] allObjects]];
+            DDLogDebug(@"reorganizing chain from height %d, new height is %d", b.blockNo, block.blockNo);
+            [self rollbackBlock:b.blockNo];
         }
     }
+}
+
+- (int)relayedBlockHeadersForMainChain:(NSArray *) blocks;{
+    if (blocks.count == 0)
+        return 0;
+    NSMutableArray *blocksToAdd = [NSMutableArray new];
+    BTBlock *prev = self.lastBlock;
+    if (prev == nil)
+        return 0;
+    for (int i = 0; i < blocks.count; i++) {
+        BTBlock *block = blocks[i];
+        if (![block.blockPrev isEqualToData:prev.blockHash]) {
+            BTBlock *alreadyIn = [self getBlock:block.blockHash];
+            if (alreadyIn == nil) {
+                continue;
+            } else {
+                self.singleBlocks[block.blockHash] = block;
+                break;
+            }
+        }
+        block.blockNo = prev.blockNo + 1;
+        NSTimeInterval transitionTime = [self getTransactionTime:block];
+        if (![block verifyDifficultyFromPreviousBlock:prev andTransitionTime:transitionTime]) {
+            break;
+        }
+
+        block.isMain = YES;
+        [blocksToAdd addObject:block];
+        prev = block;
+    }
+
+    if (blocksToAdd.count > 0) {
+        [self addBlocks:blocksToAdd];
+        _lastBlock = blocksToAdd[blocksToAdd.count - 1];
+    }
+    return blocksToAdd.count;
 }
 
 - (NSArray *)blockLocatorArray {
@@ -304,12 +333,12 @@ static BTBlockChain *blockChain;
     int32_t step = 1, start = 0;
     BTBlock *b = self.lastBlock;
 
-    while (b && b.height > 0) {
+    while (b && b.blockNo > 0) {
         [locators addObject:b.blockHash];
         if (++start >= 10) step *= 2;
 
         for (int32_t i = 0; b && i < step; i++) {
-            b = [self getMainChainBlock:b.prevBlock];
+            b = [self getMainChainBlock:b.blockPrev];
         }
     }
 
@@ -319,28 +348,34 @@ static BTBlockChain *blockChain;
 }
 
 - (BOOL)rollbackBlock:(uint32_t)blockNo; {
-    if (blockNo > self.lastBlock.height)
+    if (blockNo > self.lastBlock.blockNo)
         return NO;
-    int delta = self.lastBlock.height - blockNo;
+    int delta = self.lastBlock.blockNo - blockNo;
     if (delta >= BLOCK_DIFFICULTY_INTERVAL || delta >= [self getBlockCount])
         return NO;
 
     NSMutableArray *blocks = [[BTBlockProvider instance] getBlocksFrom:blockNo];
-    DDLogWarn(@"roll back block from %d to %d", self.lastBlock.height, blockNo);
-    for (BTBlockItem *blockItem in blocks) {
+    DDLogWarn(@"roll back block from %d to %d", self.lastBlock.blockNo, blockNo);
+    for (BTBlock *blockItem in blocks) {
         [[BTBlockProvider instance] removeBlock:blockItem.blockHash];
         if (blockItem.isMain) {
             [[BTTxProvider instance] unConfirmTxByBlockNo:blockItem.blockNo];
         }
     }
-    BTBlockItem *blockItem = [[BTBlockProvider instance] getLastBlock];
-    if (blockItem) {
-        _lastBlock = [[BTBlock alloc] initWithBlockItem:blockItem];
-    } else {
+    _lastBlock = [[BTBlockProvider instance] getLastBlock];
+    if (_lastBlock) {
         DDLogWarn(@"there is no main block in sqlite!!");
-        _lastBlock = nil;
     }
+//    if (blockItem) {
+//        _lastBlock = [[BTBlock alloc] initWithBlockItem:blockItem];
+//    } else {
+//
+//        _lastBlock = nil;
+//    }
     return YES;
+}
+-(NSArray *) getAllBlocks{
+    return [[BTBlockProvider instance] getAllBlocks];
 }
 
 @end

@@ -18,29 +18,32 @@
 
 #import "BTAddress.h"
 #import "BTTxProvider.h"
-#import "BTOutItem.h"
+//#import "BTOutItem.h"
 #import "BTUtils.h"
 #import "BTBlockChain.h"
 #import "BTTxBuilder.h"
+#import "BTIn.h"
+#import "BTOut.h"
+#import "BTSettings.h"
 
 static double saveTime;
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
-    if ([obj1 blockHeight] > [obj2 blockHeight]) return NSOrderedAscending;
-    if ([obj1 blockHeight] < [obj2 blockHeight]) return NSOrderedDescending;
-    if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
-    if ([obj1 txTime] < [obj2 txTime]) return NSOrderedDescending;
+    if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
+    if ([obj1 blockNo] < [obj2 blockNo]) return NSOrderedDescending;
     if ([[obj1 inputHashes] containsObject:[obj2 txHash]]) return NSOrderedDescending;
     if ([[obj2 inputHashes] containsObject:[obj1 txHash]]) return NSOrderedAscending;
+    if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
+    if ([obj1 txTime] < [obj2 txTime]) return NSOrderedDescending;
     return NSOrderedSame;
 };
 
-static NSData *txOutput(NSData *txHash, uint32_t n) {
-    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
-
-    [d appendData:txHash];
-    [d appendUInt32:n];
-    return d;
-}
+//static NSData *txOutput(NSData *txHash, uint32_t n) {
+//    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
+//
+//    [d appendData:txHash];
+//    [d appendUInt32:n];
+//    return d;
+//}
 
 @implementation BTAddress {
     NSString *_address;
@@ -94,18 +97,14 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
 - (NSArray *)unspentOuts {
     NSMutableArray *result = [NSMutableArray new];
-    for (BTOutItem *outItem in [[BTTxProvider instance] getUnSpendOutCanSpendWithAddress:self.address]) {
-        [result addObject:txOutput(outItem.txHash, outItem.outSn)];
+    for (BTOut *outItem in [[BTTxProvider instance] getUnSpendOutCanSpendWithAddress:self.address]) {
+        [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;
 }
 
 - (NSArray *)txs {
-    NSMutableArray *txs = [NSMutableArray new];
-    for (BTTxItem *txItem in [[BTTxProvider instance] getTxAndDetailByAddress:self.address]) {
-        BTTx *tx = [BTTx txWithTxItem:txItem];
-        [txs addObject:tx];
-    }
+    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTTxProvider instance] getTxAndDetailByAddress:self.address]];
     [txs sortUsingComparator:txComparator];
     return txs;
 }
@@ -117,7 +116,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
 - (BOOL)containsTransaction:(BTTx *)transaction {
     if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:self.address]) return YES;
-    return [[BTTxProvider instance] isAddress:self.address containsTx:[transaction formatToTxItem]];
+    return [[BTTxProvider instance] isAddress:self.address containsTx:transaction];
 }
 
 - (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
@@ -136,7 +135,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 - (BOOL)initTxs:(NSArray *)txs {
     NSMutableArray *txItemList = [NSMutableArray new];
     for (BTTx *tx  in txs) {
-        [txItemList addObject:[tx formatToTxItem]];
+        [txItemList addObject:tx];
     }
     [[BTTxProvider instance] addTxs:txItemList];
 
@@ -155,9 +154,9 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 - (void)setBlockHeight:(uint)height forTxHashes:(NSArray *)txHashes {
     NSMutableArray *needUpdateTxHash = [NSMutableArray new];
     for (NSData *hash in txHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
-        if (!tx || tx.blockHeight == height) continue;
-        tx.blockHeight = height;
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
+        if (!tx || tx.blockNo == height) continue;
+        tx.blockNo = height;
         [needUpdateTxHash addObject:tx.txHash];
     }
 
@@ -186,11 +185,11 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
         for (NSData *hash in tx.inputHashes) {
             n = [tx.inputIndexes[i++] unsignedIntValue];
-            [spent addObject:txOutput(hash, n)];
+            [spent addObject:getOutPoint(hash, n)];
         }
 
         // check if any inputs are invalid or already spent
-        if (tx.blockHeight == TX_UNCONFIRMED &&
+        if (tx.blockNo == TX_UNCONFIRMED &&
                 ([spent intersectsSet:spentOutputs] || [[NSSet setWithArray:tx.inputHashes] intersectsSet:invalidTx])) {
             [invalidTx addObject:tx.txHash];
             continue;
@@ -201,7 +200,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
         for (NSString *address in tx.outputAddresses) { // add outputs to UTXO set
             if ([self containsAddress:address]) {
-                [utxos addObject:txOutput(tx.txHash, n)];
+                [utxos addObject:getOutPoint(tx.txHash, n)];
                 balance += [tx.outputAmounts[n] unsignedLongLongValue];
             }
             n++;
@@ -212,7 +211,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
         [spent intersectSet:spentOutputs];
 
         for (NSData *o in spent) { // remove any spent outputs from UTXO set
-            BTTx *transaction = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:[o hashAtOffset:0]]];
+            BTTx *transaction = [[BTTxProvider instance] getTxDetailByTxHash:[o hashAtOffset:0]];
             n = [o UInt32AtOffset:CC_SHA256_DIGEST_LENGTH];
 
             [utxos removeObject:o];
@@ -266,7 +265,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
     NSUInteger i = 0;
 
     for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
 
         if (n < tx.outputAddresses.count && [self containsAddress:tx.outputAddresses[n]]) {
@@ -283,7 +282,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
     NSUInteger i = 0;
 
     for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
 
         if (n >= tx.outputAmounts.count) return UINT64_MAX;
@@ -318,47 +317,65 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
     NSUInteger i = 0;
 
     for (NSData *hash in transaction.inputHashes) { // get the amounts and block heights of all the transaction inputs
-        BTTx *tx = [BTTx txWithTxItem:[[BTTxProvider instance] getTxDetailByTxHash:hash]];
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
 
         if (n >= tx.outputAmounts.count) break;
         [amounts addObject:tx.outputAmounts[n]];
-        [heights addObject:@(tx.blockHeight)];
+        [heights addObject:@(tx.blockNo)];
     };
 
     return [transaction blockHeightUntilFreeForAmounts:amounts withBlockHeights:heights];
 }
 
-- (void)savePrivate:(NSString *)privateDir {
-    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, privateDir, self.address];
-    [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
 
-    [self savePrivateWithPubKey:privateDir];
+
+- (void)savePrivate {
+    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
+    [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
 }
 
-- (void)savePrivateWithPubKey:(NSString *)privateDir {
-    NSString *watchOnlyFullFileName = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, privateDir, self.address];
+- (void)savePrivateWithPubKey :(BOOL) isSetModify{
+    NSString *watchOnlyFullFileName = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
     NSString *watchOnlyContent = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
     [BTUtils writeFile:watchOnlyFullFileName content:watchOnlyContent];
-    double time = [[NSDate new] timeIntervalSince1970] + saveTime;
-    saveTime = saveTime + 1;
-    [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:watchOnlyFullFileName];
-
+    if (isSetModify) {
+        double time = [[NSDate new] timeIntervalSince1970] + saveTime;
+        saveTime = saveTime + 1;
+        [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:watchOnlyFullFileName];
+    }
 }
 
-- (void)saveWatchOnly:(NSString *)publicDir {
+- (void)saveWatchOnly :(BOOL) isSetModify {
     NSString *content = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
-    NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, publicDir, self.address];
+    NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
     [BTUtils writeFile:dir content:content];
-    double time = [[NSDate new] timeIntervalSince1970] + saveTime;
-    saveTime = saveTime + 1;
-    [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:dir];
-
+    if (isSetModify) {
+        double time = [[NSDate new] timeIntervalSince1970] + saveTime;
+        saveTime = saveTime + 1;
+        [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:dir];
+    }
 }
 
-- (void)removeWatchOnly:(NSString *)publicDir {
-    NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, publicDir, self.address];
-    [BTUtils removeFile:dir];
+- (void)updateAddress{
+    if ([self hasPrivKey]) {
+        [self savePrivateWithPubKey:NO];
+    } else {
+        [self saveWatchOnly:NO];
+    }
+}
+
+-(void)saveNewAddress{
+    if ([self hasPrivKey]) {
+        [self savePrivate];
+        [self savePrivateWithPubKey:YES];
+    }else{
+        [self saveWatchOnly:YES];
+    }
+}
+- (void)removeWatchOnly{
+    NSString *file = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
+    [BTUtils removeFile:file];
 
 }
 
@@ -395,13 +412,8 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 //}
 
 - (NSArray *)getRecentlyTxsWithConfirmationCntLessThan:(int)confirmationCnt andLimit:(int)limit; {
-    NSMutableArray *txs = [NSMutableArray new];
-    int blockNo = [BTBlockChain instance].lastBlock.height - confirmationCnt + 1;
-    for (BTTxItem *txItem in [[BTTxProvider instance] getRecentlyTxsByAddress:self.address
-                                                        andGreaterThanBlockNo:blockNo andLimit:limit]) {
-        [txs addObject:[BTTx txWithTxItem:txItem]];
-    }
-    return txs;
+    int blockNo = [BTBlockChain instance].lastBlock.blockNo - confirmationCnt + 1;
+    return [[BTTxProvider instance] getRecentlyTxsByAddress:self.address andGreaterThanBlockNo:blockNo andLimit:limit];
 }
 
 //- (uint64_t)getAmount:(NSArray *)outs; {

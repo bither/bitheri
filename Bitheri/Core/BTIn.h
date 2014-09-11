@@ -1,5 +1,5 @@
 //
-//  BTInItem.h
+//  BTIn.h
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -14,22 +14,33 @@
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  limitations under the License.#import <Foundation/Foundation.h>
 
-#import <Foundation/Foundation.h>
 
-@class BTTxItem;
+#import <CommonCrypto/CommonDigest.h>
+#import "NSMutableData+Bitcoin.h"
 
-@interface BTInItem : NSObject
+@class BTTx;
+
+static NSData *getOutPoint(NSData *txHash, uint32_t n) {
+    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
+
+    [d appendData:txHash];
+    [d appendUInt32:n];
+    return d;
+}
+
+@interface BTIn : NSObject
 
 @property (nonatomic, copy) NSData *txHash;
 @property uint inSn;
-//@property (nonatomic, strong) NSData *inScript;
+
 @property (nonatomic, copy) NSData *prevTxHash;
 @property uint prevOutSn;
 @property (nonatomic, copy) NSData *inSignature;
 @property uint inSequence;
 
-@property (nonatomic, weak) BTTxItem *tx;
+@property (nonatomic, weak) BTTx *tx;
+@property (nonatomic, copy) NSData *inScript;
 
 @end

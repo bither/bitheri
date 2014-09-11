@@ -1,5 +1,5 @@
 //
-//  BTInItem.m
+//  BTOut.m
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -14,29 +14,31 @@
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-#import "BTInItem.h"
+//  limitations under the License.#import "BTOut.h"
 
 
-@implementation BTInItem {
+#import "BTTx.h"
+#import "BTOut.h"
 
+@implementation BTOut {
+
+}
+
+- (void)setTx:(BTTx *)tx {
+    _tx = tx;
+    _txHash = tx.txHash;
 }
 
 - (BOOL)isEqual:(id)object {
     if (object == self) {
         return YES;
     }
-    if (![object isKindOfClass:[BTInItem class]]) {
+    if (![object isKindOfClass:[BTOut class]]) {
         return NO;
     }
-    BTInItem *item = (BTInItem *) object;
-    if ((self.inSignature == nil && item.inSignature != nil) || (self.inSignature != nil && item.inSignature == nil)
-            || (self.inSignature == nil && item.inSignature != nil && ![self.inSignature isEqualToData:item.inSignature])) {
-        return NO;
-    }
-    return (self.inSn == item.inSn) && [self.prevTxHash isEqualToData:item.prevTxHash]
-            && (self.prevOutSn == item.prevOutSn) && [self.txHash isEqualToData:item.txHash]
-            && (self.inSequence == item.inSequence);
+    BTOut *item = (BTOut *) object;
+    return (self.outSn == item.outSn) && [self.outScript isEqualToData:item.outScript]
+            && (self.outValue == item.outValue) && [self.outAddress isEqualToString:item.outAddress]
+            && (self.outStatus == item.outStatus) && [self.txHash isEqualToData:item.txHash];
 }
 @end

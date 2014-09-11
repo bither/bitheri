@@ -1,5 +1,5 @@
 //
-//  BTTxItem.h
+//  BTOut.h
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -14,22 +14,26 @@
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-#import <Foundation/Foundation.h>
+//  limitations under the License.#import <Foundation/Foundation.h>
 
 
-@interface BTTxItem : NSObject
+@class BTTx;
+typedef enum {
+    unspent = 0,
+    spent = 1,
+} OUT_STATUS;
 
-@property uint blockNo;
+@interface BTOut : NSObject
+
 @property (nonatomic, copy) NSData *txHash;
-@property uint txTime;
-@property uint txVer;
-@property uint txLockTime;
-@property int source;
-@property int sawByPeerCnt;
+@property uint outSn;
+@property (nonatomic, copy) NSData *outScript;
+@property uint64_t outValue;
+@property int outStatus;
+@property (nonatomic, copy) NSString *outAddress;
 
-@property (nonatomic, strong) NSMutableArray *ins;
-@property (nonatomic, strong) NSMutableArray *outs;
+@property uint64_t coinDepth;
+
+@property (nonatomic, weak) BTTx *tx;
 
 @end

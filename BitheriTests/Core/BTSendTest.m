@@ -19,14 +19,16 @@
 #import <XCTest/XCTest.h>
 //#import "BTDatabaseManager.h"
 #import "BTTxProvider.h"
-#import "BTInItem.h"
-#import "BTOutItem.h"
+//#import "BTInItem.h"
+//#import "BTOutItem.h"
 #import "NSString+Base58.h"
 #import "NSData+Hash.h"
 #import "BTAddress.h"
 #import "BTBlockChain.h"
 #import "BTBlockTestData.h"
 #import "BTTestHelper.h"
+#import "BTIn.h"
+#import "BTOut.h"
 
 @interface BTSendTest : XCTestCase
 
@@ -59,7 +61,7 @@
 
     [[BTBlockChain instance] addSPVBlock:[BTBlockTestData getMainBlock:100]];
 
-    BTTxItem *txItem1 = [self formatTx:@[@"00000000000000000000000000000002", @302400, @[@[@0, @"00000000000000000000000000000001", @0]], @[
+    BTTx *txItem1 = [self formatTx:@[@"00000000000000000000000000000002", @302400, @[@[@0, @"00000000000000000000000000000001", @0]], @[
             @[@0, @"1", @1000000, @"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3"]
     ]
     ]];
@@ -73,7 +75,7 @@
     XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
 
     // second tx 's coin depth is small than first tx, so use first tx
-    BTTxItem *txItem2 = [self formatTx:@[@"00000000000000000000000000000004", @302402, @[@[@0, @"00000000000000000000000000000003", @0]], @[
+    BTTx *txItem2 = [self formatTx:@[@"00000000000000000000000000000004", @302402, @[@[@0, @"00000000000000000000000000000003", @0]], @[
             @[@0, @"2", @1000000, @"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3"]
     ]
     ]];
@@ -86,7 +88,7 @@
     XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
 
     // third tx 's coin depth is more than first tx, so use third tx
-    BTTxItem *txItem3 = [self formatTx:@[@"00000000000000000000000000000006", @302404, @[@[@0, @"00000000000000000000000000000005", @0]], @[
+    BTTx *txItem3 = [self formatTx:@[@"00000000000000000000000000000006", @302404, @[@[@0, @"00000000000000000000000000000005", @0]], @[
             @[@0, @"3", @5000000, @"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3"]
     ]
     ]];
@@ -116,7 +118,7 @@
 
     [[BTBlockChain instance] addSPVBlock:[BTBlockTestData getMainBlock:100]];
 
-    BTTxItem *txItem1 = [self formatTx:@[@"00000000000000000000000000000002", @302400, @[@[@0, @"00000000000000000000000000000001", @0]], @[
+    BTTx *txItem1 = [self formatTx:@[@"00000000000000000000000000000002", @302400, @[@[@0, @"00000000000000000000000000000001", @0]], @[
             @[@0, @"1", @100000, bitherAddr]
     ]
     ]];
@@ -160,7 +162,7 @@
 //    XCTAssertEqual(1, tx.inputIndexes.count);
 //    XCTAssertEqual(24, tx.outputAddresses.count);
 
-    BTTxItem *txItem2 = [self formatTx:@[@"00000000000000000000000000000004", @302402, @[@[@0, @"00000000000000000000000000000003", @0]], @[
+    BTTx *txItem2 = [self formatTx:@[@"00000000000000000000000000000004", @302402, @[@[@0, @"00000000000000000000000000000003", @0]], @[
             @[@0, @"2", @100000, @"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3"]
     ]
     ]];
@@ -198,7 +200,7 @@
 //    XCTAssertEqual(1, tx.inputIndexes.count);
 //    XCTAssertEqual(24, tx.outputAddresses.count);
 
-    BTTxItem *txItem3 = [self formatTx:@[@"00000000000000000000000000000006", @302404, @[@[@0, @"00000000000000000000000000000005", @0]], @[
+    BTTx *txItem3 = [self formatTx:@[@"00000000000000000000000000000006", @302404, @[@[@0, @"00000000000000000000000000000005", @0]], @[
             @[@0, @"3", @500000, @"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3"]
     ]
     ]];
@@ -250,13 +252,13 @@
     return YES;
 }
 
-- (BTTxItem *)formatTx:(NSArray *)array;{
-    BTTxItem *txItem = [BTTxItem new];
+- (BTTx *)formatTx:(NSArray *)array;{
+    BTTx *txItem = [BTTx new];
     txItem.txHash = [[array[0] hexToData] reverse];
     txItem.blockNo = [array[1] unsignedIntValue];
     txItem.ins = [NSMutableArray new];
     for (NSArray *sub in array[2]) {
-        BTInItem *inItem = [BTInItem new];
+        BTIn *inItem = [BTIn new];
         inItem.txHash = txItem.txHash;
         inItem.inSn = [sub[0] unsignedIntValue];
         inItem.prevTxHash = [[sub[1] hexToData] reverse];
@@ -266,7 +268,7 @@
     }
     txItem.outs = [NSMutableArray new];
     for (NSArray *sub in array[3]) {
-        BTOutItem *outItem = [BTOutItem new];
+        BTOut *outItem = [BTOut new];
         outItem.txHash = txItem.txHash;
         outItem.outSn = [sub[0] unsignedIntValue];
         outItem.outScript = [[sub[1] hexToData] reverse];

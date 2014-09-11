@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTBlockItem.h"
+//#import "BTBlockItem.h"
 #import "BTBlock.h"
 
 @interface BTBlockTestData : NSObject
@@ -25,7 +25,7 @@
 
 //+ (BTBlockItem *)formatBlockItem:(NSArray *)array;
 
-+ (BTBlockItem *)getBlock:(int)index;
++ (BTBlock *)getBlock:(int)index;
 
 + (BTBlock *)getMainBlock:(int)index;
 

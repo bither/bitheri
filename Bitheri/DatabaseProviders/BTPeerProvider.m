@@ -91,7 +91,7 @@ static BTPeerProvider *provider;
         NSString *sql = @"insert into peers(peer_address,peer_port,peer_services,peer_timestamp,peer_connected_cnt)"
                 " values(?,?,?,?,?)";
         [db beginTransaction];
-        for (BTPeerItem *peer in peers){
+        for (BTPeer *peer in peers){
             FMResultSet *rs = [db executeQuery:existSql, @(peer.peerAddress)];
             int cnt = 0;
             if ([rs next])
@@ -135,11 +135,11 @@ static BTPeerProvider *provider;
         }
         [rs close];
         if (cnt == 0) {
-            sql = @"update peers set peer_connected_cnt=peer_connected_cnt+1 where peer_address=?";
-            [db executeUpdate:sql, @(address)];
-        } else {
             sql = @"update peers set peer_connected_cnt=? where peer_address=?";
             [db executeUpdate:sql, @2, @(address)];
+        } else {
+            sql = @"update peers set peer_connected_cnt=peer_connected_cnt+1 where peer_address=?";
+            [db executeUpdate:sql, @(address)];
         }
 
     }];
@@ -207,15 +207,16 @@ static BTPeerProvider *provider;
     }];
 }
 
--(BTPeerItem *)format:(FMResultSet * )rs{
-    BTPeerItem *peerItem =[[BTPeerItem alloc] init];
-    peerItem.peerAddress = (uint32_t)[rs intForColumn:@"peer_address"];
-    peerItem.peerPort = (uint16_t)[rs intForColumn:@"peer_port"];
-    peerItem.peerServices = [rs unsignedLongLongIntForColumn:@"peer_services"];
-    peerItem.peerTimestamp = (uint32_t)[rs intForColumn:@"peer_timestamp"];
+-(BTPeer *)format:(FMResultSet * )rs{
+    uint32_t peerAddress = (uint32_t)[rs intForColumn:@"peer_address"];
+    uint16_t peerPort = (uint16_t)[rs intForColumn:@"peer_port"];
+    uint64_t peerServices = [rs unsignedLongLongIntForColumn:@"peer_services"];
+    uint32_t peerTimestamp = (uint32_t)[rs intForColumn:@"peer_timestamp"];
 //    peerItem.peerMisbehavin = (int16_t)[rs intForColumn:@"peer_misbehavin"];
-    peerItem.peerConnectedCnt = [rs intForColumn:@"peer_connected_cnt"];
-    return peerItem;
+    int peerConnectedCnt = [rs intForColumn:@"peer_connected_cnt"];
+    BTPeer *peer = [[BTPeer alloc] initWithAddress:peerAddress port:peerPort timestamp:peerTimestamp services:peerServices];
+    peer.peerConnectedCnt = peerConnectedCnt;
+    return peer;
 }
 
 @end

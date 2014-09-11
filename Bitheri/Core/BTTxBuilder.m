@@ -19,10 +19,10 @@
 
 #import "BTTx.h"
 #import "BTTxBuilder.h"
-#import "BTOutItem.h"
 #import "BTBlockChain.h"
 #import "BTSettings.h"
 #import "BTTxProvider.h"
+#import "BTOut.h"
 
 @implementation BTTxBuilder {
     BTTxBuilderEmptyWallet *emptyWallet;
@@ -64,6 +64,11 @@
                                  userInfo:@{ERR_TX_NOT_ENOUGH_MONEY_LACK : @(value - [BTTxBuilder getAmount:unspendOuts])}];
         return nil;
     } else if (value > [BTTxBuilder getAmount:canSpendOuts]) {
+        *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_WAIT_CONFIRM_CODE
+                                 userInfo:@{ERR_TX_WAIT_CONFIRM_AMOUNT : @([BTTxBuilder getAmount:canNotSpendOuts])}];
+        return nil;
+    } else if (value == [BTTxBuilder getAmount:unspendOuts] && [BTTxBuilder getAmount:canNotSpendOuts] != 0) {
+        // there is some unconfirm tx, it will not empty wallet
         *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_WAIT_CONFIRM_CODE
                                  userInfo:@{ERR_TX_WAIT_CONFIRM_AMOUNT : @([BTTxBuilder getAmount:canNotSpendOuts])}];
         return nil;
@@ -129,7 +134,7 @@
 
 + (uint64_t)getAmount:(NSArray *)outs;{
     uint64_t amount = 0;
-    for (BTOutItem *outItem in outs) {
+    for (BTOut *outItem in outs) {
         amount += outItem.outValue;
     }
     return amount;
@@ -137,15 +142,15 @@
 
 + (uint64_t)getCoinDepth:(NSArray *)outs;{
     uint64_t coinDepth = 0;
-    for (BTOutItem *outItem in outs) {
-        coinDepth += [BTBlockChain instance].lastBlock.height * outItem.outValue - outItem.coinDepth + outItem.outValue;
+    for (BTOut *outItem in outs) {
+        coinDepth += [BTBlockChain instance].lastBlock.blockNo * outItem.outValue - outItem.coinDepth + outItem.outValue;
     }
     return coinDepth;
 }
 
 + (NSArray *)getUnspendOutsFromTxs:(NSArray *)txs;{
     NSMutableArray *result = [NSMutableArray new];
-    for (BTTxItem *txItem in txs) {
+    for (BTTx *txItem in txs) {
         [result addObject:txItem.outs[0]];
     }
     return result;
@@ -153,7 +158,7 @@
 
 + (NSArray *)getCanSpendOutsFromUnspendTxs:(NSArray *)txs;{
     NSMutableArray *result = [NSMutableArray new];
-    for (BTTxItem *txItem in txs) {
+    for (BTTx *txItem in txs) {
         if (txItem.blockNo != TX_UNCONFIRMED || txItem.source > 0) {
             [result addObject:txItem.outs[0]];
         }
@@ -163,7 +168,7 @@
 
 + (NSArray *)getCanNotSpendOutsFromUnspendTxs:(NSArray *)txs;{
     NSMutableArray *result = [NSMutableArray new];
-    for (BTTxItem *txItem in txs) {
+    for (BTTx *txItem in txs) {
         if (txItem.blockNo == TX_UNCONFIRMED && txItem.source == 0) {
             [result addObject:txItem.outs[0]];
         }
@@ -174,10 +179,10 @@
 @end
 
 NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
-    BTOutItem *outItem1 = (BTOutItem *)obj1;
-    BTOutItem *outItem2 = (BTOutItem *)obj2;
-    uint64_t coinDepth1 = [BTBlockChain instance].lastBlock.height * outItem1.outValue - outItem1.coinDepth + outItem1.outValue;
-    uint64_t coinDepth2 = [BTBlockChain instance].lastBlock.height * outItem2.outValue - outItem2.coinDepth + outItem2.outValue;
+    BTOut *outItem1 = (BTOut *)obj1;
+    BTOut *outItem2 = (BTOut *)obj2;
+    uint64_t coinDepth1 = [BTBlockChain instance].lastBlock.blockNo * outItem1.outValue - outItem1.coinDepth + outItem1.outValue;
+    uint64_t coinDepth2 = [BTBlockChain instance].lastBlock.blockNo * outItem2.outValue - outItem2.coinDepth + outItem2.outValue;
     if (coinDepth1 > coinDepth2) return NSOrderedAscending;
     if (coinDepth1 < coinDepth2) return NSOrderedDescending;
     if ([outItem1 outValue] > [outItem2 outValue]) return NSOrderedAscending;
@@ -213,9 +218,9 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     uint64_t additionalValueForNextCategory = 0;
     NSArray *selection3 = nil;
     NSArray *selection2 = nil;
-    BTOutItem *selection2Change = nil;
+    BTOut *selection2Change = nil;
     NSArray *selection1 = nil;
-    BTOutItem *selection1Change = nil;
+    BTOut *selection1Change = nil;
 
     int lastCalculatedSize = 0;
     uint64_t valueNeeded;
@@ -227,7 +232,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     BOOL needAtLeastReferenceFee = [BTTxBuilder needMinFee:tx.outputAmounts];
 
     NSArray *bestCoinSelection = nil;
-    BTOutItem *bestChangeOutput = nil;
+    BTOut *bestChangeOutput = nil;
     while (YES) {
         uint64_t fees = 0;
 
@@ -282,9 +287,9 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
         }
 
         int size = 0;
-        BTOutItem *changeOutput = nil;
+        BTOut *changeOutput = nil;
         if (change > 0) {
-            changeOutput = [BTOutItem new];
+            changeOutput = [BTOut new];
             changeOutput.outValue = change;
             changeOutput.outAddress = address;
             // If the change output would result in this transaction being rejected as dust, just drop the change and make it a fee
@@ -396,7 +401,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
         [tx addOutputAddress:bestChangeOutput.outAddress amount:bestChangeOutput.outValue];
     }
 
-    for (BTOutItem *outItem in bestCoinSelection) {
+    for (BTOut *outItem in bestCoinSelection) {
         [tx addInputHash:outItem.txHash index:outItem.outSn script:outItem.outScript];
     }
 
@@ -407,7 +412,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
 - (NSArray *)selectOuts:(NSArray *)outs forAmount:(uint64_t)amount; {
     NSMutableArray *result = [NSMutableArray new];
     uint64_t sum = 0;
-    for (BTOutItem *outItem in outs) {
+    for (BTOut *outItem in outs) {
         sum += outItem.outValue;
         [result addObject:outItem];
         if (sum >= amount) break;
@@ -424,6 +429,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
 - (BTTx *)buildTxForAddress:(NSString *)address WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx; {
     uint64_t feeBase = [[BTSettings instance] feeBase];
     NSMutableArray *outs = [NSMutableArray arrayWithArray:[BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs]];
+    NSMutableArray *unspendOuts = [NSMutableArray arrayWithArray:[BTTxBuilder getUnspendOutsFromTxs:unspendTxs]];
 
     uint64_t value = 0;
     for (NSNumber *amount in tx.outputAmounts) {
@@ -431,7 +437,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     }
     BOOL needMinFee = [BTTxBuilder needMinFee:tx.outputAmounts];
 
-    if (value != [BTTxBuilder getAmount:outs]) {
+    if (value != [BTTxBuilder getAmount:unspendOuts] || value != [BTTxBuilder getAmount:outs]) {
         return nil;
     }
 
@@ -466,7 +472,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
             [tx addOutputScript:script amount:amount];
         }
     }
-    for (BTOutItem *outItem in outs) {
+    for (BTOut *outItem in outs) {
         [tx addInputHash:outItem.txHash index:outItem.outSn script:outItem.outScript];
     }
 

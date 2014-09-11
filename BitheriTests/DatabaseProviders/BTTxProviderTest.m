@@ -19,7 +19,7 @@
 #import <XCTest/XCTest.h>
 #import "BTTxProvider.h"
 #import "BTTxTestData.h"
-#import "BTOutItem.h"
+#import "BTOut.h"
 #import "BTSettings.h"
 #import "BTTestHelper.h"
 #import "BTAddressTestData.h"
@@ -53,7 +53,7 @@
 }
 
 - (void)testAdd;{
-    BTTxItem *tx0 = [BTTxTestData getTx:0];
+    BTTx *tx0 = [BTTxTestData getTx:0];
 
     XCTAssert(![provider isExist:tx0.txHash]);
     [provider add:tx0];
@@ -77,9 +77,9 @@
 
     NSMutableArray *allTx = [NSMutableArray new];
     for (int i = 0; i < txCount; i++) {
-        BTTxItem *item = [BTTxTestData getTx:i];
+        BTTx *item = [BTTxTestData getTx:i];
         if (i != txCount - 1) {
-            for (BTOutItem *outItem in item.outs) {
+            for (BTOut *outItem in item.outs) {
                 if (outItem.outAddress == bitheriAddress) {
                     outItem.outStatus = spent;
                 }
@@ -102,8 +102,8 @@
     NSMutableArray *allTx = [NSMutableArray new];
     NSMutableArray *unconfirmTx = [NSMutableArray new];
     for (int i = 0; i < txCount; i++) {
-        BTTxItem *item = [BTTxTestData getTx:i];
-        BTTxItem *unconfirmItem = [BTTxTestData getTx:i];
+        BTTx *item = [BTTxTestData getTx:i];
+        BTTx *unconfirmItem = [BTTxTestData getTx:i];
         unconfirmItem.blockNo = TX_UNCONFIRMED;
         [unconfirmTx addObject:unconfirmItem];
         [allTx addObject:item];
@@ -112,11 +112,11 @@
     XCTAssertEqual(0, [provider getTxAndDetailByAddress:bitheriAddress].count);
     [provider add:unconfirmTx[0]];
     XCTAssertEqual(1, [provider getTxAndDetailByAddress:bitheriAddress].count);
-    [provider confirmTx:@[((BTTxItem *)allTx[0]).txHash] withBlockNo:((BTTxItem *)allTx[0]).blockNo];
-    XCTAssert([allTx[0] isEqual:[provider getTxDetailByTxHash:((BTTxItem *)allTx[0]).txHash]]);
+    [provider confirmTx:@[((BTTx *)allTx[0]).txHash] withBlockNo:((BTTx *)allTx[0]).blockNo];
+    XCTAssert([allTx[0] isEqual:[provider getTxDetailByTxHash:((BTTx *)allTx[0]).txHash]]);
 
-    [provider unConfirmTxByBlockNo:((BTTxItem *)allTx[0]).blockNo];
-    XCTAssert([unconfirmTx[0] isEqual:[provider getTxDetailByTxHash:((BTTxItem *)allTx[0]).txHash]]);
+    [provider unConfirmTxByBlockNo:((BTTx *)allTx[0]).blockNo];
+    XCTAssert([unconfirmTx[0] isEqual:[provider getTxDetailByTxHash:((BTTx *)allTx[0]).txHash]]);
 
 }
 @end

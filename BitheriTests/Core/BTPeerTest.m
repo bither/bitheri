@@ -43,6 +43,10 @@
 {
     BTPeer *peer = [[BTPeer alloc] initWithAddress:0x7f000001 port:8333 timestamp:0 services:0];
     [peer connectPeer];
+
+    BTPeer *peer1 = [[BTPeer alloc] initWithAddress:0x7f000001 port:8333 timestamp:0 services:0];
+    BTPeer *peer2 = [[BTPeer alloc] initWithAddress:0x7f000001 port:8333 timestamp:0 services:0];
+    XCTAssert([peer1 isEqual:peer2]);
 }
 
 @end

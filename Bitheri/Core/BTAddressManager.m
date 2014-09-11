@@ -19,21 +19,23 @@
 #import "BTAddressManager.h"
 #import "BTUtils.h"
 #import "BTTxProvider.h"
-#import "BTOutItem.h"
+//#import "BTOutItem.h"
+#import "BTIn.h"
+#import "BTOut.h"
 
-static NSData *txOutput(NSData *txHash, uint32_t n) {
-    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
-
-    [d appendData:txHash];
-    [d appendUInt32:n];
-    return d;
-}
+//static NSData *txOutput(NSData *txHash, uint32_t n) {
+//    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
+//
+//    [d appendData:txHash];
+//    [d appendUInt32:n];
+//    return d;
+//}
 
 @implementation BTAddressManager {
 
 }
 
-+ (instancetype)sharedInstance; {
++ (instancetype)instance; {
     static id singleton = nil;
     static dispatch_once_t onceToken = 0;
     dispatch_once(&onceToken, ^{
@@ -93,13 +95,10 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 - (void)addAddress:(BTAddress *)address {
     DDLogDebug(@"addAddress %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
     if (address.hasPrivKey) {
-        [address savePrivate:[BTUtils getPrivDir]];
-        //[self.privKeyAddresses addObject:address];
+        [address saveNewAddress];
         [self.privKeyAddresses insertObject:address atIndex:0];
-
     } else {
-        [address saveWatchOnly:[BTUtils getWatchOnlyDir]];
-        // [self.watchOnlyAddresses addObject:address];
+        [address saveNewAddress];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
     }
 
@@ -107,7 +106,7 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
 - (void)stopMonitor:(BTAddress *)address {
     DDLogDebug(@"stopMonitor %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
-    [address removeWatchOnly:[BTUtils getWatchOnlyDir]];
+    [address removeWatchOnly];
     [self.watchOnlyAddresses removeObject:address];
 
 }
@@ -119,22 +118,8 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
     return allAddresses;
 }
 
-- (void)saveAddress:(BTAddress *)address {
-    if ([address hasPrivKey]) {
-        [address savePrivate:[BTUtils getPrivDir]];
-    } else {
-        [address saveWatchOnly:[BTUtils getWatchOnlyDir]];
-    }
-}
 
-- (void)updateAddressWithSyncTx:(BTAddress *)address {
-    if ([address hasPrivKey]) {
-        [address savePrivateWithPubKey:[BTUtils getPrivDir]];
-    } else {
-        [address saveWatchOnly:[BTUtils getWatchOnlyDir]];
-    }
 
-}
 
 - (BOOL)allSyncComplete {
     BOOL allSync = YES;
@@ -161,14 +146,23 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
     for (NSUInteger i = 0; i < addresses.count; i++) {
         BTAddress *address = addresses[i];
         address.encryptPrivKey = encryptPrivKeys[i];
-        [address savePrivate:[BTUtils getPrivDir]];
+        [address savePrivate];
     }
     return YES;
 }
 
+- (BOOL)isTxRelated:(BTTx *)tx;{
+    for (BTAddress *address in self.allAddresses) {
+        if([self isAddress:address.address containsTransaction:tx]){
+            return true;
+        }
+    }
+    return false;
+}
+
 - (BOOL)isAddress:(NSString *)address containsTransaction:(BTTx *)transaction {
     if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:address]) return YES;
-    return [[BTTxProvider instance] isAddress:address containsTx:[transaction formatToTxItem]];
+    return [[BTTxProvider instance] isAddress:address containsTx:transaction];
 }
 
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
@@ -177,11 +171,11 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
         return YES;
     }
     BOOL needAdd = NO;
-    for (BTAddress *addr in [BTAddressManager sharedInstance].allAddresses) {
+    for (BTAddress *addr in [BTAddressManager instance].allAddresses) {
         BOOL isRel = [self isAddress:addr.address containsTransaction:tx];
         if (!needAdd && isRel) {
             needAdd = YES;
-            [[BTTxProvider instance] add:[tx formatToTxItem]];
+            [[BTTxProvider instance] add:tx];
             DDLogDebug(@"register tx %@", [NSString hexWithHash:tx.txHash]);
         }
         if (isRel) {
@@ -193,8 +187,8 @@ static NSData *txOutput(NSData *txHash, uint32_t n) {
 
 - (NSArray *)outs; {
     NSMutableArray *result = [NSMutableArray new];
-    for (BTOutItem *outItem in [[BTTxProvider instance] getOuts]) {
-        [result addObject:txOutput(outItem.txHash, outItem.outSn)];
+    for (BTOut *outItem in [[BTTxProvider instance] getOuts]) {
+        [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;
 }

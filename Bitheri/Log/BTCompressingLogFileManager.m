@@ -83,6 +83,9 @@
 
 - (void)compressLogFile:(DDLogFileInfo *)logFile
 {
+    if (logFile.isCompressed)
+        return;;
+
     self.isCompressing = YES;
 
     BTCompressingLogFileManager * __weak weakSelf = self;
@@ -114,11 +117,11 @@
     }
     
     NSUInteger i = count;
-    while (i > 0)
+    while (i > 1)
     {
         DDLogFileInfo *logFileInfo = sortedLogFileInfos[i - 1];
         
-        if (logFileInfo.isArchived && !logFileInfo.isCompressed)
+        if (!logFileInfo.isCompressed)
         {
             [self compressLogFile:logFileInfo];
             
@@ -467,7 +470,14 @@
     
     } // end @autoreleasepool
 }
-                 
+
+- (BOOL)isLogFile:(NSString *)fileName;{
+    if ([fileName hasSuffix:@".gz"]) {
+        fileName = [fileName substringToIndex:fileName.length - 3];
+    }
+    return [super isLogFile:fileName];
+}
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

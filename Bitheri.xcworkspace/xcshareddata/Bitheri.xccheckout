@@ -10,29 +10,29 @@
 	<string>Bitheri</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>76B753CA-BECF-41FA-A1A9-86E482E823AB</key>
+		<key>B627B3A9CC71A68235096D1866094778B3CC8348</key>
 		<string>https://github.com/bither/bitheri.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>Bitheri.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>76B753CA-BECF-41FA-A1A9-86E482E823AB</key>
+		<key>B627B3A9CC71A68235096D1866094778B3CC8348</key>
 		<string>..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://github.com/bither/bitheri.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>76B753CA-BECF-41FA-A1A9-86E482E823AB</string>
+	<string>B627B3A9CC71A68235096D1866094778B3CC8348</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>76B753CA-BECF-41FA-A1A9-86E482E823AB</string>
+			<string>B627B3A9CC71A68235096D1866094778B3CC8348</string>
 			<key>IDESourceControlWCCName</key>
 			<string>bitheri</string>
 		</dict>

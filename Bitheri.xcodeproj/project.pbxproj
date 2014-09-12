@@ -53,6 +53,7 @@
 		D61D0DCED98EF699D80677CF /* BTBlockChainTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0B6A8B753DA1D30565E3 /* BTBlockChainTest.m */; };
 		D61D0E2CE98B17CAD0C2A163 /* BTPeerManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D092701C507270AE4EAC6 /* BTPeerManagerTest.m */; };
 		D61D0E3AA0B80AE7E15C613E /* BTScriptTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D02889B35A2E27AE419CC /* BTScriptTest.m */; };
+		D61D0E402538E17CD28FCC38 /* BTVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D072F87B87405F7F0B7A9 /* BTVersion.m */; };
 		D61D0E96F9382CD65D87B06F /* BTAddressTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D00CBB6E0D8F1874535E2 /* BTAddressTest.m */; };
 		D61D0F3AA81161C20F392306 /* BTAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0BBC5E22642563C4398F /* BTAddress.m */; };
 		D61D0F5905AFC504FAD98EA7 /* BTPeer.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0F1E91ADEA20CF46B838 /* BTPeer.m */; };
@@ -163,6 +164,7 @@
 		D61D069D043EA02D92DD2C6A /* tx_valid.json */ = {isa = PBXFileReference; lastKnownFileType = file.json; path = tx_valid.json; sourceTree = "<group>"; };
 		D61D06AB43EBD4872C154390 /* script_valid.json */ = {isa = PBXFileReference; lastKnownFileType = file.json; path = script_valid.json; sourceTree = "<group>"; };
 		D61D06BE6EB3476DEDD9DE35 /* BTOut.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTOut.h; sourceTree = "<group>"; };
+		D61D072F87B87405F7F0B7A9 /* BTVersion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTVersion.m; sourceTree = "<group>"; };
 		D61D073CC13048357C70737F /* BTSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTSettings.m; sourceTree = "<group>"; };
 		D61D07872C65542A38C3A3FC /* BTBlockTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBlockTests.m; sourceTree = "<group>"; };
 		D61D078F0ED2BD499695308A /* BTPeerManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTPeerManager.m; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 		D61D0CA25BB9A3B5E0B26C25 /* BTBloomFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBloomFilter.m; sourceTree = "<group>"; };
 		D61D0CD8D8A42D7E08F091C1 /* BTDatabaseManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTDatabaseManager.h; sourceTree = "<group>"; };
 		D61D0D2DCAE0DCE6B2B1223F /* BTTxProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTTxProvider.m; sourceTree = "<group>"; };
+		D61D0D63F4AC69554DB18DAB /* BTVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTVersion.h; sourceTree = "<group>"; };
 		D61D0D74C1D4A51BC1A4147C /* BTBloomFilterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBloomFilterTest.m; sourceTree = "<group>"; };
 		D61D0E08F257E0C13603FA50 /* BTDatabaseManager+UnitTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "BTDatabaseManager+UnitTest.m"; sourceTree = "<group>"; };
 		D61D0ED66680F16AA0743471 /* BTKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTKey.h; sourceTree = "<group>"; };
@@ -408,6 +411,8 @@
 				D61D08C9246BCBF63E6345F8 /* BTIn.h */,
 				D61D0C208885CF9FF3157351 /* BTOut.m */,
 				D61D06BE6EB3476DEDD9DE35 /* BTOut.h */,
+				D61D072F87B87405F7F0B7A9 /* BTVersion.m */,
+				D61D0D63F4AC69554DB18DAB /* BTVersion.h */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -675,6 +680,7 @@
 				D61D05E618C82A5FE35F12A9 /* BTTxBuilder.m in Sources */,
 				D61D0FE35D5D0A79C7EEE0F0 /* BTIn.m in Sources */,
 				D61D0B8241F07159E24315B9 /* BTOut.m in Sources */,
+				D61D0E402538E17CD28FCC38 /* BTVersion.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

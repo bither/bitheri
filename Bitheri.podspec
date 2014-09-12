@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'Bitheri'
-  s.version  = '1.0.3'
+  s.version  = '1.0.4'
   s.license  = 'Apache License, Version 2.0'
   s.summary  = 'bither\'s ios framework'
   s.homepage = 'http://bither.net'

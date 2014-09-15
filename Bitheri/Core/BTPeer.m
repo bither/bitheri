@@ -351,8 +351,8 @@ services:(uint64_t)services
     }
     
     [msg appendData:hashStop ?: ZERO_HASH];
-    DDLogDebug(@"%@:%u calling get headers with locators: %@", self.host, self.peerPort,
-          @[[NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]]);
+    DDLogDebug(@"%@:%u calling get headers with locators: %@,%@", self.host, self.peerPort,
+          [NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]);
     [self sendMessage:msg type:MSG_GETHEADERS];
 }
 
@@ -368,8 +368,8 @@ services:(uint64_t)services
     }
     
     [msg appendData:hashStop ?: ZERO_HASH];
-    DDLogDebug(@"%@:%u calling get blocks with locators: %@", self.host, self.peerPort,
-                    @[[NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]]);
+    DDLogDebug(@"%@:%u calling get blocks with locators: %@,%@", self.host, self.peerPort,
+                    [NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]);
     [self sendMessage:msg type:MSG_GETBLOCKS];
 }
 

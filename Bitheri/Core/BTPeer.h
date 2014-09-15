@@ -68,7 +68,7 @@ typedef enum {
 @property (nonatomic, readonly) uint32_t displayLastBlock;
 @property (nonatomic, readonly) NSTimeInterval pingTime;
 @property (nonatomic, assign) NSTimeInterval timestamp; // last seen time (interval since reference date)
-
+@property BOOL synchronising;
 //@property (nonatomic, assign) int16_t misbehavin;
 
 

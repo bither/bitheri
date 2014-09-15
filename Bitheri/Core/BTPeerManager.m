@@ -261,6 +261,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         [self sendPeerCountChangeNotification:self.connectedPeers.count];
         if (self.connectedPeers.count == 0) {
+            [self.downloadPeer setSynchronising:NO];
             [self syncStopped];
 //            self.syncStartHeight = 0;
 
@@ -506,6 +507,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         } else {
             [dPeer sendGetHeadersMessageWithLocators:[self.blockChain blockLocatorArray] andHashStop:nil];
         }
+        [dPeer setSynchronising:YES];
     });
 }
 
@@ -534,6 +536,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         if ([self.downloadPeer isEqual:peer]) { // download peer disconnected
             _connected = NO;
+            [self.downloadPeer setSynchronising:NO];
             self.downloadPeer = nil;
             [self syncStopped];
             if (self.connectFailure > MAX_CONNECT_FAILURE_COUNT)
@@ -623,6 +626,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }
 
         if (self.lastBlockHeight == peer.versionLastBlock) {
+            [self.downloadPeer setSynchronising:NO];
             [self syncStopped];
             [peer sendGetAddrMessage];
 //            self.syncStartHeight = 0;
@@ -682,6 +686,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }];
 
         if (block.blockNo == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
+            [self.downloadPeer setSynchronising:NO];
             [self syncStopped];
             [peer sendGetAddrMessage]; // request a list of other bitcoin peers
 //            self.syncStartHeight = 0;

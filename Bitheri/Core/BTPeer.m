@@ -42,6 +42,10 @@ typedef enum {
     uint32_t _incrementalBlockHeight;
     int _unrelatedTxRelayCount;
     NSString *_host;
+    BOOL _synchronising;
+    uint32_t _syncStartBlockNo;
+    uint32_t _syncStartPeerBlockNo;
+    uint32_t _synchronisedBlockCount;
 }
 
 @property (nonatomic, strong) NSInputStream *inputStream;
@@ -74,6 +78,7 @@ services:(uint64_t)services
     _timestamp = timestamp;
     _peerServices = services;
     _peerConnectedCnt = 0;
+    _synchronising = NO;
 
     return self;
 }
@@ -209,6 +214,26 @@ services:(uint64_t)services
     [NSObject cancelPreviousPerformRequestsWithTarget:self]; // cancel pending handshake timeout
     _status = BTPeerStatusConnected;
     if (_status == BTPeerStatusConnected) [self.delegate peerConnected:self];
+}
+
+- (BOOL)synchronising {
+    return _synchronising;
+}
+
+- (void)setSynchronising:(BOOL)synchronising {
+    if (synchronising && !_synchronising) {
+        _syncStartBlockNo = [BTBlockChain instance].lastBlock.blockNo;
+        _syncStartPeerBlockNo = self.displayLastBlock;
+        _synchronisedBlockCount = 0;
+
+        _synchronising = synchronising;
+    } else if (!synchronising && _synchronising) {
+        int delta = [BTBlockChain instance].lastBlock.blockNo - _syncStartBlockNo;
+        _incrementalBlockHeight = _syncStartPeerBlockNo + delta - self.versionLastBlock;
+        _synchronisedBlockCount = 0;
+
+        _synchronising = synchronising;
+    }
 }
 
 #pragma mark - send
@@ -625,8 +650,14 @@ services:(uint64_t)services
         }
     }
 
-    if(blockHashes.count == 1){
-        _incrementalBlockHeight ++;
+    [self increaseBlockNo:blockHashes.count];
+}
+
+- (void)increaseBlockNo:(int)blockCount;{
+    if (self.synchronising) {
+        _synchronisedBlockCount += blockCount;
+    } else {
+        _incrementalBlockHeight += blockCount;
     }
 }
 

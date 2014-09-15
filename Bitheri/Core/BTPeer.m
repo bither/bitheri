@@ -1019,7 +1019,7 @@ services:(uint64_t)services
 
     NSMutableOrderedSet *txHashes = [NSMutableOrderedSet orderedSetWithArray:block.txHashes];
 
-    [txHashes minusOrderedSet:self.knownTxHashes];
+//    [txHashes minusOrderedSet:self.knownTxHashes];
 
     // wait util we get all the tx messages before processing the block
     if (txHashes.count > 0) {

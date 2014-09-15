@@ -48,7 +48,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 @property (nonatomic, strong) NSMutableDictionary *txRelays;
 @property (nonatomic, strong) NSMutableDictionary *publishedTx, *publishedCallback;
 @property (nonatomic, strong) dispatch_queue_t q;
-@property (nonatomic, strong) id activeObserver;
+//@property (nonatomic, strong) id activeObserver;
 @property BOOL synchronizing;
 @property BOOL running;
 
@@ -91,19 +91,19 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         self.publishedTx[tx.txHash] = tx; // add unconfirmed tx to mem pool
     }
 
-    _activeObserver =
-            [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillResignActiveNotification object:nil
-                                                               queue:nil usingBlock:^(NSNotification *note) {
-                        if (self.syncProgress >= 1.0 || self.syncProgress < 0.1)
-                            [self stop];
-                    }];
+//    _activeObserver =
+//            [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillResignActiveNotification object:nil
+//                                                               queue:nil usingBlock:^(NSNotification *note) {
+//                        if (self.syncProgress >= 1.0 || self.syncProgress < 0.1)
+//                            [self stop];
+//                    }];
 
     return self;
 }
 
 - (void)dealloc {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    if (self.activeObserver) [[NSNotificationCenter defaultCenter] removeObserver:self.activeObserver];
+//    if (self.activeObserver) [[NSNotificationCenter defaultCenter] removeObserver:self.activeObserver];
 }
 
 - (uint32_t)lastBlockHeight {

@@ -48,13 +48,7 @@ static BTBlockChain *blockChain;
     _singleBlocks = [NSMutableDictionary new];
 
     _lastBlock = [[BTBlockProvider instance] getLastBlock];
-//    if (blockItem) {
-//        _lastBlock = [[BTBlock alloc] initWithBlockItem:blockItem];
-//    }
     _lastOrphan = [[BTBlockProvider instance] getLastOrphanBlock];
-//    if (orphanBlockItem) {
-//        _lastOrphan = [[BTBlock alloc] initWithBlockItem:orphanBlockItem];
-//    }
 
     return self;
 }
@@ -109,10 +103,6 @@ static BTBlockChain *blockChain;
 }
 
 - (void)addBlocks:(NSArray *)blocks {
-//    NSMutableArray *addBlocks = [NSMutableArray new];
-//    for (BTBlock *block in blocks) {
-//        [addBlocks addObject:[block formatToBlockItem]];
-//    }
     [[BTBlockProvider instance] addBlocks:blocks];
 }
 
@@ -122,29 +112,14 @@ static BTBlockChain *blockChain;
 
 - (BTBlock *)getBlock:(NSData *)blockHash; {
     return [[BTBlockProvider instance] getBlock:blockHash];
-//    if (blockItem == nil) {
-//        return nil;
-//    } else {
-//        return [BTBlock blockWithBlockItem:blockItem];
-//    }
 }
 
 - (BTBlock *)getMainChainBlock:(NSData *)blockHash; {
     return [[BTBlockProvider instance] getMainChainBlock:blockHash];
-//    if (blockItem == nil) {
-//        return nil;
-//    } else {
-//        return [BTBlock blockWithBlockItem:blockItem];
-//    }
 }
 
 - (BTBlock *)getOrphanBlockByPrevHash:(NSData *)prevHash; {
     return  [[BTBlockProvider instance] getOrphanBlockByPrevHash:prevHash];
-//    if (blockItem == nil) {
-//        return nil;
-//    } else {
-//        return [BTBlock blockWithBlockItem:blockItem];
-//    }
 }
 
 - (int)getBlockCount {
@@ -326,6 +301,52 @@ static BTBlockChain *blockChain;
     return blocksToAdd.count;
 }
 
+- (int)relayedBlocks:(NSArray *) blocks;{
+    if (blocks.count == 0) {
+        return 0;
+    }
+    BTBlock *prev = nil;
+    BTBlock *first = blocks[0];
+    uint32_t rollbackBlockNo = 0;
+    if ([first.blockPrev isEqualToData:prev.blockHash]) {
+        prev = self.lastBlock;
+    } else if ([self getMainChainBlock:first.blockHash] != nil) {
+        prev = [self getSameParent:self.lastBlock with:first];
+        rollbackBlockNo = prev.blockNo;
+    }
+    if (prev == nil)
+        return 0;
+    // check blocks
+    BOOL valid = YES;
+    for (BTBlock *block in blocks) {
+        if ([block.blockPrev isEqualToData:prev.blockHash]) {
+            valid = NO;
+            break;
+        }
+        block.blockNo = prev.blockNo + 1;
+        NSTimeInterval transitionTime = [self getTransactionTime:block];
+        if (![block verifyDifficultyFromPreviousBlock:prev andTransitionTime:transitionTime]) {
+            valid = NO;
+            break;
+        }
+
+        block.isMain = YES;
+        prev = block;
+    }
+    if (valid) {
+        if (rollbackBlockNo > 0)
+            [self rollbackBlock:rollbackBlockNo];
+        [self addBlocks:blocks];
+        for (BTBlock *block in blocks) {
+            [[BTTxProvider instance] confirmTx:block.txHashes withBlockNo:block.blockNo];
+        }
+        _lastBlock = blocks[blocks.count - 1];
+        return blocks.count;
+    } else {
+        return 0;
+    }
+}
+
 - (NSArray *)blockLocatorArray {
     // append 10 most recent block hashes, descending, then continue appending, doubling the step back each time,
     // finishing with the genesis block (top, -1, -2, -3, -4, -5, -6, -7, -8, -9, -11, -15, -23, -39, -71, -135, ..., 0)
@@ -366,12 +387,6 @@ static BTBlockChain *blockChain;
     if (_lastBlock) {
         DDLogWarn(@"there is no main block in sqlite!!");
     }
-//    if (blockItem) {
-//        _lastBlock = [[BTBlock alloc] initWithBlockItem:blockItem];
-//    } else {
-//
-//        _lastBlock = nil;
-//    }
     return YES;
 }
 -(NSArray *) getAllBlocks{

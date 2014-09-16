@@ -45,7 +45,7 @@ typedef enum {
     BOOL _synchronising;
     uint32_t _syncStartBlockNo;
     uint32_t _syncStartPeerBlockNo;
-    uint32_t _synchronisedBlockCount;
+    uint32_t _synchronisingBlockCount;
 }
 
 @property (nonatomic, strong) NSInputStream *inputStream;
@@ -58,6 +58,8 @@ typedef enum {
 @property (nonatomic, assign) NSTimeInterval startTime;
 @property (nonatomic, strong) BTBlock *currentBlock;
 @property (nonatomic, strong) NSMutableOrderedSet *currentBlockHashes, *currentTxHashes, *knownTxHashes;
+@property (nonatomic, copy) NSMutableArray *syncBlocks;
+@property (nonatomic, copy) NSMutableArray *syncBlockHashes;
 @property (nonatomic, strong) NSCountedSet *requestedBlockHashes;
 @property (nonatomic, assign) uint32_t filterBlockCount;
 @property (nonatomic, strong) NSRunLoop *runLoop;
@@ -78,7 +80,6 @@ services:(uint64_t)services
     _timestamp = timestamp;
     _peerServices = services;
     _peerConnectedCnt = 0;
-    _synchronising = NO;
 
     return self;
 }
@@ -133,6 +134,7 @@ services:(uint64_t)services
     self.currentBlockHashes = [NSMutableOrderedSet orderedSet];
     self.requestedBlockHashes = [NSCountedSet set];
     self.needToRequestDependencyDict = [NSMutableDictionary new];
+    _synchronising = NO;
 
     NSString *label = [NSString stringWithFormat:@"net.bither.peer.%@:%d", self.host, self.peerPort];
     _bloomFilterSent = NO;
@@ -224,13 +226,15 @@ services:(uint64_t)services
     if (synchronising && !_synchronising) {
         _syncStartBlockNo = [BTBlockChain instance].lastBlock.blockNo;
         _syncStartPeerBlockNo = self.displayLastBlock;
-        _synchronisedBlockCount = 0;
+        _synchronisingBlockCount = 0;
+        self.syncBlocks = [NSMutableArray new];
+        self.syncBlockHashes = [NSMutableArray new];
 
         _synchronising = synchronising;
     } else if (!synchronising && _synchronising) {
         int delta = [BTBlockChain instance].lastBlock.blockNo - _syncStartBlockNo;
         _incrementalBlockHeight = _syncStartPeerBlockNo + delta - self.versionLastBlock;
-        _synchronisedBlockCount = 0;
+        _synchronisingBlockCount = 0;
 
         _synchronising = synchronising;
     }
@@ -648,6 +652,8 @@ services:(uint64_t)services
             [self.currentBlockHashes
              removeObjectsInRange:NSMakeRange(0, self.currentBlockHashes.count - MAX_GETDATA_HASHES/2)];
         }
+        if (self.synchronising)
+            [self.syncBlockHashes addObjectsFromArray:[blockHashes array]];
     }
 
     [self increaseBlockNo:blockHashes.count];
@@ -655,7 +661,7 @@ services:(uint64_t)services
 
 - (void)increaseBlockNo:(int)blockCount;{
     if (self.synchronising) {
-        _synchronisedBlockCount += blockCount;
+        _synchronisingBlockCount += blockCount;
     } else {
         _incrementalBlockHeight += blockCount;
     }
@@ -682,7 +688,22 @@ services:(uint64_t)services
             self.currentBlock = nil;
             self.currentTxHashes = nil;
 
-            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
+            if (_status == BTPeerStatusConnected) {
+                if (self.synchronising && [self.syncBlockHashes containsObject:block.blockHash]) {
+                    [self.syncBlockHashes removeObject:block.blockHash];
+                    [self.syncBlocks addObject:block];
+                    if (self.syncBlockHashes.count == 0) {
+                        [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                        [self.syncBlocks removeAllObjects];
+                    } else if (self.syncBlocks.count >= 1000) {
+                        [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                        [self.syncBlocks removeAllObjects];
+                    }
+                } else {
+                    [self.delegate peer:self relayedBlock:block];
+                }
+
+            }
         }
     } else {
         if (self.needToRequestDependencyDict[tx.txHash] == nil || ((NSArray *)self.needToRequestDependencyDict[tx.txHash]).count == 0) {
@@ -1027,7 +1048,21 @@ services:(uint64_t)services
         self.currentTxHashes = txHashes;
     }
     else {
-        if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
+        if (_status == BTPeerStatusConnected) {
+            if (self.synchronising && [self.syncBlockHashes containsObject:block.blockHash]) {
+                [self.syncBlockHashes removeObject:block.blockHash];
+                [self.syncBlocks addObject:block];
+                if (self.syncBlockHashes.count == 0) {
+                    [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                    [self.syncBlocks removeAllObjects];
+                } else if (self.syncBlocks.count > 1000) {
+                    [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                    [self.syncBlocks removeAllObjects];
+                }
+            } else {
+                [self.delegate peer:self relayedBlock:block];
+            }
+        }
     }
     if(self.currentBlockHashes.count == 0){
         [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil];

@@ -308,7 +308,7 @@ static BTBlockChain *blockChain;
     BTBlock *prev = nil;
     BTBlock *first = blocks[0];
     uint32_t rollbackBlockNo = 0;
-    if ([first.blockPrev isEqualToData:prev.blockHash]) {
+    if ([first.blockPrev isEqualToData:self.lastBlock.blockHash]) {
         prev = self.lastBlock;
     } else if ([self getMainChainBlock:first.blockHash] != nil) {
         prev = [self getSameParent:self.lastBlock with:first];
@@ -319,12 +319,22 @@ static BTBlockChain *blockChain;
     // check blocks
     BOOL valid = YES;
     for (BTBlock *block in blocks) {
-        if ([block.blockPrev isEqualToData:prev.blockHash]) {
+        if (![block.blockPrev isEqualToData:prev.blockHash]) {
             valid = NO;
             break;
         }
         block.blockNo = prev.blockNo + 1;
-        NSTimeInterval transitionTime = [self getTransactionTime:block];
+//        NSTimeInterval transitionTime = [self getTransactionTime:block];
+        NSTimeInterval transitionTime = 0;
+        // hit a difficulty transition, find previous transition time
+        if ((block.blockNo % BLOCK_DIFFICULTY_INTERVAL) == 0) {
+            BTBlock *b = first;
+            for (uint32_t i = 0; b && i < BLOCK_DIFFICULTY_INTERVAL - block.blockNo + first.blockNo; i++) {
+                b = [self getBlock:b.blockPrev];
+            }
+            transitionTime = b.blockTime;
+        }
+
         if (![block verifyDifficultyFromPreviousBlock:prev andTransitionTime:transitionTime]) {
             valid = NO;
             break;

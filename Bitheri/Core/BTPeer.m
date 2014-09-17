@@ -58,8 +58,8 @@ typedef enum {
 @property (nonatomic, assign) NSTimeInterval startTime;
 @property (nonatomic, strong) BTBlock *currentBlock;
 @property (nonatomic, strong) NSMutableOrderedSet *currentBlockHashes, *currentTxHashes, *knownTxHashes;
-@property (nonatomic, copy) NSMutableArray *syncBlocks;
-@property (nonatomic, copy) NSMutableArray *syncBlockHashes;
+@property (nonatomic, strong) NSMutableArray *syncBlocks;
+@property (nonatomic, strong) NSMutableArray *syncBlockHashes;
 @property (nonatomic, strong) NSCountedSet *requestedBlockHashes;
 @property (nonatomic, assign) uint32_t filterBlockCount;
 @property (nonatomic, strong) NSRunLoop *runLoop;
@@ -612,9 +612,7 @@ services:(uint64_t)services
                 break;
             case block:
             case merkleblock:
-                if([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]){
-                    [blockHashes addObject:hash];
-                }
+                [blockHashes addObject:hash];
                 break;
             default: break;
         }
@@ -639,11 +637,14 @@ services:(uint64_t)services
     [self.knownTxHashes unionOrderedSet:txHashes];
     
     if (txHashes.count + blockHashes.count > 0) {
-        [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:blockHashes.array];
-
-        // Each merkle block the remote peer sends us is followed by a set of tx messages for that block. We send a ping
-        // to get a pong reply after the block and all its tx are sent, indicating that there are no more tx messages
-        if (blockHashes.count == 1) [self sendPingMessage];
+        if([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]) {
+            [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:blockHashes.array];
+            // Each merkle block the remote peer sends us is followed by a set of tx messages for that block. We send a ping
+            // to get a pong reply after the block and all its tx are sent, indicating that there are no more tx messages
+            if (blockHashes.count == 1) [self sendPingMessage];
+        } else {
+            [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:nil];
+        }
     }
 
     if (blockHashes.count > 0) { // remember blockHashes in case we need to refetch them with an updated bloom filter
@@ -654,9 +655,8 @@ services:(uint64_t)services
         }
         if (self.synchronising)
             [self.syncBlockHashes addObjectsFromArray:[blockHashes array]];
+        [self increaseBlockNo:blockHashes.count];
     }
-
-    [self increaseBlockNo:blockHashes.count];
 }
 
 - (void)increaseBlockNo:(int)blockCount;{
@@ -695,7 +695,7 @@ services:(uint64_t)services
                     if (self.syncBlockHashes.count == 0) {
                         [self.delegate peer:self relayedBlocks:self.syncBlocks];
                         [self.syncBlocks removeAllObjects];
-                    } else if (self.syncBlocks.count >= 1000) {
+                    } else if (self.syncBlocks.count >= 100) {
                         [self.delegate peer:self relayedBlocks:self.syncBlocks];
                         [self.syncBlocks removeAllObjects];
                     }
@@ -1055,7 +1055,7 @@ services:(uint64_t)services
                 if (self.syncBlockHashes.count == 0) {
                     [self.delegate peer:self relayedBlocks:self.syncBlocks];
                     [self.syncBlocks removeAllObjects];
-                } else if (self.syncBlocks.count > 1000) {
+                } else if (self.syncBlocks.count >= 100) {
                     [self.delegate peer:self relayedBlocks:self.syncBlocks];
                     [self.syncBlocks removeAllObjects];
                 }

@@ -232,8 +232,7 @@ services:(uint64_t)services
 
         _synchronising = synchronising;
     } else if (!synchronising && _synchronising) {
-        int delta = [BTBlockChain instance].lastBlock.blockNo - _syncStartBlockNo;
-        _incrementalBlockHeight = _syncStartPeerBlockNo + delta - self.versionLastBlock;
+        _incrementalBlockHeight = [BTBlockChain instance].lastBlock.blockNo - self.versionLastBlock;
         _synchronisingBlockCount = 0;
 
         _synchronising = synchronising;

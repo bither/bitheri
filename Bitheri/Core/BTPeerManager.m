@@ -483,6 +483,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 dPeer = p;
         }
 
+        // ensure download peer has send bloom filter
+        if (peer.peerAddress != dPeer.peerAddress) {
+            [dPeer sendFilterLoadMessage:[self peerBloomFilter:peer]];
+        }
+
         // start blockchain sync
         if (self.downloadPeer == nil || ![self.downloadPeer isEqual:dPeer]) {
             [self.downloadPeer disconnectPeer];

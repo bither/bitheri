@@ -574,10 +574,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     if (peer == self.downloadPeer) self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
 
     dispatch_async(self.q, ^{
-        BOOL isAlreadyInDb = [[BTTxProvider instance] isExist:transaction.txHash];
         BOOL isRel = [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txReceive];
 
         if (isRel) {
+            BOOL isAlreadyInDb = [[BTTxProvider instance] isExist:transaction.txHash];
             if (self.publishedTx[transaction.txHash] == nil) {
                 self.publishedTx[transaction.txHash] = transaction;
             }

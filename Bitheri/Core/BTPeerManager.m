@@ -178,10 +178,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 #pragma mark - peer & sync
 
 - (NSArray *)bestPeers; {
-    NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
-    if (bestPeers.count < [BTSettings instance].maxPeerConnections) {
+    NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
+    if (bestPeers.count < [self maxPeerCount]) {
         [[BTPeerProvider instance] addPeers:[self getPeersFromDns]];
-        bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
+        bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
     }
     return bestPeers;
 }
@@ -242,13 +242,13 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             return [obj status] == BTPeerStatusDisconnected;
         }]];
 
-        if (self.connectedPeers.count >= [BTSettings instance].maxPeerConnections)
-            return; // we're already connected to [BTSettings instance].maxPeerConnections peers
+        if (self.connectedPeers.count >= [self maxPeerCount])
+            return; // we're already connected to [self maxPeerCount] peers
 
         NSMutableOrderedSet *peers = [NSMutableOrderedSet orderedSetWithArray:[self bestPeers]];
 
         for (BTPeer *peer in peers) {
-            if (self.connectedPeers.count >= [BTSettings instance].maxPeerConnections) {
+            if (self.connectedPeers.count >= [self maxPeerCount]) {
                 break;
             }
             if (![self.connectedPeers containsObject:peer]) {
@@ -830,6 +830,15 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                                                             object:@{@"connected" : @(self.connected)}];
         DDLogDebug(@"peer manager availability changed to %d", self.connected);
     });
+}
+
+- (int)maxPeerCount; {
+    UIApplicationState state = [UIApplication sharedApplication].applicationState;
+    if (state == UIApplicationStateBackground) {
+        return [BTSettings instance].maxBackgroundPeerConnections;
+    } else {
+        return [BTSettings instance].maxPeerConnections;
+    }
 }
 
 @end

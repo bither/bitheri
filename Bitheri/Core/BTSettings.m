@@ -42,6 +42,7 @@ static BTSettings *settings;
     _feeBase = 10000;
     _ensureMinRequiredFee = YES;
     _maxPeerConnections = 6;
+    _maxBackgroundPeerConnections = 2;
 
     BTCompressingLogFileManager *logFileManager = [[BTCompressingLogFileManager alloc] init];
     DDFileLogger *fileLogger = [[DDFileLogger alloc] initWithLogFileManager:logFileManager];

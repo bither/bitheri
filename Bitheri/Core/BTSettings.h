@@ -180,6 +180,7 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
 @property (atomic) BOOL ensureMinRequiredFee;
 @property (atomic) uint64_t feeBase;
 @property (atomic) int maxPeerConnections;
+@property (atomic) int maxBackgroundPeerConnections;
 
 -(BOOL)needChooseMode;
 -(AppMode) getAppMode;

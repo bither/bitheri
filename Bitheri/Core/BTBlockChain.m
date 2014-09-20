@@ -310,7 +310,7 @@ static BTBlockChain *blockChain;
     uint32_t rollbackBlockNo = 0;
     if ([first.blockPrev isEqualToData:self.lastBlock.blockHash]) {
         prev = self.lastBlock;
-    } else if ([self getMainChainBlock:first.blockHash] != nil) {
+    } else if ([self getMainChainBlock:first.blockPrev] != nil) {
         prev = [self getSameParent:self.lastBlock with:first];
         rollbackBlockNo = prev.blockNo;
     }

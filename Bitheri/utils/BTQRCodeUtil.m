@@ -20,12 +20,18 @@
 
 #define MAX_QRCODE_SIZE 328
 #define QR_CODE_LETTER @"*"
-#define QR_CODE_SPLIT @":"
+#define OLD_QR_CODE_SPLIT @":"
+#define QR_CODE_SPLIT @"/"
+#define XRANDOM_FLAG @"+"
 
 @implementation BTQRCodeUtil
 
 +(NSArray * )splitQRCode:(NSString * )content{
-    return [content componentsSeparatedByString:QR_CODE_SPLIT];
+    if ([content containsString:OLD_QR_CODE_SPLIT]) {
+        return [content componentsSeparatedByString:OLD_QR_CODE_SPLIT];
+    }else {
+        return [content componentsSeparatedByString:QR_CODE_SPLIT];
+    }
 }
 
 +(NSString * )joinedQRCode:(NSArray * )array{
@@ -33,6 +39,10 @@
 }
 
 +(NSString *) encodeQrCodeString :(NSString* )text{
+   return  [text uppercaseString];
+}
+
++(NSString *) oldEncodeQrCodeString :(NSString* )text{
     NSError *error;
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"[A-Z]" options:0 error:&error];
     NSArray *matches = [regex matchesInString:text
@@ -62,6 +72,12 @@
     return [result uppercaseString];
 }
 +(NSString *)decodeQrCodeString:(NSString *)text{
+    if ([BTQRCodeUtil oldVerifyQrcodeTransport:text]) {
+        return [BTQRCodeUtil oldDecodeQrCodeString:text];
+    }
+    return text;
+}
++(NSString *)oldDecodeQrCodeString:(NSString *)text{
     text=[text lowercaseString];
     NSError *error;
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"\\*([a-z])" options:0 error:&error];
@@ -96,7 +112,19 @@
     
     
 }
-+(BOOL)verifyQrcodeTransport:(NSString *)text{
++(BOOL)VerifyQrcodeTransport:(NSString *)text{
+    BOOL verifyOldVersion=[BTQRCodeUtil oldVerifyQrcodeTransport:text];
+    NSError *error;
+    NSString * regexStr = @"[^0-9A-Z/+]";
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexStr options:0 error:&error];
+    NSArray *matches = [regex matchesInString:text
+                                      options:0
+                                        range:NSMakeRange(0, [text length])];
+    BOOL verifyNewVersion= matches.count==0;
+    return verifyNewVersion||verifyOldVersion;
+
+}
++(BOOL)oldVerifyQrcodeTransport:(NSString *)text{
     NSError *error;
     NSString * regexStr = @"[^0-9A-Z\\*:]";
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexStr options:0 error:&error];

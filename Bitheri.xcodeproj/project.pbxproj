@@ -281,6 +281,19 @@
 			path = utils;
 			sourceTree = "<group>";
 		};
+		AC9BC60219D159FF003B88B5 /* crypto */ = {
+			isa = PBXGroup;
+			children = (
+				D61D0B8F375121B1BF3A35A8 /* BTKey+Bitcoinj.m */,
+				D61D0C9564C1A6E39F21417E /* BTKey+Bitcoinj.h */,
+				D61D0B8BBCD9518CECE5843C /* BTKey+BIP38.m */,
+				D61D015E92AF5A8A84865FAB /* BTKey+BIP38.h */,
+				D61D0B92284C25901F5517DA /* BTKey.m */,
+				D61D0ED66680F16AA0743471 /* BTKey.h */,
+			);
+			name = crypto;
+			sourceTree = "<group>";
+		};
 		D61D0140AAECAA0D440F93AE /* DatabaseProviders */ = {
 			isa = PBXGroup;
 			children = (
@@ -396,6 +409,7 @@
 		D61D0C0CCC65252DFAC5502F /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				AC9BC60219D159FF003B88B5 /* crypto */,
 				42796BF419446739002BC454 /* BTBlockChain.h */,
 				42796BF519446739002BC454 /* BTBlockChain.m */,
 				D61D0EE965EEBC3B077BB7F6 /* BTTx.m */,
@@ -404,10 +418,6 @@
 				D61D0073994AF63A329A0E70 /* BTPeerManager.h */,
 				D61D0F1E91ADEA20CF46B838 /* BTPeer.m */,
 				D61D088D25270AC7BC89E8A6 /* BTPeer.h */,
-				D61D0B8BBCD9518CECE5843C /* BTKey+BIP38.m */,
-				D61D015E92AF5A8A84865FAB /* BTKey+BIP38.h */,
-				D61D0B92284C25901F5517DA /* BTKey.m */,
-				D61D0ED66680F16AA0743471 /* BTKey.h */,
 				D61D0CA25BB9A3B5E0B26C25 /* BTBloomFilter.m */,
 				D61D09C99AC867DEB9BF3503 /* BTBloomFilter.h */,
 				D61D089B4377A79F26061A12 /* BTBlock.m */,
@@ -416,8 +426,6 @@
 				D61D06527901DA0F99F4E090 /* BTAddress.h */,
 				D61D0585E19052A13C844EA9 /* BTAddressManager.m */,
 				D61D0FA2F3862F680D1B33AC /* BTAddressManager.h */,
-				D61D0B8F375121B1BF3A35A8 /* BTKey+Bitcoinj.m */,
-				D61D0C9564C1A6E39F21417E /* BTKey+Bitcoinj.h */,
 				D61D073CC13048357C70737F /* BTSettings.m */,
 				D61D09E80901B896AF916B0A /* BTSettings.h */,
 				D61D0291DF871A90E113C939 /* BTTxBuilder.m */,

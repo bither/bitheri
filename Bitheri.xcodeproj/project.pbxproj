@@ -12,6 +12,8 @@
 		42CF579719582DCB00EB9465 /* BTUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 42CF579619582DCB00EB9465 /* BTUtils.m */; };
 		42CF57981958383C00EB9465 /* BTUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 42CF579619582DCB00EB9465 /* BTUtils.m */; };
 		983833E3E62E487BB1A66946 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A40D2AD541D849FE969335C0 /* libPods.a */; };
+		AC9BC5C719D11315003B88B5 /* BTBip38Test.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC5C619D11315003B88B5 /* BTBip38Test.m */; };
+		AC9BC5C819D11C7D003B88B5 /* BTKey+BIP38.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0B8BBCD9518CECE5843C /* BTKey+BIP38.m */; };
 		D61D0050BF2C7433CAE22D0E /* BTTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01CB510F3BD1C6350C3F /* BTTestHelper.m */; };
 		D61D00C8A7F91602728B0A51 /* BTKey+BIP38.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0B8BBCD9518CECE5843C /* BTKey+BIP38.m */; };
 		D61D00D6B790A6D4DF2CC0E9 /* NSData+Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D08B05802C171ED50DD0E /* NSData+Hash.m */; };
@@ -128,6 +130,7 @@
 		42CF579619582DCB00EB9465 /* BTUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTUtils.m; sourceTree = "<group>"; };
 		8E098EEBCEEB45D7A636B7A0 /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = "<group>"; };
 		A40D2AD541D849FE969335C0 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC9BC5C619D11315003B88B5 /* BTBip38Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBip38Test.m; sourceTree = "<group>"; };
 		D61D003069DDF2FC7F735AB0 /* BTPeerProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPeerProvider.h; sourceTree = "<group>"; };
 		D61D004B1CC6183D2B64D388 /* Podfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; };
 		D61D0073994AF63A329A0E70 /* BTPeerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPeerManager.h; sourceTree = "<group>"; };
@@ -372,6 +375,7 @@
 				DAC2DC001953D9C400C67B0B /* BTTxTest.m */,
 				D61D010D3A723E51A5306A15 /* BTSendTest.m */,
 				D61D02C090EBE6FA4287455A /* BTPasswordSeedTest.m */,
+				AC9BC5C619D11315003B88B5 /* BTBip38Test.m */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -688,6 +692,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC9BC5C819D11C7D003B88B5 /* BTKey+BIP38.m in Sources */,
 				DAB2E12219B857DA00F791F1 /* BTIn.m in Sources */,
 				DAB2E12319B857DA00F791F1 /* BTOut.m in Sources */,
 				DA05F3C4198B70220013BBD6 /* BTTxBuilder.m in Sources */,
@@ -709,6 +714,7 @@
 				DA41E6551957D0910038AFDB /* BTPeerManager.m in Sources */,
 				DA41E6561957D0910038AFDB /* BTPeer.m in Sources */,
 				DA41E6571957D0910038AFDB /* BTKey.m in Sources */,
+				AC9BC5C719D11315003B88B5 /* BTBip38Test.m in Sources */,
 				DA41E6581957D0910038AFDB /* BTBloomFilter.m in Sources */,
 				DA41E6591957D0910038AFDB /* BTBlock.m in Sources */,
 				DA41E65A1957D0910038AFDB /* BTAddress.m in Sources */,

@@ -18,7 +18,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface BTQRCodeEncodeUtil : NSObject
+@interface BTQRCodeUtil : NSObject
 +(NSArray * )splitQRCode:(NSString * )content;
 +(NSString * )joinedQRCode:(NSArray * )array;
 +(NSString *)encodeQrCodeString:(NSString* )text;

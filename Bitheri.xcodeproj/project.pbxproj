@@ -14,6 +14,8 @@
 		983833E3E62E487BB1A66946 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A40D2AD541D849FE969335C0 /* libPods.a */; };
 		AC9BC5C719D11315003B88B5 /* BTBip38Test.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC5C619D11315003B88B5 /* BTBip38Test.m */; };
 		AC9BC5C819D11C7D003B88B5 /* BTKey+BIP38.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0B8BBCD9518CECE5843C /* BTKey+BIP38.m */; };
+		AC9BC60019D13BE9003B88B5 /* BTQRCodeEncodeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC5FD19D13BE9003B88B5 /* BTQRCodeEncodeUtil.m */; };
+		AC9BC60119D13BE9003B88B5 /* BTUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC5FF19D13BE9003B88B5 /* BTUtils.m */; };
 		D61D0050BF2C7433CAE22D0E /* BTTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01CB510F3BD1C6350C3F /* BTTestHelper.m */; };
 		D61D00C8A7F91602728B0A51 /* BTKey+BIP38.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0B8BBCD9518CECE5843C /* BTKey+BIP38.m */; };
 		D61D00D6B790A6D4DF2CC0E9 /* NSData+Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D08B05802C171ED50DD0E /* NSData+Hash.m */; };
@@ -131,6 +133,10 @@
 		8E098EEBCEEB45D7A636B7A0 /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = "<group>"; };
 		A40D2AD541D849FE969335C0 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC9BC5C619D11315003B88B5 /* BTBip38Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBip38Test.m; sourceTree = "<group>"; };
+		AC9BC5FC19D13BE9003B88B5 /* BTQRCodeEncodeUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTQRCodeEncodeUtil.h; sourceTree = "<group>"; };
+		AC9BC5FD19D13BE9003B88B5 /* BTQRCodeEncodeUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTQRCodeEncodeUtil.m; sourceTree = "<group>"; };
+		AC9BC5FE19D13BE9003B88B5 /* BTUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTUtils.h; sourceTree = "<group>"; };
+		AC9BC5FF19D13BE9003B88B5 /* BTUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTUtils.m; sourceTree = "<group>"; };
 		D61D003069DDF2FC7F735AB0 /* BTPeerProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPeerProvider.h; sourceTree = "<group>"; };
 		D61D004B1CC6183D2B64D388 /* Podfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; };
 		D61D0073994AF63A329A0E70 /* BTPeerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPeerManager.h; sourceTree = "<group>"; };
@@ -268,6 +274,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AC9BC5F119D13B11003B88B5 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				AC9BC5FC19D13BE9003B88B5 /* BTQRCodeEncodeUtil.h */,
+				AC9BC5FD19D13BE9003B88B5 /* BTQRCodeEncodeUtil.m */,
+				AC9BC5FE19D13BE9003B88B5 /* BTUtils.h */,
+				AC9BC5FF19D13BE9003B88B5 /* BTUtils.m */,
+			);
+			path = utils;
+			sourceTree = "<group>";
+		};
 		D61D0140AAECAA0D440F93AE /* DatabaseProviders */ = {
 			isa = PBXGroup;
 			children = (
@@ -487,6 +504,7 @@
 		DADE53F91933420300F5E4DD /* Bitheri */ = {
 			isa = PBXGroup;
 			children = (
+				AC9BC5F119D13B11003B88B5 /* utils */,
 				DADE53FC1933420300F5E4DD /* Bitheri.h */,
 				DADE53FA1933420300F5E4DD /* Supporting Files */,
 				D61D089C25B3B2D7E9FAC83D /* Categories */,
@@ -677,6 +695,7 @@
 				D61D036FA31594B9FFB2192D /* BTKey+Bitcoinj.m in Sources */,
 				D61D08CF5B5B1A4F4D9C7E19 /* BTSettings.m in Sources */,
 				D61D044677DB5502A4D3E2EE /* BTScript.m in Sources */,
+				AC9BC60119D13BE9003B88B5 /* BTUtils.m in Sources */,
 				D61D074F6F789C1FD2924293 /* BTScriptBuilder.m in Sources */,
 				D61D00DA49A7F3F790D6D71D /* BTScriptChunk.m in Sources */,
 				D61D01B0C523E20343441DA0 /* BTScriptOpCodes.m in Sources */,
@@ -685,6 +704,7 @@
 				D61D0FE35D5D0A79C7EEE0F0 /* BTIn.m in Sources */,
 				D61D0B8241F07159E24315B9 /* BTOut.m in Sources */,
 				D61D0E402538E17CD28FCC38 /* BTVersion.m in Sources */,
+				AC9BC60019D13BE9003B88B5 /* BTQRCodeEncodeUtil.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -37,6 +37,9 @@
 +(NSString * )joinedQRCode:(NSArray * )array{
     return [array componentsJoinedByString:QR_CODE_SPLIT];
 }
++(NSString * )oldJoinedQRCode:(NSArray * )array{
+    return [array componentsJoinedByString:QR_CODE_SPLIT];
+}
 
 +(NSString *) encodeQrCodeString :(NSString* )text{
    return  [text uppercaseString];
@@ -112,7 +115,7 @@
     
     
 }
-+(BOOL)VerifyQrcodeTransport:(NSString *)text{
++(BOOL)verifyQrcodeTransport:(NSString *)text{
     BOOL verifyOldVersion=[BTQRCodeUtil oldVerifyQrcodeTransport:text];
     NSError *error;
     NSString * regexStr = @"[^0-9A-Z/+]";
@@ -147,5 +150,6 @@
         return 1000;
     }
 }
+
 
 @end

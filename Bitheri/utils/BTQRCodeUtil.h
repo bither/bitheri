@@ -22,6 +22,7 @@
 
 @interface BTQRCodeUtil : NSObject
 +(NSArray * )splitQRCode:(NSString * )content;
++(NSString * )oldJoinedQRCode:(NSArray * )array;
 +(NSString * )joinedQRCode:(NSArray * )array;
 +(NSString *) oldEncodeQrCodeString :(NSString* )text;
 +(NSString *)encodeQrCodeString:(NSString* )text;

@@ -26,7 +26,11 @@
 
 @implementation BTQRCodeUtil
 
-+(NSArray * )splitQRCode:(NSString * )content{
++(NSString *)replaceNewQRCode:(NSString *)content{
+    return [content stringByReplacingOccurrencesOfString:QR_CODE_SPLIT withString:OLD_QR_CODE_SPLIT];
+}
+
++(NSArray *)splitQRCode:(NSString * )content{
     if ([content containsString:OLD_QR_CODE_SPLIT]) {
         return [content componentsSeparatedByString:OLD_QR_CODE_SPLIT];
     }else {

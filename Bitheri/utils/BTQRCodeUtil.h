@@ -21,6 +21,7 @@
 #define XRANDOM_FLAG @"+"
 
 @interface BTQRCodeUtil : NSObject
++(NSString *)replaceNewQRCode:(NSString *)content;
 +(NSArray * )splitQRCode:(NSString * )content;
 +(NSString * )oldJoinedQRCode:(NSArray * )array;
 +(NSString * )joinedQRCode:(NSArray * )array;

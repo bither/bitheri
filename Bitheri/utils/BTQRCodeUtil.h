@@ -18,6 +18,8 @@
 
 #import <Foundation/Foundation.h>
 
+#define XRANDOM_FLAG @"+"
+
 @interface BTQRCodeUtil : NSObject
 +(NSArray * )splitQRCode:(NSString * )content;
 +(NSString * )joinedQRCode:(NSArray * )array;

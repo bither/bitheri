@@ -22,7 +22,7 @@
 #define QR_CODE_LETTER @"*"
 #define OLD_QR_CODE_SPLIT @":"
 #define QR_CODE_SPLIT @"/"
-#define XRANDOM_FLAG @"+"
+
 
 @implementation BTQRCodeUtil
 

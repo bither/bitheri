@@ -41,15 +41,17 @@
 @property (nonatomic, readonly) uint64_t balance;
 @property (nonatomic, readonly) NSArray *txs;
 @property (nonatomic, readonly) NSArray *unspentOuts;
-//@property(nonatomic, readonly) NSArray *unspentOutsData;
+@property long long sortTime;
+@property BOOL isFromXRandom;
 
 
--(instancetype) initWithPassphrase:(NSString *)passphrase;
 
--(instancetype) initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase;
+-(instancetype) initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
 
-- (instancetype)initWithKey:(BTKey *) key encryptPrivKey:(NSString *) encryptPrivKey;
-- (instancetype)initWithAddress:(NSString *) address pubKey:(NSData *) pubKey hasPrivKey:(BOOL)hasPrivKey;
+-(instancetype) initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
+
+- (instancetype)initWithKey:(BTKey *) key encryptPrivKey:(NSString *) encryptPrivKey isXRandom:(BOOL)isXRandom;
+- (instancetype)initWithAddress:(NSString *) address pubKey:(NSData *) pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL) isXRandom;
 
 - (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
 
@@ -105,7 +107,7 @@
 - (uint32_t)blockHeightUntilFree:(BTTx *)transaction;
 
 
--(void)saveNewAddress;
+-(void)saveNewAddress:(long long)sortTime;
 -(void)updateAddressWithPub;
 -(void)savePrivate;
 -(void)removeWatchOnly;

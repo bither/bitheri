@@ -32,4 +32,7 @@
 +(NSString * )getWatchOnlyDir;
 +(NSArray * )getFileList:(NSString *)dir;
 
++(BOOL)compareString:(NSString *)original compare:(NSString *)compare;
++(BOOL)isEmpty:(NSString *)str;
+
 @end

@@ -49,16 +49,17 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *_address;
 }
 
-- (instancetype)initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom {
-    BTKey *key = [BTKey keyWithSecret:[NSData randomWithSize:32] compressed:YES];
-    NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16]];
-    return [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:isXRandom];
+//- (instancetype)initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom {
+//    BTKey *key = [BTKey keyWithSecret:[NSData randomWithSize:32] compressed:YES];
+//
+//    NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16]];
+//    return [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:isXRandom];
+//
+//}
 
-}
-
-- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom {
+- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase {
     BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:passphrase];
-    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:isXRandom] : nil;
+    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:key.isFromXRandom] : nil;
 }
 
 - (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom {
@@ -385,14 +386,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 }
 - (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
-    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:oldPassphrase];
-    NSData *salt = [BTKey saltWithBitcoinj:self.encryptPrivKey];
-    NSData *iv = [BTKey ivWithBitcoinj:self.encryptPrivKey];
-    if (key != nil) {
-        return [key bitcoinjKeyWithPassphrase:newPassphrase andSalt:salt andIV:iv];
-    } else {
-        return nil;
-    }
+    return [BTKey reEncryptPrivKeyWithOldPassphrase:self.encryptPrivKey oldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
 }
 
 #pragma mark - calculate fee and out

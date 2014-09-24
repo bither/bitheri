@@ -10,6 +10,7 @@
 		42796BF619446739002BC454 /* BTBlockChain.m in Sources */ = {isa = PBXBuildFile; fileRef = 42796BF519446739002BC454 /* BTBlockChain.m */; };
 		428DB454194ECA9C00C81A4B /* BTPasswordSeed.m in Sources */ = {isa = PBXBuildFile; fileRef = 428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */; };
 		983833E3E62E487BB1A66946 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A40D2AD541D849FE969335C0 /* libPods.a */; };
+		AC9BBD0119D2A27500E58BA7 /* BTPrivateKeyUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BBD0019D2A27500E58BA7 /* BTPrivateKeyUtil.m */; };
 		AC9BC5C719D11315003B88B5 /* BTBip38Test.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC5C619D11315003B88B5 /* BTBip38Test.m */; };
 		AC9BC5C819D11C7D003B88B5 /* BTKey+BIP38.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0B8BBCD9518CECE5843C /* BTKey+BIP38.m */; };
 		AC9BC60919D15B08003B88B5 /* BTQRCodeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */; };
@@ -128,6 +129,8 @@
 		428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTPasswordSeed.m; sourceTree = "<group>"; };
 		8E098EEBCEEB45D7A636B7A0 /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = "<group>"; };
 		A40D2AD541D849FE969335C0 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC9BBCFF19D2A27500E58BA7 /* BTPrivateKeyUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPrivateKeyUtil.h; sourceTree = "<group>"; };
+		AC9BBD0019D2A27500E58BA7 /* BTPrivateKeyUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTPrivateKeyUtil.m; sourceTree = "<group>"; };
 		AC9BC5C619D11315003B88B5 /* BTBip38Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBip38Test.m; sourceTree = "<group>"; };
 		AC9BC60519D15B07003B88B5 /* BTQRCodeUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTQRCodeUtil.h; sourceTree = "<group>"; };
 		AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTQRCodeUtil.m; sourceTree = "<group>"; };
@@ -290,6 +293,8 @@
 				AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */,
 				AC9BC60719D15B08003B88B5 /* BTUtils.h */,
 				AC9BC60819D15B08003B88B5 /* BTUtils.m */,
+				AC9BBCFF19D2A27500E58BA7 /* BTPrivateKeyUtil.h */,
+				AC9BBD0019D2A27500E58BA7 /* BTPrivateKeyUtil.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -687,6 +692,7 @@
 				D61D0355FD98B828C6D39CB4 /* BTBlock.m in Sources */,
 				42796BF619446739002BC454 /* BTBlockChain.m in Sources */,
 				428DB454194ECA9C00C81A4B /* BTPasswordSeed.m in Sources */,
+				AC9BBD0119D2A27500E58BA7 /* BTPrivateKeyUtil.m in Sources */,
 				D61D06A181A557512520874C /* BTDatabaseManager.m in Sources */,
 				D61D0F3AA81161C20F392306 /* BTAddress.m in Sources */,
 				D61D0141E93CCBAFC9888AC4 /* BTAddressManager.m in Sources */,

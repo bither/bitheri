@@ -125,19 +125,37 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 
 - (instancetype)initKeyWithBitcoinj:(NSString *)key andPassphrase:(NSString *)passphrase;{
     NSArray *array = [key componentsSeparatedByString:@":"];
-
+    BOOL compressed=YES;
+    BOOL isXRandom=NO;
+    NSData * data=[array[2] hexToData];
+    NSMutableData * salt=[NSMutableData dataWithLength:SALT_LENGTH];
+    if (data.length==9) {
+        uint8_t *bytes=(uint8_t *)data.bytes;
+        uint8_t flag=bytes[0];
+        compressed=(flag&IS_COMPRESSED_FLAG)==IS_COMPRESSED_FLAG;
+        isXRandom=(flag&IS_FROMXRANDOM_FLAG)==IS_FROMXRANDOM_FLAG;
+        for (int i=1; i<data.length; i++) {
+            [salt appendUInt8:bytes[i]];
+        }
+    }else{
+        [salt appendData:data];
+    }
     NSData *secret = [self decryptFrom:[array[0] hexToData] andPassphrase:passphrase andSalt:[array[2] hexToData] andIV:[array[1] hexToData]];
     if (secret == nil)
         return nil;
-
-    if (! (self = [self initWithSecret:secret compressed:YES])) return nil;
+    self=[self initWithSecret:secret compressed:compressed];
+    self.isFromXRandom=isXRandom;
+    if (! self ) return nil;
     return self;
 }
 
-- (NSString *)bitcoinjKeyWithPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv;{
+- (NSString *)bitcoinjKeyWithPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv flag:(uint8_t) flag{
     NSData *secret = [[self.privateKey base58checkToData] subdataWithRange:NSMakeRange(1, 32)];
+    NSMutableData  *data=[NSMutableData dataWithLength:salt.length+1];
+    [data appendUInt8:flag];
+    [data appendData:salt];
     return [NSString stringWithFormat:@"%@:%@:%@"
-            , [NSString hexWithData:[self encryptSecret:secret withPassphrase:passphrase andSalt:salt andIV:iv]]
+            , [NSString hexWithData:[self encryptSecret:secret withPassphrase:passphrase andSalt:data andIV:iv]]
             , [NSString hexWithData:iv], [NSString hexWithData:salt]];
 }
 
@@ -218,6 +236,27 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
         return YES;
     } else {
         return NO;
+    }
+}
++(NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString * )encryptPrivKey oldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase{
+    BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:oldPassphrase];
+    NSData *data = [BTKey saltWithBitcoinj:encryptPrivKey];
+    NSMutableData * salt=[NSMutableData dataWithLength:SALT_LENGTH];
+    uint8_t flag=0;
+    if (data.length==9) {
+        uint8_t* bytes=(uint8_t *)data.bytes;
+        flag=bytes[0];
+        for (int i; i<data.length; i++) {
+            [salt appendUInt8:bytes[i]];
+        }
+    }else{
+        [salt appendData:data];
+    }
+    NSData *iv = [BTKey ivWithBitcoinj:encryptPrivKey];
+    if(key){
+        return [key bitcoinjKeyWithPassphrase:newPassphrase andSalt:salt andIV:iv flag:flag];
+    }else{
+        return nil;
     }
 }
 

@@ -46,9 +46,9 @@
 
 
 
--(instancetype) initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
-
--(instancetype) initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
+//-(instancetype) initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
+//
+-(instancetype) initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase ;
 
 - (instancetype)initWithKey:(BTKey *) key encryptPrivKey:(NSString *) encryptPrivKey isXRandom:(BOOL)isXRandom;
 - (instancetype)initWithAddress:(NSString *) address pubKey:(NSData *) pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL) isXRandom;

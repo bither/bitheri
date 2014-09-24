@@ -31,7 +31,7 @@
 }
 
 +(NSArray *)splitQRCode:(NSString * )content{
-    if ([content containsString:OLD_QR_CODE_SPLIT]) {
+    if ([content rangeOfString:OLD_QR_CODE_SPLIT].location!=NSNotFound) {
         return [content componentsSeparatedByString:OLD_QR_CODE_SPLIT];
     }else {
         return [content componentsSeparatedByString:QR_CODE_SPLIT];

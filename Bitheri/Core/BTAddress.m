@@ -357,7 +357,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 }
 
-- (void)updateAddress{
+- (void)updateAddressWithPub{
     if ([self hasPrivKey]) {
         [self savePrivateWithPubKey:NO];
     } else {

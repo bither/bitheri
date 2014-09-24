@@ -106,7 +106,7 @@
 
 
 -(void)saveNewAddress;
--(void)updateAddress;
+-(void)updateAddressWithPub;
 -(void)savePrivate;
 -(void)removeWatchOnly;
 

@@ -133,4 +133,14 @@
     return watchOnlyDir;
 }
 
++(NSArray * )getFileList:(NSString *)dir{
+    NSError *error = nil;
+    NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir
+                                                                         error:&error];
+    if (error == nil) {
+        return files;
+    }
+    return [NSArray new];
+}
+
 @end

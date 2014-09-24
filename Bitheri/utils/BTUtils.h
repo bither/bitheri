@@ -30,5 +30,6 @@
 
 +(NSString * )getPrivDir;
 +(NSString * )getWatchOnlyDir;
++(NSArray * )getFileList:(NSString *)dir;
 
 @end

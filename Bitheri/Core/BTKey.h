@@ -25,6 +25,7 @@
 @property (nonatomic, readonly) NSString *address;
 @property (nonatomic, readonly) NSData *hash160;
 @property BOOL compressed;
+@property BOOL isFromXRandom;
 
 + (instancetype)keyWithPrivateKey:(NSString *)privateKey;
 + (instancetype)keyWithSecret:(NSData *)secret compressed:(BOOL)compressed;

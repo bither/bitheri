@@ -125,7 +125,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 }
 
 - (instancetype)initKeyWithBitcoinj:(NSString *)key andPassphrase:(NSString *)passphrase;{
-    NSArray *array = [key componentsSeparatedByString:@":"];
+    NSArray *array = [BTQRCodeUtil splitQRCode:key];
     BOOL compressed=YES;
     BOOL isXRandom=NO;
     NSData * data=[array[2] hexToData];
@@ -262,7 +262,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 }
 
 + (NSData *)saltWithBitcoinj:(NSString *)key;{
-    NSArray *array = [key componentsSeparatedByString:@":"];
+    NSArray *array = [BTQRCodeUtil splitQRCode:key];
     if ([array count] == 3)
         return [array[2] hexToData];
     else
@@ -270,7 +270,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 }
 
 + (NSData *)ivWithBitcoinj:(NSString *)key;{
-    NSArray *array = [key componentsSeparatedByString:@":"];
+    NSArray *array = [BTQRCodeUtil splitQRCode:key];
     if ([array count] == 3)
         return [array[1] hexToData];
     else

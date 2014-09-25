@@ -30,8 +30,12 @@
     return [content stringByReplacingOccurrencesOfString:OLD_QR_CODE_SPLIT withString:QR_CODE_SPLIT];
 }
 
++(BOOL) isOldQRCodeVerion:(NSString *)content{
+    return [content rangeOfString:OLD_QR_CODE_SPLIT].location!=NSNotFound;
+}
+
 +(NSArray *)splitQRCode:(NSString * )content{
-    if ([content rangeOfString:OLD_QR_CODE_SPLIT].location!=NSNotFound) {
+    if ([BTQRCodeUtil isOldQRCodeVerion:content]) {
         return [content componentsSeparatedByString:OLD_QR_CODE_SPLIT];
     }else {
         return [content componentsSeparatedByString:QR_CODE_SPLIT];

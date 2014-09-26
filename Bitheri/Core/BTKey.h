@@ -18,6 +18,10 @@
 
 #import <Foundation/Foundation.h>
 
+#define SALT_LENGTH              8
+#define IS_COMPRESSED_FLAG       1
+#define IS_FROMXRANDOM_FLAG      2
+
 @interface BTKey : NSObject
 
 @property (nonatomic, copy) NSString *privateKey;
@@ -25,6 +29,7 @@
 @property (nonatomic, readonly) NSString *address;
 @property (nonatomic, readonly) NSData *hash160;
 @property BOOL compressed;
+@property BOOL isFromXRandom;
 
 + (instancetype)keyWithPrivateKey:(NSString *)privateKey;
 + (instancetype)keyWithSecret:(NSData *)secret compressed:(BOOL)compressed;

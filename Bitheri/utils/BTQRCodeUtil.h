@@ -1,6 +1,6 @@
 //
-//  BTPasswordSeed.h
-//  bitheri
+//  QRCodeEncodeUtil.h
+//  bither-ios
 //
 //  Copyright 2014 http://Bither.net
 //
@@ -17,13 +17,20 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTAddress.h"
 
-@interface BTPasswordSeed : NSObject
+#define XRANDOM_FLAG @"+"
 
-- (instancetype)initWithString:(NSString *)message;
-- (instancetype)initWithBTAddress:(BTAddress *)btAddress;
-- (BOOL)checkPassword:(NSString *)password;
--(NSString *)toPasswrodSeedString;
+@interface BTQRCodeUtil : NSObject
+
++(BOOL) isOldQRCodeVerion:(NSString *)content;
++(NSString *)replaceNewQRCode:(NSString *)content;
++(NSArray * )splitQRCode:(NSString * )content;
++(NSString * )oldJoinedQRCode:(NSArray * )array;
++(NSString * )joinedQRCode:(NSArray * )array;
++(NSString *) oldEncodeQrCodeString :(NSString* )text;
++(NSString *)encodeQrCodeString:(NSString* )text;
++(NSString *)decodeQrCodeString:(NSString *)text;
++(BOOL)verifyQrcodeTransport:(NSString *)text;
++(NSInteger)getNumOfQrCodeString:(NSInteger )length;
 
 @end

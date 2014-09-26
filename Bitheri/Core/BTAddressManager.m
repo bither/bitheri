@@ -22,6 +22,7 @@
 //#import "BTOutItem.h"
 #import "BTIn.h"
 #import "BTOut.h"
+#import "BTQRCodeUtil.h"
 
 //static NSData *txOutput(NSData *txHash, uint32_t n) {
 //    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
@@ -32,7 +33,7 @@
 //}
 
 @implementation BTAddressManager {
-
+    
 }
 
 + (instancetype)instance; {
@@ -41,13 +42,13 @@
     dispatch_once(&onceToken, ^{
         singleton = [self new];
     });
-
+    
     return singleton;
 }
 
 - (instancetype)init {
     if (!(self = [super init])) return nil;
-
+    
     _privKeyAddresses = [NSMutableArray new];
     _watchOnlyAddresses = [NSMutableArray new];
     _creationTime = [[NSDate new] timeIntervalSince1970];
@@ -64,51 +65,105 @@
 }
 
 - (void)initPrivKeyAddress {
+    BOOL isSort=NO;
     for (NSString *str in [BTUtils filesByModDate:[BTUtils getPrivDir]]) {
         NSInteger length = str.length;
         if ([str rangeOfString:@".pub"].length > 0) {
             NSString *note = [BTUtils readFile:[[BTUtils getPrivDir] stringByAppendingPathComponent:str]];
             NSArray *array = [note componentsSeparatedByString:@":"];
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES];
+            long long sortTime=0;
+            BOOL isFromXrandm=NO;
+            if (array.count>3) {
+                sortTime=[[array objectAtIndex:2] longLongValue];
+                if (sortTime>0) {
+                    isSort=YES;
+                }
+                isFromXrandm=[BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
+                
+            }
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXrandm];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
+            [btAddress setSortTime:sortTime];
             [self.privKeyAddresses addObject:btAddress];
-
+            
+            
         }
     }
-
-
+    if (isSort) {
+        [self.watchOnlyAddresses sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedDescending;
+            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedAscending;
+            
+            return NSOrderedSame;
+        }];
+        
+    }
+    
+    
 }
 
 - (void)initWatchOnlyAddress {
+    BOOL isSort=NO;
     for (NSString *str in [BTUtils filesByModDate:[BTUtils getWatchOnlyDir]]) {
         NSInteger length = str.length;
         if ([str rangeOfString:@".pub"].length > 0) {
             NSString *note = [BTUtils readFile:[[BTUtils getWatchOnlyDir] stringByAppendingPathComponent:str]];
             NSArray *array = [note componentsSeparatedByString:@":"];
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:NO];
+            long long sortTime=0;
+            BOOL isFromXrandm=NO;
+            if (array.count>3) {
+                sortTime=[[array objectAtIndex:2] longLongValue];
+                if (sortTime>0) {
+                    isSort=YES;
+                }
+                isFromXrandm=[BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
+                
+            }
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:NO isXRandom:isFromXrandm];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
+            [btAddress setSortTime:sortTime];
             [self.watchOnlyAddresses addObject:btAddress];
         }
+    }
+    if (isSort) {
+        [self.watchOnlyAddresses sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedDescending;
+            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedAscending;
+            
+            return NSOrderedSame;
+        }];
+        
     }
 }
 
 - (void)addAddress:(BTAddress *)address {
     DDLogDebug(@"addAddress %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
+    long long sortTime=[[NSDate new] timeIntervalSince1970]*1000;
     if (address.hasPrivKey) {
-        [address saveNewAddress];
+        if (self.privKeyAddresses.count>0) {
+            BTAddress * address=[self.privKeyAddresses objectAtIndex:0];
+            if (sortTime<address.sortTime) {
+                sortTime=address.sortTime + self.privKeyAddresses.count;
+            }
+        }
+        [address saveNewAddress:sortTime];
         [self.privKeyAddresses insertObject:address atIndex:0];
     } else {
-        [address saveNewAddress];
+        BTAddress * address=[self.watchOnlyAddresses objectAtIndex:0];
+        if (sortTime<address.sortTime) {
+            sortTime=address.sortTime + self.watchOnlyAddresses.count;
+        }
+        [address saveNewAddress:sortTime];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
     }
-
+    
 }
 
 - (void)stopMonitor:(BTAddress *)address {
     DDLogDebug(@"stopMonitor %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
     [address removeWatchOnly];
     [self.watchOnlyAddresses removeObject:address];
-
+    
 }
 
 - (NSMutableArray *)allAddresses {

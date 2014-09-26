@@ -17,6 +17,7 @@
 //  limitations under the License.
 
 #import "BTPasswordSeed.h"
+#import "BTQRCodeUtil.h"
 
 @interface BTPasswordSeed ()
 
@@ -29,7 +30,7 @@
 - (instancetype)initWithString:(NSString *)message {
     self = [super init];
     if (self) {
-        NSArray *array = [message componentsSeparatedByString:QR_CODE_SPLIT];
+        NSArray *array = [BTQRCodeUtil splitQRCode:message];
         _address = array[0];
         _keyStr = [message substringFromIndex:self.address.length + 1];
 
@@ -55,9 +56,10 @@
         return NO;
     }
 }
-
-- (NSString *)description {
-    return [NSString stringWithFormat:@"%@%@%@", self.address, QR_CODE_SPLIT, self.keyStr];
+-(NSString *)toPasswrodSeedString{
+    NSArray *array=[[NSArray alloc] initWithObjects:self.address,self.keyStr, nil];
+    return [BTQRCodeUtil joinedQRCode:array];
 }
+
 
 @end

@@ -1,6 +1,6 @@
 //
-//  BTPasswordSeed.h
-//  bitheri
+//  BTPrivateKeyUtil.h
+//  bither-ios
 //
 //  Copyright 2014 http://Bither.net
 //
@@ -17,13 +17,9 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTAddress.h"
+#import "BTKey.h"
 
-@interface BTPasswordSeed : NSObject
+@interface BTPrivateKeyUtil : NSObject
 
-- (instancetype)initWithString:(NSString *)message;
-- (instancetype)initWithBTAddress:(BTAddress *)btAddress;
-- (BOOL)checkPassword:(NSString *)password;
--(NSString *)toPasswrodSeedString;
-
++(NSString *)getPrivateKeyString:(BTKey *) key passphrase:(NSString *)passphrase;
 @end

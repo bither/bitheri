@@ -25,8 +25,8 @@
 #import "BTIn.h"
 #import "BTOut.h"
 #import "BTSettings.h"
+#import "BTQRCodeUtil.h"
 
-static double saveTime;
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
     if ([obj1 blockNo] < [obj2 blockNo]) return NSOrderedDescending;
@@ -49,30 +49,31 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *_address;
 }
 
-- (instancetype)initWithPassphrase:(NSString *)passphrase {
-    BTKey *key = [BTKey keyWithSecret:[NSData randomWithSize:32] compressed:YES];
-    NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16]];
-    return [self initWithKey:key encryptPrivKey:encryptPrivKey];
-
-}
+//- (instancetype)initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom {
+//    BTKey *key = [BTKey keyWithSecret:[NSData randomWithSize:32] compressed:YES];
+//
+//    NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16]];
+//    return [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:isXRandom];
+//
+//}
 
 - (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase {
     BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:passphrase];
-    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey] : nil;
+    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:key.isFromXRandom] : nil;
 }
 
-- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey; {
+- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom {
     if (!(self = [super init])) return nil;
-
     _hasPrivKey = encryptPrivKey != nil;
     _encryptPrivKey = encryptPrivKey;
     _address = key.address;
     _pubKey = key.publicKey;
     _isSyncComplete = NO;
+    _isFromXRandom=isXRandom;
     return self;
 }
 
-- (instancetype)initWithAddress:(NSString *)address pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey {
+- (instancetype)initWithAddress:(NSString *)address pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey  isXRandom:(BOOL) isXRandom {
 
     if (!(self = [super init])) return nil;
 
@@ -80,6 +81,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _encryptPrivKey = nil;
     _address = address;
     _pubKey = pubKey;
+    _isFromXRandom=isXRandom;
     _isSyncComplete = NO;
     [self updateBalance];
 
@@ -335,42 +337,36 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
 }
 
-- (void)savePrivateWithPubKey :(BOOL) isSetModify{
+- (void)savePrivateWithPubKey{
     NSString *watchOnlyFullFileName = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
-    NSString *watchOnlyContent = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
+    NSString *watchOnlyContent = [NSString stringWithFormat:@"%@:%@:%lld%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString],self.sortTime,[self getXRandomString]];
     [BTUtils writeFile:watchOnlyFullFileName content:watchOnlyContent];
-    if (isSetModify) {
-        double time = [[NSDate new] timeIntervalSince1970] + saveTime;
-        saveTime = saveTime + 1;
-        [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:watchOnlyFullFileName];
-    }
+   
 }
 
-- (void)saveWatchOnly :(BOOL) isSetModify {
-    NSString *content = [NSString stringWithFormat:@"%@:%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString]];
+- (void)saveWatchOnly  {
+    NSString *content = [NSString stringWithFormat:@"%@:%@:%lld%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString],self.sortTime,[self getXRandomString]];
     NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
     [BTUtils writeFile:dir content:content];
-    if (isSetModify) {
-        double time = [[NSDate new] timeIntervalSince1970] + saveTime;
-        saveTime = saveTime + 1;
-        [BTUtils setModifyDateToFile:[NSDate dateWithTimeIntervalSince1970:time] forFile:dir];
-    }
+
 }
 
-- (void)updateAddress{
+
+- (void)updateAddressWithPub{
     if ([self hasPrivKey]) {
-        [self savePrivateWithPubKey:NO];
+        [self savePrivateWithPubKey];
     } else {
-        [self saveWatchOnly:NO];
+        [self saveWatchOnly];
     }
 }
 
--(void)saveNewAddress{
+-(void)saveNewAddress:(long long)sortTime{
+    self.sortTime=sortTime;
     if ([self hasPrivKey]) {
         [self savePrivate];
-        [self savePrivateWithPubKey:YES];
+        [self savePrivateWithPubKey];
     }else{
-        [self saveWatchOnly:YES];
+        [self saveWatchOnly];
     }
 }
 - (void)removeWatchOnly{
@@ -382,16 +378,15 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (NSString *)getSyncCompleteString {
     return _isSyncComplete ? @"1" : @"0";
 }
-
-- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
-    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:oldPassphrase];
-    NSData *salt = [BTKey saltWithBitcoinj:self.encryptPrivKey];
-    NSData *iv = [BTKey ivWithBitcoinj:self.encryptPrivKey];
-    if (key != nil) {
-        return [key bitcoinjKeyWithPassphrase:newPassphrase andSalt:salt andIV:iv];
-    } else {
-        return nil;
+-(NSString * )getXRandomString{
+    if (self.isFromXRandom) {
+        return [NSString stringWithFormat:@":%@",XRANDOM_FLAG];
+    }else{
+        return @"";
     }
+}
+- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
+    return [BTKey reEncryptPrivKeyWithOldPassphrase:self.encryptPrivKey oldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
 }
 
 #pragma mark - calculate fee and out

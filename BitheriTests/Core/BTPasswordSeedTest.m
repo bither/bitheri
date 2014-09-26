@@ -40,12 +40,12 @@
 - (void)test {
     BTPasswordSeed *password = [[BTPasswordSeed alloc] initWithString:@"19jnfQFH8oJ2zejk2Chnqr39Jn2gkbeccs:b9879dc940f1b4ff0565b1a27a87c6e2091b2727b6ee03f80462dfa8c824900eef96a0728d54a486cd31e906973a8c9f:a332cf42d67705a6cfdec0c903cef606:6f73ea0a359d02b1"];
     XCTAssertTrue([password checkPassword:@"123456"], @"check password");
-    XCTAssertTrue([[password description] isEqualToString:@"19jnfQFH8oJ2zejk2Chnqr39Jn2gkbeccs:b9879dc940f1b4ff0565b1a27a87c6e2091b2727b6ee03f80462dfa8c824900eef96a0728d54a486cd31e906973a8c9f:a332cf42d67705a6cfdec0c903cef606:6f73ea0a359d02b1"], @" password toString");
+    XCTAssertTrue([[password toPasswrodSeedString] isEqualToString:@"19jnfQFH8oJ2zejk2Chnqr39Jn2gkbeccs:b9879dc940f1b4ff0565b1a27a87c6e2091b2727b6ee03f80462dfa8c824900eef96a0728d54a486cd31e906973a8c9f:a332cf42d67705a6cfdec0c903cef606:6f73ea0a359d02b1"], @" password toString");
 
     BTAddress *address = [[BTAddress alloc] initWithBitcoinjKey:@"b9879dc940f1b4ff0565b1a27a87c6e2091b2727b6ee03f80462dfa8c824900eef96a0728d54a486cd31e906973a8c9f:a332cf42d67705a6cfdec0c903cef606:6f73ea0a359d02b1" withPassphrase:@"123456"];
     BTPasswordSeed *addressPS = [[BTPasswordSeed alloc] initWithBTAddress:address];
     XCTAssertTrue([addressPS checkPassword:@"123456"], @"check password");
-    XCTAssertTrue([[addressPS description] isEqualToString:@"19jnfQFH8oJ2zejk2Chnqr39Jn2gkbeccs:b9879dc940f1b4ff0565b1a27a87c6e2091b2727b6ee03f80462dfa8c824900eef96a0728d54a486cd31e906973a8c9f:a332cf42d67705a6cfdec0c903cef606:6f73ea0a359d02b1"], @" password toString");
+    XCTAssertTrue([[addressPS toPasswrodSeedString] isEqualToString:@"19jnfQFH8oJ2zejk2Chnqr39Jn2gkbeccs:b9879dc940f1b4ff0565b1a27a87c6e2091b2727b6ee03f80462dfa8c824900eef96a0728d54a486cd31e906973a8c9f:a332cf42d67705a6cfdec0c903cef606:6f73ea0a359d02b1"], @" password toString");
 }
 
 @end

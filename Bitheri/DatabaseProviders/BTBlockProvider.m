@@ -19,6 +19,7 @@
 #import "BTBlockProvider.h"
 #import "BTDatabaseManager.h"
 #import "NSString+Base58.h"
+#import "BTSettings.h"
 
 static BTBlockProvider *provider;
 
@@ -249,17 +250,7 @@ static BTBlockProvider *provider;
                 maxBlockNo = [rs intForColumn:@"max_block_no"];
             }
             [rs close];
-            int interval = 2016;
-            int minBlockCount = 100;
-
-            int left = maxBlockNo % interval;
-
-            int blockNo = 0;
-            if (left > minBlockCount)
-                blockNo = maxBlockNo - left;
-            else
-                blockNo = maxBlockNo - left - interval;
-
+            int blockNo = maxBlockNo - BLOCK_DIFFICULTY_INTERVAL - maxBlockNo % BLOCK_DIFFICULTY_INTERVAL;
             sql = @"delete from blocks where block_no<?";
             [db executeUpdate:sql, @(blockNo)];
         }

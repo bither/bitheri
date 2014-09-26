@@ -51,8 +51,8 @@ static BTBlockProvider *provider;
 - (NSArray *)getBlocksWithLimit:(NSInteger) limit {
    __block NSMutableArray *blocks = [NSMutableArray new];
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select * from blocks where is_main=? order by block_no desc limit ?";
-        FMResultSet *rs = [db executeQuery:sql, @1,limit];
+       NSString *sql = [NSString stringWithFormat: @"select * from blocks where is_main=? order by block_no desc limit %ld",(long)limit ];
+        FMResultSet *rs = [db executeQuery:sql, @1];
         while ([rs next]) {
             [blocks addObject:[self format:rs] ];
         }

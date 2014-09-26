@@ -402,5 +402,8 @@ static BTBlockChain *blockChain;
 -(NSArray *) getAllBlocks{
     return [[BTBlockProvider instance] getAllBlocks];
 }
+- (NSArray *)getBlocksWithLimit:(NSInteger) limit {
+    return [[BTBlockProvider instance] getBlocksWithLimit:limit];
+}
 
 @end

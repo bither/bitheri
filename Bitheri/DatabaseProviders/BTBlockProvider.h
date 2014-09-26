@@ -27,6 +27,7 @@
 - (int)getBlockCount;
 
 - (NSMutableArray *)getAllBlocks;
+- (NSArray *)getBlocksWithLimit:(NSInteger) limit ;
 
 - (NSMutableArray *)getBlocksFrom:(uint)blockNo;
 

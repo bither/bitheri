@@ -47,6 +47,18 @@ static BTBlockProvider *provider;
     }];
     return blocks;
 }
+- (NSArray *)getBlocksWithLimit:(NSInteger) limit {
+   __block NSMutableArray *blocks = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select * from blocks where is_main=? order by block_no desc limit ?";
+        FMResultSet *rs = [db executeQuery:sql, @1,limit];
+        while ([rs next]) {
+            [blocks addObject:[self format:rs] ];
+        }
+        [rs close];
+    }];
+    return blocks;
+}
 
 - (NSMutableArray *)getBlocksFrom:(uint)blockNo;{
     __block NSMutableArray *blocks = [NSMutableArray new];

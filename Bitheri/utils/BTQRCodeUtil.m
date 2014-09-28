@@ -17,6 +17,7 @@
 //  limitations under the License.
 
 #import "BTQRCodeUtil.h"
+#import "NSString+Base58.h"
 
 #define MAX_QRCODE_SIZE 328
 #define QR_CODE_LETTER @"*"
@@ -50,7 +51,7 @@
 }
 
 +(NSString *) encodeQrCodeString :(NSString* )text{
-   return  [text uppercaseString];
+   return  [text toUppercaseStringWithEn];
 }
 
 +(NSString *) oldEncodeQrCodeString :(NSString* )text{
@@ -80,7 +81,7 @@
         result=[result stringByAppendingString:[text substringWithRange:NSMakeRange(lastIndex, text.length-lastIndex)]];
     }
     
-    return [result uppercaseString];
+    return [result toUppercaseStringWithEn];
 }
 +(NSString *)decodeQrCodeString:(NSString *)text{
     if ([BTQRCodeUtil oldVerifyQrcodeTransport:text]) {
@@ -109,7 +110,7 @@
                 result=[text substringToIndex:range.location];
             }
         }
-        result=[result stringByAppendingFormat:@"%@",[[text substringWithRange:[match rangeAtIndex:1]] uppercaseString]];
+        result=[result stringByAppendingFormat:@"%@",[[text substringWithRange:[match rangeAtIndex:1]] toUppercaseStringWithEn]];
         
         lastIndex=range.location+range.length;
         

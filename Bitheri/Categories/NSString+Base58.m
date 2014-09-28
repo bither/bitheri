@@ -376,4 +376,8 @@ breakout:
     else return NO; // invalid prefix
 }
 
+-(NSString*)toUppercaseStringWithEn{
+    return [self uppercaseStringWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
+}
+
 @end

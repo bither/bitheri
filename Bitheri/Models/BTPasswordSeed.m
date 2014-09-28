@@ -58,7 +58,7 @@
 }
 -(NSString *)toPasswrodSeedString{
     NSArray *array=[[NSArray alloc] initWithObjects:self.address,self.keyStr, nil];
-    return [BTQRCodeUtil joinedQRCode:array];
+    return [[BTQRCodeUtil joinedQRCode:array] toUppercaseStringWithEn];
 }
 
 

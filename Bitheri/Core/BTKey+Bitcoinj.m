@@ -129,7 +129,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     BOOL compressed=YES;
     BOOL isXRandom=NO;
     NSData * data=[array[2] hexToData];
-    NSMutableData * salt=[NSMutableData dataWithLength:SALT_LENGTH];
+    NSMutableData * salt=[NSMutableData new];
     if (data.length==9) {
         uint8_t *bytes=(uint8_t *)data.bytes;
         uint8_t flag=bytes[0];
@@ -152,7 +152,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 
 - (NSString *)bitcoinjKeyWithPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv flag:(uint8_t) flag{
     NSData *secret = [[self.privateKey base58checkToData] subdataWithRange:NSMakeRange(1, 32)];
-    NSMutableData  *data=[NSMutableData dataWithLength:salt.length+1];
+    NSMutableData  *data=[NSMutableData new];
     [data appendUInt8:flag];
     [data appendData:salt];
     NSArray * array=[[NSArray alloc] initWithObjects:[NSString hexWithData:[self encryptSecret:secret withPassphrase:passphrase andSalt:salt andIV:iv]]
@@ -242,7 +242,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 +(NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString * )encryptPrivKey oldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase{
     BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:oldPassphrase];
     NSData *data = [BTKey saltWithBitcoinj:encryptPrivKey];
-    NSMutableData * salt=[NSMutableData dataWithLength:SALT_LENGTH];
+    NSMutableData * salt=[NSMutableData new];
     uint8_t flag=0;
     if (data.length==9) {
         uint8_t* bytes=(uint8_t *)data.bytes;

@@ -149,9 +149,11 @@
         [address saveNewAddress:sortTime];
         [self.privKeyAddresses insertObject:address atIndex:0];
     } else {
-        BTAddress * address=[self.watchOnlyAddresses objectAtIndex:0];
-        if (sortTime<address.sortTime) {
-            sortTime=address.sortTime + self.watchOnlyAddresses.count;
+        if (self.watchOnlyAddresses.count>0) {
+            BTAddress * address=[self.watchOnlyAddresses objectAtIndex:0];
+            if (sortTime<address.sortTime) {
+                sortTime=address.sortTime + self.watchOnlyAddresses.count;
+            }
         }
         [address saveNewAddress:sortTime];
         [self.watchOnlyAddresses insertObject:address atIndex:0];

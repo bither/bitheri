@@ -141,7 +141,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     }else{
         [salt appendData:data];
     }
-    NSData *secret = [self decryptFrom:[array[0] hexToData] andPassphrase:passphrase andSalt:[array[2] hexToData] andIV:[array[1] hexToData]];
+    NSData *secret = [self decryptFrom:[array[0] hexToData] andPassphrase:passphrase andSalt:salt andIV:[array[1] hexToData]];
     if (secret == nil)
         return nil;
     self=[self initWithSecret:secret compressed:compressed];
@@ -155,7 +155,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     NSMutableData  *data=[NSMutableData dataWithLength:salt.length+1];
     [data appendUInt8:flag];
     [data appendData:salt];
-    NSArray * array=[[NSArray alloc] initWithObjects:[NSString hexWithData:[self encryptSecret:secret withPassphrase:passphrase andSalt:data andIV:iv]]
+    NSArray * array=[[NSArray alloc] initWithObjects:[NSString hexWithData:[self encryptSecret:secret withPassphrase:passphrase andSalt:salt andIV:iv]]
                      , [NSString hexWithData:iv], [NSString hexWithData:data], nil];
     return [BTQRCodeUtil joinedQRCode:array];
 }

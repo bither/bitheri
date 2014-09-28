@@ -247,7 +247,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     if (data.length==9) {
         uint8_t* bytes=(uint8_t *)data.bytes;
         flag=bytes[0];
-        for (int i=0; i<data.length; i++) {
+        for (int i=1; i<data.length; i++) {
             [salt appendUInt8:bytes[i]];
         }
     }else{

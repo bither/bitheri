@@ -26,13 +26,7 @@
 @implementation BTPrivateKeyUtil
 
 +(NSString *)getPrivateKeyString:(BTKey *) key passphrase:(NSString *)passphrase {
-    uint8_t flag=0;
-    if (key.compressed) {
-        flag=flag+IS_COMPRESSED_FLAG;
-    }
-    if (key.isFromXRandom) {
-        flag=flag+IS_FROMXRANDOM_FLAG;
-    }
+    uint8_t flag=[key getKeyFlag];
     NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16] flag:flag];
     return encryptPrivKey;
 }

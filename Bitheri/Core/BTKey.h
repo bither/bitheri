@@ -41,5 +41,6 @@
 
 - (NSData *)sign:(NSData *)d;
 - (BOOL)verify:(NSData *)d signature:(NSData *)sig;
+-(uint8_t)getKeyFlag;
 
 @end

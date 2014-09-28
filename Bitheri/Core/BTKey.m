@@ -311,4 +311,15 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
     return ECDSA_verify(0, d.bytes, (int)d.length, sig.bytes, (int)sig.length, _key) == 1;
 }
 
+-(uint8_t)getKeyFlag{
+    uint8_t flag=0;
+    if (self.compressed) {
+        flag=flag+IS_COMPRESSED_FLAG;
+    }
+    if (self.isFromXRandom) {
+        flag=flag+IS_FROMXRANDOM_FLAG;
+    }
+    return flag;
+}
+
 @end

@@ -251,6 +251,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
             [salt appendUInt8:bytes[i]];
         }
     }else{
+        flag=[key getKeyFlag];
         [salt appendData:data];
     }
     NSData *iv = [BTKey ivWithBitcoinj:encryptPrivKey];

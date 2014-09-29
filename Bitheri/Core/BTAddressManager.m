@@ -90,7 +90,7 @@
         }
     }
     if (isSort) {
-        [self.watchOnlyAddresses sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        [self.watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
             if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedDescending;
             if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedAscending;
             
@@ -126,7 +126,7 @@
         }
     }
     if (isSort) {
-        [self.watchOnlyAddresses sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        [self.watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
             if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedDescending;
             if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedAscending;
             

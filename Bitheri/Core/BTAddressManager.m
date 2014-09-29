@@ -56,15 +56,15 @@
 }
 
 - (void)initAddress {
-    [self initPrivKeyAddress];
-    [self initWatchOnlyAddress];
+    [self initPrivKeyAddressByDesc];
+    [self initWatchOnlyAddressByDesc];
 }
 
 - (NSInteger)addressCount {
     return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count];
 }
 
-- (void)initPrivKeyAddress {
+- (void)initPrivKeyAddressByDesc {
     BOOL isSort=NO;
     for (NSString *str in [BTUtils filesByModDate:[BTUtils getPrivDir]]) {
         NSInteger length = str.length;
@@ -102,7 +102,7 @@
     
 }
 
-- (void)initWatchOnlyAddress {
+- (void)initWatchOnlyAddressByDesc {
     BOOL isSort=NO;
     for (NSString *str in [BTUtils filesByModDate:[BTUtils getWatchOnlyDir]]) {
         NSInteger length = str.length;

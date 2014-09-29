@@ -76,6 +76,10 @@
     
     return d;
 }
+-(long long)longlongValue{
+    long long receivedLongLongValue = *(const long long *)[self bytes];
+    return receivedLongLongValue;
+}
 
 + (NSData *)randomWithSize:(int) size;{
     OSStatus sanityCheck = noErr;

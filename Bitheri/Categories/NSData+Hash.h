@@ -27,7 +27,8 @@
 - (NSData *)RMD160;
 - (NSData *)hash160;
 - (NSData *)reverse;
-
+-(long long)longlongValue;
 + (NSData *)randomWithSize:(int) size;
+
 
 @end

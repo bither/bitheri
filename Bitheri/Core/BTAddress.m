@@ -37,25 +37,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return NSOrderedSame;
 };
 
-//static NSData *txOutput(NSData *txHash, uint32_t n) {
-//    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
-//
-//    [d appendData:txHash];
-//    [d appendUInt32:n];
-//    return d;
-//}
 
 @implementation BTAddress {
     NSString *_address;
 }
-
-//- (instancetype)initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom {
-//    BTKey *key = [BTKey keyWithSecret:[NSData randomWithSize:32] compressed:YES];
-//
-//    NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16]];
-//    return [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:isXRandom];
-//
-//}
 
 - (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase {
     BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:passphrase];

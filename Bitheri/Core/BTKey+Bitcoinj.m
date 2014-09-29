@@ -21,6 +21,7 @@
 #import "NSMutableData+Bitcoin.h"
 #import "NSData+Bitcoin.h"
 #import "BTQRCodeUtil.h"
+#import "BTUtils.h"
 #import <CommonCrypto/CommonCrypto.h>
 #import <openssl/ecdsa.h>
 
@@ -157,7 +158,13 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     [data appendData:salt];
     NSArray * array=[[NSArray alloc] initWithObjects:[NSString hexWithData:[self encryptSecret:secret withPassphrase:passphrase andSalt:salt andIV:iv]]
                      , [NSString hexWithData:iv], [NSString hexWithData:data], nil];
-    return [BTQRCodeUtil joinedQRCode:array];
+    NSString * enscryptString= [BTQRCodeUtil joinedQRCode:array];
+    BTKey * key=[self initKeyWithBitcoinj:enscryptString andPassphrase:passphrase];
+    if (key&&[BTUtils compareString:self.address compare:key.address]) {
+        return enscryptString;
+    }else {
+        return nil;
+    }
 }
 
 

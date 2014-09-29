@@ -47,7 +47,7 @@
     return [array componentsJoinedByString:QR_CODE_SPLIT];
 }
 +(NSString * )oldJoinedQRCode:(NSArray * )array{
-    return [array componentsJoinedByString:QR_CODE_SPLIT];
+    return [array componentsJoinedByString:OLD_QR_CODE_SPLIT];
 }
 
 +(NSString *) encodeQrCodeString :(NSString* )text{

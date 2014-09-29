@@ -32,13 +32,14 @@
     self = [super init];
     if (self) {
         NSArray *array = [BTQRCodeUtil splitQRCode:message];
+        NSString * addressString=array[0];
         if ([BTQRCodeUtil isOldQRCodeVerion:message]) {
-            _address = array[0];
+            _address = addressString;
         }else{
-            _address=[array[0] hexToBase58check];
+            _address=[addressString hexToBase58check];
         }
        
-        _keyStr = [message substringFromIndex:self.address.length + 1];
+        _keyStr = [message substringFromIndex:addressString.length + 1];
 
     }
     return self;

@@ -18,6 +18,7 @@
 
 #import "NSData+Hash.h"
 #import <openssl/ripemd.h>
+#import "bn.h"
 
 @implementation NSData (Hash)
 
@@ -76,10 +77,18 @@
     
     return d;
 }
--(long long)longlongValue{
-    long long receivedLongLongValue = *(const long long *)[self bytes];
-    return receivedLongLongValue;
+-(NSInteger)compore:(NSData *)expBits{
+    unsigned char *modBin = (unsigned char *)malloc(self.length);
+    [self getBytes:modBin length:self.length];
+    unsigned char *expBin = (unsigned char *)malloc(expBits.length);
+    [expBits getBytes:expBin length:expBits.length];
+    BIGNUM *modulus = BN_bin2bn(modBin, self.length, NULL);
+    BIGNUM *exponent = BN_bin2bn(expBin, expBits.length, NULL);
+    unsigned char *testMod=BN_bn2hex(modulus);
+    unsigned char *testExp=BN_bn2hex(exponent);
+    return BN_cmp(modulus,exponent);
 }
+
 
 + (NSData *)randomWithSize:(int) size;{
     OSStatus sanityCheck = noErr;

@@ -84,8 +84,6 @@
     [expBits getBytes:expBin length:expBits.length];
     BIGNUM *modulus = BN_bin2bn(modBin, self.length, NULL);
     BIGNUM *exponent = BN_bin2bn(expBin, expBits.length, NULL);
-    unsigned char *testMod=BN_bn2hex(modulus);
-    unsigned char *testExp=BN_bn2hex(exponent);
     return BN_cmp(modulus,exponent);
 }
 

@@ -55,6 +55,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _pubKey = key.publicKey;
     _isSyncComplete = NO;
     _isFromXRandom=isXRandom;
+    _txCount = [[BTTxProvider instance] txCount:_address];
     return self;
 }
 
@@ -69,14 +70,15 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _isFromXRandom=isXRandom;
     _isSyncComplete = NO;
     [self updateBalance];
-
+    _txCount = [[BTTxProvider instance] txCount:_address];
+    
     return self;
 
 }
 
-- (uint32_t)txCount {
-    return [[BTTxProvider instance] txCount:self.address];
-}
+//- (uint32_t)txCount {
+//    return [[BTTxProvider instance] txCount:self.address];
+//}
 
 - (NSString *)address {
     return _address;
@@ -109,6 +111,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
     uint64_t oldBalance = _balance;
     [self updateBalance];
+    _txCount = [[BTTxProvider instance] txCount:_address];
     if (_balance != oldBalance) {
         int deltaBalance = (int) (_balance - oldBalance);
         DDLogWarn(@"[notification]%@ recieve tx[%@], delta balance is %d", _address, [NSString hexWithHash:tx.txHash], deltaBalance);
@@ -129,6 +132,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if ([txs count] > 0) {
         uint64_t oldBalance = _balance;
         [self updateBalance];
+        _txCount = [[BTTxProvider instance] txCount:_address];
         int deltaBalance = (int) (_balance - oldBalance);
         dispatch_async(dispatch_get_main_queue(), ^{
             DDLogWarn(@"[notification]%@ recieve some tx, delta balance is %d", _address, deltaBalance);
@@ -150,6 +154,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (needUpdateTxHash.count > 0) {
         uint64_t oldBalance = _balance;
         [self updateBalance];
+        _txCount = [[BTTxProvider instance] txCount:_address];
         if (_balance != oldBalance) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 int deltaBalance = (int) (_balance - oldBalance);

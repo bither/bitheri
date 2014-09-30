@@ -44,6 +44,7 @@
 @property long long sortTime;
 @property BOOL isFromXRandom;
 
+@property (nonatomic, readonly) uint32_t txCount;
 
 
 //-(instancetype) initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
@@ -54,8 +55,6 @@
 - (instancetype)initWithAddress:(NSString *) address pubKey:(NSData *) pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL) isXRandom;
 
 - (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
-
-- (uint32_t)txCount;
 
 - (void)setBlockHeight:(u_int32_t)height forTxHashes:(NSArray *)txHashes;
 

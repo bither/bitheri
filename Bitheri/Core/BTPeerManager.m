@@ -32,7 +32,7 @@ static const char *dns_seeds[] = {
 };
 #endif
 
-#define MAX_FAILED_COUNT (12)
+#define MAX_FAILED_COUNT (6)
 
 NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 

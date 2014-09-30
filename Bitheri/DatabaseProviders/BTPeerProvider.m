@@ -135,11 +135,11 @@ static BTPeerProvider *provider;
         }
         [rs close];
         if (cnt == 0) {
-            sql = @"update peers set peer_connected_cnt=? where peer_address=?";
-            [db executeUpdate:sql, @2, @(address)];
-        } else {
             sql = @"update peers set peer_connected_cnt=peer_connected_cnt+1 where peer_address=?";
             [db executeUpdate:sql, @(address)];
+        } else {
+            sql = @"update peers set peer_connected_cnt=? where peer_address=?";
+            [db executeUpdate:sql, @2, @(address)];
         }
 
     }];
@@ -181,7 +181,7 @@ static BTPeerProvider *provider;
 }
 
 - (void)cleanPeers;{
-    int maxPeerSaveCnt = 1000;
+    int maxPeerSaveCnt = 12;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *disconnectingPeerCntSql = @"select count(0) cnt from peers where peer_connected_cnt<>1";
         int disconnectingPeerCnt = 0;

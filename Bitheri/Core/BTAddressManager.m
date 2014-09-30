@@ -249,4 +249,10 @@
     }
     return result;
 }
+
+- (void)blockChainChanged; {
+    for (BTAddress *address in self.allAddresses) {
+        [address updateRecentlyTx];
+    }
+}
 @end

@@ -55,7 +55,8 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _pubKey = key.publicKey;
     _isSyncComplete = NO;
     _isFromXRandom=isXRandom;
-    _txCount = [[BTTxProvider instance] txCount:_address];
+    _txCount = 0;
+    _recentlyTx = nil;
     return self;
 }
 
@@ -71,6 +72,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _isSyncComplete = NO;
     [self updateBalance];
     _txCount = [[BTTxProvider instance] txCount:_address];
+    [self updateRecentlyTx];
     
     return self;
 
@@ -112,6 +114,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     uint64_t oldBalance = _balance;
     [self updateBalance];
     _txCount = [[BTTxProvider instance] txCount:_address];
+    [self updateRecentlyTx];
     if (_balance != oldBalance) {
         int deltaBalance = (int) (_balance - oldBalance);
         DDLogWarn(@"[notification]%@ recieve tx[%@], delta balance is %d", _address, [NSString hexWithHash:tx.txHash], deltaBalance);
@@ -133,6 +136,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         uint64_t oldBalance = _balance;
         [self updateBalance];
         _txCount = [[BTTxProvider instance] txCount:_address];
+        [self updateRecentlyTx];
         int deltaBalance = (int) (_balance - oldBalance);
         dispatch_async(dispatch_get_main_queue(), ^{
             DDLogWarn(@"[notification]%@ recieve some tx, delta balance is %d", _address, deltaBalance);
@@ -155,6 +159,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         uint64_t oldBalance = _balance;
         [self updateBalance];
         _txCount = [[BTTxProvider instance] txCount:_address];
+        [self updateRecentlyTx];
         if (_balance != oldBalance) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 int deltaBalance = (int) (_balance - oldBalance);
@@ -399,6 +404,15 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (NSArray *)getRecentlyTxsWithConfirmationCntLessThan:(int)confirmationCnt andLimit:(int)limit; {
     int blockNo = [BTBlockChain instance].lastBlock.blockNo - confirmationCnt + 1;
     return [[BTTxProvider instance] getRecentlyTxsByAddress:self.address andGreaterThanBlockNo:blockNo andLimit:limit];
+}
+
+- (void)updateRecentlyTx;{
+    NSArray *txs = [self getRecentlyTxsWithConfirmationCntLessThan:6 andLimit:1];
+    if (txs != nil && [txs count] > 0) {
+        _recentlyTx = [txs objectAtIndex:0];
+    } else {
+        _recentlyTx = nil;
+    }
 }
 
 //- (uint64_t)getAmount:(NSArray *)outs; {

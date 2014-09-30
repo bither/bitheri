@@ -45,6 +45,8 @@
 @property BOOL isFromXRandom;
 
 @property (nonatomic, readonly) uint32_t txCount;
+@property (nonatomic, strong, readonly) BTTx *recentlyTx;
+- (void)updateRecentlyTx;
 
 
 //-(instancetype) initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;

@@ -624,6 +624,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         int oldLastBlockNo = [BTBlockChain instance].lastBlock.blockNo;
         int relayedCount = [[BTBlockChain instance] relayedBlockHeadersForMainChain:headers];
         if (relayedCount == headers.count) {
+            [[BTAddressManager instance] blockChainChanged];
             DDLogDebug(@"%@:%d relay %d block headers OK, last block No.%d, total block:%d", peer.host, peer.peerPort, relayedCount, [BTBlockChain instance].lastBlock.blockNo, [[BTBlockChain instance] getBlockCount]);
         } else {
             [self peerAbandon:peer];
@@ -683,6 +684,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                     DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.peerPort, b.blockNo, self.filterFpRate);
                 }
                 [self setBlockHeight:b.blockNo forTxHashes:b.txHashes];
+                [[BTAddressManager instance] blockChainChanged];
             } else {
                 DDLogDebug(@"%@:%d relayed block with invalid difficulty target %x, blockHash: %@", peer.host, peer.peerPort,
                         b.blockBits, b.blockHash);
@@ -752,6 +754,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         int relayedCnt = [self.blockChain relayedBlocks:blocks];
         if (relayedCnt > 0) {
             DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.peerPort, self.lastBlockHeight, self.filterFpRate);
+            [[BTAddressManager instance] blockChainChanged];
             if (self.blockChain.lastBlock.blockNo >= peer.versionLastBlock) { // chain download is complete
                 [self.downloadPeer setSynchronising:NO];
                 [self syncStopped];

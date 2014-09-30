@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "BTDatabaseManager.h"
 #import "BTTx.h"
+#import "BTOut.h"
 
 @interface BTTxProvider : NSObject
 
@@ -61,5 +62,7 @@
 
 - (NSArray *)getPublishedTxs;
 -(void)clearAllTx;
+
+- (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;
 
 @end

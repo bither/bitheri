@@ -619,15 +619,13 @@ sequence:(uint32_t)sequence
     }
 
     i = 0;
-    NSArray *inValues = self.inValues;
-    for (NSString *address in self.inputAddresses) {
-//        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-//        uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
+    for (NSData *hash in self.inputHashes) {
+        uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
+        BTOut *outItem = [[BTTxProvider instance] getOutByTxHash:hash andOutSn:n];
 
-        if (address != nil && [addr.address isEqualToString:address]) {
-            sent += [inValues[i] unsignedLongLongValue];
+        if (n < tx.outputAddresses.count && [addr.address isEqualToString:outItem.outAddress]) {
+            sent += outItem.outValue;
         }
-        i++;
     }
     return receive - sent;
 }

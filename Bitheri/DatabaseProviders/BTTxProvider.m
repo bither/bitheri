@@ -793,6 +793,20 @@ static BTTxProvider *provider;
          [db commit];
      }];
 }
+
+- (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;{
+    __block BTOut *result = nil;
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *outSql = @"select * from outs where tx_hash=? and out_sn=?";
+        FMResultSet *rs = [db executeQuery:outSql, [NSString base58WithData:txHash], @(outSn)];
+        while ([rs next]) {
+            result = [self formatOut:rs];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (BTTx *)format:(FMResultSet *)rs {
     BTTx *txItem = [BTTx new];
     if ([rs columnIsNull:@"block_no"]) {

@@ -623,7 +623,7 @@ sequence:(uint32_t)sequence
         uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
         BTOut *outItem = [[BTTxProvider instance] getOutByTxHash:hash andOutSn:n];
 
-        if (n < tx.outputAddresses.count && [addr.address isEqualToString:outItem.outAddress]) {
+        if ([addr.address isEqualToString:outItem.outAddress]) {
             sent += outItem.outValue;
         }
     }

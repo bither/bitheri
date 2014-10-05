@@ -222,6 +222,15 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         _bloomFilter = nil;
         if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
             self.connectFailure = 0; // this attempt is a manual retry
+        if(self.connectedPeers.count > 0){
+            for(BTPeer* peer in self.connectedPeers){
+                [peer connectError];
+                [self.abandonPeers addObject:@(peer.peerAddress)];
+                [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE
+                                                          userInfo:@{NSLocalizedDescriptionKey : @"peer is abandon"}]];
+            }
+            [self.connectedPeers removeAllObjects];
+        }
         [self reconnect];
     }
 }

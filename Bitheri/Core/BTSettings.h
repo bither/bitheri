@@ -97,7 +97,9 @@
 #define MSG_ALERT       @"alert"
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
-#define USERAGENT [NSString stringWithFormat:@"/bitheri:%@/", NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]]
+#define BITHERI_VERSION @"1.1.0"
+#define BITHERI_NAME @"Bither"
+#define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 
 #define HEADER_LENGTH      24
 #define MAX_MSG_LENGTH     0x02000000
@@ -179,6 +181,7 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
 @property (atomic) BOOL ensureMinRequiredFee;
 @property (atomic) uint64_t feeBase;
 @property (atomic) int maxPeerConnections;
+@property (atomic) int maxBackgroundPeerConnections;
 
 -(BOOL)needChooseMode;
 -(AppMode) getAppMode;

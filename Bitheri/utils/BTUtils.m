@@ -133,4 +133,25 @@
     return watchOnlyDir;
 }
 
++(NSArray * )getFileList:(NSString *)dir{
+    NSError *error = nil;
+    NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir
+                                                                         error:&error];
+    if (error == nil) {
+        return files;
+    }
+    return [NSArray new];
+}
+
++(BOOL)compareString:(NSString *)original compare:(NSString *)compare{
+    if (original==nil) {
+        return compare==nil;
+    }else{
+        return compare!=nil&&[original isEqualToString:compare];
+    }
+}
++(BOOL)isEmpty:(NSString *)str{
+    return str==nil||str.length==0;
+}
+
 @end

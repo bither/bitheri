@@ -1,5 +1,5 @@
 //
-//  BTPasswordSeed.h
+//  BTUtils.h
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -17,13 +17,22 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "BTAddress.h"
+#import "BTSettings.h"
 
-@interface BTPasswordSeed : NSObject
+@interface BTUtils : NSObject
 
-- (instancetype)initWithString:(NSString *)message;
-- (instancetype)initWithBTAddress:(BTAddress *)btAddress;
-- (BOOL)checkPassword:(NSString *)password;
--(NSString *)toPasswrodSeedString;
++(NSString *)documentsPathForFileName:(NSString *)fileName;
++(NSString *) readFile:(NSString *)fileFullName;
++(void)writeFile:(NSString *)fileName content:(NSString *)content;
++(void)removeFile:(NSString *)fileName;
++(NSArray *)filesByModDate: (NSString *)fullPath;
++(BOOL)setModifyDateToFile:(NSDate *)date forFile:(NSString *)path;
+
++(NSString * )getPrivDir;
++(NSString * )getWatchOnlyDir;
++(NSArray * )getFileList:(NSString *)dir;
+
++(BOOL)compareString:(NSString *)original compare:(NSString *)compare;
++(BOOL)isEmpty:(NSString *)str;
 
 @end

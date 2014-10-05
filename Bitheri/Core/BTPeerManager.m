@@ -52,7 +52,7 @@ static const char *dns_seeds[] = {
 };
 #endif
 
-#define MAX_FAILED_COUNT (12)
+#define MAX_FAILED_COUNT (6)
 
 NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
@@ -68,7 +68,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 @property (nonatomic, strong) NSMutableDictionary *txRelays;
 @property (nonatomic, strong) NSMutableDictionary *publishedTx, *publishedCallback;
 @property (nonatomic, strong) dispatch_queue_t q;
-@property (nonatomic, strong) id activeObserver;
+//@property (nonatomic, strong) id activeObserver;
 @property BOOL synchronizing;
 @property BOOL running;
 
@@ -111,19 +111,19 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         self.publishedTx[tx.txHash] = tx; // add unconfirmed tx to mem pool
     }
 
-    _activeObserver =
-            [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillResignActiveNotification object:nil
-                                                               queue:nil usingBlock:^(NSNotification *note) {
-                        if (self.syncProgress >= 1.0 || self.syncProgress < 0.1)
-                            [self stop];
-                    }];
+//    _activeObserver =
+//            [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationWillResignActiveNotification object:nil
+//                                                               queue:nil usingBlock:^(NSNotification *note) {
+//                        if (self.syncProgress >= 1.0 || self.syncProgress < 0.1)
+//                            [self stop];
+//                    }];
 
     return self;
 }
 
 - (void)dealloc {
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    if (self.activeObserver) [[NSNotificationCenter defaultCenter] removeObserver:self.activeObserver];
+//    if (self.activeObserver) [[NSNotificationCenter defaultCenter] removeObserver:self.activeObserver];
 }
 
 - (uint32_t)lastBlockHeight {
@@ -198,10 +198,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 #pragma mark - peer & sync
 
 - (NSArray *)bestPeers; {
-    NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
-    if (bestPeers.count < [BTSettings instance].maxPeerConnections) {
+    NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
+    if (bestPeers.count < [self maxPeerCount]) {
         [[BTPeerProvider instance] addPeers:[self getPeersFromDns]];
-        bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[BTSettings instance].maxPeerConnections];
+        bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
     }
     return bestPeers;
 }
@@ -242,6 +242,15 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         _bloomFilter = nil;
         if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
             self.connectFailure = 0; // this attempt is a manual retry
+        if(self.connectedPeers.count > 0){
+            for(BTPeer* peer in self.connectedPeers){
+                [peer connectError];
+                [self.abandonPeers addObject:@(peer.peerAddress)];
+                [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE
+                                                          userInfo:@{NSLocalizedDescriptionKey : @"peer is abandon"}]];
+            }
+            [self.connectedPeers removeAllObjects];
+        }
         [self reconnect];
     }
 }
@@ -262,13 +271,13 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             return [obj status] == BTPeerStatusDisconnected;
         }]];
 
-        if (self.connectedPeers.count >= [BTSettings instance].maxPeerConnections)
-            return; // we're already connected to [BTSettings instance].maxPeerConnections peers
+        if (self.connectedPeers.count >= [self maxPeerCount])
+            return; // we're already connected to [self maxPeerCount] peers
 
         NSMutableOrderedSet *peers = [NSMutableOrderedSet orderedSetWithArray:[self bestPeers]];
 
         for (BTPeer *peer in peers) {
-            if (self.connectedPeers.count >= [BTSettings instance].maxPeerConnections) {
+            if (self.connectedPeers.count >= [self maxPeerCount]) {
                 break;
             }
             if (![self.connectedPeers containsObject:peer]) {
@@ -281,6 +290,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         [self sendPeerCountChangeNotification:self.connectedPeers.count];
         if (self.connectedPeers.count == 0) {
+            [self.downloadPeer setSynchronising:NO];
             [self syncStopped];
 //            self.syncStartHeight = 0;
 
@@ -502,6 +512,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 dPeer = p;
         }
 
+        // ensure download peer has send bloom filter
+        if (peer.peerAddress != dPeer.peerAddress) {
+            [dPeer sendFilterLoadMessage:[self peerBloomFilter:peer]];
+        }
+
         // start blockchain sync
         if (self.downloadPeer == nil || ![self.downloadPeer isEqual:dPeer]) {
             [self.downloadPeer disconnectPeer];
@@ -526,6 +541,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         } else {
             [dPeer sendGetHeadersMessageWithLocators:[self.blockChain blockLocatorArray] andHashStop:nil];
         }
+        [dPeer setSynchronising:YES];
     });
 }
 
@@ -554,6 +570,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         if ([self.downloadPeer isEqual:peer]) { // download peer disconnected
             _connected = NO;
+            [self.downloadPeer setSynchronising:NO];
             self.downloadPeer = nil;
             [self syncStopped];
             if (self.connectFailure > MAX_CONNECT_FAILURE_COUNT)
@@ -591,10 +608,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     if (peer == self.downloadPeer) self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
 
     dispatch_async(self.q, ^{
-        BOOL isAlreadyInDb = [[BTTxProvider instance] isExist:transaction.txHash];
         BOOL isRel = [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txReceive];
 
         if (isRel) {
+            BOOL isAlreadyInDb = [[BTTxProvider instance] isExist:transaction.txHash];
             if (self.publishedTx[transaction.txHash] == nil) {
                 self.publishedTx[transaction.txHash] = transaction;
             }
@@ -636,6 +653,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         int oldLastBlockNo = [BTBlockChain instance].lastBlock.blockNo;
         int relayedCount = [[BTBlockChain instance] relayedBlockHeadersForMainChain:headers];
         if (relayedCount == headers.count) {
+            [[BTAddressManager instance] blockChainChanged];
             DDLogDebug(@"%@:%d relay %d block headers OK, last block No.%d, total block:%d", peer.host, peer.peerPort, relayedCount, [BTBlockChain instance].lastBlock.blockNo, [[BTBlockChain instance] getBlockCount]);
         } else {
             [self peerAbandon:peer];
@@ -643,6 +661,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }
 
         if (self.lastBlockHeight == peer.versionLastBlock) {
+            [self.downloadPeer setSynchronising:NO];
             [self syncStopped];
             [peer sendGetAddrMessage];
 //            self.syncStartHeight = 0;
@@ -694,6 +713,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                     DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.peerPort, b.blockNo, self.filterFpRate);
                 }
                 [self setBlockHeight:b.blockNo forTxHashes:b.txHashes];
+                [[BTAddressManager instance] blockChainChanged];
             } else {
                 DDLogDebug(@"%@:%d relayed block with invalid difficulty target %x, blockHash: %@", peer.host, peer.peerPort,
                         b.blockBits, b.blockHash);
@@ -702,6 +722,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }];
 
         if (block.blockNo == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
+            [self.downloadPeer setSynchronising:NO];
             [self syncStopped];
             [peer sendGetAddrMessage]; // request a list of other bitcoin peers
 //            self.syncStartHeight = 0;
@@ -730,6 +751,64 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             dispatch_async(dispatch_get_main_queue(), ^{
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
             });
+        }
+    });
+}
+
+- (void)peer:(BTPeer *)peer relayedBlocks:(NSArray *)blocks; {
+    blocks = [NSArray arrayWithArray:blocks];
+    if (!self.running)
+        return;
+    if (peer == self.downloadPeer)
+        self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
+    else
+        return;
+
+    dispatch_async(self.q, ^{
+        // track the observed bloom filter false positive rate using a low pass filter to smooth out variance
+        for (BTBlock *block in blocks) {
+            if (block.totalTransactions > 0) {
+                // 1% low pass filter, also weights each block by total transactions, using 400 tx per block as typical
+                self.filterFpRate = self.filterFpRate * (1.0 - 0.01 * block.totalTransactions / 400) + 0.01 * block.txHashes.count / 400;
+
+                // todo: do not check bloom filter now. may be it's useful
+//        if (self.filterFpRate > BLOOM_DEFAULT_FALSEPOSITIVE_RATE*10.0) { // false positive rate sanity check
+//            DDLogDebug(@"%@:%d bloom filter false positive rate too high after %d blocks, disconnecting...", peer.host,
+//                  peer.port, self.lastBlockHeight - self.filterUpdateHeight);
+//            [self.downloadPeer disconnect];
+//        }
+            }
+        }
+
+        int relayedCnt = [self.blockChain relayedBlocks:blocks];
+        if (relayedCnt > 0) {
+            DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.peerPort, self.lastBlockHeight, self.filterFpRate);
+            [[BTAddressManager instance] blockChainChanged];
+            if (self.blockChain.lastBlock.blockNo >= peer.versionLastBlock) { // chain download is complete
+                [self.downloadPeer setSynchronising:NO];
+                [self syncStopped];
+                [peer sendGetAddrMessage]; // request a list of other bitcoin peers
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFinishedNotification object:nil];
+                });
+            }
+
+            // check if the next block was received as an orphan
+            if (self.blockChain.singleBlocks[self.blockChain.lastBlock.blockHash]) {
+                BTBlock *b = self.blockChain.singleBlocks[self.blockChain.lastBlock.blockHash];
+
+                [self.blockChain.singleBlocks removeObjectForKey:self.blockChain.lastBlock.blockHash];
+                [self peer:peer relayedBlock:b];
+            }
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
+            });
+
+        } else {
+            DDLogDebug(@"%@:%d relayed blocks failed", peer.host, peer.peerPort);
+            [self peerAbandon:peer];
         }
     });
 }
@@ -770,19 +849,28 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     return self.bloomFilter.data;
 }
 
-- (void)sendPeerCountChangeNotification:(int) peerNum; {
+- (void)sendPeerCountChangeNotification:(int)peerNum; {
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerPeerStateNotification
                                                             object:@{@"num_peers" : @(peerNum)}];
     });
 }
 
-- (void)sendConnectedChangeNotification;{
+- (void)sendConnectedChangeNotification; {
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerConnectedChangedNotification
                                                             object:@{@"connected" : @(self.connected)}];
         DDLogDebug(@"peer manager availability changed to %d", self.connected);
     });
+}
+
+- (int)maxPeerCount; {
+    UIApplicationState state = [UIApplication sharedApplication].applicationState;
+    if (state == UIApplicationStateBackground) {
+        return [BTSettings instance].maxBackgroundPeerConnections;
+    } else {
+        return [BTSettings instance].maxPeerConnections;
+    }
 }
 
 @end

@@ -43,4 +43,6 @@
 - (BOOL)isTxRelated:(BTTx *)tx;
 - (NSArray *)outs;
 
+- (void)blockChainChanged;
+
 @end

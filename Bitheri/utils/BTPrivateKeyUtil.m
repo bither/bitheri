@@ -1,6 +1,6 @@
 //
-//  BTPasswordSeed.h
-//  bitheri
+//  BTPrivateKeyUtil.m
+//  bither-ios
 //
 //  Copyright 2014 http://Bither.net
 //
@@ -15,15 +15,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-#import <Foundation/Foundation.h>
+#import "BTPrivateKeyUtil.h"
+#import "NSData+Hash.h"
+#import "NSMutableData+Bitcoin.h"
 #import "BTAddress.h"
 
-@interface BTPasswordSeed : NSObject
 
-- (instancetype)initWithString:(NSString *)message;
-- (instancetype)initWithBTAddress:(BTAddress *)btAddress;
-- (BOOL)checkPassword:(NSString *)password;
--(NSString *)toPasswrodSeedString;
+
+
+@implementation BTPrivateKeyUtil
+
++(NSString *)getPrivateKeyString:(BTKey *) key passphrase:(NSString *)passphrase {
+    uint8_t flag=[key getKeyFlag];
+    NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16] flag:flag];
+    return encryptPrivKey;
+}
+
 
 @end

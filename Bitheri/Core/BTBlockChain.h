@@ -37,11 +37,12 @@
 - (NSArray *)blockLocatorArray;
 
 - (void)relayedBlock:(BTBlock *)block withCallback:(void (^)(BTBlock *b, BOOL isConfirm))callback;
-
 - (int)relayedBlockHeadersForMainChain:(NSArray *) blocks;
+- (int)relayedBlocks:(NSArray *) blocks;
 
 - (BOOL)rollbackBlock:(uint32_t)blockNo;
 
 -(NSArray *) getAllBlocks;
+- (NSArray *)getBlocksWithLimit:(NSInteger) limit ;
 
 @end

@@ -620,11 +620,11 @@ sequence:(uint32_t)sequence
 
     i = 0;
     for (NSData *hash in self.inputHashes) {
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
         uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
+        BTOut *outItem = [[BTTxProvider instance] getOutByTxHash:hash andOutSn:n];
 
-        if (n < tx.outputAddresses.count && [addr.address isEqualToString:tx.outputAddresses[n]]) {
-            sent += [tx.outputAmounts[n] unsignedLongLongValue];
+        if ([addr.address isEqualToString:outItem.outAddress]) {
+            sent += outItem.outValue;
         }
     }
     return receive - sent;

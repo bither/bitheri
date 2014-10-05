@@ -47,7 +47,8 @@
 - (NSData *)RMD160;
 - (NSData *)hash160;
 - (NSData *)reverse;
-
+-(NSInteger)compore:(NSData *)expBits;
 + (NSData *)randomWithSize:(int) size;
+
 
 @end

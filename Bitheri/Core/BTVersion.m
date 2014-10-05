@@ -1,5 +1,5 @@
 //
-//  BTPasswordSeed.h
+//  BTVersion.m
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -14,16 +14,33 @@
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  limitations under the License.#import "BTVersion.h"
 
-#import <Foundation/Foundation.h>
-#import "BTAddress.h"
 
-@interface BTPasswordSeed : NSObject
+#import "BTVersion.h"
+#import "BTSettings.h"
 
-- (instancetype)initWithString:(NSString *)message;
-- (instancetype)initWithBTAddress:(BTAddress *)btAddress;
-- (BOOL)checkPassword:(NSString *)password;
--(NSString *)toPasswrodSeedString;
+@implementation BTVersion {
+
+}
+
+- (instancetype)init {
+    if (!(self = [super init])) return nil;
+
+    _version = BITHERI_VERSION;
+
+    return self;
+}
+
++ (instancetype)instance {
+    static id singleton = nil;
+    static dispatch_once_t onceToken = 0;
+
+    dispatch_once(&onceToken, ^{
+        singleton = [self new];
+    });
+
+    return singleton;
+}
 
 @end

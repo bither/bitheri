@@ -52,6 +52,7 @@
 // called when the peer relays either a merkleblock or a block header, headers will have 0 totalTransactions
 - (void)peer:(BTPeer *)peer relayedBlock:(BTBlock *)block;
 - (void)peer:(BTPeer *)peer relayedHeaders:(NSArray *)headers;
+- (void)peer:(BTPeer *)peer relayedBlocks:(NSArray *)blocks;
 
 - (BTTx *)peer:(BTPeer *)peer requestedTransaction:(NSData *)txHash;
 - (NSData *)peerBloomFilter:(BTPeer *)peer;
@@ -88,7 +89,7 @@ typedef enum {
 @property (nonatomic, readonly) uint32_t displayLastBlock;
 @property (nonatomic, readonly) NSTimeInterval pingTime;
 @property (nonatomic, assign) NSTimeInterval timestamp; // last seen time (interval since reference date)
-
+@property BOOL synchronising;
 //@property (nonatomic, assign) int16_t misbehavin;
 
 

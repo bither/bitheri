@@ -19,6 +19,7 @@
 #import "BTBlockProvider.h"
 #import "BTDatabaseManager.h"
 #import "NSString+Base58.h"
+#import "BTSettings.h"
 
 static BTBlockProvider *provider;
 
@@ -42,6 +43,18 @@ static BTBlockProvider *provider;
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
             [blocks addObject:[self format:rs]];
+        }
+        [rs close];
+    }];
+    return blocks;
+}
+- (NSArray *)getBlocksWithLimit:(NSInteger) limit {
+   __block NSMutableArray *blocks = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+       NSString *sql = [NSString stringWithFormat: @"select * from blocks where is_main=? order by block_no desc limit %ld",(long)limit ];
+        FMResultSet *rs = [db executeQuery:sql, @1];
+        while ([rs next]) {
+            [blocks addObject:[self format:rs] ];
         }
         [rs close];
     }];
@@ -249,17 +262,7 @@ static BTBlockProvider *provider;
                 maxBlockNo = [rs intForColumn:@"max_block_no"];
             }
             [rs close];
-            int interval = 2016;
-            int minBlockCount = 100;
-
-            int left = maxBlockNo % interval;
-
-            int blockNo = 0;
-            if (left > minBlockCount)
-                blockNo = maxBlockNo - left;
-            else
-                blockNo = maxBlockNo - left - interval;
-
+            int blockNo = maxBlockNo - BLOCK_DIFFICULTY_INTERVAL - maxBlockNo % BLOCK_DIFFICULTY_INTERVAL;
             sql = @"delete from blocks where block_no<?";
             [db executeUpdate:sql, @(blockNo)];
         }

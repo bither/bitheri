@@ -62,6 +62,10 @@ typedef enum {
     uint32_t _incrementalBlockHeight;
     int _unrelatedTxRelayCount;
     NSString *_host;
+    BOOL _synchronising;
+    uint32_t _syncStartBlockNo;
+    uint32_t _syncStartPeerBlockNo;
+    uint32_t _synchronisingBlockCount;
 }
 
 @property (nonatomic, strong) NSInputStream *inputStream;
@@ -74,6 +78,8 @@ typedef enum {
 @property (nonatomic, assign) NSTimeInterval startTime;
 @property (nonatomic, strong) BTBlock *currentBlock;
 @property (nonatomic, strong) NSMutableOrderedSet *currentBlockHashes, *currentTxHashes, *knownTxHashes;
+@property (nonatomic, strong) NSMutableArray *syncBlocks;
+@property (nonatomic, strong) NSMutableArray *syncBlockHashes;
 @property (nonatomic, strong) NSCountedSet *requestedBlockHashes;
 @property (nonatomic, assign) uint32_t filterBlockCount;
 @property (nonatomic, strong) NSRunLoop *runLoop;
@@ -148,6 +154,7 @@ services:(uint64_t)services
     self.currentBlockHashes = [NSMutableOrderedSet orderedSet];
     self.requestedBlockHashes = [NSCountedSet set];
     self.needToRequestDependencyDict = [NSMutableDictionary new];
+    _synchronising = NO;
 
     NSString *label = [NSString stringWithFormat:@"net.bither.peer.%@:%d", self.host, self.peerPort];
     _bloomFilterSent = NO;
@@ -229,6 +236,27 @@ services:(uint64_t)services
     [NSObject cancelPreviousPerformRequestsWithTarget:self]; // cancel pending handshake timeout
     _status = BTPeerStatusConnected;
     if (_status == BTPeerStatusConnected) [self.delegate peerConnected:self];
+}
+
+- (BOOL)synchronising {
+    return _synchronising;
+}
+
+- (void)setSynchronising:(BOOL)synchronising {
+    if (synchronising && !_synchronising) {
+        _syncStartBlockNo = [BTBlockChain instance].lastBlock.blockNo;
+        _syncStartPeerBlockNo = self.displayLastBlock;
+        _synchronisingBlockCount = 0;
+        self.syncBlocks = [NSMutableArray new];
+        self.syncBlockHashes = [NSMutableArray new];
+
+        _synchronising = synchronising;
+    } else if (!synchronising && _synchronising) {
+        _incrementalBlockHeight = [BTBlockChain instance].lastBlock.blockNo - self.versionLastBlock;
+        _synchronisingBlockCount = 0;
+
+        _synchronising = synchronising;
+    }
 }
 
 #pragma mark - send
@@ -346,8 +374,8 @@ services:(uint64_t)services
     }
     
     [msg appendData:hashStop ?: ZERO_HASH];
-    DDLogDebug(@"%@:%u calling get headers with locators: %@", self.host, self.peerPort,
-          @[[NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]]);
+    DDLogDebug(@"%@:%u calling get headers with locators: %@,%@", self.host, self.peerPort,
+          [NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]);
     [self sendMessage:msg type:MSG_GETHEADERS];
 }
 
@@ -363,8 +391,8 @@ services:(uint64_t)services
     }
     
     [msg appendData:hashStop ?: ZERO_HASH];
-    DDLogDebug(@"%@:%u calling get blocks with locators: %@", self.host, self.peerPort,
-                    @[[NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]]);
+    DDLogDebug(@"%@:%u calling get blocks with locators: %@,%@", self.host, self.peerPort,
+                    [NSString hexWithHash:locators.firstObject], [NSString hexWithHash:locators.lastObject]);
     [self sendMessage:msg type:MSG_GETBLOCKS];
 }
 
@@ -603,9 +631,7 @@ services:(uint64_t)services
                 break;
             case block:
             case merkleblock:
-                if([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]){
-                    [blockHashes addObject:hash];
-                }
+                [blockHashes addObject:hash];
                 break;
             default: break;
         }
@@ -630,11 +656,14 @@ services:(uint64_t)services
     [self.knownTxHashes unionOrderedSet:txHashes];
     
     if (txHashes.count + blockHashes.count > 0) {
-        [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:blockHashes.array];
-
-        // Each merkle block the remote peer sends us is followed by a set of tx messages for that block. We send a ping
-        // to get a pong reply after the block and all its tx are sent, indicating that there are no more tx messages
-        if (blockHashes.count == 1) [self sendPingMessage];
+        if([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]) {
+            [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:blockHashes.array];
+            // Each merkle block the remote peer sends us is followed by a set of tx messages for that block. We send a ping
+            // to get a pong reply after the block and all its tx are sent, indicating that there are no more tx messages
+            if (blockHashes.count == 1) [self sendPingMessage];
+        } else {
+            [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:nil];
+        }
     }
 
     if (blockHashes.count > 0) { // remember blockHashes in case we need to refetch them with an updated bloom filter
@@ -643,10 +672,17 @@ services:(uint64_t)services
             [self.currentBlockHashes
              removeObjectsInRange:NSMakeRange(0, self.currentBlockHashes.count - MAX_GETDATA_HASHES/2)];
         }
+        if (self.synchronising)
+            [self.syncBlockHashes addObjectsFromArray:[blockHashes array]];
+        [self increaseBlockNo:blockHashes.count];
     }
+}
 
-    if(blockHashes.count == 1){
-        _incrementalBlockHeight ++;
+- (void)increaseBlockNo:(int)blockCount;{
+    if (self.synchronising) {
+        _synchronisingBlockCount += blockCount;
+    } else {
+        _incrementalBlockHeight += blockCount;
     }
 }
 
@@ -671,7 +707,22 @@ services:(uint64_t)services
             self.currentBlock = nil;
             self.currentTxHashes = nil;
 
-            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
+            if (_status == BTPeerStatusConnected) {
+                if (self.synchronising && [self.syncBlockHashes containsObject:block.blockHash]) {
+                    [self.syncBlockHashes removeObject:block.blockHash];
+                    [self.syncBlocks addObject:block];
+                    if (self.syncBlockHashes.count == 0) {
+                        [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                        [self.syncBlocks removeAllObjects];
+                    } else if (self.syncBlocks.count >= 100) {
+                        [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                        [self.syncBlocks removeAllObjects];
+                    }
+                } else {
+                    [self.delegate peer:self relayedBlock:block];
+                }
+
+            }
         }
     } else {
         if (self.needToRequestDependencyDict[tx.txHash] == nil || ((NSArray *)self.needToRequestDependencyDict[tx.txHash]).count == 0) {
@@ -1008,7 +1059,7 @@ services:(uint64_t)services
 
     NSMutableOrderedSet *txHashes = [NSMutableOrderedSet orderedSetWithArray:block.txHashes];
 
-    [txHashes minusOrderedSet:self.knownTxHashes];
+//    [txHashes minusOrderedSet:self.knownTxHashes];
 
     // wait util we get all the tx messages before processing the block
     if (txHashes.count > 0) {
@@ -1016,7 +1067,21 @@ services:(uint64_t)services
         self.currentTxHashes = txHashes;
     }
     else {
-        if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedBlock:block];
+        if (_status == BTPeerStatusConnected) {
+            if (self.synchronising && [self.syncBlockHashes containsObject:block.blockHash]) {
+                [self.syncBlockHashes removeObject:block.blockHash];
+                [self.syncBlocks addObject:block];
+                if (self.syncBlockHashes.count == 0) {
+                    [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                    [self.syncBlocks removeAllObjects];
+                } else if (self.syncBlocks.count >= 100) {
+                    [self.delegate peer:self relayedBlocks:self.syncBlocks];
+                    [self.syncBlocks removeAllObjects];
+                }
+            } else {
+                [self.delegate peer:self relayedBlock:block];
+            }
+        }
     }
     if(self.currentBlockHashes.count == 0){
         [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil];

@@ -39,6 +39,7 @@
 #import "NSMutableData+Bitcoin.h"
 #import "NSString+Base58.h"
 #import "NSData+Hash.h"
+#import "BTScriptOpCodes.h"
 
 #define VAR_INT16_HEADER 0xfd
 #define VAR_INT32_HEADER 0xfe
@@ -181,9 +182,25 @@
     [self appendUInt8:OP_CHECKSIG];
 }
 
+- (void)appendScriptPubKeyForP2SH:(NSData *)hash
+{
+    [self appendUInt8:OP_HASH160];
+    [self appendScriptPushData:hash];
+    [self appendUInt8:OP_EQUAL];
+}
+
 - (void)appendScriptPubKeyForAddress:(NSString *)address
 {
-    [self appendScriptPubKeyForHash:address.addressToHash160];
+    NSData *d = address.base58checkToData;
+    if (d.length != 21) return;
+
+    uint8_t version = *(const uint8_t *)d.bytes;
+
+    if (version == BITCOIN_PUBKEY_ADDRESS) {
+        [self appendScriptPubKeyForHash:address.addressToHash160];
+    } else if (version == BITCOIN_SCRIPT_ADDRESS) {
+        [self appendScriptPubKeyForP2SH:address.addressToHash160];
+    }
 }
 
 #pragma mark - bitcoin protocol

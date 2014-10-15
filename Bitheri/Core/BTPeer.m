@@ -714,7 +714,7 @@ services:(uint64_t)services
                     if (self.syncBlockHashes.count == 0) {
                         [self.delegate peer:self relayedBlocks:self.syncBlocks];
                         [self.syncBlocks removeAllObjects];
-                    } else if (self.syncBlocks.count >= 100) {
+                    } else if (self.syncBlocks.count >= RELAY_BLOCK_COUNT_WHEN_SYNC) {
                         [self.delegate peer:self relayedBlocks:self.syncBlocks];
                         [self.syncBlocks removeAllObjects];
                     }
@@ -1074,7 +1074,7 @@ services:(uint64_t)services
                 if (self.syncBlockHashes.count == 0) {
                     [self.delegate peer:self relayedBlocks:self.syncBlocks];
                     [self.syncBlocks removeAllObjects];
-                } else if (self.syncBlocks.count >= 100) {
+                } else if (self.syncBlocks.count >= RELAY_BLOCK_COUNT_WHEN_SYNC) {
                     [self.delegate peer:self relayedBlocks:self.syncBlocks];
                     [self.syncBlocks removeAllObjects];
                 }

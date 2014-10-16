@@ -725,6 +725,25 @@ services:(uint64_t)services
             }
         }
     } else {
+        if ([[BTAddressManager instance] isTxRelated:tx]) {
+            _unrelatedTxRelayCount = 0;
+        } else {
+            _unrelatedTxRelayCount += 1;
+            if (_unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT) {
+                [self disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_RELAY_TO_MUCH_UNRELAY_TX
+                                                          userInfo:@{NSLocalizedDescriptionKey : @"connect timeout"}]];
+                return;
+            }
+        }
+
+        BOOL valid = YES;
+        valid &= [tx verify];
+        if (valid) {
+            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
+            [self checkDependencyWith:tx];
+        }
+        // do not check dependency now, may check it in future
+        /*
         if (self.needToRequestDependencyDict[tx.txHash] == nil || ((NSArray *)self.needToRequestDependencyDict[tx.txHash]).count == 0) {
             if ([[BTAddressManager instance] isTxRelated:tx]) {
                 _unrelatedTxRelayCount = 0;
@@ -779,6 +798,7 @@ services:(uint64_t)services
             }
             [self sendGetDataMessageWithTxHashes:needToRequest andBlockHashes:@[]];
         }
+        */
     }
 }
 

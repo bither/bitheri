@@ -740,7 +740,7 @@ services:(uint64_t)services
         valid &= [tx verify];
         if (valid) {
             if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
-            [self checkDependencyWith:tx];
+//            [self checkDependencyWith:tx];
         }
         // do not check dependency now, may check it in future
         /*

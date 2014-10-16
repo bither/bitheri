@@ -243,7 +243,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
             self.connectFailure = 0; // this attempt is a manual retry
         if(self.connectedPeers.count > 0){
-            for(BTPeer* peer in self.connectedPeers){
+            NSSet *set = [NSSet setWithSet:self.connectedPeers];
+            for(BTPeer* peer in set){
                 [peer connectError];
                 [self.abandonPeers addObject:@(peer.peerAddress)];
                 [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE

@@ -394,10 +394,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         completion(nil);
     }
 
-    _bloomFilter = nil;
-    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
-        [p sendFilterLoadMessage:self.bloomFilter.data];
-    }
+//    _bloomFilter = nil;
+//    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
+//        [p sendFilterLoadMessage:self.bloomFilter.data];
+//    }
 
 //    if (! self.connected) {
 //        if (completion) {

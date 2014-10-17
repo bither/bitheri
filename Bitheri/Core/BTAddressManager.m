@@ -244,6 +244,14 @@
     return result;
 }
 
+- (NSArray *)unSpentOuts {
+    NSMutableArray *result = [NSMutableArray new];
+    for (BTOut *outItem in [[BTTxProvider instance] getUnSpentOuts]) {
+        [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
+    }
+    return result;
+}
+
 - (void)blockChainChanged; {
     for (BTAddress *address in self.allAddresses) {
         [address updateRecentlyTx];

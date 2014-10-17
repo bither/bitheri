@@ -54,6 +54,8 @@
 
 - (NSArray *)getOuts;
 
+- (NSArray *)getUnSpentOuts;
+
 - (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;
 
 - (NSArray *)txInValues:(NSData *)txHash;

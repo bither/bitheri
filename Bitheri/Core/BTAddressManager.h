@@ -42,6 +42,7 @@
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
 - (BOOL)isTxRelated:(BTTx *)tx;
 - (NSArray *)outs;
+- (NSArray *)unSpentOuts;
 
 - (void)blockChainChanged;
 

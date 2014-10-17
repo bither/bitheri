@@ -679,6 +679,19 @@ static BTTxProvider *provider;
     return result;
 }
 
+- (NSArray *)getUnSpentOuts;{
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select a.* from outs a where a.out_status=?";
+        FMResultSet *rs = [db executeQuery:sql, @(0)];
+        while ([rs next]) {
+            [result addObject:[self formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;{
     __block NSMutableArray *txs = nil;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {

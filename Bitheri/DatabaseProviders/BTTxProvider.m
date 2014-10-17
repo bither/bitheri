@@ -459,6 +459,45 @@ static BTTxProvider *provider;
     }
 }
 
+- (bool)isTxDoubleSpendWithConfirmedTx:(BTTx *)tx; {
+    __block bool result = NO;
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        // check if double spend with confirmed tx
+        NSString *sql = @"select count(0) from ins a, txs b where a.tx_hash=b.tx_hash"
+                " and b.block_no is not null"
+                " and a.prev_tx_hash=? and a.prev_out_sn=?";
+        FMResultSet *rs = nil;
+        for (BTIn *inItem in tx.ins) {
+            rs = [db executeQuery:sql, inItem.prevTxHash, @(inItem.prevOutSn)];
+            if ([rs next] && [rs intForColumnIndex:0] > 0) {
+                result = YES;
+                [rs close];
+                return;
+            }
+            [rs close];
+        }
+    }];
+    return result;
+}
+
+- (NSArray *)getInAddresses:(BTTx *)tx;{
+    __block NSMutableArray *inAddresses = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select out_address from outs where tx_hash=? and out_sn=?";
+        FMResultSet *rs = nil;
+        for (BTIn *inItem in tx.ins) {
+            rs = [db executeQuery:sql, [NSString base58WithData:inItem.prevTxHash], @(inItem.prevOutSn)];
+            if ([rs next]) {
+                if (![rs columnIndexIsNull:0]) {
+                    [inAddresses addObject:[rs stringForColumnIndex:0]];
+                }
+            }
+            [rs close];
+        }
+    }];
+    return inAddresses;
+}
+
 - (bool)isAddress:(NSString *)address containsTx:(BTTx *)txItem; {
     __block bool result = NO;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {

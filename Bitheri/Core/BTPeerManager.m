@@ -43,6 +43,7 @@
 #import <netdb.h>
 #import "BTPeerProvider.h"
 #import "BTTxProvider.h"
+#import "asn1t.h"
 
 #if BITCOIN_TESTNET
 static const char *dns_seeds[] = { "testnet-seed.bitcoin.petertodd.org", "testnet-seed.bluematt.me" };
@@ -171,7 +172,13 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 (self.downloadPeer.versionLastBlock - self.lastBlockHeight) / BLOCK_DIFFICULTY_INTERVAL;
     }
 
-    NSArray *outs = [[BTAddressManager instance] outs];
+    NSMutableArray *outs = [NSMutableArray new];
+    for (BTOut *out in [[BTAddressManager instance] outs]) {
+        if ([[BTAddressManager instance].addressesSet containsObject:out.outAddress]) {
+            [outs addObject:out.outAddress];
+        }
+    }
+
     NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count;
     elemCount += 100;
     BTBloomFilter *filter = [[BTBloomFilter alloc] initWithFalsePositiveRate:self.filterFpRate

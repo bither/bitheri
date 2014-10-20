@@ -256,8 +256,10 @@
 
 - (NSArray *)outs; {
     NSMutableArray *result = [NSMutableArray new];
-    for (BTOut *outItem in [[BTTxProvider instance] getOuts]) {
-        [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
+    for (BTOut *out in [[BTTxProvider instance] getOuts]) {
+        if ([[BTAddressManager instance].addressesSet containsObject:out.outAddress]) {
+            [result addObject:getOutPoint(out.txHash, out.outSn)];
+        }
     }
     return result;
 }

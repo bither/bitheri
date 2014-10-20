@@ -172,12 +172,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 (self.downloadPeer.versionLastBlock - self.lastBlockHeight) / BLOCK_DIFFICULTY_INTERVAL;
     }
 
-    NSMutableArray *outs = [NSMutableArray new];
-    for (BTOut *out in [[BTAddressManager instance] outs]) {
-        if ([[BTAddressManager instance].addressesSet containsObject:out.outAddress]) {
-            [outs addObject:out.outAddress];
-        }
-    }
+    NSMutableArray *outs = [[BTAddressManager instance] outs];
 
     NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count;
     elemCount += 100;

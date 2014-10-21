@@ -864,8 +864,8 @@ static BTTxProvider *provider;
         NSString *updateSql = @"update ins set in_signature=? where tx_hash=? and in_sn=? and in_signature is null";
         [db beginTransaction];
         for (NSUInteger i = 0; i < txHashes.count; i++) {
-            [db executeUpdate:updateSql, [NSString base58WithData:txHashes[i]], inSns[i]
-                    , [NSString base58WithData:inSignatures[i]]];
+            [db executeUpdate:updateSql, [NSString base58WithData:inSignatures[i]]
+                    , [NSString base58WithData:txHashes[i]], inSns[i]];
         }
         [db commit];
     }];

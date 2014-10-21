@@ -69,7 +69,7 @@
 
 - (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;
 
-- (void)completeInSignatureWithTxHashes:(NSArray *) txHashes andInSns:(NSArray *) inSns andInSignatures:(NSArray *) inSignatures;
+- (void)completeInSignatureWithIns:(NSArray *) ins;
 - (uint32_t)needCompleteInSignature:(NSString *)address;
 
 @end

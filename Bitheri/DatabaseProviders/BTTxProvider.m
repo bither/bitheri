@@ -859,13 +859,13 @@ static BTTxProvider *provider;
     return result;
 }
 
-- (void)completeInSignatureWithTxHashes:(NSArray *)txHashes andInSns:(NSArray *)inSns andInSignatures:(NSArray *)inSignatures; {
+- (void)completeInSignatureWithIns:(NSArray *) ins; {
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *updateSql = @"update ins set in_signature=? where tx_hash=? and in_sn=? and in_signature is null";
         [db beginTransaction];
-        for (NSUInteger i = 0; i < txHashes.count; i++) {
-            [db executeUpdate:updateSql, [NSString base58WithData:inSignatures[i]]
-                    , [NSString base58WithData:txHashes[i]], inSns[i]];
+        for (BTIn *in in ins) {
+            [db executeUpdate:updateSql, [NSString base58WithData:in.inSignature]
+                    , [NSString base58WithData:in.txHash], in.inSn];
         }
         [db commit];
     }];
@@ -874,7 +874,9 @@ static BTTxProvider *provider;
 - (uint32_t)needCompleteInSignature:(NSString *)address;{
     __block uint32_t result = 0;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select max(block_no) from txs,ins where txs.tx_id=ins.tx_id and ins.address=? and ins.in_signature is null";
+        NSString *sql = @"select max(txs.block_no) from addresses_txs,ins,txs "
+                "where addresses_txs.tx_hash=ins.tx_hash and addresses_txs.address=? "
+                "and ins.in_signature is null and txs.tx_hash=ins.tx_hash";
         FMResultSet *rs = [db executeQuery:sql, address];
         if ([rs next]) {
             result = (uint32_t) [rs intForColumnIndex:0];

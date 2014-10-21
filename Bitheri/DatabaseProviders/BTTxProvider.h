@@ -50,7 +50,7 @@
 
 - (void)remove:(NSData *)txHash;
 
--(uint32_t) txCount:(NSString *)address;
+- (uint32_t)txCount:(NSString *)address;
 
 - (void)txSentBySelfHasSaw:(NSData *)txHash;
 
@@ -68,5 +68,8 @@
 -(void)clearAllTx;
 
 - (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;
+
+- (void)completeInSignatureWithTxHashes:(NSArray *) txHashes andInSns:(NSArray *) inSns andInSignatures:(NSArray *) inSignatures;
+- (uint32_t)needCompleteInSignature:(NSString *)address;
 
 @end

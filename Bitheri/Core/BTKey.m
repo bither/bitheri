@@ -348,9 +348,6 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
     unsigned char *b;
     b = data.mutableBytes;
     const unsigned char **pp = &b;
-
-//    const unsigned char **pp = &((unsigned char *)data.mutableBytes);
-
     ECDSA_SIG *s = d2i_ECDSA_SIG(NULL, pp, data.length);
     NSMutableData *d = [NSMutableData secureDataWithLength:200];
     unsigned char *b2 = d.mutableBytes;

@@ -875,7 +875,7 @@ static BTTxProvider *provider;
 
 - (void)completeInSignatureWithIns:(NSArray *) ins; {
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *updateSql = @"update ins set in_signature=? where tx_hash=? and in_sn=? and in_signature is null";
+        NSString *updateSql = @"update ins set in_signature=? where tx_hash=? and in_sn=? and ifnull(in_signature,'')=''";
         [db beginTransaction];
         for (BTIn *in in ins) {
             [db executeUpdate:updateSql, [NSString base58WithData:in.inSignature]

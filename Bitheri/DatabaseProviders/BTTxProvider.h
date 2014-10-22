@@ -55,8 +55,9 @@
 - (void)txSentBySelfHasSaw:(NSData *)txHash;
 
 - (NSArray *)getOuts;
-
 - (NSArray *)getUnSpentOuts;
+
+- (NSArray *)getRelatedIn:(NSString *)address;
 
 - (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;
 

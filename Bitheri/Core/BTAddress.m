@@ -26,6 +26,7 @@
 #import "BTOut.h"
 #import "BTSettings.h"
 #import "BTQRCodeUtil.h"
+#import "BTScript.h"
 
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
@@ -467,8 +468,30 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         return NO;
     }
 }
-//- (uint64_t)getMinNonDustValue:(uint64_t)feeBase;{
-//    return feeBase * 3 * (34 + 148) / 1000;
-//}
+
+- (void)completeInSignature:(NSArray *)ins; {
+    [[BTTxProvider instance] completeInSignatureWithIns:ins];
+}
+
+- (uint32_t)needCompleteInSignature; {
+    return [[BTTxProvider instance] needCompleteInSignature:self.address];
+}
+
+- (BOOL)checkRValues; {
+    NSSet *rs = [NSSet set];
+    for (BTIn *in in [[BTTxProvider instance] getRelatedIn:self.address]) {
+        if (in.inSignature != nil) {
+            BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
+            if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
+                NSData *sig = script.getSig;
+            }
+        }
+    }
+    return NO;
+}
+
+- (BOOL)checkRValuesForTx:(BTTx *) tx; {
+    return NO;
+}
 
 @end

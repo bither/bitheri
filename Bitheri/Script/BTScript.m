@@ -208,6 +208,17 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         return nil;
 }
 
+- (NSData *)getSig; {
+    if (self.chunks.count == 1 && [((BTScriptChunk *) self.chunks[0]) isEqualOpCode:OP_PUSHDATA4]) {
+        return ((BTScriptChunk *) self.chunks[0]).data;
+    } else if (self.chunks.count == 2 && [((BTScriptChunk *) self.chunks[0]) isEqualOpCode:OP_PUSHDATA4]
+            && [((BTScriptChunk *) self.chunks[1]) isEqualOpCode:OP_PUSHDATA4]) {
+        return ((BTScriptChunk *) self.chunks[0]).data;
+    }else {
+        return nil;
+    }
+}
+
 - (NSString *)getFromAddress; {
     return [self addressFromHash:[[self getPubKey] hash160]];
 }

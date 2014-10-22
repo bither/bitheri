@@ -731,6 +731,20 @@ static BTTxProvider *provider;
     return result;
 }
 
+- (NSArray *)getRelatedIn:(NSString *)address;{
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select ins.* from ins,addresses_txs "
+                "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
+        FMResultSet *rs = [db executeQuery:sql, address];
+        while ([rs next]) {
+            [result addObject:[self formatIn:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;{
     __block NSMutableArray *txs = nil;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
@@ -874,7 +888,7 @@ static BTTxProvider *provider;
 - (uint32_t)needCompleteInSignature:(NSString *)address;{
     __block uint32_t result = 0;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select max(txs.block_no) from outs,ins,txs where out_address=? "
+        NSString *sql = @"select max(txs.block_no) from outs,ins,txs where outs.out_address=? "
                 "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn "
                 "and ins.in_signature is null and txs.tx_hash=ins.tx_hash";
         FMResultSet *rs = [db executeQuery:sql, address];

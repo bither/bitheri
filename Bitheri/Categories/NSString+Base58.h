@@ -79,4 +79,7 @@ CFAllocatorRef SecureAllocator();
 
 -(NSString*)toUppercaseStringWithEn;
 
+- (NSData*)dataWithBase64EncodedString:(NSString *)string;
++ (NSString *)base64Encoding;
+
 @end

@@ -874,8 +874,8 @@ static BTTxProvider *provider;
 - (uint32_t)needCompleteInSignature:(NSString *)address;{
     __block uint32_t result = 0;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select max(txs.block_no) from addresses_txs,ins,txs "
-                "where addresses_txs.tx_hash=ins.tx_hash and addresses_txs.address=? "
+        NSString *sql = @"select max(txs.block_no) from outs,ins,txs where out_address=? "
+                "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn "
                 "and ins.in_signature is null and txs.tx_hash=ins.tx_hash";
         FMResultSet *rs = [db executeQuery:sql, address];
         if ([rs next]) {

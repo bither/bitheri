@@ -65,4 +65,13 @@
 
 }
 
+- (void)testCheckR; {
+    NSString *sig1 = @"30440220785a1d2cbfe7c1141635809600e7a199b4588b89a07119a8a5308f00eb8c1c7202200a51f8e9da21074e9aa5bdff86215b11bd6b31a1d0271f6aad35c808c1393eaa01";
+    NSString *sig2 = @"30450220310bf41281e53a34450bd41720a1f71fe0ef35d586ed51dbe2b025d67b6cc1b5022100e6a6a070a151a6aab1a216e1f1950f75d53cdca1d7f92424ca70a41e728c5e0601";
+    NSString *sig3 = @"3045022075c5710beadc1b958654255d6b8511b59b669bfbb9859b821968e6f86bb238c0022100b19995de695223c6361da87d3bef79115cc7e4a3f773e847510d702f85830b4f01";
+    XCTAssertEqual([BTKey getRFromSignature:[sig1 hexToData]], [@"785a1d2cbfe7c1141635809600e7a199b4588b89a07119a8a5308f00eb8c1c72" hexToData]);
+    XCTAssertEqual([BTKey getRFromSignature:[sig2 hexToData]], [@"310bf41281e53a34450bd41720a1f71fe0ef35d586ed51dbe2b025d67b6cc1b5" hexToData]);
+    XCTAssertEqual([BTKey getRFromSignature:[sig3 hexToData]], [@"75c5710beadc1b958654255d6b8511b59b669bfbb9859b821968e6f86bb238c0" hexToData]);
+}
+
 @end

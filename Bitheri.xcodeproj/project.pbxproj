@@ -102,6 +102,7 @@
 		DAC2DBFC1953D98000C67B0B /* BTTxProviderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DBFB1953D98000C67B0B /* BTTxProviderTest.m */; };
 		DAC2DBFF1953D9AB00C67B0B /* BTTxTestData.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DBFE1953D9AB00C67B0B /* BTTxTestData.m */; };
 		DAC2DC011953D9C400C67B0B /* BTTxTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DC001953D9C400C67B0B /* BTTxTest.m */; };
+		DAD7530A19F79D3500AAA1A0 /* BTVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D072F87B87405F7F0B7A9 /* BTVersion.m */; };
 		DADE53F81933420300F5E4DD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE53F71933420300F5E4DD /* Foundation.framework */; };
 		DADE54061933420300F5E4DD /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE54051933420300F5E4DD /* XCTest.framework */; };
 		DADE54071933420300F5E4DD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE53F71933420300F5E4DD /* Foundation.framework */; };
@@ -736,6 +737,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DAD7530A19F79D3500AAA1A0 /* BTVersion.m in Sources */,
 				DA24941F19E16D95006CA994 /* BTPrivateKeyUtil.m in Sources */,
 				DA24941E19E151A5006CA994 /* BTUtils.m in Sources */,
 				DA24941D19E1517C006CA994 /* BTQRCodeUtil.m in Sources */,

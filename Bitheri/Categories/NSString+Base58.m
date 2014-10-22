@@ -401,11 +401,11 @@ breakout:
     return [self uppercaseStringWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
 }
 
-- (NSData*)dataWithBase64EncodedString:(NSString *)string;
+- (NSData*)dataWithBase64EncodedString
 {
-    if (string == nil)
+    if (self == nil)
         [NSException raise:NSInvalidArgumentException format:nil];
-    if ([string length] == 0)
+    if ([self length] == 0)
         return [NSData data];
     
     static char *decodingTable = NULL;
@@ -420,10 +420,10 @@ breakout:
             decodingTable[(short)encodingTable[i]] = i;
     }
     
-    const char *characters = [string cStringUsingEncoding:NSASCIIStringEncoding];
+    const char *characters = [self cStringUsingEncoding:NSASCIIStringEncoding];
     if (characters == NULL)     //  Not an ASCII string!
         return nil;
-    char *bytes = malloc((([string length] + 3) / 4) * 3);
+    char *bytes = malloc((([self length] + 3) / 4) * 3);
     if (bytes == NULL)
         return nil;
     NSUInteger length = 0;

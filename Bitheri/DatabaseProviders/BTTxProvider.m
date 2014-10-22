@@ -879,7 +879,7 @@ static BTTxProvider *provider;
         [db beginTransaction];
         for (BTIn *in in ins) {
             [db executeUpdate:updateSql, [NSString base58WithData:in.inSignature]
-                    , [NSString base58WithData:in.txHash], in.inSn];
+             , [NSString base58WithData:in.txHash], @(in.inSn)];
         }
         [db commit];
     }];

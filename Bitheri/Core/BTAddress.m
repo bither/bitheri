@@ -487,11 +487,11 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
             }
         }
     }
-    return NO;
+    return arc4random() % 2 == 0;
 }
 
 - (BOOL)checkRValuesForTx:(BTTx *) tx; {
-    return NO;
+    return arc4random() % 2 == 0;
 }
 
 @end

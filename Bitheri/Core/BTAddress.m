@@ -478,7 +478,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BOOL)checkRValues; {
-    NSSet *rs = [NSSet set];
+    NSMutableSet *rs = [NSMutableSet set];
     for (BTIn *in in [[BTTxProvider instance] getRelatedIn:self.address]) {
         if (in.inSignature != nil) {
             BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
@@ -487,17 +487,39 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
                 if (sig != nil) {
                     NSData *r = [BTKey getRFromSignature:sig];
                     if ([rs containsObject:r]) {
-
+                        return NO;
                     }
+                    [rs addObject:r];
                 }
             }
         }
     }
-    return arc4random() % 2 == 0;
+    return YES;
 }
 
 - (BOOL)checkRValuesForTx:(BTTx *) tx; {
-    return arc4random() % 2 == 0;
+    NSMutableSet *rs = [NSMutableSet set];
+    for (BTIn *in in [[BTTxProvider instance] getRelatedIn:self.address]) {
+        if (in.inSignature != nil) {
+            BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
+            if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
+                NSData *sig = [script getSig];
+                if (sig != nil) {
+                    NSData *r = [BTKey getRFromSignature:sig];
+                    [rs addObject:r];
+                }
+            }
+        }
+    }
+    for (BTIn *in in tx.ins) {
+        BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
+        NSData *sig = [script getSig];
+        NSData *r = [BTKey getRFromSignature:sig];
+        if ([rs containsObject:r])
+            return NO;
+        [rs addObject:r];
+    }
+    return YES;
 }
 
 @end

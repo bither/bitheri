@@ -890,7 +890,7 @@ static BTTxProvider *provider;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select max(txs.block_no) from outs,ins,txs where outs.out_address=? "
                 "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn "
-                "and ins.in_signature is null and txs.tx_hash=ins.tx_hash";
+                "and ifnull(ins.in_signature,'')='' and txs.tx_hash=ins.tx_hash";
         FMResultSet *rs = [db executeQuery:sql, address];
         if ([rs next]) {
             result = (uint32_t) [rs intForColumnIndex:0];

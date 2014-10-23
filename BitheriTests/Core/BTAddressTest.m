@@ -91,6 +91,19 @@
     XCTAssertTrue([[BTKey getRFromSignature:[sig2 hexToData]] isEqualToData:[r2 hexToData]]);
     XCTAssertTrue([[BTKey getRFromSignature:[sig3 hexToData]] isEqualToData:[r3 hexToData]]);
     XCTAssertTrue([[BTKey getRFromSignature:[sig4 hexToData]] isEqualToData:[r4 hexToData]]);
+
+    NSMutableSet *set = [NSMutableSet set];
+    [set addObject:[r1 hexToData]];
+    XCTAssertTrue([set containsObject:[r1 hexToData]]);
+    XCTAssertFalse([set containsObject:[r2 hexToData]]);
+    [set addObject:[r2 hexToData]];
+    XCTAssertTrue([set containsObject:[r2 hexToData]]);
+    XCTAssertFalse([set containsObject:[r3 hexToData]]);
+    [set addObject:[r3 hexToData]];
+    XCTAssertTrue([set containsObject:[r3 hexToData]]);
+    XCTAssertFalse([set containsObject:[r4 hexToData]]);
+    [set addObject:[r4 hexToData]];
+    XCTAssertTrue([set containsObject:[r4 hexToData]]);
 }
 
 @end

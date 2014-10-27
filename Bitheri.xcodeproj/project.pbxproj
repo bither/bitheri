@@ -65,6 +65,10 @@
 		DA05F3C4198B70220013BBD6 /* BTTxBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0291DF871A90E113C939 /* BTTxBuilder.m */; };
 		DA1543B4196FD5EB007F629E /* BTCompressingLogFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01BF73E34E6E6C2ED9B3 /* BTCompressingLogFileManager.m */; };
 		DA1543B9196FDB89007F629E /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DA1543B8196FDB89007F629E /* libz.dylib */; };
+		DA24941B19E14F66006CA994 /* libPods-OpenSSL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA24941A19E14F66006CA994 /* libPods-OpenSSL.a */; };
+		DA24941D19E1517C006CA994 /* BTQRCodeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */; };
+		DA24941E19E151A5006CA994 /* BTUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60819D15B08003B88B5 /* BTUtils.m */; };
+		DA24941F19E16D95006CA994 /* BTPrivateKeyUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BBD0019D2A27500E58BA7 /* BTPrivateKeyUtil.m */; };
 		DA41E6471957CF660038AFDB /* BTTxProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0D2DCAE0DCE6B2B1223F /* BTTxProvider.m */; };
 		DA41E6481957D0900038AFDB /* NSString+Base58.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D05C222FF60A257EDA95F /* NSString+Base58.m */; };
 		DA41E6491957D0900038AFDB /* NSMutableData+Bitcoin.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D05F5033FC4A23EB72811 /* NSMutableData+Bitcoin.m */; };
@@ -84,9 +88,7 @@
 		DA41E65D1957D0910038AFDB /* BTDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D02CCB956C40B84F4B889 /* BTDatabaseManager.m */; };
 		DA41E65F1957D0910038AFDB /* BTBlockProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01DAC8BCD383607B7676 /* BTBlockProvider.m */; };
 		DA41E6601957D0910038AFDB /* BTPeerProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D07A59B0E01BFDF795D1F /* BTPeerProvider.m */; };
-		DA41E6661957D0B20038AFDB /* libPods-AFNetworking.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA41E6611957D0B20038AFDB /* libPods-AFNetworking.a */; };
 		DA41E6671957D0B20038AFDB /* libPods-FMDB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA41E6621957D0B20038AFDB /* libPods-FMDB.a */; };
-		DA41E6681957D0B20038AFDB /* libPods-OpenSSL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA41E6631957D0B20038AFDB /* libPods-OpenSSL.a */; };
 		DA41E6691957D0B20038AFDB /* libPods-Reachability.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA41E6641957D0B20038AFDB /* libPods-Reachability.a */; };
 		DA41E66B195A884D0038AFDB /* BTSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D073CC13048357C70737F /* BTSettings.m */; };
 		DA41E66C195A95020038AFDB /* BTSendTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D010D3A723E51A5306A15 /* BTSendTest.m */; };
@@ -100,6 +102,7 @@
 		DAC2DBFC1953D98000C67B0B /* BTTxProviderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DBFB1953D98000C67B0B /* BTTxProviderTest.m */; };
 		DAC2DBFF1953D9AB00C67B0B /* BTTxTestData.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DBFE1953D9AB00C67B0B /* BTTxTestData.m */; };
 		DAC2DC011953D9C400C67B0B /* BTTxTest.m in Sources */ = {isa = PBXBuildFile; fileRef = DAC2DC001953D9C400C67B0B /* BTTxTest.m */; };
+		DAD7530A19F79D3500AAA1A0 /* BTVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D072F87B87405F7F0B7A9 /* BTVersion.m */; };
 		DADE53F81933420300F5E4DD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE53F71933420300F5E4DD /* Foundation.framework */; };
 		DADE54061933420300F5E4DD /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE54051933420300F5E4DD /* XCTest.framework */; };
 		DADE54071933420300F5E4DD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE53F71933420300F5E4DD /* Foundation.framework */; };
@@ -220,6 +223,9 @@
 		D61D0FA2F3862F680D1B33AC /* BTAddressManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTAddressManager.h; sourceTree = "<group>"; };
 		DA1543B6196FDB55007F629E /* libbz2.1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.1.0.dylib; path = usr/lib/libbz2.1.0.dylib; sourceTree = SDKROOT; };
 		DA1543B8196FDB89007F629E /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		DA24941419E14C5A006CA994 /* libPods.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPods.a; path = "Pods/build/Debug-iphoneos/libPods.a"; sourceTree = "<group>"; };
+		DA24941619E14CA1006CA994 /* libPods.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPods.a; path = "Pods/build/Debug-iphoneos/libPods.a"; sourceTree = "<group>"; };
+		DA24941A19E14F66006CA994 /* libPods-OpenSSL.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-OpenSSL.a"; path = "Pods/build/Debug-iphoneos/libPods-OpenSSL.a"; sourceTree = "<group>"; };
 		DA41E6611957D0B20038AFDB /* libPods-AFNetworking.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-AFNetworking.a"; path = "Pods/build/Release-iphoneos/libPods-AFNetworking.a"; sourceTree = "<group>"; };
 		DA41E6621957D0B20038AFDB /* libPods-FMDB.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-FMDB.a"; path = "Pods/build/Release-iphoneos/libPods-FMDB.a"; sourceTree = "<group>"; };
 		DA41E6631957D0B20038AFDB /* libPods-OpenSSL.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-OpenSSL.a"; path = "Pods/build/Release-iphoneos/libPods-OpenSSL.a"; sourceTree = "<group>"; };
@@ -261,9 +267,8 @@
 			files = (
 				DA1543B9196FDB89007F629E /* libz.dylib in Frameworks */,
 				DA41E678195D65080038AFDB /* libPods-CocoaLumberjack.a in Frameworks */,
-				DA41E6661957D0B20038AFDB /* libPods-AFNetworking.a in Frameworks */,
 				DA41E6671957D0B20038AFDB /* libPods-FMDB.a in Frameworks */,
-				DA41E6681957D0B20038AFDB /* libPods-OpenSSL.a in Frameworks */,
+				DA24941B19E14F66006CA994 /* libPods-OpenSSL.a in Frameworks */,
 				DA41E6691957D0B20038AFDB /* libPods-Reachability.a in Frameworks */,
 				DADE54061933420300F5E4DD /* XCTest.framework in Frameworks */,
 				DADE54091933420300F5E4DD /* UIKit.framework in Frameworks */,
@@ -500,6 +505,9 @@
 		DADE53F61933420300F5E4DD /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DA24941A19E14F66006CA994 /* libPods-OpenSSL.a */,
+				DA24941619E14CA1006CA994 /* libPods.a */,
+				DA24941419E14C5A006CA994 /* libPods.a */,
 				DA1543B8196FDB89007F629E /* libz.dylib */,
 				DA1543B6196FDB55007F629E /* libbz2.1.0.dylib */,
 				DA41E677195D65080038AFDB /* libPods-CocoaLumberjack.a */,
@@ -626,8 +634,6 @@
 			mainGroup = DADE53EB1933420300F5E4DD;
 			productRefGroup = DADE53F51933420300F5E4DD /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-			);
 			projectRoot = "";
 			targets = (
 				DADE53F31933420300F5E4DD /* Bitheri */,
@@ -731,6 +737,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DAD7530A19F79D3500AAA1A0 /* BTVersion.m in Sources */,
+				DA24941F19E16D95006CA994 /* BTPrivateKeyUtil.m in Sources */,
+				DA24941E19E151A5006CA994 /* BTUtils.m in Sources */,
+				DA24941D19E1517C006CA994 /* BTQRCodeUtil.m in Sources */,
 				AC9BC5C819D11C7D003B88B5 /* BTKey+BIP38.m in Sources */,
 				DAB2E12219B857DA00F791F1 /* BTIn.m in Sources */,
 				DAB2E12319B857DA00F791F1 /* BTOut.m in Sources */,
@@ -870,7 +880,7 @@
 				DSTROOT = /tmp/Bitheri.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Bitheri/Bitheri-Prefix.pch";
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -883,7 +893,7 @@
 				DSTROOT = /tmp/Bitheri.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Bitheri/Bitheri-Prefix.pch";
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -891,7 +901,9 @@
 		};
 		DADE541B1933420300F5E4DD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -906,19 +918,18 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = "BitheriTests/BitheriTests-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Pods/build/Release-iphoneos",
-					"$(PROJECT_DIR)/Pods/build/Debug-iphoneos",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALIDATE_PRODUCT = NO;
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Debug;
 		};
 		DADE541C1933420300F5E4DD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9F9268CD0BD91D08EA89841E /* Pods.release.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -929,11 +940,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Bitheri/Bitheri-Prefix.pch";
 				INFOPLIST_FILE = "BitheriTests/BitheriTests-Info.plist";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Pods/build/Release-iphoneos",
-					"$(PROJECT_DIR)/Pods/build/Debug-iphoneos",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = xctest;
 			};

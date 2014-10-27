@@ -63,4 +63,6 @@
 - (BOOL)verify:(NSData *)d signature:(NSData *)sig;
 -(uint8_t)getKeyFlag;
 
++ (NSData *)getRFromSignature:(NSData *)sig;
+
 @end

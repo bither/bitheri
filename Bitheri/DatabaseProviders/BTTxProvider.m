@@ -459,6 +459,45 @@ static BTTxProvider *provider;
     }
 }
 
+- (bool)isTxDoubleSpendWithConfirmedTx:(BTTx *)tx; {
+    __block bool result = NO;
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        // check if double spend with confirmed tx
+        NSString *sql = @"select count(0) from ins a, txs b where a.tx_hash=b.tx_hash"
+                " and b.block_no is not null"
+                " and a.prev_tx_hash=? and a.prev_out_sn=?";
+        FMResultSet *rs = nil;
+        for (BTIn *inItem in tx.ins) {
+            rs = [db executeQuery:sql, inItem.prevTxHash, @(inItem.prevOutSn)];
+            if ([rs next] && [rs intForColumnIndex:0] > 0) {
+                result = YES;
+                [rs close];
+                return;
+            }
+            [rs close];
+        }
+    }];
+    return result;
+}
+
+- (NSArray *)getInAddresses:(BTTx *)tx;{
+    __block NSMutableArray *inAddresses = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select out_address from outs where tx_hash=? and out_sn=?";
+        FMResultSet *rs = nil;
+        for (BTIn *inItem in tx.ins) {
+            rs = [db executeQuery:sql, [NSString base58WithData:inItem.prevTxHash], @(inItem.prevOutSn)];
+            if ([rs next]) {
+                if (![rs columnIndexIsNull:0]) {
+                    [inAddresses addObject:[rs stringForColumnIndex:0]];
+                }
+            }
+            [rs close];
+        }
+    }];
+    return inAddresses;
+}
+
 - (bool)isAddress:(NSString *)address containsTx:(BTTx *)txItem; {
     __block bool result = NO;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
@@ -679,6 +718,33 @@ static BTTxProvider *provider;
     return result;
 }
 
+- (NSArray *)getUnSpentOuts;{
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select a.* from outs a where a.out_status=?";
+        FMResultSet *rs = [db executeQuery:sql, @(0)];
+        while ([rs next]) {
+            [result addObject:[self formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (NSArray *)getRelatedIn:(NSString *)address;{
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select ins.* from ins,addresses_txs "
+                "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
+        FMResultSet *rs = [db executeQuery:sql, address];
+        while ([rs next]) {
+            [result addObject:[self formatIn:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;{
     __block NSMutableArray *txs = nil;
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
@@ -801,6 +867,33 @@ static BTTxProvider *provider;
         FMResultSet *rs = [db executeQuery:outSql, [NSString base58WithData:txHash], @(outSn)];
         while ([rs next]) {
             result = [self formatOut:rs];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (void)completeInSignatureWithIns:(NSArray *) ins; {
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *updateSql = @"update ins set in_signature=? where tx_hash=? and in_sn=? and ifnull(in_signature,'')=''";
+        [db beginTransaction];
+        for (BTIn *in in ins) {
+            [db executeUpdate:updateSql, [NSString base58WithData:in.inSignature]
+             , [NSString base58WithData:in.txHash], @(in.inSn)];
+        }
+        [db commit];
+    }];
+}
+
+- (uint32_t)needCompleteInSignature:(NSString *)address;{
+    __block uint32_t result = 0;
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select max(txs.block_no) from outs,ins,txs where outs.out_address=? "
+                "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn "
+                "and ifnull(ins.in_signature,'')='' and txs.tx_hash=ins.tx_hash";
+        FMResultSet *rs = [db executeQuery:sql, address];
+        if ([rs next]) {
+            result = (uint32_t) [rs intForColumnIndex:0];
         }
         [rs close];
     }];

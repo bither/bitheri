@@ -23,6 +23,7 @@
 #import "BTIn.h"
 #import "BTOut.h"
 #import "BTQRCodeUtil.h"
+#import "asn1t.h"
 
 //static NSData *txOutput(NSData *txHash, uint32_t n) {
 //    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
@@ -51,6 +52,7 @@
     
     _privKeyAddresses = [NSMutableArray new];
     _watchOnlyAddresses = [NSMutableArray new];
+    _addressesSet = [NSMutableSet new];
     _creationTime = [[NSDate new] timeIntervalSince1970];
     return self;
 }
@@ -85,8 +87,7 @@
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             [self.privKeyAddresses addObject:btAddress];
-            
-            
+            [self.addressesSet addObject:btAddress.address];
         }
     }
     if (isSort) {
@@ -119,6 +120,7 @@
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             [self.watchOnlyAddresses addObject:btAddress];
+            [self.addressesSet addObject:btAddress.address];
         }
     }
     if (isSort) {
@@ -142,6 +144,7 @@
         }
         [address saveNewAddress:sortTime];
         [self.privKeyAddresses insertObject:address atIndex:0];
+        [self.addressesSet addObject:address.address];
     } else {
         if (self.watchOnlyAddresses.count>0) {
             BTAddress * address=[self.watchOnlyAddresses objectAtIndex:0];
@@ -151,6 +154,7 @@
         }
         [address saveNewAddress:sortTime];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
+        [self.addressesSet addObject:address.address];
     }
     
 }
@@ -159,7 +163,7 @@
     DDLogDebug(@"stopMonitor %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
     [address removeWatchOnly];
     [self.watchOnlyAddresses removeObject:address];
-    
+    [self.addressesSet removeObject:address.address];
 }
 
 - (NSMutableArray *)allAddresses {
@@ -221,24 +225,48 @@
         // already in db
         return YES;
     }
-    BOOL needAdd = NO;
-    for (BTAddress *addr in [BTAddressManager instance].allAddresses) {
-        BOOL isRel = [self isAddress:addr.address containsTransaction:tx];
-        if (!needAdd && isRel) {
-            needAdd = YES;
-            [[BTTxProvider instance] add:tx];
-            DDLogDebug(@"register tx %@", [NSString hexWithHash:tx.txHash]);
-        }
-        if (isRel) {
-            [addr registerTx:tx withTxNotificationType:txNotificationType];
+
+    if ([[BTTxProvider instance] isTxDoubleSpendWithConfirmedTx:tx]) {
+        // double spend with confirmed tx
+        return false;
+    }
+
+    NSMutableSet *needNotifyAddressHashSet = [NSMutableSet new];
+    for (BTOut *out in tx.outs) {
+        if ([self.addressesSet containsObject:out.outAddress])
+            [needNotifyAddressHashSet addObject:out.outAddress];
+    }
+
+    NSArray *inAddresses = [[BTTxProvider instance] getInAddresses:tx];
+    for (NSString *address in inAddresses) {
+        if ([self.addressesSet containsObject:address])
+            [needNotifyAddressHashSet addObject:address];
+    }
+    if (needNotifyAddressHashSet.count > 0) {
+        [[BTTxProvider instance] add:tx];
+        DDLogDebug(@"register tx %@", [NSString hexWithHash:tx.txHash]);
+    }
+    for (BTAddress *address in [BTAddressManager instance].allAddresses) {
+        if ([needNotifyAddressHashSet containsObject:address.address]) {
+            [address registerTx:tx withTxNotificationType:txNotificationType];
         }
     }
-    return needAdd;
+    return needNotifyAddressHashSet.count > 0;
 }
 
 - (NSArray *)outs; {
     NSMutableArray *result = [NSMutableArray new];
-    for (BTOut *outItem in [[BTTxProvider instance] getOuts]) {
+    for (BTOut *out in [[BTTxProvider instance] getOuts]) {
+        if ([[BTAddressManager instance].addressesSet containsObject:out.outAddress]) {
+            [result addObject:getOutPoint(out.txHash, out.outSn)];
+        }
+    }
+    return result;
+}
+
+- (NSArray *)unSpentOuts {
+    NSMutableArray *result = [NSMutableArray new];
+    for (BTOut *outItem in [[BTTxProvider instance] getUnSpentOuts]) {
         [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;

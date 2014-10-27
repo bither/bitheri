@@ -44,6 +44,7 @@
 #define SCRIPT_SUFFIX "\x88\xAC" // OP_EQUALVERIFY OP_CHECKSIG
 
 static const char base58chars[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static void *secureAllocate(CFIndex allocSize, CFOptionFlags hint, void *info)
 {
@@ -399,5 +400,4 @@ breakout:
 -(NSString*)toUppercaseStringWithEn{
     return [self uppercaseStringWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
 }
-
 @end

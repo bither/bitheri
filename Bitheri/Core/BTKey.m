@@ -44,6 +44,7 @@
 #import <openssl/ecdsa.h>
 #import <openssl/obj_mac.h>
 #import "BTSettings.h"
+#import "evp.h"
 
 // HMAC-SHA256 DRBG, using no prediction resistance or personalization string and outputing 256bits
 static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
@@ -340,6 +341,19 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
         flag=flag+IS_FROMXRANDOM_FLAG;
     }
     return flag;
+}
+
++ (NSData *)getRFromSignature:(NSData *)sig;{
+    NSMutableData *data = [NSMutableData dataWithData:sig];
+    unsigned char *b;
+    b = data.mutableBytes;
+    const unsigned char **pp = &b;
+    ECDSA_SIG *s = d2i_ECDSA_SIG(NULL, pp, data.length);
+    NSMutableData *d = [NSMutableData secureDataWithLength:200];
+    unsigned char *b2 = d.mutableBytes;
+    int len = BN_bn2bin(s->r, b2);
+    ECDSA_SIG_free(s);
+    return [d subdataWithRange:NSMakeRange(0, len)];
 }
 
 @end

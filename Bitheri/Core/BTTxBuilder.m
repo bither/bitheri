@@ -109,10 +109,11 @@
 + (BTTx *)prepareTxWithAmounts:(NSArray *)amounts andAddresses:(NSArray *)addresses; {
     BTTx *tx = [BTTx new];
     for (NSUInteger i = 0; i < amounts.count; i++) {
-        NSMutableData *script = [NSMutableData data];
-        [script appendScriptPubKeyForAddress:addresses[i]];
+//        NSMutableData *script = [NSMutableData data];
+//        [script appendScriptPubKeyForAddress:addresses[i]];
         uint64_t amount = [amounts[i] unsignedLongLongValue];
-        [tx addOutputScript:script amount:amount];
+        [tx addOutputAddress:addresses[i] amount:amount];
+//        [tx addOutputScript:script amount:amount];
     }
     return tx;
 }

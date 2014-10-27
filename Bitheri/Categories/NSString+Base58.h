@@ -79,4 +79,6 @@ CFAllocatorRef SecureAllocator();
 
 -(NSString*)toUppercaseStringWithEn;
 
+
+
 @end

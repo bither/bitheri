@@ -36,6 +36,8 @@
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address;
 
 - (bool)isAddress:(NSString *) address containsTx:(BTTx *) txItem;
+- (bool)isTxDoubleSpendWithConfirmedTx:(BTTx *)tx;
+- (NSArray *)getInAddresses:(BTTx *)tx;
 
 - (void)confirmTx:(NSArray *)txHashes withBlockNo:(int) blockNo;
 
@@ -48,11 +50,14 @@
 
 - (void)remove:(NSData *)txHash;
 
--(uint32_t) txCount:(NSString *)address;
+- (uint32_t)txCount:(NSString *)address;
 
 - (void)txSentBySelfHasSaw:(NSData *)txHash;
 
 - (NSArray *)getOuts;
+- (NSArray *)getUnSpentOuts;
+
+- (NSArray *)getRelatedIn:(NSString *)address;
 
 - (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;
 
@@ -64,5 +69,8 @@
 -(void)clearAllTx;
 
 - (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;
+
+- (void)completeInSignatureWithIns:(NSArray *) ins;
+- (uint32_t)needCompleteInSignature:(NSString *)address;
 
 @end

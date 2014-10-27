@@ -117,4 +117,9 @@
 
 - (NSArray *)getRecentlyTxsWithConfirmationCntLessThan:(int)confirmationCnt andLimit:(int)limit;
 
+- (void)completeInSignature:(NSArray *)ins;
+- (uint32_t)needCompleteInSignature;
+- (BOOL)checkRValues;
+- (BOOL)checkRValuesForTx:(BTTx *) tx;
+
 @end

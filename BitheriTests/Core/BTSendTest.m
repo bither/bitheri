@@ -57,7 +57,7 @@
 }
 
 - (void)testSendWithoutFee;{
-    BTAddress *address = [[BTAddress alloc] initWithAddress:@"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3" pubKey:[NSData new] hasPrivKey:YES];
+    BTAddress *address = [[BTAddress alloc] initWithAddress:@"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3" pubKey:[NSData new] hasPrivKey:YES isXRandom:NO];
 
     [[BTBlockChain instance] addSPVBlock:[BTBlockTestData getMainBlock:100]];
 
@@ -114,7 +114,7 @@
 
 - (void)testSendWithFee;{
 //    [BTSettings instance].feeBase = 100000;
-    BTAddress *address = [[BTAddress alloc] initWithAddress:bitherAddr pubKey:[NSData new] hasPrivKey:YES];
+    BTAddress *address = [[BTAddress alloc] initWithAddress:bitherAddr pubKey:[NSData new] hasPrivKey:YES isXRandom:NO];
 
     [[BTBlockChain instance] addSPVBlock:[BTBlockTestData getMainBlock:100]];
 

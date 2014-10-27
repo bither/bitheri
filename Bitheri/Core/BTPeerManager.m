@@ -43,6 +43,7 @@
 #import <netdb.h>
 #import "BTPeerProvider.h"
 #import "BTTxProvider.h"
+#import "asn1t.h"
 
 #if BITCOIN_TESTNET
 static const char *dns_seeds[] = { "testnet-seed.bitcoin.petertodd.org", "testnet-seed.bluematt.me" };
@@ -172,6 +173,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 
     NSArray *outs = [[BTAddressManager instance] outs];
+
     NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count;
     elemCount += 100;
     BTBloomFilter *filter = [[BTBloomFilter alloc] initWithFalsePositiveRate:self.filterFpRate
@@ -243,7 +245,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
             self.connectFailure = 0; // this attempt is a manual retry
         if(self.connectedPeers.count > 0){
-            for(BTPeer* peer in self.connectedPeers){
+            NSSet *set = [NSSet setWithSet:self.connectedPeers];
+            for(BTPeer* peer in set){
                 [peer connectError];
                 [self.abandonPeers addObject:@(peer.peerAddress)];
                 [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE
@@ -393,10 +396,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         completion(nil);
     }
 
-    _bloomFilter = nil;
-    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
-        [p sendFilterLoadMessage:self.bloomFilter.data];
-    }
+//    _bloomFilter = nil;
+//    for (BTPeer *p in [NSSet setWithSet:self.connectedPeers]) {
+//        [p sendFilterLoadMessage:self.bloomFilter.data];
+//    }
 
 //    if (! self.connected) {
 //        if (completion) {

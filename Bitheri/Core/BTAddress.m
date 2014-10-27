@@ -26,6 +26,7 @@
 #import "BTOut.h"
 #import "BTSettings.h"
 #import "BTQRCodeUtil.h"
+#import "BTScript.h"
 
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
@@ -467,8 +468,58 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         return NO;
     }
 }
-//- (uint64_t)getMinNonDustValue:(uint64_t)feeBase;{
-//    return feeBase * 3 * (34 + 148) / 1000;
-//}
+
+- (void)completeInSignature:(NSArray *)ins; {
+    [[BTTxProvider instance] completeInSignatureWithIns:ins];
+}
+
+- (uint32_t)needCompleteInSignature; {
+    return [[BTTxProvider instance] needCompleteInSignature:self.address];
+}
+
+- (BOOL)checkRValues; {
+    NSMutableSet *rs = [NSMutableSet set];
+    for (BTIn *in in [[BTTxProvider instance] getRelatedIn:self.address]) {
+        if (in.inSignature != nil) {
+            BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
+            if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
+                NSData *sig = [script getSig];
+                if (sig != nil) {
+                    NSData *r = [BTKey getRFromSignature:sig];
+                    if ([rs containsObject:r]) {
+                        return NO;
+                    }
+                    [rs addObject:r];
+                }
+            }
+        }
+    }
+    return YES;
+}
+
+- (BOOL)checkRValuesForTx:(BTTx *) tx; {
+    NSMutableSet *rs = [NSMutableSet set];
+    for (BTIn *in in [[BTTxProvider instance] getRelatedIn:self.address]) {
+        if (in.inSignature != nil) {
+            BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
+            if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
+                NSData *sig = [script getSig];
+                if (sig != nil) {
+                    NSData *r = [BTKey getRFromSignature:sig];
+                    [rs addObject:r];
+                }
+            }
+        }
+    }
+    for (BTIn *in in tx.ins) {
+        BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
+        NSData *sig = [script getSig];
+        NSData *r = [BTKey getRFromSignature:sig];
+        if ([rs containsObject:r])
+            return NO;
+        [rs addObject:r];
+    }
+    return YES;
+}
 
 @end

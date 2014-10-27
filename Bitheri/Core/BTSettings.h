@@ -97,7 +97,7 @@
 #define MSG_ALERT       @"alert"
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
-#define BITHERI_VERSION @"1.1.0"
+#define BITHERI_VERSION @"1.2.0"
 #define BITHERI_NAME @"Bither"
 #define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 
@@ -129,6 +129,7 @@
 #define MAX_PROOF_OF_WORK 0x1d00ffffu   // highest value for difficulty target (higher values are less difficult)
 #define TARGET_TIMESPAN   (14*24*60*60) // the targeted timespan between difficulty target adjustments
 #define MAX_UNRELATED_TX_RELAY_COUNT 1000
+#define RELAY_BLOCK_COUNT_WHEN_SYNC (10)
 // address
 #define PRIVATE_KEY_FILE_NAME @"%@/%@.key"
 #define WATCH_ONLY_FILE_NAME @"%@/%@.pub"

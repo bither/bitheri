@@ -24,6 +24,7 @@
 
 @property (nonatomic, strong) NSMutableArray *privKeyAddresses;
 @property (nonatomic, strong) NSMutableArray *watchOnlyAddresses;
+@property (nonatomic, strong) NSMutableSet *addressesSet;
 @property (nonatomic, readonly) NSMutableArray *allAddresses;
 @property (nonatomic, readonly) NSTimeInterval creationTime; // interval since refrence date, 00:00:00 01/01/01 GMT
 + (instancetype)instance;
@@ -42,6 +43,7 @@
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
 - (BOOL)isTxRelated:(BTTx *)tx;
 - (NSArray *)outs;
+- (NSArray *)unSpentOuts;
 
 - (void)blockChainChanged;
 

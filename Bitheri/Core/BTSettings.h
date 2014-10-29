@@ -98,7 +98,7 @@
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
 #define BITHERI_VERSION @"1.2.1"
-#define BITHERI_NAME @"Bither"
+#define BITHERI_NAME @"Bitheri"
 #define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 
 #define HEADER_LENGTH      24

@@ -52,6 +52,7 @@
     
     _privKeyAddresses = [NSMutableArray new];
     _watchOnlyAddresses = [NSMutableArray new];
+    _trashAddresses = [NSMutableArray new];
     _addressesSet = [NSMutableSet new];
     _creationTime = [[NSDate new] timeIntervalSince1970];
     return self;
@@ -60,6 +61,7 @@
 - (void)initAddress {
     [self initPrivKeyAddressByDesc];
     [self initWatchOnlyAddressByDesc];
+    [self initTrashAddressByDesc];
 }
 
 - (NSInteger)addressCount {
@@ -74,16 +76,16 @@
             NSString *note = [BTUtils readFile:[[BTUtils getPrivDir] stringByAppendingPathComponent:str]];
             NSArray *array = [note componentsSeparatedByString:@":"];
             long long sortTime=0;
-            BOOL isFromXrandm=NO;
+            BOOL isFromXRandom =NO;
             if (array.count>3) {
                 sortTime=[[array objectAtIndex:2] longLongValue];
                 if (sortTime>0) {
                     isSort=YES;
                 }
-                isFromXrandm=[BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
+                isFromXRandom =[BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
                 
             }
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXrandm];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             [self.privKeyAddresses addObject:btAddress];
@@ -132,27 +134,49 @@
     }
 }
 
+- (void)initTrashAddressByDesc {
+    BOOL isSort = NO;
+    for (NSString *str in [BTUtils filesByModDate:[BTUtils getTrashDir]]) {
+        NSInteger length = str.length;
+        if ([str rangeOfString:@".pub"].length > 0) {
+            NSString *note = [BTUtils readFile:[[BTUtils getTrashDir] stringByAppendingPathComponent:str]];
+            NSArray *array = [note componentsSeparatedByString:@":"];
+            long long sortTime = 0;
+            BOOL isFromXRandom = NO;
+            if (array.count > 3) {
+                sortTime = [[array objectAtIndex:2] longLongValue];
+                if (sortTime > 0) {
+                    isSort = YES;
+                }
+                isFromXRandom = [BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
+
+            }
+
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
+            [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
+            [btAddress setSortTime:sortTime];
+
+            [self.trashAddresses addObject:btAddress];
+        }
+    }
+    if (isSort) {
+        [self.privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+            return NSOrderedSame;
+        }];
+    }
+}
+
 - (void)addAddress:(BTAddress *)address {
     DDLogDebug(@"addAddress %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
-    long long sortTime=[[NSDate new] timeIntervalSince1970]*1000;
+
     if (address.hasPrivKey) {
-        if (self.privKeyAddresses.count>0) {
-            BTAddress * address=[self.privKeyAddresses objectAtIndex:0];
-            if (sortTime<address.sortTime) {
-                sortTime=address.sortTime + self.privKeyAddresses.count;
-            }
-        }
-        [address saveNewAddress:sortTime];
+        [address saveNewAddress:[self getPrivKeySortTime]];
         [self.privKeyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
     } else {
-        if (self.watchOnlyAddresses.count>0) {
-            BTAddress * address=[self.watchOnlyAddresses objectAtIndex:0];
-            if (sortTime<address.sortTime) {
-                sortTime=address.sortTime + self.watchOnlyAddresses.count;
-            }
-        }
-        [address saveNewAddress:sortTime];
+        [address saveNewAddress:self.getWatchOnlySortTime];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
     }
@@ -166,6 +190,27 @@
     [self.addressesSet removeObject:address.address];
 }
 
+- (void)trashPrivKey:(BTAddress *)address; {
+    if (address.hasPrivKey) {
+        DDLogDebug(@"trash priv key %@", address.address);
+        [address trashPrivKey];
+        [self.privKeyAddresses removeObject:address];
+        [self.addressesSet removeObject:address.address];
+        [self.trashAddresses addObject:address];
+    }
+}
+
+- (void)restorePrivKey:(BTAddress *)address; {
+    if (address.hasPrivKey) {
+        DDLogDebug(@"restore priv key %@", address.address);
+        [address restorePrivKey];
+        [address saveNewAddress:[self getPrivKeySortTime]];
+        [self.privKeyAddresses insertObject:address atIndex:0];
+        [self.addressesSet addObject:address.address];
+        [self.trashAddresses removeObject:address];
+    }
+}
+
 - (NSMutableArray *)allAddresses {
     NSMutableArray *allAddresses = [NSMutableArray new];
     [allAddresses addObjectsFromArray:self.privKeyAddresses];
@@ -173,7 +218,27 @@
     return allAddresses;
 }
 
+- (long long)getPrivKeySortTime; {
+    long long sortTime = (long long int) ([[NSDate new] timeIntervalSince1970] * 1000);
+    if (self.privKeyAddresses.count > 0) {
+        BTAddress *address = (self.privKeyAddresses)[0];
+        if (sortTime < address.sortTime) {
+            sortTime = address.sortTime + self.privKeyAddresses.count;
+        }
+    }
+    return sortTime;
+}
 
+- (long long)getWatchOnlySortTime; {
+    long long sortTime = (long long int) ([[NSDate new] timeIntervalSince1970] * 1000);
+    if (self.watchOnlyAddresses.count > 0) {
+        BTAddress *address = (self.watchOnlyAddresses)[0];
+        if (sortTime < address.sortTime) {
+            sortTime = address.sortTime + self.watchOnlyAddresses.count;
+        }
+    }
+    return sortTime;
+}
 
 
 - (BOOL)allSyncComplete {
@@ -274,7 +339,7 @@
 
 - (void)blockChainChanged; {
     for (BTAddress *address in self.allAddresses) {
-        [address updateRecentlyTx];
+        [address updateCache];
     }
 }
 @end

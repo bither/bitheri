@@ -21,18 +21,20 @@
 
 @interface BTUtils : NSObject
 
-+(NSString *)documentsPathForFileName:(NSString *)fileName;
-+(NSString *) readFile:(NSString *)fileFullName;
-+(void)writeFile:(NSString *)fileName content:(NSString *)content;
-+(void)removeFile:(NSString *)fileName;
-+(NSArray *)filesByModDate: (NSString *)fullPath;
-+(BOOL)setModifyDateToFile:(NSDate *)date forFile:(NSString *)path;
++ (NSString *)documentsPathForFileName:(NSString *)fileName;
++ (NSString *)readFile:(NSString *)fileFullName;
++ (void)writeFile:(NSString *)fileName content:(NSString *)content;
++ (void)removeFile:(NSString *)fileName;
++ (void)moveFile:(NSString *)oldFileName to:(NSString *)newFileName;
++ (NSArray *)filesByModDate:(NSString *)fullPath;
++ (BOOL)setModifyDateToFile:(NSDate *)date forFile:(NSString *)path;
 
-+(NSString * )getPrivDir;
-+(NSString * )getWatchOnlyDir;
-+(NSArray * )getFileList:(NSString *)dir;
++ (NSString *)getPrivDir;
++ (NSString *)getWatchOnlyDir;
++ (NSString *)getTrashDir;
++ (NSArray *)getFileList:(NSString *)dir;
 
-+(BOOL)compareString:(NSString *)original compare:(NSString *)compare;
-+(BOOL)isEmpty:(NSString *)str;
++ (BOOL)compareString:(NSString *)original compare:(NSString *)compare;
++ (BOOL)isEmpty:(NSString *)str;
 
 @end

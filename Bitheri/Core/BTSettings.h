@@ -157,6 +157,7 @@ typedef enum {
 #define WATCHONLY_DIR @"watchonly"
 #define HOT_DIR @"hot"
 #define COLD_DIR @"cold"
+#define TRASH_DIR @"trash"
 
 typedef enum {
     NoChoose = 0,

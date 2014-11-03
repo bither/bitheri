@@ -46,15 +46,15 @@
 
 @property (nonatomic, readonly) uint32_t txCount;
 @property (nonatomic, strong, readonly) BTTx *recentlyTx;
-- (void)updateRecentlyTx;
+- (void)updateCache;
 
 
 //-(instancetype) initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
 //
--(instancetype) initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase ;
+- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase;
 
-- (instancetype)initWithKey:(BTKey *) key encryptPrivKey:(NSString *) encryptPrivKey isXRandom:(BOOL)isXRandom;
-- (instancetype)initWithAddress:(NSString *) address pubKey:(NSData *) pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL) isXRandom;
+- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom;
+- (instancetype)initWithAddress:(NSString *)address pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom;
 
 - (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
 
@@ -66,7 +66,7 @@
 //- (BOOL)registerTx:(BTTx *)tx;
 
 - (BOOL)initTxs:(NSArray *)txs;
-- (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType) txNotificationType;
+- (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
 
 //- (BOOL)initTxs:(NSArray *)txs;
 
@@ -80,7 +80,7 @@
 //- (BTTx *)transactionForAmounts:(NSArray *)amounts toOutputScripts:(NSArray *)scripts withFee:(BOOL)fee;
 
 // sign any inputs in the given transaction that can be signed using private keys from the wallet
-- (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *) passphrase;
+- (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase;
 
 // true if the given transaction is associated with the wallet, false otherwise
 //- (BOOL)containsTransaction:(BTTx *)transaction;
@@ -108,10 +108,12 @@
 - (uint32_t)blockHeightUntilFree:(BTTx *)transaction;
 
 
--(void)saveNewAddress:(long long)sortTime;
--(void)updateAddressWithPub;
--(void)savePrivate;
--(void)removeWatchOnly;
+- (void)saveNewAddress:(long long)sortTime;
+- (void)updateAddressWithPub;
+- (void)savePrivate;
+- (void)removeWatchOnly;
+- (void)trashPrivKey;
+- (void)restorePrivKey;
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase;
 
@@ -120,6 +122,6 @@
 - (void)completeInSignature:(NSArray *)ins;
 - (uint32_t)needCompleteInSignature;
 - (BOOL)checkRValues;
-- (BOOL)checkRValuesForTx:(BTTx *) tx;
+- (BOOL)checkRValuesForTx:(BTTx *)tx;
 
 @end

@@ -738,7 +738,7 @@ services:(uint64_t)services
 
         BOOL valid = YES;
         valid &= [tx verify];
-        if (valid) {
+        if (valid && ![tx hasDustOut]) {
             if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
 //            [self checkDependencyWith:tx];
         }

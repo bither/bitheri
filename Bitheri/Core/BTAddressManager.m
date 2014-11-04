@@ -191,7 +191,7 @@
 }
 
 - (void)trashPrivKey:(BTAddress *)address; {
-    if (address.hasPrivKey) {
+    if (address.hasPrivKey && address.balance == 0) {
         DDLogDebug(@"trash priv key %@", address.address);
         [address trashPrivKey];
         [self.privKeyAddresses removeObject:address];

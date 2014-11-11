@@ -45,7 +45,7 @@
 #import <openssl/obj_mac.h>
 #import "BTSettings.h"
 #import "evp.h"
-#import "BTKeyParameters.h"
+#import "BTKeyParameter.h"
 
 // HMAC-SHA256 DRBG, using no prediction resistance or personalization string and outputing 256bits
 static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
@@ -72,21 +72,14 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
     CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, V.mutableBytes); // V = HMAC_K(V)
     BN_CTX *ctx = BN_CTX_new();
     BN_CTX_start(ctx);
-    BIGNUM parameterN;
-    BIGNUM parameterMinN;
-    BN_init(&parameterN);
-    BN_init(&parameterMinN);
-    BN_bin2bn([ECKEY_N hexToData].bytes, CC_SHA256_DIGEST_LENGTH, &parameterN);
-    BN_bin2bn([ECKEY_MIN_N hexToData].bytes, 1, &parameterMinN);
-    BIGNUM t;
-    BN_init(&t);
+    BIGNUM n;
+    BN_init(&n);
     while (YES) {
         CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, T.mutableBytes); // T = HMAC_K(V)
-        BN_bin2bn(T.bytes, CC_SHA256_DIGEST_LENGTH, &t);
-        if (BN_cmp(&parameterMinN, &t) < 0 && BN_cmp(&parameterN, &t) > 0) {
-            BN_clear_free(&t);
-            BN_clear_free(&parameterMinN);
-            BN_clear_free(&parameterN);
+        BN_clear(&n);
+        BN_bin2bn(T.bytes, CC_SHA256_DIGEST_LENGTH, &n);
+        if (BN_cmp([BTKeyParameter minN], &n) < 0 && BN_cmp([BTKeyParameter maxN], &n) > 0) {
+            BN_clear_free(&n);
             if (ctx) BN_CTX_end(ctx);
             if (ctx) BN_CTX_free(ctx);
             return [T subdataWithRange:NSMakeRange(0, CC_SHA256_DIGEST_LENGTH)];
@@ -152,6 +145,13 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
 - (instancetype)initWithSecret:(NSData *)secret compressed:(BOOL)compressed
 {
     if (secret.length != 32) return nil;
+    BIGNUM *n = BN_bin2bn(secret.bytes, 32, NULL);
+    if (BN_cmp([BTKeyParameter minN], n) < 0 && BN_cmp([BTKeyParameter maxN], n) > 0) {
+        BN_clear_free(n);
+        return nil;
+    } else {
+        BN_clear_free(n);
+    }
 
     if (! (self = [self init])) return nil;
 

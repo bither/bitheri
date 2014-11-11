@@ -1,5 +1,5 @@
 //
-//  BTKeyParameters.h
+//  BTKeyParameter.m
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -14,7 +14,29 @@
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  limitations under the License.#import "BTKeyParameter.h"
 
-#define ECKEY_N @"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
-#define ECKEY_MIN_N @"00"
+
+#import "BTKeyParameter.h"
+#import "NSString+Base58.h"
+
+@implementation BTKeyParameter {
+
+}
+
++(BIGNUM *)maxN {
+    static BIGNUM *n = nil;
+    if (n == nil) {
+        n = BN_bin2bn([ECKEY_N hexToData].bytes, 32, NULL);
+    }
+    return n;
+}
+
++(BIGNUM *)minN {
+    static BIGNUM *minN = nil;
+    if (minN == nil) {
+        minN = BN_bin2bn([ECKEY_MIN_N hexToData].bytes, 1, NULL);
+    }
+    return minN;
+}
+@end

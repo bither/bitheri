@@ -77,7 +77,7 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
     BN_init(&parameterN);
     BN_init(&parameterMinN);
     BN_bin2bn([ECKEY_N hexToData].bytes, CC_SHA256_DIGEST_LENGTH, &parameterN);
-    BN_bin2bn([ECKEY_MIN_N hexToData].bytes, 1, &parameterN);
+    BN_bin2bn([ECKEY_MIN_N hexToData].bytes, 1, &parameterMinN);
     BIGNUM t;
     BN_init(&t);
     while (YES) {

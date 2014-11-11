@@ -18,7 +18,7 @@
 
 #import "openssl/bn.h"
 
-#define ECKEY_N @"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
+#define ECKEY_MAX_N @"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
 #define ECKEY_MIN_N @"00"
 
 @interface BTKeyParameter : NSObject

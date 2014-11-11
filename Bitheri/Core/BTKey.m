@@ -146,7 +146,7 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
 {
     if (secret.length != 32) return nil;
     BIGNUM *n = BN_bin2bn(secret.bytes, 32, NULL);
-    if (BN_cmp([BTKeyParameter minN], n) < 0 && BN_cmp([BTKeyParameter maxN], n) > 0) {
+    if (BN_cmp([BTKeyParameter minN], n) >= 0 || BN_cmp([BTKeyParameter maxN], n) <= 0) {
         BN_clear_free(n);
         return nil;
     } else {

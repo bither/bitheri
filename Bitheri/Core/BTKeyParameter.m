@@ -27,7 +27,7 @@
 +(BIGNUM *)maxN {
     static BIGNUM *n = nil;
     if (n == nil) {
-        n = BN_bin2bn([ECKEY_N hexToData].bytes, 32, NULL);
+        n = BN_bin2bn([ECKEY_MAX_N hexToData].bytes, 32, NULL);
     }
     return n;
 }

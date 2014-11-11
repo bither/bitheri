@@ -45,6 +45,7 @@
 #import <openssl/obj_mac.h>
 #import "BTSettings.h"
 #import "evp.h"
+#import "BTKeyParameters.h"
 
 // HMAC-SHA256 DRBG, using no prediction resistance or personalization string and outputing 256bits
 static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
@@ -69,8 +70,36 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
     CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, K.mutableBytes); // K = HMAC_K(V || 0x01 || seed)
     V.length = CC_SHA256_DIGEST_LENGTH;
     CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, V.mutableBytes); // V = HMAC_K(V)
-    CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, T.mutableBytes); // T = HMAC_K(V)
-    return T;
+    BN_CTX *ctx = BN_CTX_new();
+    BN_CTX_start(ctx);
+    BIGNUM parameterN;
+    BIGNUM parameterMinN;
+    BN_init(&parameterN);
+    BN_init(&parameterMinN);
+    BN_bin2bn([ECKEY_N hexToData].bytes, CC_SHA256_DIGEST_LENGTH, &parameterN);
+    BN_bin2bn([ECKEY_MIN_N hexToData].bytes, 1, &parameterN);
+    BIGNUM t;
+    BN_init(&t);
+    while (YES) {
+        CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, T.mutableBytes); // T = HMAC_K(V)
+        BN_bin2bn(T.bytes, CC_SHA256_DIGEST_LENGTH, &t);
+        if (BN_cmp(&parameterMinN, &t) < 0 && BN_cmp(&parameterN, &t) > 0) {
+            BN_clear_free(&t);
+            BN_clear_free(&parameterMinN);
+            BN_clear_free(&parameterN);
+            if (ctx) BN_CTX_end(ctx);
+            if (ctx) BN_CTX_free(ctx);
+            return [T subdataWithRange:NSMakeRange(0, CC_SHA256_DIGEST_LENGTH)];
+        }
+
+        if ([T length] <= CC_SHA256_DIGEST_LENGTH) {
+            [T appendBytes:"\x00" length:1];
+        }
+
+        CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, T.bytes, T.length, K.mutableBytes);
+        CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, T.bytes, T.length - 1, V.mutableBytes);
+    }
+    return nil;
 }
 
 @interface BTKey ()

@@ -97,14 +97,13 @@
     
     return d;
 }
--(NSInteger)compore:(NSData *)expBits{
-    unsigned char *modBin = (unsigned char *)malloc(self.length);
-    [self getBytes:modBin length:self.length];
-    unsigned char *expBin = (unsigned char *)malloc(expBits.length);
-    [expBits getBytes:expBin length:expBits.length];
-    BIGNUM *modulus = BN_bin2bn(modBin, self.length, NULL);
-    BIGNUM *exponent = BN_bin2bn(expBin, expBits.length, NULL);
-    return BN_cmp(modulus,exponent);
+-(NSInteger)compare:(NSData *)data {
+    BIGNUM *modulus = BN_bin2bn(self.bytes, self.length, NULL);
+    BIGNUM *exponent = BN_bin2bn(data.bytes, data.length, NULL);
+    int result = BN_cmp(modulus, exponent);
+    BN_clear_free(modulus);
+    BN_clear_free(exponent);
+    return result;
 }
 
 

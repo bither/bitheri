@@ -114,6 +114,7 @@
 - (void)removeWatchOnly;
 - (void)trashPrivKey;
 - (void)restorePrivKey;
+- (void)saveTrash;
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase;
 

@@ -390,6 +390,11 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self updateCache];
 }
 
+- (void)saveTrash; {
+    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], self.address];
+    [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
+}
+
 - (NSString *)getSyncCompleteString {
     return _isSyncComplete ? @"1" : @"0";
 }

@@ -39,7 +39,7 @@
 }
 
 - (void)testNormal {
-    XCTAssertEqual([[@"0" hexToData] compare:[@"0" hexToData]], 0);
+    XCTAssertEqual([[@"0" hexToData] compare:[@"00" hexToData]], 0);
     XCTAssertEqual([[@"00" hexToData] compare:[@"00" hexToData]], 0);
     XCTAssertTrue([[@"00" hexToData] compare:[@"01" hexToData]] < 0);
     XCTAssertEqual([[@"01" hexToData] compare:[@"01" hexToData]], 0);

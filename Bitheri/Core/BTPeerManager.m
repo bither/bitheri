@@ -141,6 +141,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 }
 
+- (void)sendSyncProgressNotification; {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncProgressNotification object:@(self.syncProgress)];
+    });
+}
+
 - (BOOL)doneSyncFromSPV {
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     return [userDefaults boolForKey:BITHERI_DONE_SYNC_FROM_SPV];
@@ -298,6 +304,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         _connected = NO;
         self.syncStartHeight = 0;
         [self sendConnectedChangeNotification];
+        [self sendSyncProgressNotification];
         dispatch_async(self.q, ^{
             NSSet *set = [NSSet setWithSet:self.connectedPeers];
             for (BTPeer *peer in set) {
@@ -318,6 +325,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         DDLogDebug(@"%@:%d chain sync timed out", self.downloadPeer.host, self.downloadPeer.peerPort);
         self.synchronizing = NO;
         self.syncStartHeight = 0;
+        [self sendSyncProgressNotification];
 //        [self.peers removeObject:self.downloadPeer];
         [self.downloadPeer disconnectPeer];
     }
@@ -326,7 +334,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (void)syncStopped {
     self.synchronizing = NO;
     self.syncStartHeight = 0;
-
+    [self sendSyncProgressNotification];
     if (self.taskId != UIBackgroundTaskInvalid) {
         [[UIApplication sharedApplication] endBackgroundTask:self.taskId];
         self.taskId = UIBackgroundTaskInvalid;
@@ -519,6 +527,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         self.syncStartHeight = self.lastBlockHeight;
         DDLogDebug(@"%@:%d is downloading now", self.downloadPeer.host, self.downloadPeer.peerPort);
         self.synchronizing = YES;
+        [self sendSyncProgressNotification];
 
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(syncTimeout) object:nil];
         [self performSelector:@selector(syncTimeout) withObject:nil afterDelay:PROTOCOL_TIMEOUT];
@@ -669,6 +678,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
             });
         }
+        [self sendSyncProgressNotification];
     });
 }
 
@@ -737,6 +747,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
             });
         }
+        [self sendSyncProgressNotification];
     });
 }
 
@@ -790,7 +801,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             dispatch_async(dispatch_get_main_queue(), ^{
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
             });
-
+            [self sendSyncProgressNotification];
         } else {
             DDLogDebug(@"%@:%d relayed blocks failed", peer.host, peer.peerPort);
             [self peerAbandon:peer];

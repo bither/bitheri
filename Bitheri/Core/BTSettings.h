@@ -144,6 +144,7 @@
 #define BTPeerManagerSyncFailedNotification   @"BTPeerManagerSyncFailedNotification"
 #define BTPeerManagerPeerStateNotification @"BTPeerManagerPeerStateNotification"
 #define BTPeerManagerConnectedChangedNotification @"BTPeerManagerConnectedChangedNotification"
+#define BTPeerManagerSyncProgressNotification @"BTPeerManagerSyncProgressNotification"
 
 typedef enum {
     txSend = 0,

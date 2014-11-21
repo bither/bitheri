@@ -43,4 +43,6 @@
 
 - (void)cleanPeers;
 
+- (void)recreate;
+
 @end

@@ -26,6 +26,14 @@ typedef void (^ArrayResponseBlock)(NSArray *array);
 
 @interface BTDatabaseManager : NSObject
 
+@property (nonatomic, copy) NSString *createTableBlocksSql;
+@property (nonatomic, copy) NSString *createIndexBlocksBlockNoSql;
+@property (nonatomic, copy) NSString *createIndexBlocksBlockPrevSql;
+@property (nonatomic, copy) NSString *createTableTxsSql;
+@property (nonatomic, copy) NSString *createTableAddressesTxsSql;
+@property (nonatomic, copy) NSString *createTableInsSql;
+@property (nonatomic, copy) NSString *createTableOutsSql;
+@property (nonatomic, copy) NSString *createTablePeersSql;
 + (instancetype)instance;
 
 - (void)closeDatabase;

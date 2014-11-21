@@ -1282,7 +1282,7 @@ reset:          // reset for next message
 }
 
 - (void)connectFail;{
-    [[BTPeerProvider instance] connectFail:self.peerAddress];
+    [[BTPeerProvider instance] removePeer:self.peerAddress];
 }
 
 - (void)connectSucceed;{

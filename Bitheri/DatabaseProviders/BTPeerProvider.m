@@ -155,27 +155,12 @@ static BTPeerProvider *provider;
 - (NSArray *)getPeersWithLimit:(int)limit;{
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select * from peers where peer_connected_cnt=? order by peer_timestamp desc limit %d";
-        FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, limit], @1];
+        NSString *sql = @"select * from peers limit %d";
+        FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, limit]];
         while ([rs next]){
             [result addObject:[self format:rs]];
         }
         [rs close];
-        if (result.count < limit) {
-            rs = [db executeQuery:[NSString stringWithFormat:sql, limit - result.count], @0];
-            while ([rs next]){
-                [result addObject:[self format:rs]];
-            }
-            [rs close];
-        }
-        if (result.count < limit) {
-            sql = @"select * from peers where peer_connected_cnt>? order by peer_connected_cnt asc, peer_timestamp desc limit %d";
-            rs = [db executeQuery:[NSString stringWithFormat:sql, limit - result.count], @1];
-            while ([rs next]){
-                [result addObject:[self format:rs]];
-            }
-            [rs close];
-        }
     }];
     return result;
 }
@@ -217,6 +202,15 @@ static BTPeerProvider *provider;
     BTPeer *peer = [[BTPeer alloc] initWithAddress:peerAddress port:peerPort timestamp:peerTimestamp services:peerServices];
     peer.peerConnectedCnt = peerConnectedCnt;
     return peer;
+}
+
+- (void)recreate;{
+    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+        [db beginTransaction];
+        [db executeUpdate:@"drop table peers;"];
+        [db executeUpdate:[BTDatabaseManager instance].createTablePeersSql];
+        [db commit];
+    }];
 }
 
 @end

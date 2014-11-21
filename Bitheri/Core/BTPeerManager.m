@@ -190,6 +190,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (NSArray *)bestPeers; {
     NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
     if (bestPeers.count < [self maxPeerCount]) {
+        [[BTPeerProvider instance] recreate];
+        [[BTPeerProvider instance] addPeers:bestPeers];
         [[BTPeerProvider instance] addPeers:[self getPeersFromDns]];
         bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
     }
@@ -506,8 +508,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (self.downloadPeer == nil || ![self.downloadPeer isEqual:dPeer]) {
             [self.downloadPeer disconnectPeer];
             self.downloadPeer = dPeer;
-            self.syncStartHeight = self.lastBlockHeight;
-            DDLogDebug(@"%@:%d is downloading now", self.downloadPeer.host, self.downloadPeer.peerPort);
         }
 
         if (self.taskId == UIBackgroundTaskInvalid) { // start a background task for the chain sync
@@ -516,7 +516,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }
 
         self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
+        self.syncStartHeight = self.lastBlockHeight;
+        DDLogDebug(@"%@:%d is downloading now", self.downloadPeer.host, self.downloadPeer.peerPort);
         self.synchronizing = YES;
+
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(syncTimeout) object:nil];
         [self performSelector:@selector(syncTimeout) withObject:nil afterDelay:PROTOCOL_TIMEOUT];
 

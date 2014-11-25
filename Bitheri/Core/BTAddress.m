@@ -77,6 +77,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 }
 
+- (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey; {
+    return nil;
+}
+
 //- (uint32_t)txCount {
 //    return [[BTTxProvider instance] txCount:self.address];
 //}

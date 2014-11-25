@@ -78,7 +78,17 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey; {
-    return nil;
+    if (!(self = [super init])) return nil;
+
+    _hasPrivKey = encryptPrivKey != nil;
+    _encryptPrivKey = encryptPrivKey;
+    _pubKey = [pubKey hexToData];
+    _address = [NSString addressWithPubKey:_pubKey];
+    _isFromXRandom = [BTKey isXRandom:encryptPrivKey];
+    _isSyncComplete = NO;
+    [self updateCache];
+
+    return self;
 }
 
 //- (uint32_t)txCount {

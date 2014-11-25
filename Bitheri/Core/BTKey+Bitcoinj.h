@@ -33,6 +33,6 @@
 + (NSData *)saltWithBitcoinj:(NSString *)key;
 + (NSData *)ivWithBitcoinj:(NSString *)key;
 
-
++ (BOOL)isXRandom:(NSString *)encryptPrivKey;
 
 @end

@@ -259,6 +259,17 @@ breakout:
     return [self base58checkWithData:d];
 }
 
++ (NSString *)addressWithPubKey:(NSData *)pubKey;{
+    if (pubKey == (id)[NSNull null] || pubKey.length < 33) {
+        return nil;
+    }
+    uint8_t x = BITCOIN_PUBKEY_ADDRESS;
+    NSMutableData *d = [NSMutableData dataWithBytes:&x length:1];
+    NSData *hash = [pubKey hash160];
+    [d appendBytes:(const uint8_t *)hash.bytes length:20];
+    return [self base58checkWithData:d];
+}
+
 
 - (NSString *)hexToBase58
 {

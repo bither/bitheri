@@ -53,6 +53,11 @@
     [fileManager removeItemAtPath:fileName error:nil];
 }
 
++ (void)moveFile:(NSString *)oldFileName to:(NSString *)newFileName; {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager moveItemAtPath:oldFileName toPath:newFileName error:nil];
+}
+
 + (BOOL)setModifyDateToFile:(NSDate *)date forFile:(NSString *)path {
     NSFileManager *fm = [NSFileManager defaultManager];
     if (![fm fileExistsAtPath:path]) {
@@ -124,13 +129,19 @@
     [self createDir:privDir];
     [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:privDir]];
     return privDir;
-
 }
 
 + (NSString *)getWatchOnlyDir {
     NSString *watchOnlyDir = [self documentsPathForFileName:WATCHONLY_DIR];
     [self createDir:watchOnlyDir];
     return watchOnlyDir;
+}
+
++ (NSString *)getTrashDir {
+    NSString *trashDir = [self documentsPathForFileName:TRASH_DIR];;
+    [self createDir:trashDir];
+    [self addSkipBackupAttributeToItemAtURL:[NSURL fileURLWithPath:trashDir]];
+    return trashDir;
 }
 
 +(NSArray * )getFileList:(NSString *)dir{

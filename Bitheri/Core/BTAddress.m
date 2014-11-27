@@ -71,12 +71,24 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _pubKey = pubKey;
     _isFromXRandom=isXRandom;
     _isSyncComplete = NO;
-    [self updateBalance];
-    _txCount = [[BTTxProvider instance] txCount:_address];
-    [self updateRecentlyTx];
-    
+    [self updateCache];
+
     return self;
 
+}
+
+- (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey; {
+    if (!(self = [super init])) return nil;
+
+    _hasPrivKey = encryptPrivKey != nil;
+    _encryptPrivKey = encryptPrivKey;
+    _pubKey = [pubKey hexToData];
+    _address = [NSString addressWithPubKey:_pubKey];
+    _isFromXRandom = [BTKey isXRandom:encryptPrivKey];
+    _isSyncComplete = NO;
+    [self updateCache];
+
+    return self;
 }
 
 //- (uint32_t)txCount {
@@ -113,9 +125,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
     uint64_t oldBalance = _balance;
-    [self updateBalance];
-    _txCount = [[BTTxProvider instance] txCount:_address];
-    [self updateRecentlyTx];
+    [self updateCache];
     if (_balance != oldBalance) {
         int deltaBalance = (int) (_balance - oldBalance);
         DDLogWarn(@"[notification]%@ recieve tx[%@], delta balance is %d", _address, [NSString hexWithHash:tx.txHash], deltaBalance);
@@ -135,9 +145,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
     if ([txs count] > 0) {
         uint64_t oldBalance = _balance;
-        [self updateBalance];
-        _txCount = [[BTTxProvider instance] txCount:_address];
-        [self updateRecentlyTx];
+        [self updateCache];
         int deltaBalance = (int) (_balance - oldBalance);
         dispatch_async(dispatch_get_main_queue(), ^{
             DDLogWarn(@"[notification]%@ recieve some tx, delta balance is %d", _address, deltaBalance);
@@ -158,9 +166,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
     if (needUpdateTxHash.count > 0) {
         uint64_t oldBalance = _balance;
-        [self updateBalance];
-        _txCount = [[BTTxProvider instance] txCount:_address];
-        [self updateRecentlyTx];
+        [self updateCache];
         if (_balance != oldBalance) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 int deltaBalance = (int) (_balance - oldBalance);
@@ -365,10 +371,42 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         [self saveWatchOnly];
     }
 }
+
 - (void)removeWatchOnly{
     NSString *file = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
     [BTUtils removeFile:file];
+}
 
+- (void)trashPrivKey; {
+    NSString *oldPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
+    NSString *newPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], self.address];
+
+    NSString *oldWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
+    NSString *newWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getTrashDir], self.address];
+
+    [BTUtils moveFile:oldPrivKeyFile to:newPrivKeyFile];
+    [BTUtils moveFile:oldWatchOnlyFile to:newWatchOnlyFile];
+}
+
+- (void)restorePrivKey; {
+    NSString *oldPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], self.address];
+    NSString *newPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
+
+    NSString *oldWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getTrashDir], self.address];
+    NSString *newWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
+
+    [BTUtils moveFile:oldPrivKeyFile to:newPrivKeyFile];
+    [BTUtils moveFile:oldWatchOnlyFile to:newWatchOnlyFile];
+
+    _isSyncComplete = NO;
+    [self updateAddressWithPub];
+
+    [self updateCache];
+}
+
+- (void)saveTrash; {
+    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], self.address];
+    [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
 }
 
 - (NSString *)getSyncCompleteString {
@@ -520,6 +558,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         [rs addObject:r];
     }
     return YES;
+}
+
+- (void)updateCache;{
+    [self updateBalance];
+    _txCount = [[BTTxProvider instance] txCount:_address];
+    [self updateRecentlyTx];
 }
 
 @end

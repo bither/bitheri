@@ -43,6 +43,53 @@ static BTDatabaseManager *databaseProvide;
 }
 
 - (BOOL)initDatabase {
+    // init sql
+    self.createTableBlocksSql = @"create table if not exists blocks "
+            "(block_no integer not null"
+            ", block_hash text not null primary key"
+            ", block_root text not null"
+            ", block_ver integer not null"
+            ", block_bits integer not null"
+            ", block_nonce integer not null"
+            ", block_time integer not null"
+            ", block_prev text"
+            ", is_main integer not null);";
+    self.createIndexBlocksBlockNoSql = @"create index idx_blocks_block_no on blocks (block_no);";
+    self.createIndexBlocksBlockPrevSql = @"create index idx_blocks_block_prev on blocks (block_prev);";
+    self.createTableTxsSql = @"create table if not exists txs "
+            "(tx_hash text primary key"
+            ", tx_ver integer"
+            ", tx_locktime integer"
+            ", tx_time integer"
+            ", block_no integer"
+            ", source integer);";
+    self.createTableAddressesTxsSql = @"create table if not exists addresses_txs "
+            "(address text not null"
+            ", tx_hash text not null"
+            ", primary key (address, tx_hash));";
+    self.createTableInsSql = @"create table if not exists ins "
+            "(tx_hash text not null"
+            ", in_sn integer not null"
+            ", prev_tx_hash text"
+            ", prev_out_sn integer"
+            ", in_signature text"
+            ", in_sequence integer"
+            ", primary key (tx_hash, in_sn));";
+    self.createTableOutsSql = @"create table if not exists outs "
+            "(tx_hash text not null"
+            ", out_sn integer not null"
+            ", out_script text not null"
+            ", out_value integer not null"
+            ", out_status integer not null"
+            ", out_address text"
+            ", primary key (tx_hash, out_sn));";
+    self.createTablePeersSql = @"create table if not exists peers "
+            "(peer_address integer primary key"
+            ", peer_port integer not null"
+            ", peer_services integer not null"
+            ", peer_timestamp integer not null"
+            ", peer_connected_cnt integer not null);";
+
     NSUserDefaults *userDefaultUtil = [NSUserDefaults standardUserDefaults];
     int dbVersion = (int) [userDefaultUtil integerForKey:DB_VERSION];
     canOpenDb = NO;
@@ -89,51 +136,14 @@ static BTDatabaseManager *databaseProvide;
 - (BOOL)v1:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
-        [db executeUpdate:@"create table if not exists blocks "
-                "(block_no integer not null"
-                ", block_hash text not null primary key"
-                ", block_root text not null"
-                ", block_ver integer not null"
-                ", block_bits integer not null"
-                ", block_nonce integer not null"
-                ", block_time integer not null"
-                ", block_prev text"
-                ", is_main integer not null);"];
-        [db executeUpdate:@"create index idx_blocks_block_no on blocks (block_no);"];
-        [db executeUpdate:@"create index idx_blocks_block_prev on blocks (block_prev);"];
-        [db executeUpdate:@"create table if not exists txs "
-                "(tx_hash text primary key"
-                ", tx_ver integer"
-                ", tx_locktime integer"
-                ", tx_time integer"
-                ", block_no integer"
-                ", source integer);"];
-        [db executeUpdate:@"create table if not exists addresses_txs "
-                "(address text not null"
-                ", tx_hash text not null"
-                ", primary key (address, tx_hash));"];
-        [db executeUpdate:@"create table if not exists ins "
-                "(tx_hash text not null"
-                ", in_sn integer not null"
-                ", prev_tx_hash text"
-                ", prev_out_sn integer"
-                ", in_signature text"
-                ", in_sequence integer"
-                ", primary key (tx_hash, in_sn));"];
-        [db executeUpdate:@"create table if not exists outs "
-                "(tx_hash text not null"
-                ", out_sn integer not null"
-                ", out_script text not null"
-                ", out_value integer not null"
-                ", out_status integer not null"
-                ", out_address text"
-                ", primary key (tx_hash, out_sn));"];
-        [db executeUpdate:@"create table if not exists peers "
-                "(peer_address integer primary key"
-                ", peer_port integer not null"
-                ", peer_services integer not null"
-                ", peer_timestamp integer not null"
-                ", peer_connected_cnt integer not null);"];
+        [db executeUpdate:self.createTableBlocksSql];
+        [db executeUpdate:self.createIndexBlocksBlockNoSql];
+        [db executeUpdate:self.createIndexBlocksBlockPrevSql];
+        [db executeUpdate:self.createTableTxsSql];
+        [db executeUpdate:self.createTableAddressesTxsSql];
+        [db executeUpdate:self.createTableInsSql];
+        [db executeUpdate:self.createTableOutsSql];
+        [db executeUpdate:self.createTablePeersSql];
         [db commit];
         return YES;
     } else {

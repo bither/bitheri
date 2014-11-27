@@ -45,6 +45,7 @@
 #import <openssl/obj_mac.h>
 #import "BTSettings.h"
 #import "evp.h"
+#import "BTKeyParameter.h"
 
 // HMAC-SHA256 DRBG, using no prediction resistance or personalization string and outputing 256bits
 static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
@@ -69,8 +70,29 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
     CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, K.mutableBytes); // K = HMAC_K(V || 0x01 || seed)
     V.length = CC_SHA256_DIGEST_LENGTH;
     CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, V.mutableBytes); // V = HMAC_K(V)
-    CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, T.mutableBytes); // T = HMAC_K(V)
-    return T;
+    BN_CTX *ctx = BN_CTX_new();
+    BN_CTX_start(ctx);
+    BIGNUM n;
+    BN_init(&n);
+    while (YES) {
+        CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, V.bytes, V.length, T.mutableBytes); // T = HMAC_K(V)
+        BN_clear(&n);
+        BN_bin2bn(T.bytes, CC_SHA256_DIGEST_LENGTH, &n);
+        if (BN_cmp([BTKeyParameter minN], &n) < 0 && BN_cmp([BTKeyParameter maxN], &n) > 0) {
+            BN_clear_free(&n);
+            if (ctx) BN_CTX_end(ctx);
+            if (ctx) BN_CTX_free(ctx);
+            return [T subdataWithRange:NSMakeRange(0, CC_SHA256_DIGEST_LENGTH)];
+        }
+
+        if ([T length] <= CC_SHA256_DIGEST_LENGTH) {
+            [T appendBytes:"\x00" length:1];
+        }
+
+        CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, T.bytes, T.length, K.mutableBytes);
+        CCHmac(kCCHmacAlgSHA256, K.bytes, K.length, T.bytes, T.length - 1, V.mutableBytes);
+    }
+    return nil;
 }
 
 @interface BTKey ()
@@ -123,6 +145,13 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
 - (instancetype)initWithSecret:(NSData *)secret compressed:(BOOL)compressed
 {
     if (secret.length != 32) return nil;
+    BIGNUM *n = BN_bin2bn(secret.bytes, 32, NULL);
+    if (BN_cmp([BTKeyParameter minN], n) >= 0 || BN_cmp([BTKeyParameter maxN], n) <= 0) {
+        BN_clear_free(n);
+        return nil;
+    } else {
+        BN_clear_free(n);
+    }
 
     if (! (self = [self init])) return nil;
 

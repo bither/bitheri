@@ -285,4 +285,16 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
         return nil;
 }
 
++ (BOOL)isXRandom:(NSString *)encryptPrivKey;{
+    NSArray *array = [BTQRCodeUtil splitQRCode:encryptPrivKey];
+    NSData * data=[array[2] hexToData];
+    BOOL isXRandom = NO;
+    NSMutableData * salt=[NSMutableData new];
+    if (data.length==9) {
+        uint8_t *bytes=(uint8_t *)data.bytes;
+        uint8_t flag=bytes[0];
+        isXRandom = (flag & IS_FROMXRANDOM_FLAG) == IS_FROMXRANDOM_FLAG;
+    }
+    return isXRandom;
+}
 @end

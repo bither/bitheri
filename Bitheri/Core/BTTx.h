@@ -123,4 +123,6 @@ sequence:(uint32_t)sequence;
 - (BOOL)verify;
 - (BOOL)verifySignatures;
 
+- (BOOL)hasDustOut;
+
 @end

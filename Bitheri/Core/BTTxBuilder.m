@@ -76,8 +76,11 @@
 
     BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address WithUnspendTxs:unspendTxs
                                                    andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses]];
-    if (emptyWalletTx != nil) {
+    if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
         return emptyWalletTx;
+    } else if (emptyWalletTx != nil) {
+        *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_MAX_SIZE_CODE userInfo:nil];
+        return nil;
     }
 
     // check min out put
@@ -88,17 +91,25 @@
         }
     }
 
+    BOOL mayTxMaxSize = NO;
     NSMutableArray *txs = [NSMutableArray new];
     for (NSObject<BTTxBuilderProtocol> *builder in txBuilders) {
         BTTx *tx = [builder buildTxForAddress:address WithUnspendTxs:unspendTxs
                                         andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses]];
-        if (tx != nil)
+        if (tx != nil && [BTTxBuilder estimationTxSizeWithInCount:tx.ins.count andOutCount:tx.outs.count] <= TX_MAX_SIZE) {
             [txs addObject:tx];
+        } else if (tx != nil) {
+            mayTxMaxSize = YES;
+        }
+
     }
 
     if (txs.count > 0) {
         // choose the best tx
         return txs[0];
+    } else if (mayTxMaxSize) {
+        *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_MAX_SIZE_CODE userInfo:nil];
+        return nil;
     } else {
         // else logic...
         *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_CAN_NOT_CALCULATE_CODE userInfo:nil];

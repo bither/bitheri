@@ -852,4 +852,13 @@ sequence:(uint32_t)sequence
         }
     }
 }
+
+- (BOOL)hasDustOut; {
+    for (BTOut *out in self.outs) {
+        if (out.outValue <= TX_MIN_OUTPUT_AMOUNT) {
+            return YES;
+        }
+    }
+    return NO;
+}
 @end

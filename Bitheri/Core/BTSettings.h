@@ -66,6 +66,7 @@
 #define ERR_TX_NOT_ENOUGH_MONEY_CODE                 2002
 #define ERR_TX_WAIT_CONFIRM_CODE                 2003
 #define ERR_TX_CAN_NOT_CALCULATE_CODE                 2004
+#define ERR_TX_MAX_SIZE_CODE    2005
 
 #define ERR_TX_WAIT_CONFIRM_AMOUNT @"ERR_TX_WAIT_CONFIRM_AMOUNT"
 #define ERR_TX_NOT_ENOUGH_MONEY_LACK @"ERR_TX_NOT_ENOUGH_MONEY_LACK"
@@ -97,8 +98,8 @@
 #define MSG_ALERT       @"alert"
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
-#define BITHERI_VERSION @"1.2.0"
-#define BITHERI_NAME @"Bither"
+#define BITHERI_VERSION @"1.2.1"
+#define BITHERI_NAME @"Bitheri"
 #define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 
 #define HEADER_LENGTH      24
@@ -143,6 +144,7 @@
 #define BTPeerManagerSyncFailedNotification   @"BTPeerManagerSyncFailedNotification"
 #define BTPeerManagerPeerStateNotification @"BTPeerManagerPeerStateNotification"
 #define BTPeerManagerConnectedChangedNotification @"BTPeerManagerConnectedChangedNotification"
+#define BTPeerManagerSyncProgressNotification @"BTPeerManagerSyncProgressNotification"
 
 typedef enum {
     txSend = 0,
@@ -157,6 +159,7 @@ typedef enum {
 #define WATCHONLY_DIR @"watchonly"
 #define HOT_DIR @"hot"
 #define COLD_DIR @"cold"
+#define TRASH_DIR @"trash"
 
 typedef enum {
     NoChoose = 0,

@@ -655,7 +655,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             [self peerAbandon:peer];
             DDLogDebug(@"%@:%d relay %d/%d block headers. drop this peer", peer.host, peer.peerPort, relayedCount, headers.count);
         }
-
+        [self sendSyncProgressNotification];
+        
         if (self.lastBlockHeight == peer.versionLastBlock) {
             [self.downloadPeer setSynchronising:NO];
             [self syncStopped];
@@ -678,7 +679,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
             });
         }
-        [self sendSyncProgressNotification];
     });
 }
 
@@ -716,6 +716,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 [self peerAbandon:peer];
             }
         }];
+        [self sendSyncProgressNotification];
 
         if (block.blockNo == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
             [self.downloadPeer setSynchronising:NO];
@@ -747,7 +748,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
             });
         }
-        [self sendSyncProgressNotification];
     });
 }
 
@@ -779,6 +779,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         int relayedCnt = [self.blockChain relayedBlocks:blocks];
         if (relayedCnt > 0) {
             DDLogDebug(@"%@:%d relayed block at height %d, false positive rate: %f", peer.host, peer.peerPort, self.lastBlockHeight, self.filterFpRate);
+            [self sendSyncProgressNotification];
             [[BTAddressManager instance] blockChainChanged];
             if (self.blockChain.lastBlock.blockNo >= peer.versionLastBlock) { // chain download is complete
                 [self.downloadPeer setSynchronising:NO];
@@ -801,7 +802,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             dispatch_async(dispatch_get_main_queue(), ^{
                 [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerLastBlockChangedNotification object:nil];
             });
-            [self sendSyncProgressNotification];
         } else {
             DDLogDebug(@"%@:%d relayed blocks failed", peer.host, peer.peerPort);
             [self peerAbandon:peer];

@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import <CocoaLumberjack/DDLog.h>
+#import "CocoaLumberjack/DDLog.h"
 #import "Bitheri.h"
 
 // tx

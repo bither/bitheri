@@ -66,7 +66,7 @@
     [self initWatchOnlyAddressByDesc];
     [self initTrashAddressByDesc];
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:BTAddressManagerIsReady
                                                             object:nil userInfo:nil];
     });
     self.isReady=YES;

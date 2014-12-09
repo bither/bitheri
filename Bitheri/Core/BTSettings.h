@@ -167,6 +167,11 @@ typedef enum {
     HOT = 2
 } AppMode;
 
+typedef void (^IdResponseBlock)(id response);
+typedef void (^VoidResponseBlock)(void);
+
+typedef void (^ArrayResponseBlock)(NSArray *array);
+
 
 #define BITHERI_LOG_FLAG NO
 

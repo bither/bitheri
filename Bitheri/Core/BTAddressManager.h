@@ -18,6 +18,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BTAddress.h"
+#import "BTSettings.h"
 
 #define BTAddressManagerIsReady @"BTAddressManagerIsReady"
 

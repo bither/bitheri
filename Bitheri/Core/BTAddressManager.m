@@ -34,7 +34,7 @@
 //}
 
 @implementation BTAddressManager {
-    
+ NSCondition *tc;
 }
 
 + (instancetype)instance; {
@@ -49,6 +49,7 @@
 
 - (instancetype)init {
     if (!(self = [super init])) return nil;
+    tc=[NSCondition new];
     self.isReady=NO;
     _privKeyAddresses = [NSMutableArray new];
     _watchOnlyAddresses = [NSMutableArray new];
@@ -62,19 +63,56 @@
     if (self.isReady) {
         return;
     }
+    [tc lock];
     [self initPrivKeyAddressByDesc];
     [self initWatchOnlyAddressByDesc];
     [self initTrashAddressByDesc];
     self.isReady=YES;
+    [tc signal];
     dispatch_sync(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:BTAddressManagerIsReady
                                                             object:nil userInfo:nil];
     });
+    [tc unlock];
     
 }
 
 - (NSInteger)addressCount {
     return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count];
+}
+
+-(NSMutableArray*)privKeyAddresses{
+    [tc lock];
+    while (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _privKeyAddresses;
+}
+-(NSMutableArray *)watchOnlyAddresses{
+    [tc lock];
+    while (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _watchOnlyAddresses;
+}
+-(NSMutableArray *)trashAddresses{
+    [tc lock];
+    while (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _trashAddresses;
+
+}
+-(NSMutableSet *)addressesSet{
+    [tc lock];
+    while (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _addressesSet;
 }
 
 - (void)initPrivKeyAddressByDesc {

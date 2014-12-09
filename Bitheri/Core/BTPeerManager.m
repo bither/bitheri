@@ -233,7 +233,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (void)start {
-    [self initAddress];
+   // [self initAddress];
     if (!self.running) {
         DDLogDebug(@"peer manager start");
         self.running = YES;

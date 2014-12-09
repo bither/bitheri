@@ -65,11 +65,12 @@
     [self initPrivKeyAddressByDesc];
     [self initWatchOnlyAddressByDesc];
     [self initTrashAddressByDesc];
+    self.isReady=YES;
     dispatch_sync(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:BTAddressManagerIsReady
                                                             object:nil userInfo:nil];
     });
-    self.isReady=YES;
+    
 }
 
 - (NSInteger)addressCount {

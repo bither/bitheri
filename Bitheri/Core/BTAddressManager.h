@@ -19,7 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "BTAddress.h"
 
-#define BTAddressManagerIsReady "BTAddressManagerIsReady"
+#define BTAddressManagerIsReady @"BTAddressManagerIsReady"
 
 @interface BTAddressManager : NSObject
 

@@ -233,28 +233,33 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (void)start {
-     dispatch_async(self.q, ^{
-         [[BTAddressManager instance] initAddress];
-         if (!self.running) {
-             DDLogDebug(@"peer manager start");
-             self.running = YES;
-             // rebuild bloom filter
-             _bloomFilter = nil;
-             if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
-                 self.connectFailure = 0; // this attempt is a manual retry
-             if(self.connectedPeers.count > 0){
-                 NSSet *set = [NSSet setWithSet:self.connectedPeers];
-                 for(BTPeer* peer in set){
-                     [peer connectError];
-                     [self.abandonPeers addObject:@(peer.peerAddress)];
-                     [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE
-                                                               userInfo:@{NSLocalizedDescriptionKey : @"peer is abandon"}]];
-                 }
-                 [self.connectedPeers removeAllObjects];
-             }
-             [self reconnect];
-         }
-     });
+    [self initAddress];
+    if (!self.running) {
+        DDLogDebug(@"peer manager start");
+        self.running = YES;
+        // rebuild bloom filter
+        _bloomFilter = nil;
+        if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
+            self.connectFailure = 0; // this attempt is a manual retry
+        if(self.connectedPeers.count > 0){
+            NSSet *set = [NSSet setWithSet:self.connectedPeers];
+            for(BTPeer* peer in set){
+                [peer connectError];
+                [self.abandonPeers addObject:@(peer.peerAddress)];
+                [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE
+                                                          userInfo:@{NSLocalizedDescriptionKey : @"peer is abandon"}]];
+            }
+            [self.connectedPeers removeAllObjects];
+        }
+        [self reconnect];
+    }
+    
+}
+-(void)initAddress{
+    dispatch_async(self.q, ^{
+        [[BTAddressManager instance] initAddress];
+    });
+
 }
 
 - (void)reconnect {

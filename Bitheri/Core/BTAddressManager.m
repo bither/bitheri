@@ -59,6 +59,9 @@
 }
 
 - (void)initAddress {
+    if (self.isReady) {
+        return;
+    }
     [self initPrivKeyAddressByDesc];
     [self initWatchOnlyAddressByDesc];
     [self initTrashAddressByDesc];

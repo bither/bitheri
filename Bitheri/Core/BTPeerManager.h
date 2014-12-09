@@ -51,6 +51,7 @@
 @property (readonly) BOOL doneSyncFromSPV;
 
 + (instancetype)instance;
+-(void)initAddress;
 
 - (void)start;
 - (void)stop;

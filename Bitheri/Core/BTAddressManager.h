@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "BTAddress.h"
 
+#define BTAddressManagerIsReady "BTAddressManagerIsReady"
 
 @interface BTAddressManager : NSObject
 
@@ -28,6 +29,7 @@
 @property (nonatomic, strong) NSMutableSet *addressesSet;
 @property (nonatomic, readonly) NSMutableArray *allAddresses;
 @property (nonatomic, readonly) NSTimeInterval creationTime; // interval since refrence date, 00:00:00 01/01/01 GMT
+@property (nonatomic,readwrite) BOOL isReady;
 + (instancetype)instance;
 
 - (void)initAddress;

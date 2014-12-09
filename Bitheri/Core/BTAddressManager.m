@@ -49,7 +49,7 @@
 
 - (instancetype)init {
     if (!(self = [super init])) return nil;
-    
+    self.isReady=NO;
     _privKeyAddresses = [NSMutableArray new];
     _watchOnlyAddresses = [NSMutableArray new];
     _trashAddresses = [NSMutableArray new];
@@ -62,6 +62,11 @@
     [self initPrivKeyAddressByDesc];
     [self initWatchOnlyAddressByDesc];
     [self initTrashAddressByDesc];
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
+                                                            object:nil userInfo:nil];
+    });
+    self.isReady=YES;
 }
 
 - (NSInteger)addressCount {

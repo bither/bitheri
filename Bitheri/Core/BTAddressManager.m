@@ -84,7 +84,7 @@
 
 -(NSMutableArray*)privKeyAddresses{
     [tc lock];
-    while (!self.isReady) {
+    if (!self.isReady) {
         [tc wait];
     }
     [tc unlock];
@@ -92,7 +92,7 @@
 }
 -(NSMutableArray *)watchOnlyAddresses{
     [tc lock];
-    while (!self.isReady) {
+    if (!self.isReady) {
         [tc wait];
     }
     [tc unlock];
@@ -100,7 +100,7 @@
 }
 -(NSMutableArray *)trashAddresses{
     [tc lock];
-    while (!self.isReady) {
+    if (!self.isReady) {
         [tc wait];
     }
     [tc unlock];
@@ -109,7 +109,7 @@
 }
 -(NSMutableSet *)addressesSet{
     [tc lock];
-    while (!self.isReady) {
+    if (!self.isReady) {
         [tc wait];
     }
     [tc unlock];

@@ -215,6 +215,7 @@
             BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
+            btAddress.isTrashed = YES;
 
             [_trashAddresses addObject:btAddress];
         }

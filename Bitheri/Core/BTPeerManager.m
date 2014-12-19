@@ -422,7 +422,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     // instead of publishing to all peers, leave one out to see if the tx propogates and is relayed back to us
     if (peers.count > 1) [peers removeObject:[peers anyObject]];
 
-    dispatch_async(dispatch_get_main_queue(), ^{
+    dispatch_async(self.q, ^{
         [self performSelector:@selector(txTimeout:) withObject:transaction.txHash afterDelay:PROTOCOL_TIMEOUT];
 
         for (BTPeer *p in peers) {

@@ -599,10 +599,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     DDLogDebug(@"%@:%d relayed %d peer(s)", peer.host, peer.peerPort, (int) peers.count);
     if (peer == self.downloadPeer)
         self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
-    if ([peers count] > MAX_PEERS_COUNT) {
-        peers = [peers subarrayWithRange:NSMakeRange(0, MAX_PEERS_COUNT)];
-    }
-    [self addRelayedPeers:peers];
+    // will add relay peer in future, for now only use dns peer
+//    if ([peers count] > MAX_PEERS_COUNT) {
+//        peers = [peers subarrayWithRange:NSMakeRange(0, MAX_PEERS_COUNT)];
+//    }
+//    [self addRelayedPeers:peers];
 }
 
 - (void)peer:(BTPeer *)peer relayedTransaction:(BTTx *)transaction {

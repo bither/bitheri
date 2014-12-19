@@ -322,6 +322,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 }
 
+- (void)clearPeerAndRestart;{
+    [self stop];
+    [[BTPeerProvider instance] recreate];
+    [self start];
+}
+
 - (void)syncTimeout {
     NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
 

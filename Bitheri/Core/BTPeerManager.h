@@ -55,6 +55,7 @@
 
 - (void)start;
 - (void)stop;
+- (void)clearPeerAndRestart;
 - (void)publishTransaction:(BTTx *)transaction completion:(void (^)(NSError *error))completion;
 
 // transaction is considered verified when all peers have relayed it

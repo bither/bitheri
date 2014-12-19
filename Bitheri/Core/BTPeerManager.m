@@ -459,7 +459,9 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 //    [self.publishedTx removeObjectForKey:txHash];
     [self.publishedCallback removeObjectForKey:txHash];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(txTimeout:) object:txHash];
-
+    for (BTPeer *peer in self.connectedPeers) {
+        [peer disconnectPeer];
+    }
     if (callback) {
         callback([NSError errorWithDomain:@"bitheri" code:ERR_PEER_TIMEOUT_CODE
                                  userInfo:@{NSLocalizedDescriptionKey : @"transaction canceled, network timeout"}]);

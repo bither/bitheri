@@ -47,6 +47,8 @@
 @property (nonatomic, readonly) double syncProgress;
 @property (nonatomic, strong) BTBlockChain * blockChain;
 @property (nonatomic, strong) BTPeer *downloadPeer;
+@property BOOL synchronizing;
+@property BOOL running;
 
 @property (readonly) BOOL doneSyncFromSPV;
 

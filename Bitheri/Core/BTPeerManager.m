@@ -70,8 +70,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 @property (nonatomic, strong) NSMutableDictionary *publishedTx, *publishedCallback;
 @property (nonatomic, strong) dispatch_queue_t q;
 //@property (nonatomic, strong) id activeObserver;
-@property BOOL synchronizing;
-@property BOOL running;
 
 @end
 

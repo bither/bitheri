@@ -427,8 +427,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 #pragma mark - calculate fee and out
 
-- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error; {
-    return [[BTTxBuilder instance] buildTxForAddress:self.address andAmount:amounts andAddress:addresses andError:error];
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error {
+    return [self txForAmounts:amounts andAddress:addresses andChangeAddress:self.address andError:error];
+}
+
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error{
+    return [[BTTxBuilder instance] buildTxForAddress:self.address andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
 }
 
 //- (NSArray *)selectOuts:(uint64_t)amount andOuts:(NSArray *)outs; {

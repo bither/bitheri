@@ -23,12 +23,15 @@
 + (instancetype)instance;
 - (BTTx *)buildTxForAddress:(NSString *)address andAmount:(NSArray *)amounts
                  andAddress:(NSArray *)addresses andError:(NSError **)error;
+
+- (BTTx *)buildTxForAddress:(NSString *)address andAmount:(NSArray *)amounts
+                 andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error;
 @end
 
 @protocol BTTxBuilderProtocol
 
 @required
-- (BTTx *)buildTxForAddress:(NSString *)address WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx;
+- (BTTx *)buildTxForAddress:(NSString *)address WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString*)changeAddress;
 @end
 
 @interface BTTxBuilderEmptyWallet : NSObject <BTTxBuilderProtocol>

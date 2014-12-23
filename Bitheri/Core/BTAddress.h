@@ -75,6 +75,8 @@
 //- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses;
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error;
 
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error;
+
 // returns an unsigned transaction that sends the specified amount from the wallet to the given address
 //- (BTTx *)transactionFor:(uint64_t)amount to:(NSString *)address withFee:(BOOL)fee;
 //

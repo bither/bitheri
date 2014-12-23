@@ -17,7 +17,7 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import <CocoaLumberjack/DDLog.h>
+#import "CocoaLumberjack/DDLog.h"
 #import "Bitheri.h"
 
 // tx
@@ -98,7 +98,7 @@
 #define MSG_ALERT       @"alert"
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
-#define BITHERI_VERSION @"1.2.1"
+#define BITHERI_VERSION @"1.2.2"
 #define BITHERI_NAME @"Bitheri"
 #define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 
@@ -166,6 +166,11 @@ typedef enum {
     COLD = 1,
     HOT = 2
 } AppMode;
+
+typedef void (^IdResponseBlock)(id response);
+typedef void (^VoidResponseBlock)(void);
+
+typedef void (^ArrayResponseBlock)(NSArray *array);
 
 
 #define BITHERI_LOG_FLAG NO

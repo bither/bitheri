@@ -20,6 +20,11 @@
 
 #define XRANDOM_FLAG @"+"
 
+typedef enum {
+    NORMAL,
+    LOW
+} QRQuality;
+
 @interface BTQRCodeUtil : NSObject
 
 +(BOOL) isOldQRCodeVerion:(NSString *)content;
@@ -32,5 +37,8 @@
 +(NSString *)decodeQrCodeString:(NSString *)text;
 +(BOOL)verifyQrcodeTransport:(NSString *)text;
 +(NSInteger)getNumOfQrCodeString:(NSInteger )length;
++(QRQuality)qrQuality;
++(void)setQrQuality:(QRQuality)quality;
++(NSUInteger) maxSize;
 
 @end

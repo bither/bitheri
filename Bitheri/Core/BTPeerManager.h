@@ -47,13 +47,17 @@
 @property (nonatomic, readonly) double syncProgress;
 @property (nonatomic, strong) BTBlockChain * blockChain;
 @property (nonatomic, strong) BTPeer *downloadPeer;
+@property BOOL synchronizing;
+@property BOOL running;
 
 @property (readonly) BOOL doneSyncFromSPV;
 
 + (instancetype)instance;
+-(void)initAddress;
 
 - (void)start;
 - (void)stop;
+- (void)clearPeerAndRestart;
 - (void)publishTransaction:(BTTx *)transaction completion:(void (^)(NSError *error))completion;
 
 // transaction is considered verified when all peers have relayed it

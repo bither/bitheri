@@ -19,7 +19,10 @@
 #import "BTQRCodeUtil.h"
 #import "NSString+Base58.h"
 
-#define MAX_QRCODE_SIZE 328
+#define kQR_QUALITY_KEY (@"qr_quality")
+
+#define MAX_QRCODE_SIZE_NORMAL (328)
+#define MAX_QRCODE_SIZE_LOW (216)
 #define QR_CODE_LETTER @"*"
 #define OLD_QR_CODE_SPLIT @":"
 #define QR_CODE_SPLIT @"/"
@@ -147,18 +150,42 @@
 }
 
 +(NSInteger)getNumOfQrCodeString:(NSInteger )length{
-    if (length<MAX_QRCODE_SIZE) {
+    if (length<[BTQRCodeUtil maxSize]) {
         return 1;
-    }else if (length<=(MAX_QRCODE_SIZE-4)*10){
-        return length/(MAX_QRCODE_SIZE-4)+1;
-    }else if (length<=(MAX_QRCODE_SIZE-5)*100){
-        return (length/(MAX_QRCODE_SIZE-5))+1;
-    }else if (length <=(MAX_QRCODE_SIZE-6)*1000){
-        return length/(MAX_QRCODE_SIZE-6)+1;
+    }else if (length<=([BTQRCodeUtil maxSize]-4)*10){
+        return length/([BTQRCodeUtil maxSize]-4)+1;
+    }else if (length<=([BTQRCodeUtil maxSize]-5)*100){
+        return (length/([BTQRCodeUtil maxSize]-5))+1;
+    }else if (length <=([BTQRCodeUtil maxSize]-6)*1000){
+        return length/([BTQRCodeUtil maxSize]-6)+1;
     }else{
         return 1000;
     }
 }
 
++(QRQuality)qrQuality{
+    if([[NSUserDefaults standardUserDefaults] objectForKey:kQR_QUALITY_KEY]){
+        QRQuality q = (QRQuality) [[NSUserDefaults standardUserDefaults] integerForKey:kQR_QUALITY_KEY];
+        return q;
+    }else{
+        return NORMAL;
+    }
+}
+
++(void)setQrQuality:(QRQuality)quality{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setInteger:quality forKey:kQR_QUALITY_KEY];
+    [defaults synchronize];
+}
+
++(NSUInteger)maxSize{
+    switch ([BTQRCodeUtil qrQuality]) {
+        case LOW:
+            return MAX_QRCODE_SIZE_LOW;
+        case NORMAL:
+        default:
+            return MAX_QRCODE_SIZE_NORMAL;
+    }
+}
 
 @end

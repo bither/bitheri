@@ -34,7 +34,7 @@
 //}
 
 @implementation BTAddressManager {
-    
+ NSCondition *tc;
 }
 
 + (instancetype)instance; {
@@ -49,7 +49,8 @@
 
 - (instancetype)init {
     if (!(self = [super init])) return nil;
-    
+    tc=[NSCondition new];
+    self.isReady=NO;
     _privKeyAddresses = [NSMutableArray new];
     _watchOnlyAddresses = [NSMutableArray new];
     _trashAddresses = [NSMutableArray new];
@@ -59,13 +60,72 @@
 }
 
 - (void)initAddress {
+    if (self.isReady) {
+        return;
+    }
+    [tc lock];
     [self initPrivKeyAddressByDesc];
     [self initWatchOnlyAddressByDesc];
     [self initTrashAddressByDesc];
+    self.isReady=YES;
+    [tc signal];
+    [tc unlock];
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:BTAddressManagerIsReady
+                                                            object:nil userInfo:nil];
+    });
+   
+    
 }
 
 - (NSInteger)addressCount {
     return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count];
+}
+
+-(NSMutableArray*)privKeyAddresses{
+    if (self.isReady) {
+        return _privKeyAddresses;
+    }
+    [tc lock];
+    if (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _privKeyAddresses;
+}
+-(NSMutableArray *)watchOnlyAddresses{
+    if (self.isReady) {
+        return _watchOnlyAddresses;
+    }
+    [tc lock];
+    if (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _watchOnlyAddresses;
+}
+-(NSMutableArray *)trashAddresses{
+    if (self.isReady) {
+        return _trashAddresses;
+    }
+    [tc lock];
+    if (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _trashAddresses;
+    
+}
+-(NSMutableSet *)addressesSet{
+    if (self.isReady) {
+        return _addressesSet;
+    }
+    [tc lock];
+    if (!self.isReady) {
+        [tc wait];
+    }
+    [tc unlock];
+    return _addressesSet;
 }
 
 - (void)initPrivKeyAddressByDesc {
@@ -88,12 +148,12 @@
             BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
-            [self.privKeyAddresses addObject:btAddress];
-            [self.addressesSet addObject:btAddress.address];
+            [_privKeyAddresses addObject:btAddress];
+            [_addressesSet addObject:btAddress.address];
         }
     }
     if (isSort) {
-        [self.privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        [_privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
             if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
             if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
             return NSOrderedSame;
@@ -121,12 +181,12 @@
             BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:NO isXRandom:isFromXrandm];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
-            [self.watchOnlyAddresses addObject:btAddress];
-            [self.addressesSet addObject:btAddress.address];
+            [_watchOnlyAddresses addObject:btAddress];
+            [_addressesSet addObject:btAddress.address];
         }
     }
     if (isSort) {
-        [self.watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        [_watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
             if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
             if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
             return NSOrderedSame;
@@ -155,12 +215,13 @@
             BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
+            btAddress.isTrashed = YES;
 
-            [self.trashAddresses addObject:btAddress];
+            [_trashAddresses addObject:btAddress];
         }
     }
     if (isSort) {
-        [self.privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        [_trashAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
             if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
             if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
             return NSOrderedSame;

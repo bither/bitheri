@@ -19,10 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "FMDatabase.h"
 #import "FMDatabaseQueue.h"
-
-typedef void (^IdResponseBlock)(id response);
-
-typedef void (^ArrayResponseBlock)(NSArray *array);
+#import "BTSettings.h"
 
 @interface BTDatabaseManager : NSObject
 

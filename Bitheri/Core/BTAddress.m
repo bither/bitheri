@@ -384,6 +384,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *oldWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
     NSString *newWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getTrashDir], self.address];
 
+    self.isTrashed = YES;
     [BTUtils moveFile:oldPrivKeyFile to:newPrivKeyFile];
     [BTUtils moveFile:oldWatchOnlyFile to:newWatchOnlyFile];
 }
@@ -398,6 +399,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     [BTUtils moveFile:oldPrivKeyFile to:newPrivKeyFile];
     [BTUtils moveFile:oldWatchOnlyFile to:newWatchOnlyFile];
 
+    self.isTrashed = NO;
     _isSyncComplete = NO;
     [self updateAddressWithPub];
 
@@ -475,7 +477,11 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (_encryptPrivKey) {
             return _encryptPrivKey;
         } else {
-            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
+            NSString *dirStr = [BTUtils getPrivDir];
+            if(self.isTrashed){
+                dirStr = [BTUtils getTrashDir];
+            }
+            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, dirStr, self.address];
             _encryptPrivKey = [BTUtils readFile:privateKeyFullFileName];
             return _encryptPrivKey;
         }

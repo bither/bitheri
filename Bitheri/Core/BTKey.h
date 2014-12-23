@@ -65,4 +65,7 @@
 
 + (NSData *)getRFromSignature:(NSData *)sig;
 
+- (NSString *)signMessage:(NSString *)message;
+- (BOOL)verifyMessage:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;
+
 @end

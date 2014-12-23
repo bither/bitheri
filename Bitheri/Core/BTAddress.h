@@ -129,4 +129,6 @@
 - (BOOL)checkRValues;
 - (BOOL)checkRValuesForTx:(BTTx *)tx;
 
+- (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase;
+
 @end

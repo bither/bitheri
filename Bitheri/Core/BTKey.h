@@ -67,5 +67,6 @@
 
 - (NSString *)signMessage:(NSString *)message;
 - (BOOL)verifyMessage:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;
++ (BTKey *)signedMessageToKey:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;
 
 @end

@@ -576,4 +576,9 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self updateRecentlyTx];
 }
 
+- (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase;{
+    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
+    return [key signMessage:message];
+}
+
 @end

@@ -510,15 +510,15 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 }
 
 - (BOOL)verifyMessage:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;{
-    EC_KEY *key = [BTKey signedMessageToKey:message andSignatureBase64:signatureBase64];
-    if (key != nil) {
-        return [[self publicKey] isEqualToData:[BTKey pubKey:key]];
+    BTKey *key = [BTKey signedMessageToKey:message andSignatureBase64:signatureBase64];
+    if (key != nil && [self publicKey] != nil && [key publicKey] != nil) {
+        return [[self publicKey] isEqualToData:[key publicKey]];
     } else {
         return NO;
     }
 }
 
-+ (EC_KEY *)signedMessageToKey:(NSString *)message andSignatureBase64:(NSString *)signatureBase64; {
++ (BTKey *)signedMessageToKey:(NSString *)message andSignatureBase64:(NSString *)signatureBase64; {
     NSData *sigData = [[NSData alloc] initWithBase64EncodedString:signatureBase64 options:NSDataBase64DecodingIgnoreUnknownCharacters];
     if ([sigData length] < 65) {
         return nil;
@@ -537,18 +537,23 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
         header -= 4;
     }
     int recId = header - 27;
-    EC_KEY *key = [BTKey recoverFromSignatureWith:recId andSig:sig andMessageHash:messageHash andCompressed:compressed];
+    BTKey *key = [BTKey recoverFromSignatureWith:recId andSig:sig andMessageHash:messageHash andCompressed:compressed];
     ECDSA_SIG_free(sig);
     return key;
 }
 
-+ (EC_KEY *)recoverFromSignatureWith:(int)recId andSig:(ECDSA_SIG *)sig andMessageHash:(NSData *)messageHash andCompressed:(BOOL)compressed; {
++ (BTKey *)recoverFromSignatureWith:(int)recId andSig:(ECDSA_SIG *)sig andMessageHash:(NSData *)messageHash andCompressed:(BOOL)compressed; {
     EC_KEY *eckey = EC_KEY_new_by_curve_name(NID_secp256k1);
     int res = ECDSA_SIG_recover_key_GFp(eckey, sig, messageHash.bytes, messageHash.length, recId, 1);
     if (res != 0) {
         EC_KEY_set_conv_form(eckey, compressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
-        return eckey;
+        BTKey *key = [[BTKey alloc] initWithPublicKey:[BTKey pubKey:eckey]];
+        if (eckey != nil)
+            EC_KEY_free(eckey);
+        return key;
     } else {
+        if (eckey != nil)
+            EC_KEY_free(eckey);
         return nil;
     }
 }

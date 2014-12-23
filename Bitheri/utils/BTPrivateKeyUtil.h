@@ -22,4 +22,6 @@
 @interface BTPrivateKeyUtil : NSObject
 
 +(NSString *)getPrivateKeyString:(BTKey *) key passphrase:(NSString *)passphrase;
+
++ (BOOL)verifyMessage:(NSString *)message andSignedMessage:(NSString *)signedMessage withAddress:(NSString *)address;
 @end

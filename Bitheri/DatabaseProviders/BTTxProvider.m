@@ -851,11 +851,13 @@ static BTTxProvider *provider;
          NSString *deleteIn = @"delete from ins";
          NSString *deleteOut = @"delete from outs";
          NSString *deleteAddressesTx = @"delete from addresses_txs";
+         NSString *deletePeer = @"delete from peers";
          [db beginTransaction];
          [db executeUpdate:deleteTx];
          [db executeUpdate:deleteIn];
          [db executeUpdate:deleteOut];
          [db executeUpdate:deleteAddressesTx];
+         [db executeUpdate:deletePeer];
          [db commit];
      }];
 }

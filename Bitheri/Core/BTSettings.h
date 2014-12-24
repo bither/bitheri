@@ -161,6 +161,9 @@ typedef enum {
 #define COLD_DIR @"cold"
 #define TRASH_DIR @"trash"
 
+#define BITCOIN_SIGNED_MESSAGE_HEADER @"Bitcoin Signed Message:\n"
+#define BITCOIN_SIGNED_MESSAGE_HEADER_BYTES [BITCOIN_SIGNED_MESSAGE_HEADER dataUsingEncoding:NSUTF8StringEncoding]
+
 typedef enum {
     NoChoose = 0,
     COLD = 1,

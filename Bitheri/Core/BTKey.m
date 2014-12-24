@@ -47,6 +47,7 @@
 #import "evp.h"
 #import "BTKeyParameter.h"
 #import "NSData+Bitcoin.h"
+#import "BTUtils.h"
 
 // HMAC-SHA256 DRBG, using no prediction resistance or personalization string and outputing 256bits
 static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
@@ -480,7 +481,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 }
 
 - (NSString *)signMessage:(NSString *)message; {
-    NSData *d = [[message dataUsingEncoding:NSUTF8StringEncoding] SHA256_2];
+    NSData *d = [[BTUtils formatMessageForSigning:message] SHA256_2];
     ECDSA_SIG *sig = [self _sign:d];
     int recId = -1;
     for (int i = 0; i < 4; i++) {
@@ -530,7 +531,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     ECDSA_SIG *sig = ECDSA_SIG_new();
     BN_bin2bn(sigData.bytes + 1, 32, sig->r);
     BN_bin2bn(sigData.bytes + 33, 32, sig->s);
-    NSData *messageHash = [[message dataUsingEncoding:NSUTF8StringEncoding] SHA256_2];
+    NSData *messageHash = [[BTUtils formatMessageForSigning:message] SHA256_2];
     BOOL compressed = false;
     if (header >= 31) {
         compressed = true;

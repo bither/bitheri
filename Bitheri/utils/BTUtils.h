@@ -37,4 +37,6 @@
 + (BOOL)compareString:(NSString *)original compare:(NSString *)compare;
 + (BOOL)isEmpty:(NSString *)str;
 
++ (NSData *)formatMessageForSigning:(NSString *)message;
+
 @end

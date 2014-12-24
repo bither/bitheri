@@ -47,21 +47,21 @@
 - (void)testNormal; {
     BTKey *key = [BTKey keyWithSecret:[@"0000000000000000000000000000000000000000000000000000000000000001" hexToData] compressed:YES];
     NSString *message = @"1";
-    NSString *expectSignedMessage = @"H0zWA4TC71RRt8WZo/h5Kium1lPMxgxNKKm+W8OLZ/2lGTQb7iLe2tnM3P7IJX+R5K+HhDgedZElqDyV33aln0o=";
+    NSString *expectSignedMessage = @"IJbxSEQOQOySFCJJEAnUSOnvzTNEX0i4ENVwYrSVBCYuHvTNil+wYDwQhRtV2msKkHZMW5GiRXeDFbXIYzn1KXw=";
 
     NSString *signedMessage = [key signMessage:message];
     XCTAssertTrue([signedMessage isEqualToString:expectSignedMessage]);
     XCTAssertTrue([key verifyMessage:message andSignatureBase64:signedMessage]);
 
     message = @"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
-    expectSignedMessage = @"H5xZUmZQzxP5eDnhsDUeEEpyutiPUfDEJ1rABSOWwsfJZxItKaVWIe6V9U7GnjnuNAcLMP6hwWXhGc25V7DN0B4=";
+    expectSignedMessage = @"IFllaRcUZyAe3nXNWbOlKbP4BZ3dMLZ6somOreoZPOK1YTgjgFrHdczTWarKtjsdoRbP70u3C+D57yU+SOleoGI=";
 
     signedMessage = [key signMessage:message];
     XCTAssertTrue([signedMessage isEqualToString:expectSignedMessage]);
     XCTAssertTrue([key verifyMessage:message andSignatureBase64:signedMessage]);
 
     message = @"比太钱包";
-    expectSignedMessage = @"IBkXZi4cd0pAeyBJv5qUg7s8ggGqjSiRhVmvb5H+KR5uSZdj5lhgCFVnii5W3TUJCxGe4WiHRXgNPTtbjJk4myk=";
+    expectSignedMessage = @"Hw6ZIXQwLovmlCijSAuQs1JeVqIS2OB0hL74q0E5x2PAW0LCUIUM0nyjuasSKaYfmFlFWO0Btyx+r+MohYHirbA=";
 
     signedMessage = [key signMessage:message];
     XCTAssertTrue([signedMessage isEqualToString:expectSignedMessage]);

@@ -212,8 +212,8 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     {
         if (bytes1[i] != bytes2[i])
         {
-            if (bytes1[i] > bytes1[i]) return NSOrderedDescending;
-            if (bytes1[i] < bytes1[i]) return NSOrderedAscending;
+            if (bytes1[i] > bytes2[i]) return NSOrderedDescending;
+            if (bytes1[i] < bytes2[i]) return NSOrderedAscending;
         }
     }
 

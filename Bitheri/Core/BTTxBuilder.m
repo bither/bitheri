@@ -489,7 +489,11 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
             [script appendScriptPubKeyForAddress:addresses[i]];
             uint64_t amount = [amounts[i] unsignedLongLongValue];
             if (i == amounts.count - 1) {
-                amount -= fees;
+                if (amount > fees) {
+                    amount -= fees;
+                } else {
+                    return nil;
+                }
             }
             [tx addOutputScript:script amount:amount];
         }

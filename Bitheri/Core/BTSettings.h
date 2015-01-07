@@ -98,7 +98,7 @@
 #define MSG_ALERT       @"alert"
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
-#define BITHERI_VERSION @"1.2.2"
+#define BITHERI_VERSION @"1.2.3"
 #define BITHERI_NAME @"Bitheri"
 #define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 
@@ -160,6 +160,9 @@ typedef enum {
 #define HOT_DIR @"hot"
 #define COLD_DIR @"cold"
 #define TRASH_DIR @"trash"
+
+#define BITCOIN_SIGNED_MESSAGE_HEADER @"Bitcoin Signed Message:\n"
+#define BITCOIN_SIGNED_MESSAGE_HEADER_BYTES [BITCOIN_SIGNED_MESSAGE_HEADER dataUsingEncoding:NSUTF8StringEncoding]
 
 typedef enum {
     NoChoose = 0,

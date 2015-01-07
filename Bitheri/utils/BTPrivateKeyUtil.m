@@ -19,8 +19,7 @@
 #import "NSData+Hash.h"
 #import "NSMutableData+Bitcoin.h"
 #import "BTAddress.h"
-
-
+#import "BTUtils.h"
 
 
 @implementation BTPrivateKeyUtil
@@ -31,5 +30,9 @@
     return encryptPrivKey;
 }
 
-
++ (BOOL)verifyMessage:(NSString *)message andSignedMessage:(NSString *)signedMessage withAddress:(NSString *)address;{
+    BTKey *key = [BTKey signedMessageToKey:message andSignatureBase64:signedMessage];
+    NSString *signAddress = [key address];
+    return [BTUtils compareString:address compare:signAddress];
+}
 @end

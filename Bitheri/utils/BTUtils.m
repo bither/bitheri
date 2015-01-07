@@ -17,6 +17,7 @@
 //  limitations under the License.
 
 #import "BTUtils.h"
+#import "NSMutableData+Bitcoin.h"
 
 @implementation NSDate (compare)
 
@@ -163,6 +164,16 @@
 }
 +(BOOL)isEmpty:(NSString *)str{
     return str==nil||str.length==0;
+}
+
++ (NSData *)formatMessageForSigning:(NSString *)message; {
+    NSMutableData *data = [NSMutableData secureData];
+    [data appendUInt8:(uint8_t) BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length];
+    [data appendData:BITCOIN_SIGNED_MESSAGE_HEADER_BYTES];
+    NSData *messageData = [message dataUsingEncoding:NSUTF8StringEncoding];
+    [data appendVarInt:messageData.length];
+    [data appendData:messageData];
+    return data;
 }
 
 @end

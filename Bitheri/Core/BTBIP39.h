@@ -1,5 +1,5 @@
 //
-//  BTBIP39Mnemonic.h
+//  BTBIP39.h
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -37,22 +37,21 @@
 //  THE SOFTWARE.
 
 #import <Foundation/Foundation.h>
-#import "BTMnemonic.h"
 
 // BIP39 is method for generating a deterministic wallet seed from a mnemonic phrase
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
-#define BIP39_CREATION_TIME (1388534400.0 - NSTimeIntervalSince1970)
+@interface BTBIP39 : NSObject
 
-@interface BTBIP39Mnemonic : NSObject<BTMnemonic>
+@property (nonatomic) BOOL isUnitTest;
 
 + (instancetype)sharedInstance;
 
-- (NSString *)encodePhrase:(NSData *)data;
-- (NSData *)decodePhrase:(NSString *)phrase;
-- (BOOL)phraseIsValid:(NSString *)phrase;
+- (NSString *)normalizeCode:(NSString *)phrase;
 
-- (NSString *)normalizePhrase:(NSString *)phrase;
-- (NSData *)deriveKeyFromPhrase:(NSString *)phrase withPassphrase:(NSString *)passphrase;
+- (NSString *)toMnemonic:(NSData *)data;
+- (NSData *)toEntropy:(NSString *)code;
+- (BOOL)check:(NSString *)code;
+- (NSData *)toSeed:(NSString *)code withPassphrase:(NSString *)passphrase;
 
 @end

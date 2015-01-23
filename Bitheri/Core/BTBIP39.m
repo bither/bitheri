@@ -1,5 +1,5 @@
 //
-//  BTBIP39Mnemonic.m
+//  BTBIP39.m
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -36,7 +36,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-#import "BTBIP39Mnemonic.h"
+#import "BTBIP39.h"
 #import "NSString+Base58.h"
 #import "NSData+Hash.h"
 #import "NSMutableData+Bitcoin.h"
@@ -45,10 +45,18 @@
 
 #define WORDS @"BIP39EnglishWords"
 
-// BIP39 is method for generating a deterministic wallet seed from a mnemonic phrase
+// BIP39 is method for generating a deterministic wallet seed from a mnemonic code
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
-@implementation BTBIP39Mnemonic
+@implementation BTBIP39
+
+- (instancetype)init; {
+    if (! (self = [super init])) return nil;
+
+    self.isUnitTest = NO;
+
+    return self;
+}
 
 + (instancetype)sharedInstance
 {
@@ -62,11 +70,19 @@
     return singleton;
 }
 
-- (NSString *)encodePhrase:(NSData *)data
-{
-    if ((data.length % 4) != 0) return nil; // data length must be a multiple of 32 bits
+- (NSArray *)getWords;{
+    if (self.isUnitTest) {
+        return [NSArray arrayWithContentsOfFile:[[NSBundle bundleForClass:[self class]] pathForResource:WORDS ofType:@"plist"]];
+    } else {
+        return [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:WORDS ofType:@"plist"]];
+    }
+}
 
-    NSArray *words = [NSArray arrayWithContentsOfFile:[[NSBundle bundleForClass:[self class]] pathForResource:WORDS ofType:@"plist"]];
+- (NSString *)toMnemonic:(NSData *)data
+{
+    if ((data.length % 4) != 0 || data.length == 0) return nil; // data length must be a multiple of 32 bits
+
+    NSArray *words = [self getWords];
     uint32_t n = (uint32_t)words.count, x;
     NSMutableArray *a =
             CFBridgingRelease(CFArrayCreateMutable(SecureAllocator(), data.length*3/4, &kCFTypeArrayCallBacks));
@@ -83,17 +99,17 @@
     return CFBridgingRelease(CFStringCreateByCombiningStrings(SecureAllocator(), (__bridge CFArrayRef)a, CFSTR(" ")));
 }
 
-- (NSData *)decodePhrase:(NSString *)phrase
+- (NSData *)toEntropy:(NSString *)code
 {
-    NSArray *words = [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:WORDS ofType:@"plist"]];
+    NSArray *words = [self getWords];
     NSArray *a = CFBridgingRelease(CFStringCreateArrayBySeparatingStrings(SecureAllocator(),
-            (__bridge CFStringRef)[self normalizePhrase:phrase], CFSTR(" ")));
+            (__bridge CFStringRef) [self normalizeCode:code], CFSTR(" ")));
     NSMutableData *d = [NSMutableData secureDataWithCapacity:(a.count*11 + 7)/8];
     uint32_t n = (uint32_t)words.count, x, y;
     uint8_t b;
 
     if ((a.count % 3) != 0 || a.count > 24) {
-        NSLog(@"phrase has wrong number of words");
+        NSLog(@"code has wrong number of words");
         return nil;
     }
 
@@ -102,7 +118,7 @@
         y = (i*8/11 + 1 < a.count) ? (uint32_t)[words indexOfObject:a[i*8/11 + 1]] : 0;
 
         if (x == (uint32_t)NSNotFound || y == (uint32_t)NSNotFound) {
-            NSLog(@"phrase contained unknown word: %@", a[i*8/11 + (x == (uint32_t)NSNotFound ? 0 : 1)]);
+            NSLog(@"code contained unknown word: %@", a[i*8/11 + (x == (uint32_t)NSNotFound ? 0 : 1)]);
             return nil;
         }
 
@@ -114,7 +130,7 @@
     d.length = a.count*4/3;
 
     if (b != (*(const uint8_t *)d.SHA256.bytes >> (8 - a.count/3))) {
-        NSLog(@"incorrect phrase, bad checksum");
+        NSLog(@"incorrect code, bad checksum");
         return nil;
     }
 
@@ -124,14 +140,14 @@
     return d;
 }
 
-- (BOOL)phraseIsValid:(NSString *)phrase
+- (BOOL)check:(NSString *)code
 {
-    return ([self decodePhrase:phrase] == nil) ? NO : YES;
+    return [self toEntropy:code] != nil;
 }
 
-- (NSString *)normalizePhrase:(NSString *)phrase
+- (NSString *)normalizeCode:(NSString *)code
 {
-    NSMutableString *s = CFBridgingRelease(CFStringCreateMutableCopy(SecureAllocator(), 0, (__bridge CFStringRef)phrase));
+    NSMutableString *s = CFBridgingRelease(CFStringCreateMutableCopy(SecureAllocator(), 0, (__bridge CFStringRef)code));
 
     [s replaceOccurrencesOfString:@"." withString:@" " options:0 range:NSMakeRange(0, s.length)];
     [s replaceOccurrencesOfString:@"," withString:@" " options:0 range:NSMakeRange(0, s.length)];
@@ -146,11 +162,11 @@
     return s;
 }
 
-- (NSData *)deriveKeyFromPhrase:(NSString *)phrase withPassphrase:(NSString *)passphrase
+- (NSData *)toSeed:(NSString *)code withPassphrase:(NSString *)passphrase
 {
     NSMutableData *key = [NSMutableData secureDataWithLength:CC_SHA512_DIGEST_LENGTH];
     NSData *password, *salt;
-    CFMutableStringRef pw = CFStringCreateMutableCopy(SecureAllocator(), phrase.length, (__bridge CFStringRef)phrase);
+    CFMutableStringRef pw = CFStringCreateMutableCopy(SecureAllocator(), code.length, (__bridge CFStringRef) code);
     CFMutableStringRef s = CFStringCreateMutableCopy(SecureAllocator(), 8 + passphrase.length, CFSTR("mnemonic"));
 
     if (passphrase) CFStringAppend(s, (__bridge CFStringRef)passphrase);

@@ -17,7 +17,7 @@
 //  limitations under the License.
 #import <XCTest/XCTest.h>
 #import "BTTestHelper.h"
-#import "BTBIP39Mnemonic.h"
+#import "BTBIP39.h"
 
 @interface BTBip39Test : XCTestCase
 
@@ -129,6 +129,8 @@
             @"15da872c95a13dd738fbf50e427583ad61f18fd99f628c417a61cf8343c90419",
             @"beyond stage sleep clip because twist token leaf atom beauty genius food business side grid unable middle armed observe pair crouch tonight away coconut",
             @"b15509eaa2d09d3efd3e006ef42151b30367dc6e3aa5e44caba3fe4d3e352e65101fbdb86a96776b91946ff06f8eac594dc6ee1d3e82a42dfe1b40fef6bcc3fd"];
+
+    [BTBIP39 sharedInstance].isUnitTest = YES;
 }
 
 - (void)tearDown {
@@ -137,21 +139,47 @@
 }
 
 - (void)testVectors {
-    for (int i = 0;  i < self.testCase.count; i += 3) {
-        NSString *vecData = self.testCase[i];
+    for (uint i = 0;  i < self.testCase.count; i += 3) {
+        NSString *vecEntropy = self.testCase[i];
         NSString *vecCode = self.testCase[i + 1];
         NSString *vecSeed = self.testCase[i + 2];
 
-        NSString *code = [[BTBIP39Mnemonic sharedInstance] encodePhrase:[vecData hexToData]];
+        NSString *code = [[BTBIP39 sharedInstance] toMnemonic:[vecEntropy hexToData]];
         XCTAssertTrue([vecCode isEqualToString:code]);
 
-//        List<NSString> code = mc.toMnemonic(Utils.hexStringToByteArray(vecData));
-//        byte[] seed = MnemonicCode.toSeed(code, "TREZOR");
-//        byte[] entropy = mc.toEntropy(split(vecCode));
-//
-//        assertEquals(vecData, Utils.bytesToHexString(entropy));
-//        assertEquals(vecCode, Joiner.on(' ').join(code));
-//        assertEquals(vecSeed, Utils.bytesToHexString(seed));
+        NSData *seed = [[BTBIP39 sharedInstance] toSeed:vecCode withPassphrase:@"TREZOR"];
+        XCTAssertTrue([[vecSeed hexToData] isEqualToData:seed]);
+
+        NSData *entropy = [[BTBIP39 sharedInstance] toEntropy:vecCode];
+        XCTAssertTrue([[vecEntropy hexToData] isEqualToData:entropy]);
     }
 }
+
+- (void)testBadEntropyLength {
+    NSString *code = [[BTBIP39 sharedInstance] toMnemonic:[@"7f7f7f7f7f7f7f7f7f7f7f7f7f7f" hexToData]];
+    XCTAssertTrue(code == nil);
+}
+
+- (void)testBadLength {
+    XCTAssertFalse([[BTBIP39 sharedInstance] check:@"risk tiger venture dinner age assume float denial penalty hello"]);
+}
+
+- (void)testBadWord {
+    XCTAssertFalse([[BTBIP39 sharedInstance] check:@"risk tiger venture dinner xyzzy assume float denial penalty hello game wing"]);
+}
+
+- (void)testBadChecksum {
+    XCTAssertFalse([[BTBIP39 sharedInstance] check:@"bless cloud wheel regular tiny venue bird web grief security dignity zoo"]);
+}
+
+- (void)testEmptyMnemonic {
+    XCTAssertFalse([[BTBIP39 sharedInstance] check:@""]);
+}
+
+- (void)testEmptyEntropy {
+    NSString *code = [[BTBIP39 sharedInstance] toMnemonic:[@"" hexToData]];
+    XCTAssertTrue(code == nil);
+}
+
+
 @end

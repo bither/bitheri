@@ -37,7 +37,6 @@
 //  THE SOFTWARE.
 
 #import <Foundation/Foundation.h>
-#import "BTKeySequence.h"
 
 @interface BTBIP32Key : NSObject
 

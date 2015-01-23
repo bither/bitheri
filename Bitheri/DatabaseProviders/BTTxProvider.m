@@ -38,7 +38,7 @@ static BTTxProvider *provider;
 }
 
 - (void)getTxByAddress:(NSString *)address callback:(ArrayResponseBlock)callback; {
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableArray *txs = [NSMutableArray new];
         NSString *sql = @"select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address=? "
                 "order by b.block_no";
@@ -53,7 +53,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getTxByAddress:(NSString *)address; {
     __block NSMutableArray *txs = nil;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         txs = [NSMutableArray new];
         NSString *sql = @"select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address=? "
                 "order by b.block_no";
@@ -67,7 +67,7 @@ static BTTxProvider *provider;
 }
 
 - (void)getTxAndDetailByAddress:(NSString *)address callback:(ArrayResponseBlock)callback; {
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableArray *txs = [NSMutableArray new];
         NSMutableDictionary *txDict = [NSMutableDictionary new];
         NSString *sql = @"select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address=? "
@@ -110,7 +110,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address; {
     __block NSMutableArray *txs = nil;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         txs = [NSMutableArray new];
         NSMutableDictionary *txDict = [NSMutableDictionary new];
         NSString *sql = @"select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address=? "
@@ -152,7 +152,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getPublishedTxs {
     __block NSMutableArray *txs = nil;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         txs = [NSMutableArray new];
         NSMutableDictionary *txDict = [NSMutableDictionary new];
         NSString *sql = @"select a.* from txs a where a.block_no is null order by a.tx_hash";
@@ -191,7 +191,7 @@ static BTTxProvider *provider;
 
 - (BTTx *)getTxDetailByTxHash:(NSData *)txHash; {
     __block BTTx *txItem = nil;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *txHashStr = [NSString base58WithData:txHash];
         NSString *sql = @"select * from txs where tx_hash=?";
         FMResultSet *rs = [db executeQuery:sql, txHashStr];
@@ -227,7 +227,7 @@ static BTTxProvider *provider;
 
 - (BOOL)isExist:(NSData *)txHash; {
     __block BOOL result = NO;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(0) from txs where tx_hash=?";
         FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:txHash]];
         if ([rs next]) {
@@ -241,7 +241,7 @@ static BTTxProvider *provider;
 - (void)add:(BTTx *)txItem; {
     // need update out\'s status in this.
     // need maintain relation table addresses_txs
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // insert tx record
         [db beginTransaction];
         NSNumber *blockNo = nil;
@@ -312,7 +312,7 @@ static BTTxProvider *provider;
 - (void)addTxs:(NSArray *)txs;{
     // need update out\'s status in this.
     // need maintain relation table addresses_txs
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // filter tx that not exist
         NSMutableArray *addList = [NSMutableArray new];
         for (BTTx *txItem in txs) {
@@ -397,7 +397,7 @@ static BTTxProvider *provider;
 - (void)remove:(NSData *)txHash; {
     // need remove txs that relay to this tx
     NSString *tx = [NSString base58WithData:txHash];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableArray *txHashes = [NSMutableArray new];
         NSMutableSet *needRemoveTxHashes = [NSMutableSet new];
         [txHashes addObject:tx];
@@ -461,7 +461,7 @@ static BTTxProvider *provider;
 
 - (bool)isTxDoubleSpendWithConfirmedTx:(BTTx *)tx; {
     __block bool result = NO;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // check if double spend with confirmed tx
         NSString *sql = @"select count(0) from ins a, txs b where a.tx_hash=b.tx_hash"
                 " and b.block_no is not null"
@@ -482,7 +482,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getInAddresses:(BTTx *)tx;{
     __block NSMutableArray *inAddresses = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select out_address from outs where tx_hash=? and out_sn=?";
         FMResultSet *rs = nil;
         for (BTIn *inItem in tx.ins) {
@@ -500,7 +500,7 @@ static BTTxProvider *provider;
 
 - (bool)isAddress:(NSString *)address containsTx:(BTTx *)txItem; {
     __block bool result = NO;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // check if double spend with confirmed tx
         NSString *sql = @"select count(0) from ins a, txs b where a.tx_hash=b.tx_hash"
                 " and b.block_no is not null"
@@ -549,7 +549,7 @@ static BTTxProvider *provider;
     if (blockNo == TX_UNCONFIRMED)
         return;
 
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         [db beginTransaction];
         NSString *sql = @"update txs set block_no=? where tx_hash=?";
         NSString *existSql = @"select count(0) from txs where block_no=? and tx_hash=?";
@@ -604,7 +604,7 @@ static BTTxProvider *provider;
 }
 
 - (void)unConfirmTxByBlockNo:(int)blockNo; {
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         [db beginTransaction];
         NSString *sql = @"update txs set block_no=null where block_no>=?";
         [db executeUpdate:sql, @(blockNo)];
@@ -614,7 +614,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getUnspendTxWithAddress:(NSString *)address;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth "
                 "from outs a,txs b where a.tx_hash=b.tx_hash"
                 " and a.out_address=? and a.out_status=?";
@@ -635,7 +635,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getUnspendOutWithAddress:(NSString *)address;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
                 " and a.out_address=? and a.out_status=?";
         FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent)];
@@ -649,7 +649,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getUnSpendOutCanSpendWithAddress:(NSString *)address; {
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *confirmedOutSql = @"select a.*,b.block_no*a.out_value coin_depth from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is not null"
                 " and a.out_address=? and a.out_status=?";
         NSString *selfOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
@@ -672,7 +672,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getUnSpendOutButNotConfirmWithAddress:(NSString *)address;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *selfOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
                 " and a.out_address=? and a.out_status=? and b.source=?";
         FMResultSet *rs = [db executeQuery:selfOutSql, address, @(unspent), @0];
@@ -686,7 +686,7 @@ static BTTxProvider *provider;
 
 - (uint32_t)txCount:(NSString *)address {
     __block uint32_t result = 0;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(*) from addresses_txs  where address=? ";
         FMResultSet *rs = [db executeQuery:sql, address];
         if ([rs next]) {
@@ -699,7 +699,7 @@ static BTTxProvider *provider;
 }
 
 - (void)txSentBySelfHasSaw:(NSData *)txHash; {
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update txs set source=source+1 where tx_hash=? and source>=?";
         [db executeUpdate:sql, [NSString base58WithData:txHash], @(1)];
     }];
@@ -707,7 +707,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getOuts;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.* from outs a";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
@@ -720,7 +720,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getUnSpentOuts;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.* from outs a where a.out_status=?";
         FMResultSet *rs = [db executeQuery:sql, @(0)];
         while ([rs next]) {
@@ -733,7 +733,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getRelatedIn:(NSString *)address;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select ins.* from ins,addresses_txs "
                 "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
         FMResultSet *rs = [db executeQuery:sql, address];
@@ -747,7 +747,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;{
     __block NSMutableArray *txs = nil;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         txs = [NSMutableArray new];
         NSMutableDictionary *txDict = [NSMutableDictionary new];
         NSString *sql = @"select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address=? "
@@ -789,7 +789,7 @@ static BTTxProvider *provider;
 
 - (NSArray *)txInValues:(NSData *)txHash;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select b.out_value "
                 "from ins a left outer join outs b on a.prev_tx_hash=b.tx_hash and a.prev_out_sn=b.out_sn "
                 "where a.tx_hash=?";
@@ -808,7 +808,7 @@ static BTTxProvider *provider;
 
 - (NSDictionary *)getTxDependencies:(BTTx *)txItem;{
     __block NSMutableDictionary *result = [NSMutableDictionary new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         for (BTIn *in in txItem.ins) {
             BTTx *tx;
             NSString *txHashStr = [NSString base58WithData:in.txHash];
@@ -846,25 +846,40 @@ static BTTxProvider *provider;
     return result;
 }
 -(void)clearAllTx{
-     [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
-         NSString *deleteTx = @"delete from txs ";
-         NSString *deleteIn = @"delete from ins";
-         NSString *deleteOut = @"delete from outs";
-         NSString *deleteAddressesTx = @"delete from addresses_txs";
-         NSString *deletePeer = @"delete from peers";
+     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
          [db beginTransaction];
-         [db executeUpdate:deleteTx];
-         [db executeUpdate:deleteIn];
-         [db executeUpdate:deleteOut];
-         [db executeUpdate:deleteAddressesTx];
-         [db executeUpdate:deletePeer];
+         [db executeUpdate:@"drop table txs;"];
+         [db executeUpdate:@"drop table ins;"];
+         [db executeUpdate:@"drop table outs;"];
+         [db executeUpdate:@"drop table addresses_txs;"];
+         [db executeUpdate:@"drop table peers;"];
+         [db executeUpdate:[BTDatabaseManager instance].createTableTxsSql];
+         [db executeUpdate:[BTDatabaseManager instance].createIndexTxsBlockNoSql];
+         [db executeUpdate:[BTDatabaseManager instance].createTableAddressesTxsSql];
+         [db executeUpdate:[BTDatabaseManager instance].createTableInsSql];
+         [db executeUpdate:[BTDatabaseManager instance].createIndexInsPrevTxHashSql];
+         [db executeUpdate:[BTDatabaseManager instance].createTableOutsSql];
+         [db executeUpdate:[BTDatabaseManager instance].createIndexInsPrevTxHashSql];
+         [db executeUpdate:[BTDatabaseManager instance].createTablePeersSql];
          [db commit];
+//         NSString *deleteTx = @"delete from txs ";
+//         NSString *deleteIn = @"delete from ins";
+//         NSString *deleteOut = @"delete from outs";
+//         NSString *deleteAddressesTx = @"delete from addresses_txs";
+//         NSString *deletePeer = @"delete from peers";
+//         [db beginTransaction];
+//         [db executeUpdate:deleteTx];
+//         [db executeUpdate:deleteIn];
+//         [db executeUpdate:deleteOut];
+//         [db executeUpdate:deleteAddressesTx];
+//         [db executeUpdate:deletePeer];
+//         [db commit];
      }];
 }
 
 - (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;{
     __block BTOut *result = nil;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *outSql = @"select * from outs where tx_hash=? and out_sn=?";
         FMResultSet *rs = [db executeQuery:outSql, [NSString base58WithData:txHash], @(outSn)];
         while ([rs next]) {
@@ -876,7 +891,7 @@ static BTTxProvider *provider;
 }
 
 - (void)completeInSignatureWithIns:(NSArray *) ins; {
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *updateSql = @"update ins set in_signature=? where tx_hash=? and in_sn=? and ifnull(in_signature,'')=''";
         [db beginTransaction];
         for (BTIn *in in ins) {
@@ -889,7 +904,7 @@ static BTTxProvider *provider;
 
 - (uint32_t)needCompleteInSignature:(NSString *)address;{
     __block uint32_t result = 0;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select max(txs.block_no) from outs,ins,txs where outs.out_address=? "
                 "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn "
                 "and ifnull(ins.in_signature,'')='' and txs.tx_hash=ins.tx_hash";

@@ -23,7 +23,7 @@
 @implementation BTDatabaseManager (UnitTest)
 
 - (void)reInitDataBase;{
-    [[self getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[self getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *delBlockSql = @"drop table blocks";
         NSString *delTxSql = @"drop table txs";
         NSString *delAddressTxSql = @"drop table addresses_txs";
@@ -44,7 +44,7 @@
 }
 
 - (void)clear {
-    [[self getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[self getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *delBlockSql = @"delete from blocks";
         NSString *delTxSql = @"delete from txs";
         NSString *delAddressTxSql = @"delete from addresses_txs";

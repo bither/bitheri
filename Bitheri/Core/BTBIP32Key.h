@@ -42,7 +42,7 @@
 
 @property (nonatomic, copy) NSData *secret;
 @property (nonatomic, copy) NSData *pubKey;
-@property (nonatomic, copy) NSArray *childNumberPath;
+@property (nonatomic, copy) NSArray *path;
 @property (readonly) BOOL isPubKeyOnly;
 @property (nonatomic, readonly) NSString *address;
 
@@ -50,15 +50,10 @@
 
 - (instancetype)initWithSeed:(NSData *)seed;
 - (instancetype)initWithMasterPubKey:(NSData *)masterPubKey;
+- (instancetype)initWithSecret:(NSData *)secret andPubKey:(NSData *)pubKey andChain:(NSData *)chain
+                       andPath:(NSArray *)path;
 - (BTBIP32Key *)deriveSoftened:(uint)child;
 - (BTBIP32Key *)deriveHardened:(uint)child;
 - (void)clearPrivateKey;
-//- (NSData *)masterPublicKeyFromSeed:(NSData *)seed;
-//- (NSData *)publicKey:(unsigned)n internal:(BOOL)internal masterPublicKey:(NSData *)masterPublicKey;
-//- (NSString *)privateKey:(unsigned)n internal:(BOOL)internal fromSeed:(NSData *)seed;
-//- (NSArray *)privateKeys:(NSArray *)n internal:(BOOL)internal fromSeed:(NSData *)seed;
-//
-//- (NSString *)serializedPrivateMasterFromSeed:(NSData *)seed;
-//- (NSString *)serializedMasterPublicKey:(NSData *)masterPublicKey;
 
 @end

@@ -187,21 +187,19 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
 }
 
 + (BTBIP32Key *)deriveChildKey:(uint) childNumber fromParent:(BTBIP32Key *)parent;{
-    BTBIP32Key *key = [BTBIP32Key new];
     if (parent.isPubKeyOnly) {
         NSMutableData *pubKey = [NSMutableData dataWithData:[parent pubKey]];
         NSMutableData *chain = [NSMutableData dataWithData:[parent chain]];
         CKDPrime(pubKey, chain, childNumber);
-        key.pubKey = pubKey;
-        key.chain = chain;
+        NSArray *path = [BTBIP32Key path:parent.path extend:childNumber];
+        return [[BTBIP32Key alloc] initWithSecret:nil andPubKey:pubKey andChain:chain andPath:path];
     } else {
         NSMutableData *secret = [NSMutableData dataWithData:[parent secret]];
         NSMutableData *chain = [NSMutableData dataWithData:[parent chain]];
         CKD(secret, chain, childNumber);
-        key.secret = secret;
-        key.chain = chain;
+        NSArray *path = [BTBIP32Key path:parent.path extend:childNumber];
+        return [[BTBIP32Key alloc] initWithSecret:secret andPubKey:nil andChain:chain andPath:path];
     }
-    return key;
 }
 
 - (instancetype)initWithSeed:(NSData *)seed; {
@@ -218,6 +216,7 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
 
     self.secret = secret;
     self.chain = chain;
+    self.path = @[];
 
     return self;
 }
@@ -233,6 +232,19 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
 
     self.pubKey = pubKey;
     self.chain = chain;
+    self.path = @[];
+
+    return self;
+}
+
+- (instancetype)initWithSecret:(NSData *)secret andPubKey:(NSData *)pubKey andChain:(NSData *)chain
+                       andPath:(NSArray *)path; {
+    if (! (self = [super init])) return nil;
+
+    self.secret = secret;
+    self.pubKey = pubKey;
+    self.chain = chain;
+    self.path = path;
 
     return self;
 }
@@ -278,145 +290,10 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     return [NSString base58checkWithData:d];
 }
 
-//#pragma mark - BTKeySequence
-//
-//// master public key format is: 4 byte parent fingerprint || 32 byte chain code || 33 byte compressed public key
-//// the values are taken from BIP32 account m/0'
-//- (NSData *)masterPublicKeyFromSeed:(NSData *)seed
-//{
-//    if (! seed) return nil;
-//
-//    NSMutableData *mpk = [NSMutableData secureData];
-//    NSMutableData *I = [NSMutableData secureDataWithLength:CC_SHA512_DIGEST_LENGTH];
-//    NSMutableData *secret = [NSMutableData secureDataWithCapacity:32];
-//    NSMutableData *chain = [NSMutableData secureDataWithCapacity:32];
-//
-//    CCHmac(kCCHmacAlgSHA512, BIP32_SEED_KEY, strlen(BIP32_SEED_KEY), seed.bytes, seed.length, I.mutableBytes);
-//
-//    [secret appendBytes:I.bytes length:32];
-//    [chain appendBytes:(const unsigned char *)I.bytes + 32 length:32];
-//    [mpk appendBytes:[[[BTKey keyWithSecret:secret compressed:YES] hash160] bytes] length:4];
-//
-//    CKD(secret, chain, 0 | BIP32_HARDEN); // account 0'
-//
-//    [mpk appendData:chain];
-//    [mpk appendData:[[BTKey keyWithSecret:secret compressed:YES] publicKey]];
-//
-//    return mpk;
-//}
-//
-//- (NSData *)publicKey:(unsigned)n internal:(BOOL)internal masterPublicKey:(NSData *)masterPublicKey
-//{
-//    if (masterPublicKey.length < 36) return nil;
-//
-//    NSMutableData *chain = [NSMutableData secureDataWithCapacity:32];
-//    NSMutableData *pubKey = [NSMutableData secureDataWithCapacity:65];
-//
-//    [chain appendBytes:(const unsigned char *)masterPublicKey.bytes + 4 length:32];
-//    [pubKey appendBytes:(const unsigned char *)masterPublicKey.bytes + 36 length:masterPublicKey.length - 36];
-//
-//    CKDPrime(pubKey, chain, internal ? 1 : 0); // internal or external chain
-//    CKDPrime(pubKey, chain, n); // nth key in chain
-//
-//    return pubKey;
-//}
-//
-//- (NSString *)privateKey:(unsigned)n internal:(BOOL)internal fromSeed:(NSData *)seed
-//{
-//    return seed ? [[self privateKeys:@[@(n)] internal:internal fromSeed:seed] lastObject] : nil;
-//}
-//
-//- (NSArray *)privateKeys:(NSArray *)n internal:(BOOL)internal fromSeed:(NSData *)seed
-//{
-//    if (! seed || ! n) return nil;
-//    if (n.count == 0) return @[];
-//
-//    NSMutableArray *a = [NSMutableArray arrayWithCapacity:n.count];
-//    NSMutableData *I = [NSMutableData secureDataWithLength:CC_SHA512_DIGEST_LENGTH];
-//    NSMutableData *secret = [NSMutableData secureDataWithCapacity:32];
-//    NSMutableData *chain = [NSMutableData secureDataWithCapacity:32];
-//    uint8_t version = BITCOIN_PRIVKEY;
-//
-//#if BITCOIN_TESTNET
-//    version = BITCOIN_PRIVKEY_TEST;
-//#endif
-//
-//    CCHmac(kCCHmacAlgSHA512, BIP32_SEED_KEY, strlen(BIP32_SEED_KEY), seed.bytes, seed.length, I.mutableBytes);
-//
-//    [secret appendBytes:I.bytes length:32];
-//    [chain appendBytes:(const unsigned char *)I.bytes + 32 length:32];
-//
-//    CKD(secret, chain, 0 | BIP32_HARDEN); // account 0'
-//    CKD(secret, chain, internal ? 1 : 0); // internal or external chain
-//
-//    for (NSNumber *i in n) {
-//        NSMutableData *prvKey = [NSMutableData secureDataWithCapacity:34];
-//        NSMutableData *s = [NSMutableData secureDataWithData:secret];
-//        NSMutableData *c = [NSMutableData secureDataWithData:chain];
-//
-//        CKD(s, c, i.unsignedIntValue); // nth key in chain
-//
-//        [prvKey appendBytes:&version length:1];
-//        [prvKey appendData:s];
-//        [prvKey appendBytes:"\x01" length:1]; // specifies compressed pubkey format
-//        [a addObject:[NSString base58checkWithData:prvKey]];
-//    }
-//
-//    return a;
-//}
-//
-//#pragma mark - serializations
-//
-//- (NSString *)serializedPrivateMasterFromSeed:(NSData *)seed
-//{
-//    if (! seed) return nil;
-//
-//    NSMutableData *I = [NSMutableData secureDataWithLength:CC_SHA512_DIGEST_LENGTH];
-//
-//    CCHmac(kCCHmacAlgSHA512, BIP32_SEED_KEY, strlen(BIP32_SEED_KEY), seed.bytes, seed.length, I.mutableBytes);
-//
-//    NSData *secret = [NSData dataWithBytesNoCopy:I.mutableBytes length:32 freeWhenDone:NO];
-//    NSData *chain = [NSData dataWithBytesNoCopy:(unsigned char *)I.mutableBytes + 32 length:32 freeWhenDone:NO];
-//
-//    return serialize(0, 0, 0, chain, secret);
-//}
-//
-//- (NSString *)serializedMasterPublicKey:(NSData *)masterPublicKey
-//{
-//    if (masterPublicKey.length < 36) return nil;
-//
-//    uint32_t fingerprint = CFSwapInt32BigToHost(*(const uint32_t *)masterPublicKey.bytes);
-//    NSData *chain = [NSData dataWithBytesNoCopy:(unsigned char *)masterPublicKey.bytes + 4 length:32 freeWhenDone:NO];
-//    NSData *pubKey = [NSData dataWithBytesNoCopy:(unsigned char *)masterPublicKey.bytes + 36
-//                                          length:masterPublicKey.length - 36 freeWhenDone:NO];
-//
-//    return serialize(1, fingerprint, 0 | BIP32_HARDEN, chain, pubKey);
-//}
-
-- (NSArray *)getAddresses:(NSData *)seed;{
-    NSMutableData *I = [NSMutableData secureDataWithLength:CC_SHA512_DIGEST_LENGTH];
-    NSMutableData *secret = [NSMutableData secureDataWithCapacity:32];
-    NSMutableData *chain = [NSMutableData secureDataWithCapacity:32];
-
-    CCHmac(kCCHmacAlgSHA512, BIP32_SEED_KEY, strlen(BIP32_SEED_KEY), seed.bytes, seed.length, I.mutableBytes);
-
-    [secret appendBytes:I.bytes length:32];
-    [chain appendBytes:(const unsigned char *)I.bytes + 32 length:32];
-
-    CKD(secret, chain, 44 | BIP32_HARDEN);
-    CKD(secret, chain, 0 | BIP32_HARDEN);
-    CKD(secret, chain, 0 | BIP32_HARDEN);
-    CKD(secret, chain, 0);
-
-    NSMutableArray *result = [NSMutableArray new];
-    for (int i = 0; i < 20; i++) {
-        NSMutableData *s = [NSMutableData dataWithData:[secret copy]];
-        NSMutableData *c = [NSMutableData dataWithData:[chain copy]];
-        CKD(s, c, i);
-        [result addObject:[[BTKey keyWithSecret:s compressed:YES] address]];
-//        XCTAssertTrue([[[BTKey keyWithSecret:s compressed:YES] address] isEqualToString:addresses[i]]);
-    }
-    return result;
++ (NSArray *)path:(NSArray *)path extend:(uint) child; {
+    NSMutableArray *array = [NSMutableArray arrayWithArray:path];
+    [array addObject:@(child)];
+    return [NSArray arrayWithArray:array];
 }
 
 @end

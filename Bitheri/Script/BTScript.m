@@ -44,7 +44,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     return self;
 }
 
-- (instancetype)initWithChunks:(NSArray *)chunks {
+- (instancetype)initWithChunks:(NSArray *)chunks; {
     if (!(self = [super init])) return nil;
 //    NSMutableArray *chunks = [NSMutableArray new];
 //    for (BTScriptChunk *chunk in chunks) {
@@ -222,7 +222,20 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (NSString *)getFromAddress; {
-    return [self addressFromHash:[[self getPubKey] hash160]];
+    if (self.chunks.count == 2
+            && ((BTScriptChunk *)self.chunks[0]).data != nil && ((BTScriptChunk *)self.chunks[0]).data.length > 2
+            && ((BTScriptChunk *)self.chunks[1]).data != nil && ((BTScriptChunk *)self.chunks[1]).data.length > 2) {
+        return [self addressFromHash:[((BTScriptChunk *) self.chunks[1]).data hash160]];
+    } else if (self.chunks.count >= 3 && ((BTScriptChunk *)self.chunks[0]).opCode == OP_0) {
+        BOOL isP2SHScript = YES;
+        for (NSUInteger i = 1; i < self.chunks.count; i++) {
+            isP2SHScript &= ((BTScriptChunk *)self.chunks[i]).data != nil && ((BTScriptChunk *)self.chunks[i]).data.length > 2;
+        }
+        if (isP2SHScript) {
+            return [self p2shAddressFromHash:[((BTScriptChunk *) self.chunks[self.chunks.count - 1]).data hash160]];
+        }
+    }
+    return nil;
 }
 
 - (NSString *)getToAddress; {

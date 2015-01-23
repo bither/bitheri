@@ -17,9 +17,88 @@
 //  limitations under the License.
 
 #import "BTScriptBuilder.h"
+#import "BTScript.h"
+#import "BTScriptOpCodes.h"
 
 
 @implementation BTScriptBuilder {
 
+}
+
+- (BTScriptBuilder *)addChunk:(BTScriptChunk *)chunk;{
+    [self.chunks addObject:chunk];
+    return self;
+}
+
+- (BTScriptBuilder *)op:(int)opCode; {
+    if (opCode > OP_PUSHDATA4) {
+        return [self addChunk:[[BTScriptChunk alloc] initWithOpCode:opCode andData:nil]];
+    } else {
+        return nil;
+    }
+}
+
+- (BTScriptBuilder *)data:(NSData *)data; {
+    NSData *copy = [data copy];
+    int opCode = 0;
+    if (copy.length == 0) {
+        opCode = OP_0;
+    } else if (copy.length == 1) {
+        uint8_t b = *((const uint8_t *)copy.bytes);
+        if (b >= 1 && b <= 16) {
+            opCode = [BTScript encodeToOpN:b];
+        } else {
+            opCode = 1;
+        }
+    } else if (copy.length < OP_PUSHDATA1) {
+        opCode = copy.length;
+    } else if (copy.length < 256) {
+        opCode = OP_PUSHDATA1;
+    } else if (copy.length < 65536) {
+        opCode = OP_PUSHDATA2;
+    } else {
+        return nil;
+    }
+    return [self addChunk:[[BTScriptChunk alloc] initWithOpCode:opCode andData:copy]];
+}
+
+- (BTScriptBuilder *)smallNum:(int)num; {
+    if (num >= 0 && num <= 16) {
+        return [self addChunk:[[BTScriptChunk alloc] initWithOpCode:[BTScript encodeToOpN:num] andData:nil]];
+    } else {
+        return nil;
+    }
+}
+
+- (BTScript *)build;{
+    return [[BTScript alloc] initWithChunks:self.chunks];
+}
+
+#pragma mark - p2sh
++ (BTScript *)createMultisigScriptWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys;{
+    BTScriptBuilder *builder = [[[BTScriptBuilder alloc] init] smallNum:threshold];
+    for (NSData *pubKey in pubKeys) {
+        [builder data:pubKey];
+    }
+    [builder smallNum:pubKeys.count];
+    [builder op:OP_CHECKMULTISIG];
+    return [builder build];
+}
+
++ (BTScript *)createP2SHMultisigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram;{
+    BTScriptBuilder *builder = [[[BTScriptBuilder alloc] init] smallNum:0];
+    for (NSData *signature in signatures) {
+        [builder data:signature];
+    }
+    [builder data:multisigProgram];
+    return [builder build];
+}
+
++ (BTScript *)createP2SHOutputScriptWithHash:(NSData *)hash;{
+    return [[[[[[BTScriptBuilder alloc] init] op:OP_HASH160] data:hash] op:OP_EQUAL] build];
+}
+
++ (BTScript *)createP2SHOutputScriptWithScript:(BTScript *)script;{
+    return [BTScriptBuilder createP2SHOutputScriptWithHash:[[script program] hash160]];
 }
 @end

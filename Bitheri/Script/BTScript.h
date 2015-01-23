@@ -29,7 +29,7 @@ const static int SIG_SIZE = 75;
 @property NSUInteger index;
 @property (nonatomic, copy) NSData *program;
 - (instancetype)initWithProgram:(NSData *)program;
-
+- (instancetype)initWithChunks:(NSArray *)chunks;
 
 - (NSData *)getPubKey;
 - (NSData *)getPubKeyHash;

@@ -17,7 +17,22 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-
+#import "BTScript.h"
+#import "BTScriptChunk.h"
 
 @interface BTScriptBuilder : NSObject
+
+@property (nonatomic, copy) NSMutableArray *chunks;
+
+- (BTScriptBuilder *)addChunk:(BTScriptChunk *)chunk;
+- (BTScriptBuilder *)op:(int)opCode;
+- (BTScriptBuilder *)data:(NSData *)data;
+- (BTScriptBuilder *)smallNum:(int)num;
+- (BTScript *)build;
+
++ (BTScript *)createMultisigScriptWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys;
++ (BTScript *)createP2SHMultisigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram;
++ (BTScript *)createP2SHOutputScriptWithHash:(NSData *)hash;
++ (BTScript *)createP2SHOutputScriptWithScript:(BTScript *)script;
+
 @end

@@ -132,7 +132,10 @@ static BTDatabaseManager *databaseProvide;
 }
 
 - (BOOL)initDatabase {
-    return NO;
+    BOOL result = YES;
+    result &= [self initTxDb];
+    result &= [self initAddressDb];
+    return result;
 }
 
 - (BOOL)initTxDb {

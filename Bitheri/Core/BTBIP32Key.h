@@ -58,4 +58,6 @@
 - (BTBIP32Key *)deriveHardened:(uint)child;
 - (void)clearPrivateKey;
 
+- (NSData *)getPubKeyExtended;
+
 @end

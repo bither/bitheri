@@ -53,6 +53,7 @@
 #pragma mark - normal
 - (NSArray *)getAddresses;
 - (void)addAddress:(BTAddress *)address;
+- (NSString *)getEncryptPrivKeyWith:(NSString *)address;
 - (void)updatePrivateKey:(BTAddress *)address;
 - (void)removeWatchOnlyAddress:(BTAddress *)address;
 - (void)trashPrivKeyAddress:(BTAddress *)address;

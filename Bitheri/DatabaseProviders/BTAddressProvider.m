@@ -354,11 +354,24 @@ static BTAddressProvider *provider;
 
 - (void)addAddress:(BTAddress *)address;{
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"insert into addresses(address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,sort_time) "
+        NSString *sql = @"insert into addresses(ifnull(encrypt_private_key,0),pub_key,is_xrandom,is_trash,is_synced,sort_time) "
                 " values(?,?,?,?,?,?,?)";
         [db executeUpdate:sql, address.address, address.encryptPrivKey, [NSString base58WithData:address.pubKey]
                 , @(address.isFromXRandom), @(address.isTrashed), @(address.isSyncComplete), @(address.sortTime)];
     }];
+}
+
+- (NSString *)getEncryptPrivKeyWith:(NSString *)address;{
+    __block NSString *encryptPrivKey = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select encrypt_private_key from addresses where address=?";
+        FMResultSet *rs = [db executeQuery:sql, address];
+        if ([rs next]) {
+            encryptPrivKey = [rs stringForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return encryptPrivKey;
 }
 
 - (void)updatePrivateKey:(BTAddress *)address;{

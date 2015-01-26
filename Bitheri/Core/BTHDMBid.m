@@ -20,4 +20,13 @@
 @implementation BTHDMBid {
 
 }
+
+- (instancetype)initWithHDMBid:(NSString *)address andEncryptBitherPassword:(NSString *)encryptBitherPassword;{
+    if (!(self = [super init])) return nil;
+
+    self.address = address;
+    self.encryptedBitherPassword = encryptBitherPassword;
+
+    return self;
+}
 @end

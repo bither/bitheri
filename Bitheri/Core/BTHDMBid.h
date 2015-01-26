@@ -18,4 +18,10 @@
 #import <Foundation/Foundation.h>
 
 @interface BTHDMBid : NSObject
+
+- (instancetype)initWithHDMBid:(NSString *)address andEncryptBitherPassword:(NSString *)encryptBitherPassword;
+
+@property (nonatomic, copy) NSString *address;
+@property (nonatomic, copy) NSString *encryptedBitherPassword;
+
 @end

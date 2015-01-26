@@ -862,18 +862,6 @@ static BTTxProvider *provider;
          [db executeUpdate:[BTDatabaseManager instance].createIndexInsPrevTxHashSql];
          [db executeUpdate:[BTDatabaseManager instance].createTablePeersSql];
          [db commit];
-//         NSString *deleteTx = @"delete from txs ";
-//         NSString *deleteIn = @"delete from ins";
-//         NSString *deleteOut = @"delete from outs";
-//         NSString *deleteAddressesTx = @"delete from addresses_txs";
-//         NSString *deletePeer = @"delete from peers";
-//         [db beginTransaction];
-//         [db executeUpdate:deleteTx];
-//         [db executeUpdate:deleteIn];
-//         [db executeUpdate:deleteOut];
-//         [db executeUpdate:deleteAddressesTx];
-//         [db executeUpdate:deletePeer];
-//         [db commit];
      }];
 }
 

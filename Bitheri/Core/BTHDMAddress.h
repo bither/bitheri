@@ -16,10 +16,23 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #import <Foundation/Foundation.h>
+@class BTHDMKeychain;
 
 @interface BTHDMPubs :NSObject
+
+@property (nonatomic, copy) NSData *hot;
+@property (nonatomic, copy) NSData *cold;
+@property (nonatomic, copy) NSData *remote;
+@property (nonatomic) int index;
+
 @end
 
 @interface BTHDMAddress : NSObject
+
+@property (nonatomic, strong) BTHDMPubs *pubs;
+@property (nonatomic, strong) BTHDMKeychain *keychain;
+@property (nonatomic, copy) NSString *address;
+@property (nonatomic) BOOL isSynced;
+
 @end
 

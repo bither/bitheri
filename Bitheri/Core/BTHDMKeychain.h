@@ -18,4 +18,11 @@
 #import <Foundation/Foundation.h>
 
 @interface BTHDMKeychain : NSObject
+
+@property (nonatomic) int hdSeedId;
+@property (nonatomic, copy) NSString *encryptSeed;
+@property (nonatomic, copy) NSString *encryptHDSeed;
+@property (nonatomic, copy, readonly) NSString *firstAddress;
+@property (nonatomic) BOOL isXRandom;
+
 @end

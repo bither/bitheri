@@ -23,6 +23,9 @@
 
 @interface BTAddressProvider : NSObject
 
++ (instancetype)instance;
+- (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
+
 #pragma mark - hdm
 - (NSArray *)getHDSeedIds;
 - (NSString *)getEncryptSeed:(int)hdSeedId;

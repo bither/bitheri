@@ -22,6 +22,10 @@
 
 }
 
+- (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
+    return NO;
+}
+
 #pragma mark - hdm
 - (NSArray *)getHDSeedIds; {
     __block NSMutableArray *hdSeedIds = [NSMutableArray new];
@@ -323,30 +327,72 @@
 
 #pragma mark - normal
 - (NSArray *)getAddresses; {
-    return nil;
+    __block NSMutableArray *addresses = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,sort_time "
+                " from addresses order by sort_time desc";
+        FMResultSet *rs = [db executeQuery:sql];
+        while ([rs next]) {
+            [addresses addObject:[self formatAddress:rs]];
+        }
+        [rs close];
+    }];
+    return addresses;
 }
 
 - (void)addAddress:(BTAddress *)address;{
-
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"insert into addresses(address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,sort_time) "
+                " values(?,?,?,?,?,?,?)";
+        [db executeUpdate:sql, address.address, address.encryptPrivKey, [NSString base58WithData:address.pubKey]
+                , @(address.isFromXRandom), @(address.isTrashed), @(address.isSyncComplete), @(address.sortTime)];
+    }];
 }
 
 - (void)updatePrivateKey:(BTAddress *)address;{
-
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update addresses set encrypt_private_key=? where address=?";
+        [db executeUpdate:sql, address.encryptPrivKey, address.address];
+    }];
 }
 
 - (void)removeWatchOnlyAddress:(BTAddress *)address;{
-
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update addresses set is_trash=1 where address=?";
+        [db executeUpdate:sql, address.address];
+    }];
 }
 
 - (void)trashPrivKeyAddress:(BTAddress *)address;{
-
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update addresses set is_trash=1 where address=?";
+        [db executeUpdate:sql, address.address];
+    }];
 }
 
 - (void)restorePrivKeyAddress:(BTAddress *)address;{
-
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update addresses set is_trash=0,is_synced=0,sort_time=? where address=?";
+        [db executeUpdate:sql, @(address.sortTime), address.address];
+    }];
 }
 
 - (void)updateSyncComplete:(BTAddress *)address;{
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update addresses set is_synced=1 where address=?";
+        [db executeUpdate:sql, address.address];
+    }];
+}
 
+- (BTAddress *)formatAddress:(FMResultSet *)rs;{
+    BTAddress *address = [[BTAddress alloc] init];
+    address.hasPrivKey = [rs columnIsNull:@"encrypt_private_key"];
+    address.encryptPrivKey = [rs stringForColumn:@"encrypt_private_key"];
+    address.pubKey = [[rs stringForColumn:@"pub_key"] base58ToData];
+    address.isFromXRandom = [rs boolForColumn:@"is_xrandom"];
+    address.isTrashed = [rs boolForColumn:@"is_trash"];
+    address.isSyncComplete = [rs boolForColumn:@"is_synced"];
+    address.sortTime = [rs longLongIntForColumn:@"sort_time"];
+    return address;
 }
 @end

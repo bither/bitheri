@@ -37,9 +37,11 @@
 //  THE SOFTWARE.
 
 #import <Foundation/Foundation.h>
+#import "BTKey.h"
 
 @interface BTBIP32Key : NSObject
 
+@property (nonatomic, strong, readonly) BTKey *key;
 @property (nonatomic, copy) NSData *secret;
 @property (nonatomic, copy) NSData *pubKey;
 @property (nonatomic, copy) NSArray *path;

@@ -16,13 +16,46 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #import <Foundation/Foundation.h>
+#import "BTHDMAddress.h"
+#import "BTBIP32Key.h"
+#import "BTPasswordSeed.h"
+
+@protocol BTHDMFetchRemotePublicKeys
+-(void)completeRemotePublicKeysWithPassword:(NSString*)password andPartialPubs:(NSArray*)partialPubs;
+@end
+
+@protocol BTHDMFetchRemoteAddressesDelegate
+-(NSArray*) getRemoteExistsPublicKeysWithPassword:(NSString*)password;
+@end
+
+@protocol BTHDMAddressChangeDelegate
+-(void)hdmAddressAdded:(BTHDMAddress*)address;
+@end
 
 @interface BTHDMKeychain : NSObject
 
 @property (nonatomic) int hdSeedId;
-@property (nonatomic, copy) NSString *encryptSeed;
-@property (nonatomic, copy) NSString *encryptHDSeed;
-@property (nonatomic, copy, readonly) NSString *firstAddress;
-@property (nonatomic) BOOL isXRandom;
+@property (nonatomic, copy, readonly) NSString *firstAddressFromDb;
+@property (nonatomic, readonly) BOOL isFromXRandom;
+@property (nonatomic, readonly) NSArray* addresses;
+@property (nonatomic) NSMutableArray *allCompletedAddresses;
+@property (nonatomic, readonly) NSUInteger uncompletedAddressCount;
+@property (nonatomic, readonly) BOOL isInRecovery;
+@property (nonatomic, weak) NSObject<BTHDMAddressChangeDelegate> *addressChangeDelegate;
 
+-(instancetype)initWithMnemonicSeed:(NSData*)seed password:(NSString*)password andXRandom:(BOOL)xrandom;
+
+-(instancetype)initWithSeedId:(int)seedId;
+
+-(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeed password:(NSString*) password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate;
+
+-(NSUInteger)prepareAddressesWithCount:(NSUInteger)count password:(NSString*)password andColdExternalPub:(NSData*)coldExternalPub;
+-(NSArray*)completeAddressesWithCount:(NSUInteger)count password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemotePublicKeys>*)fetchDelegate;
+
+-(BTBIP32Key*)externalKeyWithIndex:(uint) index andPassword:(NSString*)password;
+-(NSData*)externalChainRootPubExtended:(NSString*)password;
+-(NSString*)externalChainRootPubExtendedAsHex:(NSString*)password;
+
+-(BOOL)checkWithPassword:(NSString*)password;
+-(NSString*)signHDMBIdWithMessageHash:(NSString*)messageHash andPassword:(NSString*)password;
 @end

@@ -264,11 +264,16 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     self.secret = nil;
 }
 
-- (NSData *)getPubKeyExtended;{
+- (NSData *)getPubKeyExtended{
     NSMutableData *pubKeyExtended = [NSMutableData secureDataWithCapacity:self.pubKey.length + self.chain.length];
     [pubKeyExtended appendBytes:self.pubKey.bytes length:self.pubKey.length];
     [pubKeyExtended appendBytes:self.chain.bytes length:self.chain.length];
     return pubKeyExtended;
+}
+
+- (void)wipe{
+    [self clearPrivateKey];
+    self.chain = nil;
 }
 
 - (NSData *)pubKey {

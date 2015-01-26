@@ -25,6 +25,8 @@
 @property (nonatomic, copy) NSData *remote;
 @property (nonatomic) int index;
 
+@property (nonatomic, readonly) BOOL isCompleted;
+
 @end
 
 @interface BTHDMAddress : NSObject
@@ -33,6 +35,8 @@
 @property (nonatomic, strong) BTHDMKeychain *keychain;
 @property (nonatomic, copy) NSString *address;
 @property (nonatomic) BOOL isSynced;
+
+-(instancetype)initWithPubs:(BTHDMPubs*)pubs andKeychain:(BTHDMKeychain*)keychain;
 
 @end
 

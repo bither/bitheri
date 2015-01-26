@@ -179,7 +179,7 @@
         FMResultSet *rs = nil;
         for (BTHDMPubs *pub in pubs) {
             rs = [db executeQuery:sql, @(hdSeedId), @(pub.index)];
-            if ([rs next]) {
+            while ([rs next]) {
                 isExist &= [rs intForColumnIndex:0] > 0;
             }
             [rs close];
@@ -188,7 +188,8 @@
         if (!isExist) {
             [db beginTransaction];
             for (BTHDMPubs *pub in pubs) {
-                [db executeUpdate:sql, @(hdSeedId), @(pub.index), [NSString base58WithData:pub.hot], [NSString base58WithData:pub.hot], [NSNull null], [NSNull null], @(0)];
+                [db executeUpdate:sql, @(hdSeedId), @(pub.index), [NSString base58WithData:pub.hot]
+                        , [NSString base58WithData:pub.cold], [NSNull null], [NSNull null], @(0)];
             }
             [db commit];
         }
@@ -196,28 +197,103 @@
 }
 
 - (NSArray *)getUncompletedHDMAddressPubs:(int) hdSeedId andCount:(int)count;{
-    return nil;
+    __block NSMutableArray *pubsList = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select * from hdm_addresses where hd_seed_id=? and pub_key_remote is null limit ?";
+        FMResultSet *rs = [db executeQuery:sql, @(hdSeedId), @(count)];
+        while ([rs next]) {
+            [pubsList addObject:[self formatHDMPubs:rs]];
+        }
+        [rs close];
+    }];
+    return pubsList;
 }
 
 - (int)maxHDMAddressPubIndex:(int)hdSeedId;{
     //including completed and uncompleted
-    return 0;
+    __block int max = -1;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select ifnull(max(hd_seed_index),-1) hd_seed_index from hdm_addresses where hd_seed_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(hdSeedId)];
+        if ([rs next]) {
+            max = [rs intForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return max;
 }
 
 - (void)recoverHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;{
-
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"insert into hdm_addresses(hd_seed_id,hd_seed_index,pub_key_hot,pub_key_cold,pub_key_remote,address,is_synced) values(?,?,?,?,?,?,?)";
+        [db beginTransaction];
+        for (BTHDMAddress *address in addresses) {
+            [db executeUpdate:sql, @(hdSeedId), @(address.pubs.index), [NSString base58WithData:address.pubs.hot]
+                    , [NSString base58WithData:address.pubs.cold], [NSString base58WithData:address.pubs.remote]
+                    , address.address, @(0)];
+        }
+        [db commit];
+    }];
 }
 
 - (void)completeHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;{
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        BOOL isExist = NO;
+        NSString *sql = @"select count(0) cnt from hdm_addresses where hd_seed_id=? and hd_seed_index=? and pub_key_remote is null";
+        FMResultSet *rs = nil;
+        for (BTHDMAddress *address in addresses) {
+            rs = [db executeQuery:sql, @(hdSeedId), @(address.pubs.index)];
+            while ([rs next]) {
+                isExist &= [rs intForColumnIndex:0] > 0;
+            }
+            [rs close];
+        }
+        sql = @"update hdm_addresses set pub_key_remote=?,address=? where hd_seed_id=? and hd_seed_index=?";
+        if (!isExist) {
+            [db beginTransaction];
+            for (BTHDMAddress *address in addresses) {
+                [db executeUpdate:sql, [NSString base58WithData:address.pubs.remote], address, @(hdSeedId), @(address.pubs.index)];
+            }
+            [db commit];
+        }
+    }];
+}
 
+- (void)setHDMPubsRemoteWithHDSeedId:(int)hdSeedId andIndex:(int) index andPubKeyRemote:(NSData *) pubKeyRemote;{
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        BOOL isExist = YES;
+        NSString *sql = @"select count(0) cnt from hdm_addresses where hd_seed_id=? and hd_seed_index=? and pub_key_remote is null";
+        FMResultSet *rs = nil;
+        rs = [db executeQuery:sql, @(hdSeedId), @(index)];
+        if ([rs next]) {
+            isExist = [rs intForColumnIndex:0] > 0;
+        }
+        [rs close];
+        sql = @"update hdm_addresses set pub_key_remote=? where hd_seed_id=? and hd_seed_index=?";
+        if (!isExist) {
+            [db executeUpdate:sql, [NSString base58WithData:pubKeyRemote], @(hdSeedId), @(index)];
+        }
+    }];
 }
 
 - (int)uncompletedHDMAddressCount:(int)hdSeedId;{
-    return 0;
+    __block int cnt = 0;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select count(0) cnt from hdm_addresses where hd_seed_id=?  and pub_key_remote is null";
+        FMResultSet *rs = [db executeQuery:sql, @(hdSeedId)];
+        if ([rs next]) {
+            cnt = [rs intForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return cnt;
 }
 
 - (void)syncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(int)hdSeedIndex;{
-
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update hdm_addresses set is_synced=1 where hd_seed_id=? and hd_seed_index=?";
+        [db executeUpdate:sql, @(hdSeedId), @(hdSeedIndex)];
+    }];
 }
 
 - (BTHDMAddress *)formatHDMAddress:(FMResultSet *)rs; {

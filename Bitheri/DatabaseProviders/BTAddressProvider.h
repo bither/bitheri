@@ -43,6 +43,7 @@
 - (int)maxHDMAddressPubIndex:(int)hdSeedId;//including completed and uncompleted
 - (void)recoverHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
 - (void)completeHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
+- (void)setHDMPubsRemoteWithHDSeedId:(int)hdSeedId andIndex:(int) index andPubKeyRemote:(NSData *) pubKeyRemote;
 - (int)uncompletedHDMAddressCount:(int)hdSeedId;
 - (void)syncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(int)hdSeedIndex;
 

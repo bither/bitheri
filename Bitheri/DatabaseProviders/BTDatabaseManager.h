@@ -37,6 +37,7 @@
 @property (nonatomic, copy, readonly) NSString *createTablePeersSql;
 
 #pragma mark - address db
+@property (nonatomic, copy, readonly) NSString *createTablePasswordSeedSql;
 @property (nonatomic, copy, readonly) NSString *createTableAddressesSql;
 @property (nonatomic, copy, readonly) NSString *createTableHDSeedsSql;
 @property (nonatomic, copy, readonly) NSString *createTableHDMAddressesSql;

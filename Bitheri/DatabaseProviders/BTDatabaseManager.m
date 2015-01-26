@@ -101,7 +101,9 @@ static BTDatabaseManager *databaseProvide;
             ", peer_timestamp integer not null"
             ", peer_connected_cnt integer not null);";
 
-
+    _createTablePasswordSeedSql = @"create table if not exists password_seed "
+            "(address text not null primary key"
+            ", encrypt_str text not null);";
     _createTableAddressesSql = @"create table if not exists addresses "
             "(address text not null primary key"
             ", encrypt_private_key text"
@@ -246,6 +248,7 @@ static BTDatabaseManager *databaseProvide;
 - (BOOL)addressV1:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
+        [db executeUpdate:self.createTablePasswordSeedSql];
         [db executeUpdate:self.createTableAddressesSql];
         [db executeUpdate:self.createTableHDSeedsSql];
         [db executeUpdate:self.createTableHDMAddressesSql];

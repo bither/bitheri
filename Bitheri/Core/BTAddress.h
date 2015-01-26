@@ -32,7 +32,8 @@
 
 @interface BTAddress : NSObject
 
-@property (nonatomic, copy) NSString *encryptPrivKey;
+@property (nonatomic, copy, readonly) NSString *encryptPrivKey;
+@property (nonatomic, copy) NSString *encryptPrivKeyForCreate;
 @property (nonatomic, copy) NSData *pubKey;
 @property (nonatomic, readwrite) BOOL isSyncComplete;
 @property (nonatomic, readonly) NSString *address;

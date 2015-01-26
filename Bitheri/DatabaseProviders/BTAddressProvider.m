@@ -33,9 +33,38 @@ static BTAddressProvider *provider;
     return provider;
 }
 
-
+#pragma mark - password
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
     return NO;
+}
+
+- (BTPasswordSeed *)getPasswordSeed;{
+    __block BTPasswordSeed *passwordSeed = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select address,encrypt_str from password_seed limit 1";
+        FMResultSet *rs = [db executeQuery:sql];
+        if ([rs next]) {
+            NSString *address = [rs stringForColumnIndex:0];
+            NSString *encryptStr = [rs stringForColumnIndex:1];
+            passwordSeed = [[BTPasswordSeed alloc] initWithAddress:address andEncryptStr:encryptStr];
+        }
+        [rs close];
+    }];
+    return passwordSeed;
+}
+
+- (void)addPasswordSeedWithAddress:(NSString *)address andEncryptStr:(NSString *)encryptStr andDB:(FMDatabase *)db {
+    NSString *sql = @"select ifnull(count(0),0) from password_seed";
+    FMResultSet *rs = [db executeQuery:sql];
+    BOOL isExist = YES;
+    if ([rs next]) {
+        isExist = [rs boolForColumnIndex:0];
+    }
+    [rs close];
+    if (!isExist) {
+        sql = @"insert into password_seed(address,encrypt_seed) values(?,?)";
+        [db executeUpdate:sql, address, encryptStr];
+    }
 }
 
 #pragma mark - hdm
@@ -118,17 +147,24 @@ static BTAddressProvider *provider;
     return firstAddress;
 }
 
-- (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom;{
+- (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed
+                andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom
+                andPasswordSeed:(NSString *)passwordSeed;{
     __block int hdSeedId = 0;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"insert into hd_seeds(encrypt_seed,encrypt_hd_seed,hdm_address,is_xrandom) values(?,?,?,?)";
+        [db beginTransaction];
         [db executeUpdate:sql, encryptSeed, encryptHDSeed, firstAddress, (isXRandom ? @1: @0)];
+        if (passwordSeed != nil) {
+            [self addPasswordSeedWithAddress:passwordSeed andEncryptStr:encryptSeed andDB:db];
+        }
         sql = @"select hd_seed_id from hd_seeds order by hd_seed_id desc limit 1";
         FMResultSet *rs = [db executeQuery:sql, @(hdSeedId)];
         if ([rs next]) {
             hdSeedId = [rs intForColumnIndex:0];
         }
         [rs close];
+        [db commit];
     }];
     return hdSeedId;
 }
@@ -148,7 +184,7 @@ static BTAddressProvider *provider;
     return hdmBid;
 }
 
-- (void)addHDMBid:(BTHDMBid *)hdmBid;{
+- (void)addHDMBid:(BTHDMBid *)hdmBid andPasswordSeed:(NSString *)passwordSeed;{
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(0) cnt from hdm_bid";
         BOOL isExist = YES;
@@ -159,7 +195,10 @@ static BTAddressProvider *provider;
         [rs close];
         if (!isExist) {
             sql = @"insert into hdm_bid(hdm_bid,encrypt_bither_password) values(?,?)";
+            [db beginTransaction];
             [db executeUpdate:sql, hdmBid.address, hdmBid.encryptedBitherPassword];
+            [self addPasswordSeedWithAddress:passwordSeed andEncryptStr:hdmBid.encryptedBitherPassword andDB:db];
+            [db commit];
         }
     }];
 }
@@ -356,8 +395,14 @@ static BTAddressProvider *provider;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"insert into addresses(address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,sort_time) "
                 " values(?,?,?,?,?,?,?)";
-        [db executeUpdate:sql, address.address, address.encryptPrivKey, [NSString base58WithData:address.pubKey]
-                , @(address.isFromXRandom), @(address.isTrashed), @(address.isSyncComplete), @(address.sortTime)];
+        [db beginTransaction];
+        [db executeUpdate:sql, address.address, address.encryptPrivKeyForCreate == nil ? [NSNull null] : address.encryptPrivKeyForCreate
+                , [NSString base58WithData:address.pubKey], @(address.isFromXRandom), @(address.isTrashed)
+                , @(address.isSyncComplete), @(address.sortTime)];
+        if (address.encryptPrivKeyForCreate != nil) {
+            [self addPasswordSeedWithAddress:address.address andEncryptStr:address.encryptPrivKeyForCreate andDB:db];
+        }
+        [db commit];
     }];
 }
 
@@ -412,7 +457,6 @@ static BTAddressProvider *provider;
 - (BTAddress *)formatAddress:(FMResultSet *)rs;{
     BTAddress *address = [[BTAddress alloc] init];
     address.hasPrivKey = [rs boolForColumn:@"has_priv_key"];
-    address.encryptPrivKey = [rs stringForColumn:@"encrypt_private_key"];
     address.pubKey = [[rs stringForColumn:@"pub_key"] base58ToData];
     address.isFromXRandom = [rs boolForColumn:@"is_xrandom"];
     address.isTrashed = [rs boolForColumn:@"is_trash"];

@@ -21,6 +21,7 @@
 
 @interface BTPasswordSeed : NSObject
 
+- (instancetype)initWithAddress:(NSString *)address andEncryptStr:(NSString *)encryptStr;
 - (instancetype)initWithString:(NSString *)message;
 - (instancetype)initWithBTAddress:(BTAddress *)btAddress;
 - (BOOL)checkPassword:(NSString *)password;

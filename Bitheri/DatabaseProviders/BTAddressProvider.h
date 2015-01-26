@@ -20,11 +20,15 @@
 #import "BTHDMAddress.h"
 #import "BTHDMKeychain.h"
 #import "BTAddress.h"
+#import "BTPasswordSeed.h"
 
 @interface BTAddressProvider : NSObject
 
 + (instancetype)instance;
+
+#pragma mark - password
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
+- (BTPasswordSeed *)getPasswordSeed;
 
 #pragma mark - hdm
 - (NSArray *)getHDSeedIds;
@@ -34,10 +38,10 @@
 - (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
 - (BOOL)isHDSeedFromXRandom:(int)hdSeedId;
 - (NSString *)getHDFirstAddress:(int)hdSeedId;
-- (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom;
+- (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom andPasswordSeed:(NSString *)passwordSeed;
 
 - (BTHDMBid *)getHDMBid;
-- (void)addHDMBid:(BTHDMBid *)hdmBid;
+- (void)addHDMBid:(BTHDMBid *)hdmBid andPasswordSeed:(NSString *)passwordSeed;
 - (void)changeHDMBIdPassword:(BTHDMBid *)hdmBid;
 
 - (NSArray *)getHDMAddressInUse:(BTHDMKeychain *)keychain;

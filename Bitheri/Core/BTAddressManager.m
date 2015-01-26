@@ -336,12 +336,12 @@
     }
     for (NSUInteger i = 0; i < privAddresses.count; i++) {
         BTAddress *address = privAddresses[i];
-        address.encryptPrivKey = encryptPrivKeys[i];
+//        address.encryptPrivKey = encryptPrivKeys[i];
         [address savePrivate];
     }
     for (NSUInteger i = 0; i < trashAddresses.count; i++) {
         BTAddress *address = trashAddresses[i];
-        address.encryptPrivKey = encryptTrashKeys[i];
+//        address.encryptPrivKey = encryptTrashKeys[i];
         [address saveTrash];
     }
     return YES;

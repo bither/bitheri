@@ -28,6 +28,16 @@
 @end
 
 @implementation BTPasswordSeed
+
+- (instancetype)initWithAddress:(NSString *)address andEncryptStr:(NSString *)encryptStr;{
+    if (! (self = [super init])) return nil;
+
+    self.address = address;
+    self.keyStr = encryptStr;
+
+    return self;
+}
+
 - (instancetype)initWithString:(NSString *)message {
     self = [super init];
     if (self) {

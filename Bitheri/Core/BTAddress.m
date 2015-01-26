@@ -27,6 +27,7 @@
 #import "BTSettings.h"
 #import "BTQRCodeUtil.h"
 #import "BTScript.h"
+#import "BTAddressProvider.h"
 
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
@@ -51,7 +52,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom {
     if (!(self = [super init])) return nil;
     _hasPrivKey = encryptPrivKey != nil;
-    _encryptPrivKey = encryptPrivKey;
+    _encryptPrivKeyForCreate = encryptPrivKey;
     _address = key.address;
     _pubKey = key.publicKey;
     _isSyncComplete = NO;
@@ -66,7 +67,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = hasPrivKey;
-    _encryptPrivKey = nil;
+    _encryptPrivKeyForCreate = nil;
     _address = address;
     _pubKey = pubKey;
     _isFromXRandom=isXRandom;
@@ -81,7 +82,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = encryptPrivKey != nil;
-    _encryptPrivKey = encryptPrivKey;
+    _encryptPrivKeyForCreate = encryptPrivKey;
     _pubKey = [pubKey hexToData];
     _address = [NSString addressWithPubKey:_pubKey];
     _isFromXRandom = [BTKey isXRandom:encryptPrivKey];
@@ -478,19 +479,21 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (NSString *)encryptPrivKey {
     if (self.hasPrivKey) {
-        if (_encryptPrivKey) {
-            return _encryptPrivKey;
-        } else {
-            NSString *dirStr = [BTUtils getPrivDir];
-            if(self.isTrashed){
-                dirStr = [BTUtils getTrashDir];
-            }
-            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, dirStr, self.address];
-            _encryptPrivKey = [BTUtils readFile:privateKeyFullFileName];
-            return _encryptPrivKey;
-        }
+        return [[BTAddressProvider instance] getEncryptPrivKeyWith:[self address]];
+//        if (_encryptPrivKey) {
+//            return _encryptPrivKey;
+//        } else {
+//            NSString *dirStr = [BTUtils getPrivDir];
+//            if(self.isTrashed){
+//                dirStr = [BTUtils getTrashDir];
+//            }
+//            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, dirStr, self.address];
+//            _encryptPrivKey = [BTUtils readFile:privateKeyFullFileName];
+//            return _encryptPrivKey;
+//        }
+    } else {
+        return nil;
     }
-    return nil;
 }
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase; {

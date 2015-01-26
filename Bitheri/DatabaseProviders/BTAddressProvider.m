@@ -341,7 +341,7 @@ static BTAddressProvider *provider;
 - (NSArray *)getAddresses; {
     __block NSMutableArray *addresses = [NSMutableArray new];
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,sort_time "
+        NSString *sql = @"select ifnull(length(encrypt_private_key)>0,0) has_priv_key,pub_key,is_xrandom,is_trash,is_synced,sort_time "
                 " from addresses order by sort_time desc";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
@@ -354,7 +354,7 @@ static BTAddressProvider *provider;
 
 - (void)addAddress:(BTAddress *)address;{
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"insert into addresses(ifnull(encrypt_private_key,0),pub_key,is_xrandom,is_trash,is_synced,sort_time) "
+        NSString *sql = @"insert into addresses(address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,sort_time) "
                 " values(?,?,?,?,?,?,?)";
         [db executeUpdate:sql, address.address, address.encryptPrivKey, [NSString base58WithData:address.pubKey]
                 , @(address.isFromXRandom), @(address.isTrashed), @(address.isSyncComplete), @(address.sortTime)];
@@ -411,7 +411,7 @@ static BTAddressProvider *provider;
 
 - (BTAddress *)formatAddress:(FMResultSet *)rs;{
     BTAddress *address = [[BTAddress alloc] init];
-    address.hasPrivKey = [rs columnIsNull:@"encrypt_private_key"];
+    address.hasPrivKey = [rs boolForColumn:@"has_priv_key"];
     address.encryptPrivKey = [rs stringForColumn:@"encrypt_private_key"];
     address.pubKey = [[rs stringForColumn:@"pub_key"] base58ToData];
     address.isFromXRandom = [rs boolForColumn:@"is_xrandom"];

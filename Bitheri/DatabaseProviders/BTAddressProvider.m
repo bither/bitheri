@@ -18,9 +18,21 @@
 #import "BTAddressProvider.h"
 #import "BTDatabaseManager.h"
 
+static BTAddressProvider *provider;
+
 @implementation BTAddressProvider {
 
 }
+
++ (instancetype)instance; {
+    @synchronized (self) {
+        if (provider == nil) {
+            provider = [[self alloc] init];
+        }
+    }
+    return provider;
+}
+
 
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
     return NO;
@@ -358,7 +370,7 @@
 
 - (void)removeWatchOnlyAddress:(BTAddress *)address;{
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"update addresses set is_trash=1 where address=?";
+        NSString *sql = @"delete from addresses where address=? and encrypt_private_key is null";
         [db executeUpdate:sql, address.address];
     }];
 }

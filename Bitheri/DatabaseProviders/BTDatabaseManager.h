@@ -48,7 +48,7 @@
 - (FMDatabaseQueue *)getTxDbQueue;
 - (FMDatabaseQueue *)getAddressDbQueue;
 
-//-(BOOL)initDatabase;
+-(BOOL)initDatabase;
 //- (void)closeDatabase;
 //- (BOOL)dbIsOpen;
 

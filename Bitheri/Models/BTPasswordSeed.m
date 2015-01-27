@@ -73,7 +73,7 @@
         return NO;
     }
 }
--(NSString *)toPasswrodSeedString{
+-(NSString *)toPasswordSeedString {
     NSArray *array=[[NSArray alloc] initWithObjects:[self.address base58checkToHex],self.keyStr, nil];
     return [[BTQRCodeUtil joinedQRCode:array] toUppercaseStringWithEn];
 }

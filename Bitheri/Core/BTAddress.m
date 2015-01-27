@@ -584,4 +584,8 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [key signMessage:message];
 }
 
+-(BOOL)isHDM{
+    return NO;
+}
+
 @end

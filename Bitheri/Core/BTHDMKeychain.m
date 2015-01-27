@@ -21,6 +21,8 @@
 #import "BTUtils.h"
 #import "BTHDMKeychainRecover.h"
 #import "NSString+Base58.h"
+#import "BTEncryptedData.h"
+#import "BTHDMBid.h"
 
 @interface BTHDMKeychain(){
     BOOL _isFromXRandom;
@@ -37,12 +39,15 @@
         self.hdSeedId = -1;
         self.mnemonicSeed = seed;
         self.hdSeed = [BTHDMKeychain seedFromMnemonic:self.mnemonicSeed];
-        //TODO: encrypt hdSeed and mnemonic seed
+        BTEncryptedData* encryptedMnemonicSeed = [[BTEncryptedData alloc]initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:xrandom];
+        BTEncryptedData* encryptedHDSeed = [[BTEncryptedData alloc]initWithData:self.hdSeed andPassowrd:password andIsXRandom:xrandom];
+        BTKey* priv = [[BTKey alloc] initWithSecret:self.mnemonicSeed compressed:encryptedMnemonicSeed.isCompressed];
+        NSString* passwordSeedAddress = priv.address;
         NSString *firstAddress = [self firstAddressFromSeed:password];
         [self wipeHDSeed];
         [self wipeMnemonicSeed];
         _isFromXRandom = xrandom;
-        self.hdSeedId = [[BTAddressProvider instance]addHDSeedWithEncryptSeed:nil andEncryptHDSeed:nil andFirstAddress:firstAddress andIsXRandom:xrandom];
+        self.hdSeedId = [[BTAddressProvider instance]addHDSeedWithEncryptSeed:encryptedMnemonicSeed.toEncryptedString andEncryptHDSeed:encryptedHDSeed.toEncryptedString andFirstAddress:firstAddress andIsXRandom:xrandom andPasswordSeed:passwordSeedAddress];
         self.allCompletedAddresses = [[NSMutableArray alloc]init];
     }
     return self;
@@ -58,14 +63,15 @@
     return self;
 }
 
--(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeed password:(NSString*) password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate{
+-(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeedStr password:(NSString*) password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate{
     self = [super init];
     if(self){
         self.hdSeedId = -1;
-        self.mnemonicSeed = nil; //TODO: decrype encrypted mnemonic seed
+        BTEncryptedData* encryptedMnemonicSeed = [[BTEncryptedData alloc]initWithStr:encryptedMnemonicSeedStr];
+        self.mnemonicSeed = [encryptedMnemonicSeed decrypt:password];
         self.hdSeed = [BTHDMKeychain seedFromMnemonic:self.mnemonicSeed];
-        _isFromXRandom = NO; //TODO: is from xrandom from encrypted mnemonic seed
-        //TODO: encrypt hd seed here
+        _isFromXRandom = encryptedMnemonicSeed.isXRandom;
+        BTEncryptedData* encryptedHDSeed = [[BTEncryptedData alloc]initWithData:self.hdSeed andPassowrd:password andIsXRandom:_isFromXRandom];
         self.allCompletedAddresses = [[NSMutableArray alloc]init];
         NSMutableArray* as = [[NSMutableArray alloc]init];
         NSMutableArray* uncompPubs = [[NSMutableArray alloc]init];
@@ -74,7 +80,8 @@
             if(pubs && pubs.count > 0){
                 BTBIP32Key* root = [self externalChainRoot:password];
                 NSData* pubDerived = [root deriveSoftened:0].pubKey;
-                NSData* pubFetched = pubs[0].hot;
+                BTHDMPubs *p0 = pubs[0];
+                NSData* pubFetched = p0.hot;
                 [root wipe];
                 if(![pubDerived isEqualToData:pubFetched]){
                     [self wipeMnemonicSeed];
@@ -91,22 +98,95 @@
                 }
             }
         }
+        BTKey* priv = [[BTKey alloc] initWithSecret:self.mnemonicSeed compressed:encryptedMnemonicSeed.isCompressed];
+        NSString* passwordSeedAddress = priv.address;
         NSString* firstAddress = [self firstAddressFromSeed:password];
         [self wipeHDSeed];
         [self wipeMnemonicSeed];
-        self.hdSeedId = [[BTAddressProvider instance]addHDSeedWithEncryptSeed:nil andEncryptHDSeed:nil andFirstAddress:firstAddress andIsXRandom:_isFromXRandom];
+        self.hdSeedId = [[BTAddressProvider instance] addHDSeedWithEncryptSeed:encryptedMnemonicSeed.toEncryptedString andEncryptHDSeed:encryptedHDSeed.toEncryptedString andFirstAddress:firstAddress andIsXRandom:_isFromXRandom andPasswordSeed:passwordSeedAddress];
         if(as.count > 0){
             [[BTAddressProvider instance]completeHDMAddressesWithHDSeedId:self.hdSeedId andHDMAddresses:as];
             [self.allCompletedAddresses addObjectsFromArray:as];
             if(uncompPubs.count > 0){
                 [[BTAddressProvider instance]prepareHDMAddressesWithHDSeedId:self.hdSeedId andPubs:uncompPubs];
-                for(BTHDMPubs* p : uncompPubs){
+                for(BTHDMPubs* p in uncompPubs){
                     [[BTAddressProvider instance] setHDMPubsRemoteWithHDSeedId:self.hdSeedId andIndex:p.index andPubKeyRemote:p.remote];
                 }
             }
         }
     }
     return self;
+}
+
+-(NSUInteger)prepareAddressesWithCount:(UInt32)count password:(NSString*)password andColdExternalPub:(NSData*)coldExternalPub{
+    BTBIP32Key* externalRootCold = [[BTBIP32Key alloc]initWithMasterPubKey:coldExternalPub];
+    BTBIP32Key* externalRootHot = [self externalChainRoot:password];
+    NSMutableArray* pubs = [NSMutableArray new];
+    UInt32 startIndex = 0;
+    int32_t maxIndex = [[BTAddressProvider instance]maxHDMAddressPubIndex:self.hdSeedId];
+    if(maxIndex >= 0){
+        startIndex = maxIndex + 1;
+    }
+    
+    if(startIndex > 0){
+        BTHDMBid *bid = [BTHDMBid getHDMBidFromDb];
+        if(bid){
+            NSString *hdmIdAddress = bid.address;
+            if(![BTUtils compareString:hdmIdAddress compare:[externalRootCold deriveSoftened:0].key.address]){
+                [BTHDMColdPubNotSameException raise:@"BTHDMColdPubNotSameException" format:nil];
+            }
+        }
+    }
+    
+    for(UInt32 i = startIndex; pubs.count < count; i++){
+        BTHDMPubs *p = [BTHDMPubs new];
+        p.hot = [externalRootHot deriveSoftened:i].pubKey;
+        if(!p.hot){
+            p.hot = [BTHDMPubs EmptyBytes];
+        }
+        p.cold = [externalRootCold deriveSoftened:i].pubKey;
+        if(!p.cold){
+            p.cold = [BTHDMPubs EmptyBytes];
+        }
+        p.index = i;
+        [pubs addObject:p];
+    }
+    
+    [[BTAddressProvider instance]prepareHDMAddressesWithHDSeedId:self.hdSeedId andPubs:pubs];
+    if(externalRootCold){
+        [externalRootCold wipe];
+    }
+    
+    if(externalRootHot){
+        [externalRootHot wipe];
+    }
+    
+    return pubs.count;
+}
+
+-(NSArray*)completeAddressesWithCount:(UInt32)count password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemotePublicKeys>*)fetchDelegate{
+    UInt32 uncompletedAddressCount = self.uncompletedAddressCount;
+    if(uncompletedAddressCount < count){
+        [NSException raise:@"Not enough uncompleted addesses" format:@"Not enough uncompleted addesses. Need %d, Has %d", count, uncompletedAddressCount, nil];
+    }
+    NSMutableArray* as = [NSMutableArray new];
+    NSArray* pubs = [[BTAddressProvider instance]getUncompletedHDMAddressPubs:self.hdSeedId andCount:count];
+    [fetchDelegate completeRemotePublicKeysWithPassword:password andPartialPubs:pubs];
+    for(BTHDMPubs* p in pubs){
+        if(p.isCompleted){
+            [as addObject:[[BTHDMAddress alloc] initWithPubs:p andKeychain:self]];
+        }else{
+            [[BTAddressProvider instance]setHDMPubsRemoteWithHDSeedId:self.hdSeedId andIndex:p.index andPubKeyRemote:p.remote];
+        }
+    }
+    [[BTAddressProvider instance]completeHDMAddressesWithHDSeedId:self.hdSeedId andHDMAddresses:as];
+    [self.allCompletedAddresses addObjectsFromArray:as];
+    if(self.addressChangeDelegate && [self.addressChangeDelegate respondsToSelector:@selector(hdmAddressAdded:)]){
+        for(BTHDMAddress* a in as){
+            [self.addressChangeDelegate hdmAddressAdded:a];
+        }
+    }
+    return as;
 }
 
 -(BTBIP32Key*)masterKey:(NSString*)password{
@@ -154,7 +234,7 @@
     }
     NSString* encrypted = [self encryptedHDSeed];
     if(![BTUtils isEmpty:encrypted]){
-        //TODO: encrypted data goes here
+        self.hdSeed = [[[BTEncryptedData alloc]initWithStr:encrypted]decrypt:password];
     }
 }
 
@@ -164,7 +244,7 @@
     }
     NSString* encrypted = [self encryptedMnemonicSeed];
     if(![BTUtils isEmpty:encrypted]){
-        //TODO: encrypted data goes here
+        self.mnemonicSeed = [[[BTEncryptedData alloc]initWithStr:encrypted]decrypt:password];
     }
 }
 
@@ -215,7 +295,7 @@
     if(!self.mnemonicSeed){
         return NO;
     }
-    NSData* hdCopy = [NSData dataWithBytes:self.hdSeed length:self.hdSeed.length];
+    NSData* hdCopy = [NSData dataWithBytes:(__bridge const void *)(self.hdSeed) length:self.hdSeed.length];
     BOOL hdSeedSafe = [BTUtils compareString:[self firstAddressFromDb] compare:[self firstAddressFromSeed:nil]];
     BOOL mnemonicSeefSafe = [[BTHDMKeychain seedFromMnemonic:self.mnemonicSeed] isEqualToData:hdCopy];
     hdCopy = nil;
@@ -260,7 +340,7 @@
     }
 }
 
--(NSUInteger)uncompletedAddressCount{
+-(UInt32)uncompletedAddressCount{
     return [[BTAddressProvider instance] uncompletedHDMAddressCount:self.hdSeedId];
 }
 

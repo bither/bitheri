@@ -24,4 +24,6 @@
 @property (nonatomic, copy) NSString *address;
 @property (nonatomic, copy) NSString *encryptedBitherPassword;
 
++(BTHDMBid*)getHDMBidFromDb;
+
 @end

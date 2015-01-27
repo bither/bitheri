@@ -45,6 +45,7 @@
 @property long long sortTime;
 @property BOOL isFromXRandom;
 @property BOOL isTrashed;
+@property (nonatomic, readonly) BOOL isHDM;
 
 @property (nonatomic, readonly) uint32_t txCount;
 @property (nonatomic, strong, readonly) BTTx *recentlyTx;

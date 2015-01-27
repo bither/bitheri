@@ -29,4 +29,9 @@
 
     return self;
 }
+
++(BTHDMBid*)getHDMBidFromDb{
+    //TODO: get hdm bid from db
+    return nil;
+}
 @end

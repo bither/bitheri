@@ -167,7 +167,7 @@
 -(NSArray*)completeAddressesWithCount:(UInt32)count password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemotePublicKeys>*)fetchDelegate{
     UInt32 uncompletedAddressCount = self.uncompletedAddressCount;
     if(uncompletedAddressCount < count){
-        [NSException raise:@"Not enough uncompleted addesses" format:@"Not enough uncompleted addesses. Need %d, Has %d", count, uncompletedAddressCount];
+        [NSException raise:@"Not enough uncompleted addesses" format:@"Not enough uncompleted addesses. Need %d, Has %d", count, uncompletedAddressCount, nil];
     }
     NSMutableArray* as = [NSMutableArray new];
     NSArray* pubs = [[BTAddressProvider instance]getUncompletedHDMAddressPubs:self.hdSeedId andCount:count];

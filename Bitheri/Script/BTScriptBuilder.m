@@ -25,8 +25,16 @@
 
 }
 
-- (BTScriptBuilder *)addChunk:(BTScriptChunk *)chunk;{
-    [self.chunks addObject:chunk];
+-(instancetype)init{
+    self = [super init];
+    if(self){
+        _chunks = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
+
+- (BTScriptBuilder *)addChunk:(BTScriptChunk *)chunk{
+    [_chunks addObject:chunk];
     return self;
 }
 
@@ -80,7 +88,7 @@
     for (NSData *pubKey in pubKeys) {
         [builder data:pubKey];
     }
-    [builder smallNum:pubKeys.count];
+    [builder smallNum:(int)pubKeys.count];
     [builder op:OP_CHECKMULTISIG];
     return [builder build];
 }

@@ -295,7 +295,7 @@
     if(!self.mnemonicSeed){
         return NO;
     }
-    NSData* hdCopy = [NSData dataWithBytes:(__bridge const void *)(self.hdSeed) length:self.hdSeed.length];
+    NSData* hdCopy = [NSData dataWithBytes:self.hdSeed.bytes length:self.hdSeed.length];
     BOOL hdSeedSafe = [BTUtils compareString:[self firstAddressFromDb] compare:[self firstAddressFromSeed:nil]];
     BOOL mnemonicSeefSafe = [[BTHDMKeychain seedFromMnemonic:self.mnemonicSeed] isEqualToData:hdCopy];
     hdCopy = nil;

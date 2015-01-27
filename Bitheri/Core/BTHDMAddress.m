@@ -25,4 +25,7 @@
 @implementation BTHDMAddress {
 
 }
+-(instancetype)initWithPubs:(BTHDMPubs*)pubs andKeychain:(BTHDMKeychain*)keychain{
+
+}
 @end

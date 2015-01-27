@@ -57,6 +57,7 @@
 - (BTBIP32Key *)deriveSoftened:(uint)child;
 - (BTBIP32Key *)deriveHardened:(uint)child;
 - (void)clearPrivateKey;
+- (void)wipe;
 
 - (NSData *)getPubKeyExtended;
 

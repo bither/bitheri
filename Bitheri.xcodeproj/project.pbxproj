@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A29B0C61A761C380020BCD7 /* BTHDMKeychainRecover.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */; };
 		42796BF619446739002BC454 /* BTBlockChain.m in Sources */ = {isa = PBXBuildFile; fileRef = 42796BF519446739002BC454 /* BTBlockChain.m */; };
 		428DB454194ECA9C00C81A4B /* BTPasswordSeed.m in Sources */ = {isa = PBXBuildFile; fileRef = 428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */; };
 		983833E3E62E487BB1A66946 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A40D2AD541D849FE969335C0 /* libPods.a */; };
@@ -150,6 +151,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0A29B0C41A761C380020BCD7 /* BTHDMKeychainRecover.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDMKeychainRecover.h; sourceTree = "<group>"; };
+		0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDMKeychainRecover.m; sourceTree = "<group>"; };
 		215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		42796BF419446739002BC454 /* BTBlockChain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBlockChain.h; sourceTree = "<group>"; };
 		42796BF519446739002BC454 /* BTBlockChain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBlockChain.m; sourceTree = "<group>"; };
@@ -537,6 +540,8 @@
 				D61D0B120A111EE05FFACBA3 /* BTHDMAddress.h */,
 				D61D097C59E6F1C024A993DA /* BTHDMKeychain.m */,
 				D61D02849C8CF7443614876B /* BTHDMKeychain.h */,
+				0A29B0C41A761C380020BCD7 /* BTHDMKeychainRecover.h */,
+				0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -830,6 +835,7 @@
 				D61D0956B11B4375D723770C /* BTBIP39.m in Sources */,
 				D61D01FDA529E4A7DEE5715A /* BTAddressProvider.m in Sources */,
 				D61D0940D0FF7FAA8F3F0024 /* BTHDMBid.m in Sources */,
+				0A29B0C61A761C380020BCD7 /* BTHDMKeychainRecover.m in Sources */,
 				D61D0F1510BE313FA122AE97 /* BTHDMAddress.m in Sources */,
 				D61D0E06C49C62BA68C71A16 /* BTHDMKeychain.m in Sources */,
 				D61D03664AB5C571267EBBC6 /* BTEncryptedData.m in Sources */,

@@ -88,6 +88,7 @@
 		DA05F3C4198B70220013BBD6 /* BTTxBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0291DF871A90E113C939 /* BTTxBuilder.m */; };
 		DA1543B4196FD5EB007F629E /* BTCompressingLogFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01BF73E34E6E6C2ED9B3 /* BTCompressingLogFileManager.m */; };
 		DA1543B9196FDB89007F629E /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DA1543B8196FDB89007F629E /* libz.dylib */; };
+		DA20E0401A778BB4001C9EE5 /* BTHDMKeychainRecover.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */; };
 		DA2154391A71F592000BD6D3 /* BIP39EnglishWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */; };
 		DA24941B19E14F66006CA994 /* libPods-OpenSSL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA24941A19E14F66006CA994 /* libPods-OpenSSL.a */; };
 		DA24941D19E1517C006CA994 /* BTQRCodeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */; };
@@ -846,6 +847,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA20E0401A778BB4001C9EE5 /* BTHDMKeychainRecover.m in Sources */,
 				DAD7530A19F79D3500AAA1A0 /* BTVersion.m in Sources */,
 				DA24941F19E16D95006CA994 /* BTPrivateKeyUtil.m in Sources */,
 				DA24941E19E151A5006CA994 /* BTUtils.m in Sources */,

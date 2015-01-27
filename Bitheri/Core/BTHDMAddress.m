@@ -18,9 +18,6 @@
 #import "BTHDMAddress.h"
 #import "BTHDMKeychain.h"
 #import "BTScriptBuilder.h"
-#import "BTUtils.h"
-#import "NSData+Hash.h"
-#import "NSData+Bitcoin.h"
 
 @implementation BTHDMPubs
 static NSData* EMPTYBYTES;
@@ -191,4 +188,7 @@ static NSData* EMPTYBYTES;
     return result;
 }
 
+@end
+
+@implementation BTHDMColdPubNotSameException
 @end

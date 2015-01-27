@@ -18,14 +18,14 @@
 -(instancetype)initWithColdExternalRootPub:(NSData*)coldExternalRootPub password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate{
     self = [super initWithSeedId:[[BTAddressProvider instance] addHDSeedWithEncryptSeed:[BTHDMKeychainRecover RecoverPlaceHolder] andEncryptHDSeed:[BTHDMKeychainRecover RecoverPlaceHolder]  andFirstAddress:[BTHDMKeychainRecover RecoverPlaceHolder] andIsXRandom:NO andPasswordSeed:nil]];
     if(self){
-        BTBIP32Key* coldRoot = [[BTBIP32Key alloc]initWithMasterPubKey:[NSData dataWithBytes:coldExternalRootPub length:coldExternalRootPub.length]];
+        BTBIP32Key* coldRoot = [[BTBIP32Key alloc]initWithMasterPubKey:[NSData dataWithBytes:coldExternalRootPub.bytes length:coldExternalRootPub.length]];
         NSMutableArray* as = [[NSMutableArray alloc]init];
         NSMutableArray* uncompPubs = [[NSMutableArray alloc]init];
         if(fetchDelegate){
             NSArray* pubs = [fetchDelegate getRemoteExistsPublicKeysWithPassword:password];
             if(pubs.count > 0){
-                NSData* pubFetched = pubs[0].cold;
-                NSData* pubDerived = [coldRoot deriveSoftened:pubs[0].index].pubKey;
+                NSData* pubFetched = ((BTHDMPubs *)pubs[0]).cold;
+                NSData* pubDerived = [coldRoot deriveSoftened:((BTHDMPubs *)pubs[0]).index].pubKey;
                 [coldRoot wipe];
                 if(![pubFetched isEqualToData:pubDerived]){
                     [NSException raise:@"HDM Bither ID Not Match" format:nil];
@@ -44,7 +44,7 @@
             [self.allCompletedAddresses addObjectsFromArray:as];
             if(uncompPubs.count > 0){
                 [[BTAddressProvider instance]prepareHDMAddressesWithHDSeedId:self.hdSeedId andPubs:uncompPubs];
-                for(BTHDMPubs* p : uncompPubs){
+                for(BTHDMPubs* p in uncompPubs){
                     [[BTAddressProvider instance] setHDMPubsRemoteWithHDSeedId:self.hdSeedId andIndex:p.index andPubKeyRemote:p.remote];
                 }
             }

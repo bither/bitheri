@@ -20,9 +20,7 @@
 #import "BTAddressProvider.h"
 #import "BTUtils.h"
 #import "BTHDMKeychainRecover.h"
-#import "NSString+Base58.h"
 #import "BTEncryptedData.h"
-#import "BTHDMBid.h"
 
 @interface BTHDMKeychain(){
     BOOL _isFromXRandom;

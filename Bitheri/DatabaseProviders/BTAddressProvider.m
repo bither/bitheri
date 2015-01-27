@@ -220,7 +220,7 @@ static BTAddressProvider *provider;
                 " where hd_seed_id=? and address is not null order by hd_seed_index";
         FMResultSet *rs = [db executeQuery:sql, @(keychain.hdSeedId)];
         while ([rs next]) {
-            [addresses addObject:[self formatHDMAddress:rs]];
+            [addresses addObject:[self formatHDMAddress:rs withKeyChain:keychain]];
         }
         [rs close];
     }];
@@ -351,21 +351,19 @@ static BTAddressProvider *provider;
     }];
 }
 
-- (BTHDMAddress *)formatHDMAddress:(FMResultSet *)rs; {
-    BTHDMAddress *address = [BTHDMAddress new];
-    address.pubs = [self formatHDMPubs:rs];
+- (BTHDMAddress *)formatHDMAddress:(FMResultSet *)rs withKeyChain:(BTHDMKeychain *)keychain; {
+    BTHDMPubs *pubs = [self formatHDMPubs:rs];
+    NSString *address = nil;
     if (![rs columnIsNull:@"address"]) {
-        address.address = [rs stringForColumn:@"address"];
-    } else {
-        address.address = nil;
+        address = [rs stringForColumn:@"address"];
     }
-    address.isSynced = [rs boolForColumn:@"is_synced"];
-    return address;
+    BOOL isSynced = [rs boolForColumn:@"is_synced"];
+    return [[BTHDMAddress alloc] initWithPubs:pubs address:address syncCompleted:isSynced andKeychain:keychain];
 }
 
 - (BTHDMPubs *)formatHDMPubs:(FMResultSet *)rs; {
     BTHDMPubs *pubs = [BTHDMPubs new];
-    pubs.index = [rs intForColumn:@"hd_seed_index"];
+    pubs.index = (UInt32) [rs intForColumn:@"hd_seed_index"];
     pubs.hot = [[rs stringForColumn:@"pub_key_hot"] base58ToData];
     pubs.cold = [[rs stringForColumn:@"pub_key_cold"] base58ToData];
     if (![rs columnIsNull:@"pub_key_remote"]) {

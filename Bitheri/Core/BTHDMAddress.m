@@ -16,9 +16,11 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #import "BTHDMAddress.h"
+#import "BTHDMKeychain.h"
 #import "BTScriptBuilder.h"
 #import "BTUtils.h"
 #import "NSData+Hash.h"
+#import "NSData+Bitcoin.h"
 
 @implementation BTHDMPubs
 static NSData* EMPTYBYTES;
@@ -26,16 +28,20 @@ static NSData* EMPTYBYTES;
 +(NSData*)EmptyBytes{
     if(!EMPTYBYTES){
         Byte b = 0;
-        EMPTYBYTES = [NSData dataWithBytes:b length:sizeof(b)];
+        EMPTYBYTES = [NSData dataWithBytes:&b length:sizeof(b)];
     }
     return EMPTYBYTES;
 }
 
--(instancetype)initWithHot:(NSData*)hot cold:(NSData*)cold remote:(NSData*)remote andIndex:(NSUInteger)index{
-    self.hot = hot;
-    self.cold = cold;
-    self.remote = remote;
-    self.index = index;
+-(instancetype)initWithHot:(NSData*)hot cold:(NSData*)cold remote:(NSData*)remote andIndex:(UInt32)index{
+    self = [super init];
+    if(self){
+        self.hot = hot;
+        self.cold = cold;
+        self.remote = remote;
+        self.index = index;
+    }
+    return self;
 }
 
 -(BOOL)hasHot{
@@ -83,10 +89,106 @@ static NSData* EMPTYBYTES;
 @implementation BTHDMAddress
 
 -(instancetype)initWithPubs:(BTHDMPubs*)pubs andKeychain:(BTHDMKeychain*)keychain{
-    
+    self = [self initWithPubs:pubs address:pubs.address syncCompleted:NO andKeychain:keychain];
+    return self;
 }
 
 -(instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString*)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain{
-
+    self = [super initWithAddress:address pubKey:pubs.multisigScript.program hasPrivKey:NO isXRandom:keychain.isFromXRandom];
+    if(self){
+        self.pubs = pubs;
+        self.keychain = keychain;
+    }
+    return self;
 }
+
+-(void)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*) fetchDelegate{
+    [tx signWithSignatures:[self signUnsginedHashes:tx.unsignedInHashes withPassword:password tx:tx andOtherDelegate:fetchDelegate]];
+}
+
+-(void)signTx:(BTTx *)tx withPassword:(NSString *)password coldDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateCold andRemoteDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateRemote{
+    NSArray* unsigns = tx.unsignedInHashes;
+    NSArray* coldSigs = [fetchDelegateCold getOtherSignatureWithIndex:self.index password:password unsignedHashes:unsigns andTx:tx];
+    NSArray* remoteSigs = [fetchDelegateRemote getOtherSignatureWithIndex:self.index password:password unsignedHashes:unsigns andTx:tx];
+    assert(coldSigs.count == remoteSigs.count && coldSigs.count == unsigns.count);
+    NSArray* joined = [self formatInScriptFromSigns1:coldSigs andSigns2:remoteSigs];
+    [tx signWithSignatures:joined];
+}
+
+-(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*)delegate{
+    NSArray* hotSigs = [self signMyPartUnsignedHashes:unsignedHashes withPassword:password];
+    NSArray* otherSigs = [delegate getOtherSignatureWithIndex:self.index password:password unsignedHashes:unsignedHashes andTx:tx];
+    assert(hotSigs.count == otherSigs.count && hotSigs.count == unsignedHashes.count);
+    return [self formatInScriptFromSigns1:hotSigs andSigns2:otherSigs];
+}
+
+-(NSArray*)signMyPartUnsignedHashes:(NSArray*) unsignedHashes withPassword:(NSString*)password{
+    if(self.isInRecovery){
+        [NSException raise:@"recovery hdm address can not sign" format:nil];
+    }
+    BTBIP32Key* key = [self.keychain externalKeyWithIndex:self.index andPassword:password];
+    NSMutableArray* sigs = [NSMutableArray new];
+    for(NSData* hash in unsignedHashes){
+        NSMutableData *sig = [NSMutableData data];
+        NSMutableData *s = [NSMutableData dataWithData:[key.key sign:hash]];
+        [s appendUInt8:SIG_HASH_ALL];
+        [sig appendScriptPushData:s];
+        [sigs addObject:sig];
+    }
+    [key wipe];
+    return sigs;
+}
+
+-(NSArray*)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase{
+    [NSException raise:@"hdm address can't sign transactions all by self" format:nil];
+    return nil;
+}
+
+-(UInt32)index{
+    return self.pubs.index;
+}
+
+-(NSData*)pubHot{
+    return self.pubs.hot;
+}
+
+-(NSData*)pubCold{
+    return self.pubs.cold;
+}
+
+-(NSArray*)pubKeys{
+    NSMutableArray* keys = [NSMutableArray new];
+    [keys addObject:self.pubHot];
+    [keys addObject:self.pubCold];
+    [keys addObject:self.pubRemote];
+    return keys;
+}
+
+-(BOOL)isInRecovery{
+    return self.keychain.isInRecovery;
+}
+
+-(NSData*)pubRemote{
+    return self.pubs.remote;
+}
+
+-(BOOL)isFromXRandom{
+    return self.keychain.isFromXRandom;
+}
+
+-(BOOL)isHDM{
+    return YES;
+}
+
+-(NSArray*)formatInScriptFromSigns1:(NSArray*)signs1 andSigns2:(NSArray*)signs2{
+    NSMutableArray* result = [NSMutableArray new];
+    for(UInt32 i = 0; i < signs1.count; i++){
+        NSMutableArray* signs = [NSMutableArray new];
+        [signs addObject:signs1[i]];
+        [signs addObject:signs2[i]];
+        [result addObject:[BTScriptBuilder createP2SHMultisigInputScriptWithSignatures:signs andMultisigProgram:self.pubKey]];
+    }
+    return result;
+}
+
 @end

@@ -17,6 +17,7 @@
 //  limitations under the License.
 #import <Foundation/Foundation.h>
 #import "BTAddress.h"
+#import "BTTx.h"
 #import "BTScript.h"
 
 @class BTHDMKeychain;
@@ -41,14 +42,35 @@
 
 @end
 
+@protocol BTHDMFetchOtherSignatureDelegate
+-(NSArray*) getOtherSignatureWithIndex:(UInt32)index password:(NSString*)password unsignedHashes:(NSArray*)unsignHashes andTx:(BTTx*)tx;
+@end
+
+
 @interface BTHDMAddress : BTAddress
 
 @property (nonatomic, strong) BTHDMPubs *pubs;
-@property (nonatomic, strong) BTHDMKeychain *keychain;
+@property (nonatomic, weak) BTHDMKeychain *keychain;
+@property (nonatomic, readonly) UInt32 index;
+
+@property (nonatomic, readonly) NSData* pubCold;
+@property (nonatomic, readonly) NSData* pubHot;
+@property (nonatomic, readonly) NSData* pubRemote;
+@property (nonatomic, readonly) NSArray* pubKeys;
+
+@property (nonatomic, readonly) BOOL isInRecovery;
 
 -(instancetype)initWithPubs:(BTHDMPubs*)pubs andKeychain:(BTHDMKeychain*)keychain;
 
 -(instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString*)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain;
+
+-(void)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*) fetchDelegate;
+
+-(void)signTx:(BTTx *)tx withPassword:(NSString *)password coldDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateCold andRemoteDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateRemote;
+
+-(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*)delegate;
+
+-(NSArray*)signMyPartUnsignedHashes:(NSArray*) unsignedHashes withPassword:(NSString*)password;
 
 @end
 

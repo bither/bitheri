@@ -39,7 +39,7 @@
 @property (nonatomic, readonly) BOOL isFromXRandom;
 @property (nonatomic, readonly) NSArray* addresses;
 @property (nonatomic) NSMutableArray *allCompletedAddresses;
-@property (nonatomic, readonly) NSUInteger uncompletedAddressCount;
+@property (nonatomic, readonly) UInt32 uncompletedAddressCount;
 @property (nonatomic, readonly) BOOL isInRecovery;
 @property (nonatomic, weak) NSObject<BTHDMAddressChangeDelegate> *addressChangeDelegate;
 
@@ -49,8 +49,8 @@
 
 -(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeed password:(NSString*) password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate;
 
--(NSUInteger)prepareAddressesWithCount:(NSUInteger)count password:(NSString*)password andColdExternalPub:(NSData*)coldExternalPub;
--(NSArray*)completeAddressesWithCount:(NSUInteger)count password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemotePublicKeys>*)fetchDelegate;
+-(NSUInteger)prepareAddressesWithCount:(UInt32)count password:(NSString*)password andColdExternalPub:(NSData*)coldExternalPub;
+-(NSArray*)completeAddressesWithCount:(UInt32)count password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemotePublicKeys>*)fetchDelegate;
 
 -(BTBIP32Key*)externalKeyWithIndex:(uint) index andPassword:(NSString*)password;
 -(NSData*)externalChainRootPubExtended:(NSString*)password;

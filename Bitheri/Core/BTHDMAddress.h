@@ -16,27 +16,42 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #import <Foundation/Foundation.h>
+#import "BTAddress.h"
+#import "BTScript.h"
+
 @class BTHDMKeychain;
 
 @interface BTHDMPubs :NSObject
++(NSData*)EmptyBytes;
 
 @property (nonatomic, copy) NSData *hot;
 @property (nonatomic, copy) NSData *cold;
 @property (nonatomic, copy) NSData *remote;
-@property (nonatomic) int index;
+@property (nonatomic) UInt32 index;
 
+@property (nonatomic, readonly) BTScript* multisigScript;
+
+@property (nonatomic, readonly) BOOL hasHot;
+@property (nonatomic, readonly) BOOL hasCold;
+@property (nonatomic, readonly) BOOL hasRemote;
 @property (nonatomic, readonly) BOOL isCompleted;
+@property (nonatomic, readonly) NSString* address;
+
+-(instancetype)initWithHot:(NSData*)hot cold:(NSData*)cold remote:(NSData*)remote andIndex:(UInt32)index;
 
 @end
 
-@interface BTHDMAddress : NSObject
+@interface BTHDMAddress : BTAddress
 
 @property (nonatomic, strong) BTHDMPubs *pubs;
 @property (nonatomic, strong) BTHDMKeychain *keychain;
-@property (nonatomic, copy) NSString *address;
-@property (nonatomic) BOOL isSynced;
 
 -(instancetype)initWithPubs:(BTHDMPubs*)pubs andKeychain:(BTHDMKeychain*)keychain;
 
+-(instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString*)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain;
+
+@end
+
+@interface BTHDMColdPubNotSameException : NSException
 @end
 

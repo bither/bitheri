@@ -65,7 +65,7 @@
 
     _address = btAddress.address;
     _keyStr = [BTEncryptedData encryptedString:btAddress.encryptPrivKeyForCreate
-                               addIsCompressed:btAddress.isSyncComplete andIsXRandom:btAddress.isFromXRandom];
+                               addIsCompressed:btAddress.pubKey.length < 65 andIsXRandom:btAddress.isFromXRandom];
 
     return self;
 }

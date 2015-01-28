@@ -475,7 +475,7 @@ static BTAddressProvider *provider;
 - (NSArray *)getAddresses; {
     __block NSMutableArray *addresses = [NSMutableArray new];
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select ifnull(length(encrypt_private_key)>0,0) has_priv_key,pub_key,is_xrandom,is_trash,is_synced,sort_time "
+        NSString *sql = @"select address,ifnull(length(encrypt_private_key)>0,0) has_priv_key,pub_key,is_xrandom,is_trash,is_synced,sort_time "
                 " from addresses order by sort_time desc";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
@@ -550,13 +550,17 @@ static BTAddressProvider *provider;
 }
 
 - (BTAddress *)formatAddress:(FMResultSet *)rs;{
-    BTAddress *address = [[BTAddress alloc] init];
-    address.hasPrivKey = [rs boolForColumn:@"has_priv_key"];
-    address.pubKey = [[rs stringForColumn:@"pub_key"] base58ToData];
-    address.isFromXRandom = [rs boolForColumn:@"is_xrandom"];
-    address.isTrashed = [rs boolForColumn:@"is_trash"];
-    address.isSyncComplete = [rs boolForColumn:@"is_synced"];
-    address.sortTime = [rs longLongIntForColumn:@"sort_time"];
-    return address;
+    NSString *address = [rs stringForColumn:@"address"];
+    BOOL hasPrivKey = [rs boolForColumn:@"has_priv_key"];
+    NSData *pubKey = [[rs stringForColumn:@"pub_key"] base58ToData];
+    BOOL isFromXRandom = [rs boolForColumn:@"is_xrandom"];
+    BOOL isTrashed = [rs boolForColumn:@"is_trash"];
+    BOOL isSyncComplete = [rs boolForColumn:@"is_synced"];
+    long long int sortTime = [rs longLongIntForColumn:@"sort_time"];
+    BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address pubKey:pubKey hasPrivKey:hasPrivKey isXRandom:isFromXRandom];
+    btAddress.isTrashed = isTrashed;
+    btAddress.isSyncComplete = isSyncComplete;
+    btAddress.sortTime = sortTime;
+    return btAddress;
 }
 @end

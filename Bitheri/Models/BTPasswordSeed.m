@@ -18,7 +18,6 @@
 
 #import "BTPasswordSeed.h"
 #import "BTQRCodeUtil.h"
-#import "NSString+Base58.h"
 
 @interface BTPasswordSeed ()
 
@@ -29,8 +28,8 @@
 
 @implementation BTPasswordSeed
 
-- (instancetype)initWithAddress:(NSString *)address andEncryptStr:(NSString *)encryptStr;{
-    if (! (self = [super init])) return nil;
+- (instancetype)initWithAddress:(NSString *)address andEncryptStr:(NSString *)encryptStr; {
+    if (!(self = [super init])) return nil;
 
     self.address = address;
     self.keyStr = encryptStr;
@@ -42,13 +41,13 @@
     self = [super init];
     if (self) {
         NSArray *array = [BTQRCodeUtil splitQRCode:message];
-        NSString * addressString=array[0];
+        NSString *addressString = array[0];
         if ([BTQRCodeUtil isOldQRCodeVerion:message]) {
             _address = addressString;
-        }else{
-            _address=[addressString hexToBase58check];
+        } else {
+            _address = [addressString hexToBase58check];
         }
-       
+
         _keyStr = [message substringFromIndex:addressString.length + 1];
 
     }
@@ -73,8 +72,9 @@
         return NO;
     }
 }
--(NSString *)toPasswordSeedString {
-    NSArray *array=[[NSArray alloc] initWithObjects:[self.address base58checkToHex],self.keyStr, nil];
+
+- (NSString *)toPasswordSeedString {
+    NSArray *array = [[NSArray alloc] initWithObjects:[self.address base58checkToHex], self.keyStr, nil];
     return [[BTQRCodeUtil joinedQRCode:array] toUppercaseStringWithEn];
 }
 

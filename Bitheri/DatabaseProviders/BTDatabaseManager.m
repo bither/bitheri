@@ -102,8 +102,7 @@ static BTDatabaseManager *databaseProvide;
             ", peer_connected_cnt integer not null);";
 
     _createTablePasswordSeedSql = @"create table if not exists password_seed "
-            "(address text not null primary key"
-            ", encrypt_str text not null);";
+            "(password_seed text not null primary key);";
     _createTableAddressesSql = @"create table if not exists addresses "
             "(address text not null primary key"
             ", encrypt_private_key text"

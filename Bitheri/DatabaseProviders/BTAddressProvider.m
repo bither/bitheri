@@ -17,6 +17,7 @@
 //  limitations under the License.
 #import "BTAddressProvider.h"
 #import "BTDatabaseManager.h"
+#import "BTEncryptedData.h"
 
 static BTAddressProvider *provider;
 
@@ -35,7 +36,102 @@ static BTAddressProvider *provider;
 
 #pragma mark - password
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
-    return NO;
+    __block NSMutableDictionary *addressesPrivKeyDict = [NSMutableDictionary new];
+    __block NSString *hdmEncryptPassword = nil;
+    __block NSMutableDictionary *encryptSeedDict = [NSMutableDictionary new];
+    __block NSMutableDictionary *encryptHDSeedDict = [NSMutableDictionary new];
+    __block BTPasswordSeed *passwordSeed = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select address,encrypt_private_key from addresses where encrypt_private_key is not null";
+        FMResultSet *rs = [db executeQuery:sql];
+        while ([rs next]) {
+            NSString *address = [rs stringForColumnIndex:0];
+            NSString *encryptPrivKey = [rs stringForColumnIndex:1];
+            addressesPrivKeyDict[address] = encryptPrivKey;
+        }
+        [rs close];
+
+        sql = @"select encrypt_bither_password from hdm_bid limit 1";
+        rs = [db executeQuery:sql];
+        if ([rs next]) {
+            hdmEncryptPassword = [rs stringForColumnIndex:0];
+        }
+        [rs close];
+
+        sql = @"select hd_seed_id,encrypt_seed,encrypt_hd_seed from hd_seeds where encrypt_seed!='RECOVER'";
+        rs = [db executeQuery:sql];
+        while ([rs next]) {
+            NSNumber *hdSeedId = @([rs intForColumnIndex:0]);
+            NSString *encryptSeed = [rs stringForColumnIndex:1];
+            if (![rs columnIndexIsNull:2]) {
+                NSString *encryptHDSeed = [rs stringForColumnIndex:2];
+                encryptHDSeedDict[hdSeedId] = encryptHDSeed;
+            }
+            encryptSeedDict[hdSeedId] = encryptSeed;
+        }
+        [rs close];
+
+        sql = @"select password_seed from password_seed limit 1";
+        rs = [db executeQuery:sql];
+        if ([rs next]) {
+            passwordSeed = [[BTPasswordSeed alloc] initWithString:[rs stringForColumnIndex:0]];
+        }
+        [rs close];
+    }];
+
+    for (NSString *key in addressesPrivKeyDict.keyEnumerator) {
+        addressesPrivKeyDict[key] = [self changePwdWithEncryptStr:addressesPrivKeyDict[key]
+                                                   andOldPassword:oldPassword andNewPassword:newPassword];
+    }
+    if (hdmEncryptPassword != nil) {
+        hdmEncryptPassword = [self changePwdWithEncryptStr:hdmEncryptPassword
+                                            andOldPassword:oldPassword andNewPassword:newPassword];
+    }
+    for (NSString *key in encryptSeedDict.keyEnumerator) {
+        encryptSeedDict[key] = [self changePwdWithEncryptStr:encryptSeedDict[key]
+                                              andOldPassword:oldPassword andNewPassword:newPassword];
+    }
+    for (NSString *key in encryptHDSeedDict.keyEnumerator) {
+        encryptHDSeedDict[key] = [self changePwdWithEncryptStr:encryptHDSeedDict[key]
+                                                andOldPassword:oldPassword andNewPassword:newPassword];
+    }
+    if (passwordSeed != nil) {
+        if (![passwordSeed changePasswordWithOldPassword:oldPassword andNewPassword:newPassword])
+            return NO;
+    }
+
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        [db beginTransaction];
+        NSString *sql = @"update addresses set encrypt_private_key=? where address=? and encrypt_private_key is not null";
+        for (NSString *key in addressesPrivKeyDict.keyEnumerator) {
+            [db executeUpdate:sql, addressesPrivKeyDict[key], key];
+        }
+        if (hdmEncryptPassword != nil) {
+            sql = @"update hdm_bid set encrypt_bither_password=?";
+            [db executeUpdate:sql, hdmEncryptPassword];
+        }
+        for (NSNumber *hdSeedId in encryptSeedDict.keyEnumerator) {
+            if (encryptHDSeedDict[hdSeedId] != nil) {
+                sql = @"update hd_seeds set encrypt_seed=?,encrypt_hd_seed=? where hd_seed_id=?";
+                [db executeUpdate:sql, encryptSeedDict[hdSeedId], encryptHDSeedDict[hdSeedId], hdSeedId];
+            } else {
+                sql = @"update hd_seeds set encrypt_seed=? where hd_seed_id=?";
+                [db executeUpdate:sql, encryptSeedDict[hdSeedId], hdSeedId];
+            }
+        }
+        if (passwordSeed != nil) {
+            sql = @"update password_seed set password_seed=?";
+            [db executeUpdate:sql, [passwordSeed toPasswordSeedString]];
+        }
+        [db commit];
+    }];
+
+    return YES;
+}
+
+- (NSString *)changePwdWithEncryptStr:(NSString *)encryptStr andOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
+    BTEncryptedData *encryptedData = [[BTEncryptedData alloc] initWithStr:encryptStr];
+    return [[[BTEncryptedData alloc] initWithData:[encryptedData decrypt:oldPassword] andPassowrd:newPassword] toEncryptedString];
 }
 
 - (BTPasswordSeed *)getPasswordSeed;{

@@ -19,6 +19,8 @@
 #import "BTPasswordSeed.h"
 #import "BTQRCodeUtil.h"
 #import "BTEncryptedData.h"
+#import "BTPrivateKeyUtil.h"
+#import "BTUtils.h"
 
 @interface BTPasswordSeed ()
 
@@ -80,6 +82,15 @@
 - (NSString *)toPasswordSeedString {
     NSArray *array = @[[self.address base58checkToHex], self.keyStr];
     return [[BTQRCodeUtil joinedQRCode:array] toUppercaseStringWithEn];
+}
+
+- (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
+    BTEncryptedData *encryptedData = [[BTEncryptedData alloc] initWithStr:self.keyStr];
+    self.keyStr = [[[BTEncryptedData alloc] initWithData:[encryptedData decrypt:oldPassword]
+                                             andPassowrd:newPassword andIsCompressed:encryptedData.isCompressed
+                                            andIsXRandom:encryptedData.isXRandom]
+            toEncryptedStringForQRCodeWithIsCompressed:encryptedData.isCompressed andIsXRandom:encryptedData.isXRandom];
+    return ![BTUtils isEmpty:self.keyStr];
 }
 
 

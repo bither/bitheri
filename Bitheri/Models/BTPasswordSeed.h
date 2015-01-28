@@ -25,6 +25,7 @@
 - (instancetype)initWithString:(NSString *)message;
 - (instancetype)initWithBTAddress:(BTAddress *)btAddress;
 - (BOOL)checkPassword:(NSString *)password;
--(NSString *)toPasswordSeedString;
+- (NSString *)toPasswordSeedString;
+- (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
 
 @end

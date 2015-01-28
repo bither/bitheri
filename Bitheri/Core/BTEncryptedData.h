@@ -32,4 +32,7 @@
 - (NSString *)toEncryptedString;
 - (NSString *)toEncryptedStringForQRCodeWithIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom;
 
++ (NSString *)encryptedString:(NSString *)encryptedString addIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom;
++ (NSString *)encryptedStringRemoveFlag:(NSString *)encryptedString;
+
 @end

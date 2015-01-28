@@ -19,6 +19,7 @@
 		D61D0050BF2C7433CAE22D0E /* BTTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01CB510F3BD1C6350C3F /* BTTestHelper.m */; };
 		D61D00D6B790A6D4DF2CC0E9 /* NSData+Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D08B05802C171ED50DD0E /* NSData+Hash.m */; };
 		D61D00DA49A7F3F790D6D71D /* BTScriptChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D059FF8F45BEECE09DF93 /* BTScriptChunk.m */; };
+		D61D0108201D2ACD9F8EEAC9 /* BTEncryptedDataTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D03D5ED8F73C7C3D539DE /* BTEncryptedDataTest.m */; };
 		D61D01265EEC0A5F8F670EEB /* BTPeerProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D07A59B0E01BFDF795D1F /* BTPeerProvider.m */; };
 		D61D0141E93CCBAFC9888AC4 /* BTAddressManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0585E19052A13C844EA9 /* BTAddressManager.m */; };
 		D61D01A7E7001E506222FC07 /* BTKeyParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0F636383A7EADC9F453E /* BTKeyParameter.m */; };
@@ -196,6 +197,7 @@
 		D61D02CCB956C40B84F4B889 /* BTDatabaseManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTDatabaseManager.m; sourceTree = "<group>"; };
 		D61D03715FC41C121DC18067 /* NSData+Bitcoin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+Bitcoin.m"; sourceTree = "<group>"; };
 		D61D0395809857FA9F31E395 /* BTScriptChunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTScriptChunk.h; sourceTree = "<group>"; };
+		D61D03D5ED8F73C7C3D539DE /* BTEncryptedDataTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTEncryptedDataTest.m; sourceTree = "<group>"; };
 		D61D03EFB1173A3F0B42282C /* BTBip39Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBip39Test.m; sourceTree = "<group>"; };
 		D61D03FEC147C37E607A6153 /* NSMutableData+Bitcoin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableData+Bitcoin.h"; sourceTree = "<group>"; };
 		D61D041D48238458B84136C8 /* BTAddressProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTAddressProvider.m; sourceTree = "<group>"; };
@@ -358,6 +360,7 @@
 			children = (
 				D61D0496D5B5281BD1F57B35 /* BTBip32Test.m */,
 				D61D03EFB1173A3F0B42282C /* BTBip39Test.m */,
+				D61D03D5ED8F73C7C3D539DE /* BTEncryptedDataTest.m */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -915,6 +918,7 @@
 				D61D0B05920E02746F65A90B /* BTHDMAddress.m in Sources */,
 				D61D0330C5EF8D98A02DA779 /* BTHDMKeychain.m in Sources */,
 				D61D0E0064A1489B78EB9AC1 /* BTEncryptedData.m in Sources */,
+				D61D0108201D2ACD9F8EEAC9 /* BTEncryptedDataTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

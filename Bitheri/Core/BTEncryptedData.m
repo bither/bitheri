@@ -273,7 +273,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 - (NSString *)toEncryptedStringForQRCodeWithIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom; {
     return [[BTQRCodeUtil joinedQRCode:@[[NSString hexWithData:self.encryptedData]
             , [NSString hexWithData:self.iv]
-            , [NSString hexWithData:[self saltWithIsCompressed:isCompressed andIsXRandom:isXRandom]]]] uppercaseString];
+            , [NSString hexWithData:[self saltWithIsCompressed:isCompressed andIsXRandom:isXRandom]]]] toUppercaseStringWithEn];
 }
 
 - (NSData *)saltWithIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom; {
@@ -290,5 +290,36 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     return result;
 }
 
++ (NSString *)encryptedString:(NSString *)encryptedString addIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom; {
+    NSArray *array = [BTQRCodeUtil splitQRCode:encryptedString];
+    NSData *data = [array[2] hexToData];
+    NSMutableData *salt = [NSMutableData secureDataWithCapacity:9];
+    uint8_t flag = 0;
+    if (isCompressed) {
+        flag += IS_COMPRESSED_FLAG;
+    }
+    if (isXRandom) {
+        flag += IS_FROMXRANDOM_FLAG;
+    }
+    [salt appendUInt8:flag];
+    if (data.length == 9) {
+        [salt appendBytes:(const unsigned char *)data.bytes + 1 length:8];
+    } else {
+        [salt appendData:data];
+    }
+    return [[BTQRCodeUtil joinedQRCode:@[array[0], array[1], [NSString hexWithData:salt]]] toUppercaseStringWithEn];
+}
+
++ (NSString *)encryptedStringRemoveFlag:(NSString *)encryptedString; {
+    NSArray *array = [BTQRCodeUtil splitQRCode:encryptedString];
+    NSData *data = [array[2] hexToData];
+    NSMutableData *salt = [NSMutableData secureDataWithCapacity:8];
+    if (data.length == 9) {
+        [salt appendBytes:(const unsigned char *)data.bytes + 1 length:8];
+    } else {
+        [salt appendData:data];
+    }
+    return [[BTQRCodeUtil joinedQRCode:@[array[0], array[1], [NSString hexWithData:salt]]] toUppercaseStringWithEn];
+}
 
 @end

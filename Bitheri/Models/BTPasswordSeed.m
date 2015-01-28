@@ -18,6 +18,7 @@
 
 #import "BTPasswordSeed.h"
 #import "BTQRCodeUtil.h"
+#import "BTEncryptedData.h"
 
 @interface BTPasswordSeed ()
 
@@ -55,12 +56,15 @@
 }
 
 - (instancetype)initWithBTAddress:(BTAddress *)btAddress {
-    self = [super init];
-    if (self) {
-        _address = btAddress.address;
-        _keyStr = btAddress.encryptPrivKey;
+    if (!(self = [super init])) return nil;
 
-    }
+    if (btAddress.encryptPrivKeyForCreate == nil)
+        return nil;
+
+    _address = btAddress.address;
+    _keyStr = [BTEncryptedData encryptedString:btAddress.encryptPrivKeyForCreate
+                               addIsCompressed:btAddress.isSyncComplete andIsXRandom:btAddress.isFromXRandom];
+
     return self;
 }
 
@@ -74,7 +78,7 @@
 }
 
 - (NSString *)toPasswordSeedString {
-    NSArray *array = [[NSArray alloc] initWithObjects:[self.address base58checkToHex], self.keyStr, nil];
+    NSArray *array = @[[self.address base58checkToHex], self.keyStr];
     return [[BTQRCodeUtil joinedQRCode:array] toUppercaseStringWithEn];
 }
 

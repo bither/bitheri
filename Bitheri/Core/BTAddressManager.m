@@ -65,9 +65,36 @@
         return;
     }
     [tc lock];
-    [self initPrivKeyAddressByDesc];
-    [self initWatchOnlyAddressByDesc];
-    [self initTrashAddressByDesc];
+    NSArray *allAddresses = [[BTAddressProvider instance] getAddresses];
+    for (BTAddress *address in allAddresses) {
+        if (address.hasPrivKey && !address.isTrashed) {
+            [_privKeyAddresses addObject:address];
+            [_addressesSet addObject:address.address];
+        } else if (address.hasPrivKey && address.isTrashed) {
+            [_trashAddresses addObject:address];
+        } else {
+            [_watchOnlyAddresses addObject:address];
+            [_addressesSet addObject:address.address];
+        }
+    }
+    [_privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+        if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
+    [_watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+        if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
+    [_trashAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+        if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
+//    [self initPrivKeyAddressByDesc];
+//    [self initWatchOnlyAddressByDesc];
+//    [self initTrashAddressByDesc];
     self.isReady=YES;
     [tc signal];
     [tc unlock];

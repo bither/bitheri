@@ -495,7 +495,10 @@ static BTAddressProvider *provider;
                 , [NSString base58WithData:address.pubKey], @(address.isFromXRandom), @(address.isTrashed)
                 , @(address.isSyncComplete), @(address.sortTime)];
         if (address.encryptPrivKeyForCreate != nil) {
-            [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithBTAddress:address] andDB:db];
+            NSString *str = [BTEncryptedData encryptedString:address.encryptPrivKeyForCreate
+                                             addIsCompressed:address.pubKey.length < 65
+                                                andIsXRandom:address.isFromXRandom];
+            [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:address.address andEncryptStr:str] andDB:db];
         }
         [db commit];
     }];

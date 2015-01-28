@@ -60,11 +60,8 @@
 - (instancetype)initWithBTAddress:(BTAddress *)btAddress {
     if (!(self = [super init])) return nil;
 
-    if (btAddress.encryptPrivKeyForCreate == nil)
-        return nil;
-
     _address = btAddress.address;
-    _keyStr = [BTEncryptedData encryptedString:btAddress.encryptPrivKeyForCreate
+    _keyStr = [BTEncryptedData encryptedString:btAddress.encryptPrivKey
                                addIsCompressed:btAddress.pubKey.length < 65 andIsXRandom:btAddress.isFromXRandom];
 
     return self;

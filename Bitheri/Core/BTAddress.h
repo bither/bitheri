@@ -60,7 +60,7 @@
 - (instancetype)initWithAddress:(NSString *)address pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom;
 - (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey;
 
-- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
+//- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
 
 - (void)setBlockHeight:(u_int32_t)height forTxHashes:(NSArray *)txHashes;
 
@@ -114,13 +114,13 @@
 - (uint32_t)blockHeightUntilFree:(BTTx *)transaction;
 
 
-- (void)saveNewAddress:(long long)sortTime;
-- (void)updateAddressWithPub;
-- (void)savePrivate;
-- (void)removeWatchOnly;
-- (void)trashPrivKey;
-- (void)restorePrivKey;
-- (void)saveTrash;
+//- (void)saveNewAddress:(long long)sortTime;
+//- (void)updateAddressWithPub;
+//- (void)savePrivate;
+//- (void)removeWatchOnly;
+//- (void)trashPrivKey;
+//- (void)restorePrivKey;
+//- (void)saveTrash;
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase;
 

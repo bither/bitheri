@@ -351,7 +351,6 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *content = [NSString stringWithFormat:@"%@:%@:%lld%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString],self.sortTime,[self getXRandomString]];
     NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
     [BTUtils writeFile:dir content:content];
-
 }
 
 

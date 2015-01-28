@@ -24,6 +24,7 @@
 #import "BTOut.h"
 #import "BTQRCodeUtil.h"
 #import "asn1t.h"
+#import "BTAddressProvider.h"
 
 //static NSData *txOutput(NSData *txHash, uint32_t n) {
 //    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
@@ -233,11 +234,13 @@
     DDLogDebug(@"addAddress %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
 
     if (address.hasPrivKey) {
-        [address saveNewAddress:[self getPrivKeySortTime]];
+        address.sortTime = [self getPrivKeySortTime];
+        [[BTAddressProvider instance] addAddress:address];
         [self.privKeyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
     } else {
-        [address saveNewAddress:self.getWatchOnlySortTime];
+        address.sortTime = [self getWatchOnlySortTime];
+        [[BTAddressProvider instance] addAddress:address];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
     }
@@ -246,7 +249,8 @@
 
 - (void)stopMonitor:(BTAddress *)address {
     DDLogDebug(@"stopMonitor %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
-    [address removeWatchOnly];
+    [[BTAddressProvider instance] removeWatchOnlyAddress:address];
+//    [address removeWatchOnly];
     [self.watchOnlyAddresses removeObject:address];
     [self.addressesSet removeObject:address.address];
 }
@@ -254,7 +258,7 @@
 - (void)trashPrivKey:(BTAddress *)address; {
     if (address.hasPrivKey && address.balance == 0) {
         DDLogDebug(@"trash priv key %@", address.address);
-        [address trashPrivKey];
+        [[BTAddressProvider instance] trashPrivKeyAddress:address];
         [self.privKeyAddresses removeObject:address];
         [self.addressesSet removeObject:address.address];
         [self.trashAddresses addObject:address];
@@ -264,8 +268,11 @@
 - (void)restorePrivKey:(BTAddress *)address; {
     if (address.hasPrivKey) {
         DDLogDebug(@"restore priv key %@", address.address);
-        [address restorePrivKey];
-        [address saveNewAddress:[self getPrivKeySortTime]];
+        address.sortTime = [self getPrivKeySortTime];
+        address.isTrashed = NO;
+        address.isSyncComplete = NO;
+        [address updateCache];
+        [[BTAddressProvider instance] restorePrivKeyAddress:address];
         [self.privKeyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
         [self.trashAddresses removeObject:address];
@@ -314,37 +321,40 @@
 }
 
 - (BOOL)changePassphraseWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
-    NSMutableArray *encryptPrivKeys = [NSMutableArray new];
-    NSMutableArray *privAddresses = [NSMutableArray new];
-    NSMutableArray *encryptTrashKeys = [NSMutableArray new];
-    NSMutableArray *trashAddresses = [NSMutableArray new];
-    for (BTAddress *address in self.privKeyAddresses) {
-        NSString *encryptPrivKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-        if (encryptPrivKey == nil) {
-            return NO;
-        }
-        [encryptPrivKeys addObject:encryptPrivKey];
-        [privAddresses addObject:address];
-    }
-    for (BTAddress *address in self.trashAddresses) {
-        NSString *encryptTrashKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-        if (encryptTrashKey == nil) {
-            return NO;
-        }
-        [encryptTrashKeys addObject:encryptTrashKey];
-        [trashAddresses addObject:address];
-    }
-    for (NSUInteger i = 0; i < privAddresses.count; i++) {
-        BTAddress *address = privAddresses[i];
-//        address.encryptPrivKey = encryptPrivKeys[i];
-        [address savePrivate];
-    }
-    for (NSUInteger i = 0; i < trashAddresses.count; i++) {
-        BTAddress *address = trashAddresses[i];
-//        address.encryptPrivKey = encryptTrashKeys[i];
-        [address saveTrash];
-    }
-    return YES;
+    // todo:
+//    NSMutableArray *encryptPrivKeys = [NSMutableArray new];
+//    NSMutableArray *privAddresses = [NSMutableArray new];
+//    NSMutableArray *encryptTrashKeys = [NSMutableArray new];
+//    NSMutableArray *trashAddresses = [NSMutableArray new];
+//    for (BTAddress *address in self.privKeyAddresses) {
+//        NSString *encryptPrivKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
+//        if (encryptPrivKey == nil) {
+//            return NO;
+//        }
+//        [encryptPrivKeys addObject:encryptPrivKey];
+//        [privAddresses addObject:address];
+//    }
+//    for (BTAddress *address in self.trashAddresses) {
+//        NSString *encryptTrashKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
+//        if (encryptTrashKey == nil) {
+//            return NO;
+//        }
+//        [encryptTrashKeys addObject:encryptTrashKey];
+//        [trashAddresses addObject:address];
+//    }
+//    for (NSUInteger i = 0; i < privAddresses.count; i++) {
+//        BTAddress *address = privAddresses[i];
+//        // todo:
+////        address.encryptPrivKey = encryptPrivKeys[i];
+////        [address savePrivate];
+//    }
+//    for (NSUInteger i = 0; i < trashAddresses.count; i++) {
+//        BTAddress *address = trashAddresses[i];
+//        // todo:
+////        address.encryptPrivKey = encryptTrashKeys[i];
+////        [address saveTrash];
+//    }
+    return NO;
 }
 
 - (BOOL)isTxRelated:(BTTx *)tx;{

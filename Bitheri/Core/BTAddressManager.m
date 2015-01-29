@@ -34,6 +34,12 @@
 //    return d;
 //}
 
+@interface BTAddressManager()<BTHDMAddressChangeDelegate>{
+    BTHDMKeychain* _hdmKeychain;
+}
+
+@end
+
 @implementation BTAddressManager {
  NSCondition *tc;
 }
@@ -92,6 +98,7 @@
         if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
         return NSOrderedSame;
     }];
+    [self initHDMKeychain];
 //    [self initPrivKeyAddressByDesc];
 //    [self initWatchOnlyAddressByDesc];
 //    [self initTrashAddressByDesc];
@@ -102,12 +109,17 @@
         [[NSNotificationCenter defaultCenter] postNotificationName:BTAddressManagerIsReady
                                                             object:nil userInfo:nil];
     });
-   
-    
+}
+
+-(void)initHDMKeychain{
+    NSArray* seeds = [[BTAddressProvider instance]getHDSeedIds];
+    if(seeds.count > 0){
+        self.hdmKeychain = [[BTHDMKeychain alloc]initWithSeedId:((NSNumber*)seeds[0]).intValue];
+    }
 }
 
 - (NSInteger)addressCount {
-    return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count];
+    return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count] + (self.hasHDMKeychain ? self.hdmKeychain.addresses.count : 0);
 }
 
 -(NSMutableArray*)privKeyAddresses{
@@ -310,6 +322,9 @@
     NSMutableArray *allAddresses = [NSMutableArray new];
     [allAddresses addObjectsFromArray:self.privKeyAddresses];
     [allAddresses addObjectsFromArray:self.watchOnlyAddresses];
+    if(self.hasHDMKeychain){
+        [allAddresses addObjectsFromArray:self.hdmKeychain.addresses];
+    }
     return allAddresses;
 }
 
@@ -415,6 +430,31 @@
         [result addObject:getOutPoint(outItem.txHash, outItem.outSn)];
     }
     return result;
+}
+
+-(void)hdmAddressAdded:(BTHDMAddress *)address{
+    [_addressesSet addObject:address.address];
+}
+
+-(void)setHdmKeychain:(BTHDMKeychain *)hdmKeychain{
+    _hdmKeychain = hdmKeychain;
+    hdmKeychain.addressChangeDelegate = self;
+    NSArray* addresses = hdmKeychain.addresses;
+    for(BTHDMAddress* a in addresses){
+        [_addressesSet addObject:a.address];
+    }
+}
+
+-(BOOL)hasHDMKeychain{
+    if([[BTSettings instance] getAppMode] == COLD){
+        return _hdmKeychain != nil;
+    } else {
+        return _hdmKeychain && _hdmKeychain.addresses.count > 0;
+    }
+}
+
+-(BTHDMKeychain*)hdmKeychain{
+    return _hdmKeychain;
 }
 
 - (void)blockChainChanged; {

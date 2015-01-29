@@ -348,40 +348,7 @@
 }
 
 - (BOOL)changePassphraseWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
-    // todo:
-//    NSMutableArray *encryptPrivKeys = [NSMutableArray new];
-//    NSMutableArray *privAddresses = [NSMutableArray new];
-//    NSMutableArray *encryptTrashKeys = [NSMutableArray new];
-//    NSMutableArray *trashAddresses = [NSMutableArray new];
-//    for (BTAddress *address in self.privKeyAddresses) {
-//        NSString *encryptPrivKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-//        if (encryptPrivKey == nil) {
-//            return NO;
-//        }
-//        [encryptPrivKeys addObject:encryptPrivKey];
-//        [privAddresses addObject:address];
-//    }
-//    for (BTAddress *address in self.trashAddresses) {
-//        NSString *encryptTrashKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-//        if (encryptTrashKey == nil) {
-//            return NO;
-//        }
-//        [encryptTrashKeys addObject:encryptTrashKey];
-//        [trashAddresses addObject:address];
-//    }
-//    for (NSUInteger i = 0; i < privAddresses.count; i++) {
-//        BTAddress *address = privAddresses[i];
-//        // todo:
-////        address.encryptPrivKey = encryptPrivKeys[i];
-////        [address savePrivate];
-//    }
-//    for (NSUInteger i = 0; i < trashAddresses.count; i++) {
-//        BTAddress *address = trashAddresses[i];
-//        // todo:
-////        address.encryptPrivKey = encryptTrashKeys[i];
-////        [address saveTrash];
-//    }
-    return NO;
+    return [[BTAddressProvider instance] changePasswordWithOldPassword:oldPassphrase andNewPassword:newPassphrase];
 }
 
 - (BOOL)isTxRelated:(BTTx *)tx;{

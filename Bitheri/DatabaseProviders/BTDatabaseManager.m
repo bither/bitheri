@@ -235,7 +235,7 @@ static BTDatabaseManager *databaseProvide;
         [db executeUpdate:self.createTableInsSql];
         [db executeUpdate:self.createIndexInsPrevTxHashSql];
         [db executeUpdate:self.createTableOutsSql];
-        [db executeUpdate:self.createIndexInsPrevTxHashSql];
+        [db executeUpdate:self.createIndexOutsOutAddressSql];
         [db executeUpdate:self.createTablePeersSql];
         [db commit];
         return YES;

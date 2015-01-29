@@ -859,7 +859,7 @@ static BTTxProvider *provider;
          [db executeUpdate:[BTDatabaseManager instance].createTableInsSql];
          [db executeUpdate:[BTDatabaseManager instance].createIndexInsPrevTxHashSql];
          [db executeUpdate:[BTDatabaseManager instance].createTableOutsSql];
-         [db executeUpdate:[BTDatabaseManager instance].createIndexInsPrevTxHashSql];
+         [db executeUpdate:[BTDatabaseManager instance].createIndexOutsOutAddressSql];
          [db executeUpdate:[BTDatabaseManager instance].createTablePeersSql];
          [db commit];
      }];

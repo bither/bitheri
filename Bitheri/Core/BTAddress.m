@@ -180,11 +180,18 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)updateBalance {
+    _balance = [[BTTxProvider instance] getConfirmedBalanceWithAddress:self.address] + [self calculateUnconfirmedBalance];
+}
+
+- (uint64_t)calculateUnconfirmedBalance {
     uint64_t balance = 0;
     NSMutableOrderedSet *utxos = [NSMutableOrderedSet orderedSet];
     NSMutableSet *spentOutputs = [NSMutableSet set], *invalidTx = [NSMutableSet set];
 
-    for (BTTx *tx in [self.txs reverseObjectEnumerator]) {
+    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTTxProvider instance] getUnconfirmedTxWithAddress:self.address]];
+    [txs sortUsingComparator:txComparator];
+
+    for (BTTx *tx in [txs reverseObjectEnumerator]) {
         NSMutableSet *spent = [NSMutableSet set];
         uint32_t i = 0, n = 0;
 
@@ -223,14 +230,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
             balance -= [transaction.outputAmounts[n] unsignedLongLongValue];
         }
     }
-
-    if (balance != _balance) {
-        _balance = balance;
-
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification object:nil];
-//        });
-    }
+    return balance;
 }
 
 - (BOOL)containsAddress:(NSString *)address {

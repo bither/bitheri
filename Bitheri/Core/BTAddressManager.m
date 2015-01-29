@@ -437,6 +437,10 @@
 }
 
 -(void)setHdmKeychain:(BTHDMKeychain *)hdmKeychain{
+    if(!hdmKeychain){
+        _hdmKeychain = nil;
+        return;
+    }
     _hdmKeychain = hdmKeychain;
     hdmKeychain.addressChangeDelegate = self;
     NSArray* addresses = hdmKeychain.addresses;

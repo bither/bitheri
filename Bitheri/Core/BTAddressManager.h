@@ -56,4 +56,6 @@
 
 - (void)blockChainChanged;
 
+- (NSArray *)compressTxsForApi:(NSArray *)txList andAddress:(NSString *)address;
+
 @end

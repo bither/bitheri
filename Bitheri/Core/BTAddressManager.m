@@ -466,4 +466,39 @@
         [address updateCache];
     }
 }
+
+- (NSArray *)compressTxsForApi:(NSArray *)txList andAddress:(NSString *)address;{
+    NSMutableDictionary *txDict = [NSMutableDictionary new];
+    for (BTTx *tx in txList) {
+        txDict[tx.txHash] = tx;
+    }
+    for (BTTx *tx in txList) {
+        if (![self isSendFromMe:tx andTxHashDict:txDict andAddress:address] && tx.outs.count > COMPRESS_OUT_NUM) {
+            NSMutableArray *outList = [NSMutableArray new];
+            for (BTOut *out in tx.outs) {
+                if ([out.outAddress isEqualToString:address]) {
+                    [outList addObject:out];
+                }
+            }
+            tx.outs = outList;
+        }
+    }
+    return txList;
+}
+
+- (BOOL)isSendFromMe:(BTTx *)tx andTxHashDict:(NSDictionary *)txDict andAddress:(NSString *)address;{
+    for (BTIn *btIn in tx.ins) {
+        if (txDict[btIn.txHash] != nil) {
+            BTTx *prevTx = txDict[btIn.txHash];
+            for (BTOut *out in prevTx.outs) {
+                if (out.outSn == btIn.prevOutSn) {
+                    if ([out.outAddress isEqualToString:address]) {
+                        return YES;
+                    }
+                }
+            }
+        }
+    }
+    return NO;
+}
 @end

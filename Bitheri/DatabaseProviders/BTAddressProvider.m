@@ -79,7 +79,8 @@ static BTAddressProvider *provider;
         [rs close];
     }];
 
-    for (NSString *key in addressesPrivKeyDict.keyEnumerator) {
+    NSArray *keys = [addressesPrivKeyDict allKeys];
+    for (NSString *key in keys) {
         addressesPrivKeyDict[key] = [self changePwdWithEncryptStr:addressesPrivKeyDict[key]
                                                    andOldPassword:oldPassword andNewPassword:newPassword];
     }
@@ -87,11 +88,13 @@ static BTAddressProvider *provider;
         hdmEncryptPassword = [self changePwdWithEncryptStr:hdmEncryptPassword
                                             andOldPassword:oldPassword andNewPassword:newPassword];
     }
-    for (NSString *key in encryptSeedDict.keyEnumerator) {
+    keys = [encryptSeedDict allKeys];
+    for (NSString *key in keys) {
         encryptSeedDict[key] = [self changePwdWithEncryptStr:encryptSeedDict[key]
                                               andOldPassword:oldPassword andNewPassword:newPassword];
     }
-    for (NSString *key in encryptHDSeedDict.keyEnumerator) {
+    keys = [encryptHDSeedDict allKeys];
+    for (NSString *key in keys) {
         encryptHDSeedDict[key] = [self changePwdWithEncryptStr:encryptHDSeedDict[key]
                                                 andOldPassword:oldPassword andNewPassword:newPassword];
     }

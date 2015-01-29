@@ -73,4 +73,7 @@
 - (void)completeInSignatureWithIns:(NSArray *) ins;
 - (uint32_t)needCompleteInSignature:(NSString *)address;
 
+- (uint64_t)getConfirmedBalanceWithAddress:(NSString *)address;
+- (NSArray *)getUnconfirmedTxWithAddress:(NSString *)address;
+- (uint64_t)getTotalReceiveWithAddress:(NSString *)address;
 @end

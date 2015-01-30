@@ -551,7 +551,7 @@ static BTAddressProvider *provider;
 - (void)updateSyncComplete:(BTAddress *)address;{
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update addresses set is_synced=? where address=?";
-        [db executeUpdate:sql, address.address, address.isSyncComplete ? @1 : @0];
+        [db executeUpdate:sql, address.isSyncComplete ? @1 : @0, address.address];
     }];
 }
 

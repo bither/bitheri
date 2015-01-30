@@ -48,7 +48,7 @@
 + (instancetype)sharedInstance;
 
 - (NSString *)normalizeCode:(NSString *)phrase;
-
+- (NSArray *)toMnemonicArray:(NSData*)data;
 - (NSString *)toMnemonic:(NSData *)data;
 - (NSData *)toEntropy:(NSString *)code;
 - (BOOL)check:(NSString *)code;

@@ -78,24 +78,29 @@
     }
 }
 
-- (NSString *)toMnemonic:(NSData *)data
-{
+- (NSArray *)toMnemonicArray:(NSData*)data{
     if ((data.length % 4) != 0 || data.length == 0) return nil; // data length must be a multiple of 32 bits
-
+    
     NSArray *words = [self getWords];
     uint32_t n = (uint32_t)words.count, x;
     NSMutableArray *a =
-            CFBridgingRelease(CFArrayCreateMutable(SecureAllocator(), data.length*3/4, &kCFTypeArrayCallBacks));
+    CFBridgingRelease(CFArrayCreateMutable(SecureAllocator(), data.length*3/4, &kCFTypeArrayCallBacks));
     NSMutableData *d = [NSMutableData secureDataWithData:data];
-
+    
     [d appendData:data.SHA256]; // append SHA256 checksum
-
+    
     for (int i = 0; i < data.length*3/4; i++) {
         x = CFSwapInt32BigToHost(*(const uint32_t *)((const uint8_t *)d.bytes + i*11/8));
         [a addObject:words[(x >> (sizeof(x)*8 - (11 + ((i*11) % 8)))) % n]];
     }
-
+    
     CC_XZEROMEM(&x, sizeof(x));
+    return a;
+}
+
+- (NSString *)toMnemonic:(NSData *)data
+{
+    NSArray* a = [self toMnemonicArray:data];
     return CFBridgingRelease(CFStringCreateByCombiningStrings(SecureAllocator(), (__bridge CFArrayRef)a, CFSTR(" ")));
 }
 

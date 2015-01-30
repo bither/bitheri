@@ -342,6 +342,13 @@
     return [[BTAddressProvider instance] uncompletedHDMAddressCount:self.hdSeedId];
 }
 
+-(NSArray*)seedWords:(NSString*)password{
+    [self decryptMnemonicSeed:password];
+    NSArray* words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    [self wipeMnemonicSeed];
+    return words;
+}
+
 -(BOOL)isInRecovery{
     return [BTUtils compareString:[[BTAddressProvider instance]getEncryptSeed:self.hdSeedId] compare:[BTHDMKeychainRecover RecoverPlaceHolder]] ||
     [BTUtils compareString:[[BTAddressProvider instance]getEncryptHDSeed:self.hdSeedId] compare:[BTHDMKeychainRecover RecoverPlaceHolder]] ||

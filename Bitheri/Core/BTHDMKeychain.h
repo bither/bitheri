@@ -55,7 +55,7 @@
 -(BTBIP32Key*)externalKeyWithIndex:(uint) index andPassword:(NSString*)password;
 -(NSData*)externalChainRootPubExtended:(NSString*)password;
 -(NSString*)externalChainRootPubExtendedAsHex:(NSString*)password;
-
+-(NSArray*)seedWords:(NSString*)password;
 -(BOOL)checkWithPassword:(NSString*)password;
 -(NSString*)signHDMBIdWithMessageHash:(NSString*)messageHash andPassword:(NSString*)password;
 @end

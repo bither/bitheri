@@ -172,6 +172,8 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     self.salt = [NSData randomWithSize:8];
     self.iv = [NSData randomWithSize:16];
     self.encryptedData = [self encryptSecret:data withPassphrase:password andSalt:self.salt andIV:self.iv];
+    _isCompressed = isCompressed;
+    _isXRandom = isXRandom;
 
     return self;
 }

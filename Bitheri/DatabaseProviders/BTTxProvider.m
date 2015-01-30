@@ -248,7 +248,7 @@ static BTTxProvider *provider;
         if (txItem.blockNo != TX_UNCONFIRMED) {
             blockNo = @(txItem.blockNo);
         }
-        NSString *sql = @"insert into txs(block_no, tx_hash, source, tx_ver, tx_locktime, tx_time) values(?,?,?,?,?,?)";
+        NSString *sql = @"insert or ignore into txs(block_no, tx_hash, source, tx_ver, tx_locktime, tx_time) values(?,?,?,?,?,?)";
         bool success = [db executeUpdate:sql, blockNo, [NSString base58WithData:txItem.txHash]
                 , @(txItem.source), @(txItem.txVer), @(txItem.txLockTime), @(txItem.txTime)];
         // query in's prev out, get addresses and txs.
@@ -265,7 +265,7 @@ static BTTxProvider *provider;
                 }
             }
             [rs close];
-            sql = @"insert into ins(tx_hash,in_sn,prev_tx_hash,prev_out_sn,in_signature,in_sequence) values(?,?,?,?,?,?)";
+            sql = @"insert or ignore into ins(tx_hash,in_sn,prev_tx_hash,prev_out_sn,in_signature,in_sequence) values(?,?,?,?,?,?)";
             NSString *inSignature = nil;
             if (inItem.inSignature != (id) [NSNull null]) {
                 inSignature = [NSString base58WithData:inItem.inSignature];
@@ -280,7 +280,7 @@ static BTTxProvider *provider;
 
         // insert outs and get the out\'s addresses
         for (BTOut *outItem in txItem.outs) {
-            sql = @"insert into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address) values(?,?,?,?,?,?)";
+            sql = @"insert or ignore into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address) values(?,?,?,?,?,?)";
             success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                     , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                     , @(outItem.outValue), @(outItem.outStatus)

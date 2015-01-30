@@ -381,37 +381,46 @@
 }
 
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
-    if ([[BTTxProvider instance] isExist:tx.txHash]) {
-        // already in db
-        return YES;
-    }
-
     if ([[BTTxProvider instance] isTxDoubleSpendWithConfirmedTx:tx]) {
         // double spend with confirmed tx
         return false;
     }
 
+    BOOL isRegister = NO;
+    BTTx *compressedTx = [self compressTx:tx];
     NSMutableSet *needNotifyAddressHashSet = [NSMutableSet new];
     for (BTOut *out in tx.outs) {
         if ([self.addressesSet containsObject:out.outAddress])
             [needNotifyAddressHashSet addObject:out.outAddress];
     }
 
-    NSArray *inAddresses = [[BTTxProvider instance] getInAddresses:tx];
-    for (NSString *address in inAddresses) {
-        if ([self.addressesSet containsObject:address])
-            [needNotifyAddressHashSet addObject:address];
+    BTTx *txInDb = [[BTTxProvider instance] getTxDetailByTxHash:tx.txHash];
+    if (txInDb != nil) {
+        for (BTOut *out in txInDb.outs) {
+            if ([needNotifyAddressHashSet containsObject:out.outAddress]) {
+                [needNotifyAddressHashSet removeObject:out.outAddress];
+            }
+        }
+        isRegister = YES;
+    } else {
+        NSArray *inAddresses = [[BTTxProvider instance] getInAddresses:compressedTx];
+        for (NSString *address in inAddresses) {
+            if ([self.addressesSet containsObject:address]) {
+                [needNotifyAddressHashSet addObject:address];
+            }
+        }
+        isRegister = needNotifyAddressHashSet.count > 0;
     }
     if (needNotifyAddressHashSet.count > 0) {
-        [[BTTxProvider instance] add:tx];
-        DDLogDebug(@"register tx %@", [NSString hexWithHash:tx.txHash]);
+        [[BTTxProvider instance] add:compressedTx];
+        DDLogDebug(@"register tx %@", [NSString hexWithHash:compressedTx.txHash]);
     }
     for (BTAddress *address in [BTAddressManager instance].allAddresses) {
         if ([needNotifyAddressHashSet containsObject:address.address]) {
-            [address registerTx:tx withTxNotificationType:txNotificationType];
+            [address registerTx:compressedTx withTxNotificationType:txNotificationType];
         }
     }
-    return needNotifyAddressHashSet.count > 0;
+    return isRegister;
 }
 
 - (NSArray *)outs; {
@@ -500,5 +509,23 @@
         }
     }
     return NO;
+}
+
+- (BTTx *)compressTx:(BTTx *)tx {
+    if (![self isSendFromMe:tx] && tx.outs.count > COMPRESS_OUT_NUM) {
+        NSMutableArray *outList = [NSMutableArray new];
+        for (BTOut *out in tx.outs) {
+            if ([self.addressesSet containsObject:out.outAddress]) {
+                [outList addObject:out];
+            }
+        }
+        tx.outs = outList;
+    }
+    return tx;
+}
+
+- (BOOL)isSendFromMe:(BTTx *) tx;{
+    NSArray *fromAddresses = [tx inputAddresses];
+    return [self.addressesSet intersectsSet:[NSSet setWithArray:fromAddresses]];
 }
 @end

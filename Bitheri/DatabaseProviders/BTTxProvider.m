@@ -981,7 +981,7 @@ static BTTxProvider *provider;
                 "  where aa.receive>ifnull(bb.send, 0)";
         FMResultSet *rs = [db executeQuery:sql, address, address];
         if ([rs next]) {
-            result = (uint64_t) [rs longLongIntForColumn:0];
+            result = (uint64_t) [rs longLongIntForColumnIndex:0];
         }
         [rs close];
     }];

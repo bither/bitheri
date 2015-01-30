@@ -488,7 +488,7 @@
 
 - (BOOL)isSendFromMe:(BTTx *)tx andTxHashDict:(NSDictionary *)txDict andAddress:(NSString *)address;{
     for (BTIn *btIn in tx.ins) {
-        if (txDict[btIn.txHash] != nil) {
+        if (txDict[btIn.prevTxHash] != nil) {
             BTTx *prevTx = txDict[btIn.prevTxHash];
             for (BTOut *out in prevTx.outs) {
                 if (out.outSn == btIn.prevOutSn) {

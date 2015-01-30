@@ -180,7 +180,9 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
 
 @end
 
-@implementation BTBIP32Key
+@implementation BTBIP32Key{
+    BTKey *_key;
+};
 
 - (BOOL)isPubKeyOnly {
     return _secret == nil;
@@ -277,8 +279,8 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
 }
 
 - (NSData *)pubKey {
-    if (_pubKey == nil) {
-        _pubKey = [BTKey keyWithSecret:self.secret compressed:YES].publicKey;
+    if (_pubKey == nil && _secret != nil) {
+        _pubKey = self.key.publicKey;
     }
     return _pubKey;
 }
@@ -306,6 +308,13 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     NSMutableArray *array = [NSMutableArray arrayWithArray:path];
     [array addObject:@(child)];
     return [NSArray arrayWithArray:array];
+}
+
+- (BTKey *)key {
+    if (_key == nil && _secret != nil) {
+        _key = [BTKey keyWithSecret:_secret compressed:YES];
+    }
+    return _key;
 }
 
 @end

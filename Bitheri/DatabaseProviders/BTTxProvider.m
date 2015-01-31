@@ -150,6 +150,53 @@ static BTTxProvider *provider;
     return txs;
 }
 
+- (NSArray *)getTxAndDetailByAddress:(NSString *)address andPage:(int)page;{
+    __block NSMutableArray *txs = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSMutableDictionary *txDict = [NSMutableDictionary new];
+        int start = (page - 1) * TX_PAGE_SIZE;
+        NSString *sql = @"select b.* from addresses_txs a, txs b"
+                " where a.tx_hash=b.tx_hash and a.address=? order by ifnull(b.block_no,4294967295) desc limit ?,? ";
+        FMResultSet *rs = [db executeQuery:sql, address, @(start), @(TX_PAGE_SIZE)];
+        NSMutableString *txsStrBuilder = [NSMutableString new];
+        while ([rs next]) {
+            BTTx *txItem = [self format:rs];
+            txItem.ins = [NSMutableArray new];
+            txItem.outs = [NSMutableArray new];
+            [txs addObject:txItem];
+            txDict[txItem.txHash] = txItem;
+            [txsStrBuilder appendFormat:@"'%@',", [NSString base58WithData:txItem.txHash]];
+        }
+        [rs close];
+
+        if (txsStrBuilder.length > 1) {
+            NSString *txsStr = [txsStrBuilder substringToIndex:txsStrBuilder.length - 1];
+            sql = [NSString stringWithFormat:@"select b.* from ins b where b.tx_hash in (%@)"
+                                                     " order by b.tx_hash ,b.in_sn", txsStr];
+            rs = [db executeQuery:sql];
+            while ([rs next]) {
+                BTIn *inItem = [self formatIn:rs];
+                BTTx *txItem = txDict[inItem.txHash];
+                [txItem.ins addObject:inItem];
+                inItem.tx = txItem;
+            }
+            [rs close];
+
+            sql = [NSString stringWithFormat:@"select b.* from outs b where b.tx_hash in (%@)"
+                                                     " order by b.tx_hash,b.out_sn", txsStr];
+            rs = [db executeQuery:sql];
+            while ([rs next]) {
+                BTOut *outItem = [self formatOut:rs];
+                BTTx *txItem = txDict[outItem.txHash];
+                [txItem.outs addObject:outItem];
+                outItem.tx = txItem;
+            }
+            [rs close];
+        }
+    }];
+    return txs;
+}
+
 - (NSArray *)getPublishedTxs {
     __block NSMutableArray *txs = nil;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {

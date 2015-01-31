@@ -58,4 +58,5 @@
 -(NSArray*)seedWords:(NSString*)password;
 -(BOOL)checkWithPassword:(NSString*)password;
 -(NSString*)signHDMBIdWithMessageHash:(NSString*)messageHash andPassword:(NSString*)password;
+-(NSString*) getFullEncryptPrivKey;
 @end

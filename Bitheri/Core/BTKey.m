@@ -482,11 +482,15 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 
 - (NSString *)signMessage:(NSString *)message; {
     NSData *d = [[BTUtils formatMessageForSigning:message] SHA256_2];
-    ECDSA_SIG *sig = [self _sign:d];
+    return [self signHash:d];
+}
+
+- (NSString *)signHash:(NSData *)hash{
+    ECDSA_SIG *sig = [self _sign:hash];
     int recId = -1;
     for (int i = 0; i < 4; i++) {
         EC_KEY *k = EC_KEY_new_by_curve_name(NID_secp256k1);
-        int res = ECDSA_SIG_recover_key_GFp(k, sig, d.bytes, d.length, i, 1);
+        int res = ECDSA_SIG_recover_key_GFp(k, sig, hash.bytes, hash.length, i, 1);
         if (res == 0)
             continue;
         EC_KEY_set_conv_form(k, self.compressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);

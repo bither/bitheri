@@ -354,6 +354,10 @@
     [BTUtils compareString:[[BTAddressProvider instance]getEncryptHDSeed:self.hdSeedId] compare:[BTHDMKeychainRecover RecoverPlaceHolder]] ||
     [BTUtils compareString:self.firstAddressFromDb compare:[BTHDMKeychainRecover RecoverPlaceHolder]];
 }
+-(NSString *)getFullEncryptPrivKey {
+    return [BTEncryptedData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
+
+}
 
 +(NSData*)seedFromMnemonic:(NSData*) mnemonicSeed{
     return [[BTBIP39 sharedInstance] toSeed:[[BTBIP39 sharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];

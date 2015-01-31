@@ -101,7 +101,11 @@
 - (NSString *)toMnemonic:(NSData *)data
 {
     NSArray* a = [self toMnemonicArray:data];
-    return CFBridgingRelease(CFStringCreateByCombiningStrings(SecureAllocator(), (__bridge CFArrayRef)a, CFSTR(" ")));
+    if (a != nil) {
+        return CFBridgingRelease(CFStringCreateByCombiningStrings(SecureAllocator(), (__bridge CFArrayRef)a, CFSTR(" ")));
+    } else {
+        return nil;
+    }
 }
 
 - (NSData *)toEntropy:(NSString *)code

@@ -144,8 +144,13 @@ static void CKDPrime(NSMutableData *K, NSMutableData *c, uint32_t i)
     EC_POINT_mul(group, IlPoint, Ilbn, NULL, NULL, ctx);
     EC_POINT_add(group, pubKeyPoint, IlPoint, pubKeyPoint, ctx);
 
-    K.length = EC_POINT_point2oct(group, pubKeyPoint, form, NULL, 0, ctx);
-    EC_POINT_point2oct(group, pubKeyPoint, form, K.mutableBytes, K.length, ctx);
+    if (!EC_POINT_is_at_infinity(group, pubKeyPoint)) {
+        K.length = EC_POINT_point2oct(group, pubKeyPoint, form, NULL, 0, ctx);
+        EC_POINT_point2oct(group, pubKeyPoint, form, K.mutableBytes, K.length, ctx);
+    } else {
+        K.length = 1;
+        [K appendUInt8:0];
+    }
     [c replaceBytesInRange:NSMakeRange(0, c.length) withBytes:(const unsigned char *)I.bytes + 32 length:32];
 
     EC_POINT_clear_free(IlPoint);
@@ -193,12 +198,18 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
         NSMutableData *pubKey = [NSMutableData dataWithData:[parent pubKey]];
         NSMutableData *chain = [NSMutableData dataWithData:[parent chain]];
         CKDPrime(pubKey, chain, childNumber);
+        if ([pubKey isEqualToData:[@"00" hexToData]]) {
+            return nil;
+        }
         NSArray *path = [BTBIP32Key path:parent.path extend:childNumber];
         return [[BTBIP32Key alloc] initWithSecret:nil andPubKey:pubKey andChain:chain andPath:path];
     } else {
         NSMutableData *secret = [NSMutableData dataWithData:[parent secret]];
         NSMutableData *chain = [NSMutableData dataWithData:[parent chain]];
         CKD(secret, chain, childNumber);
+        if ([secret isEqualToData:[NSMutableData secureDataWithCapacity:32]]) {
+            return nil;
+        }
         NSArray *path = [BTBIP32Key path:parent.path extend:childNumber];
         return [[BTBIP32Key alloc] initWithSecret:secret andPubKey:nil andChain:chain andPath:path];
     }

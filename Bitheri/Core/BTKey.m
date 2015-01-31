@@ -482,10 +482,10 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 
 - (NSString *)signMessage:(NSString *)message; {
     NSData *d = [[BTUtils formatMessageForSigning:message] SHA256_2];
-    return [self signHash:d];
+    return [[self signHash:d] base64EncodedStringWithOptions:0];
 }
 
-- (NSString *)signHash:(NSData *)hash{
+- (NSData *)signHash:(NSData *)hash{
     ECDSA_SIG *sig = [self _sign:hash];
     int recId = -1;
     for (int i = 0; i < 4; i++) {
@@ -511,7 +511,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     NSData *s = [BTKey bn2bin:*(sig->s) andLength:32];
     [sigData appendBytes:s.bytes length:s.length];
     ECDSA_SIG_free(sig);
-    return [sigData base64EncodedStringWithOptions:0];
+    return sigData;
 }
 
 - (BOOL)verifyMessage:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;{

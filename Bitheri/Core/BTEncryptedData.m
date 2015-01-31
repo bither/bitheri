@@ -256,8 +256,8 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
             cryptor = NULL;
         }
     }
-    if (buffer.length == 48) {
-        for (NSUInteger i = 32; i < 48; i++) {
+    if (buffer.length >= 48) {
+        for (NSUInteger i = buffer.length - 16; i < buffer.length; i++) {
             if ([buffer UInt8AtOffset:i] != 0x10)
                 return NO;
         }

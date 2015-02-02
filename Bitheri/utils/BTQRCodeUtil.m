@@ -133,7 +133,7 @@
 + (BOOL)verifyQrcodeTransport:(NSString *)text {
     BOOL verifyOldVersion = [BTQRCodeUtil oldVerifyQrcodeTransport:text];
     NSError *error;
-    NSString *regexStr = @"[^0-9A-Z/+]";
+    NSString *regexStr = @"[^0-9a-zA-Z/+-]";
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexStr options:0 error:&error];
     NSArray *matches = [regex matchesInString:text
                                       options:0

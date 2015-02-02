@@ -21,6 +21,7 @@
 #import "BTUtils.h"
 #import "BTHDMKeychainRecover.h"
 #import "BTEncryptData.h"
+#import "BTQRCodeUtil.h"
 
 @interface BTHDMKeychain(){
     BOOL _isFromXRandom;
@@ -356,6 +357,12 @@
 }
 -(NSString *)getFullEncryptPrivKey {
     return [BTEncryptData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
+    return [BTEncryptedData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
+
+}
+
+-(NSString *)getFullEncryptPrivKeyWithHDMFlag {
+    return [HDM_QR_CODE_FLAG stringByAppendingString: [BTEncryptedData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
 
 }
 

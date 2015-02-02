@@ -419,7 +419,11 @@
 
 #pragma mark - for old version
 + (BOOL)updateKeyStoreFromFileToDbWithPasswordSeed:(BTPasswordSeed *)passwordSeed; {
-    return NO;
+    NSMutableArray *addresses = [NSMutableArray new];
+    [addresses addObjectsFromArray:[BTAddressManager getPrivKeyAddressFromFile]];
+    [addresses addObjectsFromArray:[BTAddressManager getTrashAddressFromFile]];
+    [addresses addObjectsFromArray:[BTAddressManager getWatchOnlyAddressFromFile]];
+    return [[BTAddressProvider instance] addAddresses:addresses andPasswordSeed:passwordSeed];
 }
 
 + (NSArray *)getPrivKeyAddressFromFile; {
@@ -433,11 +437,11 @@
             long long sortTime=0;
             BOOL isFromXRandom =NO;
             if (array.count>3) {
-                sortTime=[[array objectAtIndex:2] longLongValue];
+                sortTime=[array[2] longLongValue];
                 if (sortTime>0) {
                     isSort=YES;
                 }
-                isFromXRandom =[BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
+                isFromXRandom = [BTUtils compareString:XRANDOM_FLAG compare:array[3]];
 
             }
             BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];

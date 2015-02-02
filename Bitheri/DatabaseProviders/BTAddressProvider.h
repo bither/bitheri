@@ -41,22 +41,23 @@
 - (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom andPasswordSeed:(NSString *)passwordSeed;
 
 - (BTHDMBid *)getHDMBid;
-- (void)addHDMBid:(BTHDMBid *)hdmBid andPasswordSeed:(NSString *)passwordSeed;
+- (BOOL)addHDMBid:(BTHDMBid *)hdmBid andPasswordSeed:(NSString *)passwordSeed;
 - (void)changeHDMBIdPassword:(BTHDMBid *)hdmBid;
 
 - (NSArray *)getHDMAddressInUse:(BTHDMKeychain *)keychain;
-- (void)prepareHDMAddressesWithHDSeedId:(int)hdSeedId andPubs:(NSArray *)pubs;
+- (BOOL)prepareHDMAddressesWithHDSeedId:(int)hdSeedId andPubs:(NSArray *)pubs;
 - (NSArray *)getUncompletedHDMAddressPubs:(int) hdSeedId andCount:(int)count;
 - (int)maxHDMAddressPubIndex:(int)hdSeedId;//including completed and uncompleted
-- (void)recoverHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
-- (void)completeHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
+- (BOOL)recoverHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
+- (BOOL)completeHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
 - (void)setHDMPubsRemoteWithHDSeedId:(int)hdSeedId andIndex:(int) index andPubKeyRemote:(NSData *) pubKeyRemote;
 - (int)uncompletedHDMAddressCount:(int)hdSeedId;
 - (void)syncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(int)hdSeedIndex;
 
 #pragma mark - normal
 - (NSArray *)getAddresses;
-- (void)addAddress:(BTAddress *)address;
+- (BOOL)addAddress:(BTAddress *)address;
+- (BOOL)addAddresses:(NSArray *)addresses andPasswordSeed:(BTPasswordSeed *)passwordSeed;
 - (NSString *)getEncryptPrivKeyWith:(NSString *)address;
 - (void)updatePrivateKey:(BTAddress *)address;
 - (void)removeWatchOnlyAddress:(BTAddress *)address;

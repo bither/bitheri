@@ -49,6 +49,7 @@
 
 - (NSString *)normalizeCode:(NSString *)phrase;
 - (NSArray *)toMnemonicArray:(NSData*)data;
+-(NSString *)toMnemonicWithArray:(NSArray *)a;
 - (NSString *)toMnemonic:(NSData *)data;
 - (NSData *)toEntropy:(NSString *)code;
 - (BOOL)check:(NSString *)code;

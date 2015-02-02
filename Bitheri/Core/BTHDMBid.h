@@ -24,11 +24,9 @@
 
 @property (nonatomic, copy) NSString *address;
 @property (nonatomic, copy) NSString *encryptedBitherPassword;
+@property (nonatomic, copy) NSData *password;
+@property (nonatomic) long serviceRandom;
 
 + (BTHDMBid *)getHDMBidFromDb;
-
-- (NSString *)getPreSignHashAndError:(NSError **)error;
-- (void)changeBidPasswordWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError **)error;
-- (NSArray *)recoverHDMWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError **)error;
 
 @end

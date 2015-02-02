@@ -1,5 +1,5 @@
 //
-//  BTEncryptedData.h
+//  BTEncryptData.h
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -17,7 +17,7 @@
 //  limitations under the License.
 #import <Foundation/Foundation.h>
 
-@interface BTEncryptedData : NSObject
+@interface BTEncryptData : NSObject
 
 - (instancetype)initWithStr:(NSString *)str;
 - (instancetype)initWithData:(NSData *)data andPassowrd:(NSString *)password;
@@ -34,5 +34,8 @@
 
 + (NSString *)encryptedString:(NSString *)encryptedString addIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom;
 + (NSString *)encryptedStringRemoveFlag:(NSString *)encryptedString;
+
++ (NSData *)encryptSecret:(NSData *)secret withPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv;
++ (NSData *)decryptFrom:(NSData *)encrypted andPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv;
 
 @end

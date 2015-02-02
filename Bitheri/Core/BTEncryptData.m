@@ -1,5 +1,5 @@
 //
-//  BTEncryptedData.m
+//  BTEncryptData.m
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -15,7 +15,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#import "BTEncryptedData.h"
+#import "BTEncryptData.h"
 #import "NSString+Base58.h"
 #import "NSMutableData+Bitcoin.h"
 #import "NSData+Bitcoin.h"
@@ -116,7 +116,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     return d;
 }
 
-@interface BTEncryptedData ()
+@interface BTEncryptData ()
 
 @property (nonatomic, strong) NSData *encryptedData;
 @property (nonatomic, strong) NSData *iv;
@@ -124,7 +124,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 
 @end
 
-@implementation BTEncryptedData {
+@implementation BTEncryptData {
     BOOL _isCompressed;
     BOOL _isXRandom;
 }
@@ -171,7 +171,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 
     self.salt = [NSData randomWithSize:8];
     self.iv = [NSData randomWithSize:16];
-    self.encryptedData = [self encryptSecret:data withPassphrase:password andSalt:self.salt andIV:self.iv];
+    self.encryptedData = [BTEncryptData encryptSecret:data withPassphrase:password andSalt:self.salt andIV:self.iv];
     _isCompressed = isCompressed;
     _isXRandom = isXRandom;
 
@@ -187,32 +187,32 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 }
 
 - (NSData *)decrypt:(NSString *)password; {
-    NSData *secret = [self decryptFrom:self.encryptedData andPassphrase:password andSalt:self.salt andIV:self.iv];
+    NSData *secret = [BTEncryptData decryptFrom:self.encryptedData andPassphrase:password andSalt:self.salt andIV:self.iv];
     return secret;
 }
 
 // encrypts receiver with passphrase and returns Bitcoinj key
-- (NSData *)encryptSecret:(NSData *)secret withPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv {
++ (NSData *)encryptSecret:(NSData *)secret withPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv {
     NSData *password = [passphrase dataUsingEncoding:NSUTF16BigEndianStringEncoding];
     NSData *derived = scrypt(password, salt, BITCOINJ_SCRYPT_N, BITCOINJ_SCRYPT_R, BITCOINJ_SCRYPT_P, 32);
 
     CCOperation operation = kCCEncrypt;
-    NSData *result = [self doCipher:secret iv:iv key:derived operation:operation];
+    NSData *result = [BTEncryptData doCipher:secret iv:iv key:derived operation:operation];
 
     return result;
 }
 
-- (NSData *)decryptFrom:(NSData *)encrypted andPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv; {
++ (NSData *)decryptFrom:(NSData *)encrypted andPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv; {
     NSData *password = [passphrase dataUsingEncoding:NSUTF16BigEndianStringEncoding];
     NSData *derived = scrypt(password, salt, BITCOINJ_SCRYPT_N, BITCOINJ_SCRYPT_R, BITCOINJ_SCRYPT_P, 32);
 
     CCOperation operation = kCCDecrypt;
-    NSData *result = [self doCipher:encrypted iv:iv key:derived operation:operation];
+    NSData *result = [BTEncryptData doCipher:encrypted iv:iv key:derived operation:operation];
     return result;
 }
 
-- (NSData *)doCipher:(NSData *)data iv:(NSData *)iv key:(NSData *)key operation:(CCOperation)operation {
-    if (operation == kCCDecrypt && ![self checkCipher:data iv:iv key:key operation:operation])
++ (NSData *)doCipher:(NSData *)data iv:(NSData *)iv key:(NSData *)key operation:(CCOperation)operation {
+    if (operation == kCCDecrypt && ![BTEncryptData checkCipher:data iv:iv key:key operation:operation])
         return nil;
 
     NSMutableData *buffer;
@@ -237,9 +237,9 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     return result;
 }
 
-- (BOOL)checkCipher:(NSData *)data iv:(NSData *)iv key:(NSData *)key operation:(CCOperation)operation {
++ (BOOL)checkCipher:(NSData *)data iv:(NSData *)iv key:(NSData *)key operation:(CCOperation)operation {
     NSMutableData *buffer;
-    size_t len, actualLen = 0, remainLen;
+    size_t len, remainLen;
     CCCryptorRef cryptor;
     if (CCCryptorCreateWithMode(operation, kCCModeCBC, kCCAlgorithmAES, kCCOptionECBMode, iv.bytes, key.bytes, kCCKeySizeAES256, NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor) == kCCSuccess) {
         remainLen = CCCryptorGetOutputLength(cryptor, data.length, true);
@@ -247,17 +247,15 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 
         if (CCCryptorUpdate(cryptor, data.bytes, data.length, buffer.mutableBytes, buffer.length, &len) == kCCSuccess) {
             remainLen -= len;
-            actualLen += len;
         }
 
         if (CCCryptorFinal(cryptor, buffer.mutableBytes + len, remainLen, &len) == kCCSuccess) {
-            actualLen += len;
             CCCryptorRelease(cryptor);
             cryptor = NULL;
         }
     }
-    if (buffer.length >= 48) {
-        for (NSUInteger i = buffer.length - 16; i < buffer.length; i++) {
+    if (buffer.length >= iv.length) {
+        for (NSUInteger i = buffer.length - iv.length; i < buffer.length; i++) {
             if ([buffer UInt8AtOffset:i] != 0x10)
                 return NO;
         }

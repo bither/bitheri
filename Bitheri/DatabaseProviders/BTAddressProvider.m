@@ -17,7 +17,7 @@
 //  limitations under the License.
 #import "BTAddressProvider.h"
 #import "BTDatabaseManager.h"
-#import "BTEncryptedData.h"
+#import "BTEncryptData.h"
 
 static BTAddressProvider *provider;
 
@@ -133,8 +133,8 @@ static BTAddressProvider *provider;
 }
 
 - (NSString *)changePwdWithEncryptStr:(NSString *)encryptStr andOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
-    BTEncryptedData *encryptedData = [[BTEncryptedData alloc] initWithStr:encryptStr];
-    return [[[BTEncryptedData alloc] initWithData:[encryptedData decrypt:oldPassword] andPassowrd:newPassword] toEncryptedString];
+    BTEncryptData *encryptedData = [[BTEncryptData alloc] initWithStr:encryptStr];
+    return [[[BTEncryptData alloc] initWithData:[encryptedData decrypt:oldPassword] andPassowrd:newPassword] toEncryptedString];
 }
 
 - (BTPasswordSeed *)getPasswordSeed;{
@@ -498,9 +498,9 @@ static BTAddressProvider *provider;
                 , [NSString base58WithData:address.pubKey], @(address.isFromXRandom), @(address.isTrashed)
                 , @(address.isSyncComplete), @(address.sortTime)];
         if (address.encryptPrivKeyForCreate != nil) {
-            NSString *str = [BTEncryptedData encryptedString:address.encryptPrivKeyForCreate
-                                             addIsCompressed:address.pubKey.length < 65
-                                                andIsXRandom:address.isFromXRandom];
+            NSString *str = [BTEncryptData encryptedString:address.encryptPrivKeyForCreate
+                                           addIsCompressed:address.pubKey.length < 65
+                                              andIsXRandom:address.isFromXRandom];
             [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:address.address andEncryptStr:str] andDB:db];
         }
         [db commit];

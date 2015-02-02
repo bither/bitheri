@@ -20,7 +20,7 @@
 #import "BTAddressProvider.h"
 #import "BTUtils.h"
 #import "BTHDMKeychainRecover.h"
-#import "BTEncryptedData.h"
+#import "BTEncryptData.h"
 
 @interface BTHDMKeychain(){
     BOOL _isFromXRandom;
@@ -37,8 +37,8 @@
         self.hdSeedId = -1;
         self.mnemonicSeed = seed;
         self.hdSeed = [BTHDMKeychain seedFromMnemonic:self.mnemonicSeed];
-        BTEncryptedData* encryptedMnemonicSeed = [[BTEncryptedData alloc]initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:xrandom];
-        BTEncryptedData* encryptedHDSeed = [[BTEncryptedData alloc]initWithData:self.hdSeed andPassowrd:password andIsXRandom:xrandom];
+        BTEncryptData * encryptedMnemonicSeed = [[BTEncryptData alloc]initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:xrandom];
+        BTEncryptData * encryptedHDSeed = [[BTEncryptData alloc]initWithData:self.hdSeed andPassowrd:password andIsXRandom:xrandom];
         BTKey* priv = [[BTKey alloc] initWithSecret:self.mnemonicSeed compressed:encryptedMnemonicSeed.isCompressed];
         NSString* passwordSeedAddress = priv.address;
         NSString *firstAddress = [self firstAddressFromSeed:password];
@@ -65,11 +65,11 @@
     self = [super init];
     if(self){
         self.hdSeedId = -1;
-        BTEncryptedData* encryptedMnemonicSeed = [[BTEncryptedData alloc]initWithStr:encryptedMnemonicSeedStr];
+        BTEncryptData * encryptedMnemonicSeed = [[BTEncryptData alloc]initWithStr:encryptedMnemonicSeedStr];
         self.mnemonicSeed = [encryptedMnemonicSeed decrypt:password];
         self.hdSeed = [BTHDMKeychain seedFromMnemonic:self.mnemonicSeed];
         _isFromXRandom = encryptedMnemonicSeed.isXRandom;
-        BTEncryptedData* encryptedHDSeed = [[BTEncryptedData alloc]initWithData:self.hdSeed andPassowrd:password andIsXRandom:_isFromXRandom];
+        BTEncryptData * encryptedHDSeed = [[BTEncryptData alloc]initWithData:self.hdSeed andPassowrd:password andIsXRandom:_isFromXRandom];
         self.allCompletedAddresses = [[NSMutableArray alloc]init];
         NSMutableArray* as = [[NSMutableArray alloc]init];
         NSMutableArray* uncompPubs = [[NSMutableArray alloc]init];
@@ -232,7 +232,7 @@
     }
     NSString* encrypted = [self encryptedHDSeed];
     if(![BTUtils isEmpty:encrypted]){
-        self.hdSeed = [[[BTEncryptedData alloc]initWithStr:encrypted]decrypt:password];
+        self.hdSeed = [[[BTEncryptData alloc]initWithStr:encrypted]decrypt:password];
     }
 }
 
@@ -242,7 +242,7 @@
     }
     NSString* encrypted = [self encryptedMnemonicSeed];
     if(![BTUtils isEmpty:encrypted]){
-        self.mnemonicSeed = [[[BTEncryptedData alloc]initWithStr:encrypted]decrypt:password];
+        self.mnemonicSeed = [[[BTEncryptData alloc]initWithStr:encrypted]decrypt:password];
     }
 }
 
@@ -355,7 +355,7 @@
     [BTUtils compareString:self.firstAddressFromDb compare:[BTHDMKeychainRecover RecoverPlaceHolder]];
 }
 -(NSString *)getFullEncryptPrivKey {
-    return [BTEncryptedData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
+    return [BTEncryptData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
 
 }
 

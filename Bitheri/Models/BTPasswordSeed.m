@@ -18,7 +18,7 @@
 
 #import "BTPasswordSeed.h"
 #import "BTQRCodeUtil.h"
-#import "BTEncryptedData.h"
+#import "BTEncryptData.h"
 #import "BTPrivateKeyUtil.h"
 #import "BTUtils.h"
 
@@ -61,8 +61,8 @@
     if (!(self = [super init])) return nil;
 
     _address = btAddress.address;
-    _keyStr = [BTEncryptedData encryptedString:btAddress.encryptPrivKey
-                               addIsCompressed:btAddress.pubKey.length < 65 andIsXRandom:btAddress.isFromXRandom];
+    _keyStr = [BTEncryptData encryptedString:btAddress.encryptPrivKey
+                             addIsCompressed:btAddress.pubKey.length < 65 andIsXRandom:btAddress.isFromXRandom];
 
     return self;
 }
@@ -82,8 +82,8 @@
 }
 
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
-    BTEncryptedData *encryptedData = [[BTEncryptedData alloc] initWithStr:self.keyStr];
-    self.keyStr = [[[BTEncryptedData alloc] initWithData:[encryptedData decrypt:oldPassword]
+    BTEncryptData *encryptedData = [[BTEncryptData alloc] initWithStr:self.keyStr];
+    self.keyStr = [[[BTEncryptData alloc] initWithData:[encryptedData decrypt:oldPassword]
                                              andPassowrd:newPassword andIsCompressed:encryptedData.isCompressed
                                             andIsXRandom:encryptedData.isXRandom]
             toEncryptedStringForQRCodeWithIsCompressed:encryptedData.isCompressed andIsXRandom:encryptedData.isXRandom];

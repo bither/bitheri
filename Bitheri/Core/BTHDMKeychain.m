@@ -174,7 +174,7 @@
     for(BTHDMPubs* p in pubs){
         if(p.isCompleted){
             [as addObject:[[BTHDMAddress alloc] initWithPubs:p andKeychain:self]];
-        }else{
+        }else if(p.remote){
             [[BTAddressProvider instance]setHDMPubsRemoteWithHDSeedId:self.hdSeedId andIndex:p.index andPubKeyRemote:p.remote];
         }
     }

@@ -421,9 +421,9 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         return @"";
     }
 }
-- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
-    return [BTKey reEncryptPrivKeyWithOldPassphrase:self.encryptPrivKey oldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-}
+//- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
+//    return [BTKey reEncryptPrivKeyWithOldPassphrase:self.encryptPrivKey oldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
+//}
 
 #pragma mark - calculate fee and out
 

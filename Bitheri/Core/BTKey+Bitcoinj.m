@@ -70,123 +70,44 @@
     }
 }
 
-
-//// encrypts receiver with passphrase and returns Bitcoinj key
-//- (NSData *)encryptSecret:(NSData *)secret withPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv
-//{
-//    NSData *password = [passphrase dataUsingEncoding:NSUTF16BigEndianStringEncoding];
-//    NSData *derived = scrypt(password, salt, BITCOINJ_SCRYPT_N, BITCOINJ_SCRYPT_R, BITCOINJ_SCRYPT_P, 32);
-//
-//    CCOperation operation = kCCEncrypt;
-//    NSData *result = [self doCipher:secret iv:iv key:derived operation:operation];
-//
-//    return  result;
-//}
-//
-//- (NSData *)decryptFrom:(NSData *)encrypted andPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv;{
-//    NSData *password = [passphrase dataUsingEncoding:NSUTF16BigEndianStringEncoding];
-//    NSData *derived = scrypt(password, salt, BITCOINJ_SCRYPT_N, BITCOINJ_SCRYPT_R, BITCOINJ_SCRYPT_P, 32);
-//
-//    CCOperation operation = kCCDecrypt;
-//    NSData *result = [self doCipher:encrypted iv:iv key:derived operation:operation];
-//    return result;
-//}
-//
-//- (NSData *)doCipher:(NSData *)data iv:(NSData *)iv key:(NSData *)key operation:(CCOperation)operation {
-//    if (operation == kCCDecrypt && ![self checkCipher:data iv:iv key:key operation:operation])
-//        return nil;
-//
-//    NSMutableData *buffer;
-//    size_t len, actualLen = 0, remainLen;
-//    CCCryptorRef cryptor;
-//    if (CCCryptorCreateWithMode(operation, kCCModeCBC, kCCAlgorithmAES, kCCOptionPKCS7Padding, iv.bytes
-//            , key.bytes, kCCKeySizeAES256, NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor) == kCCSuccess){
-//        remainLen = CCCryptorGetOutputLength(cryptor, data.length, true);
-//        buffer = [NSMutableData secureDataWithLength:(NSUInteger) remainLen];
-//
-//        if (CCCryptorUpdate(cryptor, data.bytes, data.length, buffer.mutableBytes, buffer.length, &len) == kCCSuccess){
-//            remainLen -= len;
-//            actualLen += len;
+//+ (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)encryptPrivKey oldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase {
+//    BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:oldPassphrase];
+//    NSData *data = [BTKey saltWithBitcoinj:encryptPrivKey];
+//    NSMutableData *salt = [NSMutableData new];
+//    uint8_t flag = 0;
+//    if (data.length == 9) {
+//        uint8_t *bytes = (uint8_t *) data.bytes;
+//        flag = bytes[0];
+//        for (int i = 1; i < data.length; i++) {
+//            [salt appendUInt8:bytes[i]];
 //        }
-//
-//        if (CCCryptorFinal(cryptor, buffer.mutableBytes + len, remainLen, &len) == kCCSuccess){
-//            actualLen += len;
-//            CCCryptorRelease(cryptor);
-//            cryptor = NULL;
-//        }
-//    }
-//    NSData *result = [buffer subdataWithRange:NSMakeRange(0, actualLen)];
-//    return result;
-//}
-//
-//- (BOOL)checkCipher:(NSData *)data iv:(NSData *)iv key:(NSData *)key operation:(CCOperation)operation {
-//    NSMutableData *buffer;
-//    size_t len, actualLen = 0, remainLen;
-//    CCCryptorRef cryptor;
-//    if (CCCryptorCreateWithMode(operation, kCCModeCBC, kCCAlgorithmAES, kCCOptionECBMode, iv.bytes
-//            , key.bytes, kCCKeySizeAES256, NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor) == kCCSuccess){
-//        remainLen = CCCryptorGetOutputLength(cryptor, data.length, true);
-//        buffer = [NSMutableData secureDataWithLength:(NSUInteger) remainLen];
-//
-//        if (CCCryptorUpdate(cryptor, data.bytes, data.length, buffer.mutableBytes, buffer.length, &len) == kCCSuccess){
-//            remainLen -= len;
-//            actualLen += len;
-//        }
-//
-//        if (CCCryptorFinal(cryptor, buffer.mutableBytes + len, remainLen, &len) == kCCSuccess){
-//            actualLen += len;
-//            CCCryptorRelease(cryptor);
-//            cryptor = NULL;
-//        }
-//    }
-//    if (buffer.length == 48) {
-//        for (NSUInteger i = 32; i < 48; i++){
-//            if ([buffer UInt8AtOffset:i] != 0x10)
-//                return NO;
-//        }
-//        return YES;
 //    } else {
-//        return NO;
+//        flag = [key getKeyFlag];
+//        [salt appendData:data];
+//    }
+//    NSData *iv = [BTKey ivWithBitcoinj:encryptPrivKey];
+//    if (key) {
+//        return [key bitcoinjKeyWithPassphrase:newPassphrase andSalt:salt andIV:iv flag:flag];
+//    } else {
+//        return nil;
 //    }
 //}
-+ (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)encryptPrivKey oldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase {
-    BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:oldPassphrase];
-    NSData *data = [BTKey saltWithBitcoinj:encryptPrivKey];
-    NSMutableData *salt = [NSMutableData new];
-    uint8_t flag = 0;
-    if (data.length == 9) {
-        uint8_t *bytes = (uint8_t *) data.bytes;
-        flag = bytes[0];
-        for (int i = 1; i < data.length; i++) {
-            [salt appendUInt8:bytes[i]];
-        }
-    } else {
-        flag = [key getKeyFlag];
-        [salt appendData:data];
-    }
-    NSData *iv = [BTKey ivWithBitcoinj:encryptPrivKey];
-    if (key) {
-        return [key bitcoinjKeyWithPassphrase:newPassphrase andSalt:salt andIV:iv flag:flag];
-    } else {
-        return nil;
-    }
-}
-
-+ (NSData *)saltWithBitcoinj:(NSString *)key; {
-    NSArray *array = [BTQRCodeUtil splitQRCode:key];
-    if ([array count] == 3)
-        return [array[2] hexToData];
-    else
-        return nil;
-}
-
-+ (NSData *)ivWithBitcoinj:(NSString *)key; {
-    NSArray *array = [BTQRCodeUtil splitQRCode:key];
-    if ([array count] == 3)
-        return [array[1] hexToData];
-    else
-        return nil;
-}
+//
+//+ (NSData *)saltWithBitcoinj:(NSString *)key; {
+//    NSArray *array = [BTQRCodeUtil splitQRCode:key];
+//    if ([array count] == 3)
+//        return [array[2] hexToData];
+//    else
+//        return nil;
+//}
+//
+//+ (NSData *)ivWithBitcoinj:(NSString *)key; {
+//    NSArray *array = [BTQRCodeUtil splitQRCode:key];
+//    if ([array count] == 3)
+//        return [array[1] hexToData];
+//    else
+//        return nil;
+//}
 
 + (BOOL)isXRandom:(NSString *)encryptPrivKey; {
     NSArray *array = [BTQRCodeUtil splitQRCode:encryptPrivKey];

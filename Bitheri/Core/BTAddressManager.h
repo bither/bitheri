@@ -58,4 +58,6 @@
 
 - (NSArray *)compressTxsForApi:(NSArray *)txList andAddress:(NSString *)address;
 
+#pragma mark - for old version
++ (BOOL)updateKeyStoreFromFileToDbWithPasswordSeed:(BTPasswordSeed *)passwordSeed;
 @end

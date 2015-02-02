@@ -11,5 +11,5 @@
 @interface BTHDMKeychainRecover : BTHDMKeychain
 +(NSString*) RecoverPlaceHolder;
 
--(instancetype)initWithColdExternalRootPub:(NSData*)coldExternalRootPub password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate;
+-(instancetype)initWithColdExternalRootPub:(NSData*)coldExternalRootPub password:(NSString*)password andFetchBlock:(NSArray* (^)(NSString* password))fetchBlock;
 @end

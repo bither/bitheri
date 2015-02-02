@@ -99,22 +99,22 @@ static NSData* EMPTYBYTES;
     return self;
 }
 
--(void)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*) fetchDelegate{
-    [tx signWithSignatures:[self signUnsginedHashes:tx.unsignedInHashes withPassword:password tx:tx andOtherDelegate:fetchDelegate]];
+-(void)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx)) fetchBlock{
+    [tx signWithSignatures:[self signUnsginedHashes:tx.unsignedInHashes withPassword:password tx:tx andOtherBlock:fetchBlock]];
 }
 
--(void)signTx:(BTTx *)tx withPassword:(NSString *)password coldDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateCold andRemoteDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateRemote{
+-(void)signTx:(BTTx *)tx withPassword:(NSString *)password coldBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockCold andRemoteBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockRemote{
     NSArray* unsigns = tx.unsignedInHashes;
-    NSArray* coldSigs = [fetchDelegateCold getOtherSignatureWithIndex:self.index password:password unsignedHashes:unsigns andTx:tx];
-    NSArray* remoteSigs = [fetchDelegateRemote getOtherSignatureWithIndex:self.index password:password unsignedHashes:unsigns andTx:tx];
+    NSArray* coldSigs = fetchBlockCold(self.index, password, unsigns, tx);
+    NSArray* remoteSigs = fetchBlockRemote(self.index, password, unsigns, tx);
     assert(coldSigs.count == remoteSigs.count && coldSigs.count == unsigns.count);
     NSArray* joined = [self formatInScriptFromSigns1:coldSigs andSigns2:remoteSigs];
     [tx signWithSignatures:joined];
 }
 
--(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*)delegate{
+-(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))block{
     NSArray* hotSigs = [self signMyPartUnsignedHashes:unsignedHashes withPassword:password];
-    NSArray* otherSigs = [delegate getOtherSignatureWithIndex:self.index password:password unsignedHashes:unsignedHashes andTx:tx];
+    NSArray* otherSigs = block(self.index, password, unsignedHashes, tx);
     assert(hotSigs.count == otherSigs.count && hotSigs.count == unsignedHashes.count);
     return [self formatInScriptFromSigns1:hotSigs andSigns2:otherSigs];
 }

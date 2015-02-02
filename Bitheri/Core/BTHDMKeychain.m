@@ -62,7 +62,7 @@
     return self;
 }
 
--(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeedStr password:(NSString*) password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate{
+-(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeedStr password:(NSString*) password andFetchBlock:(NSArray* (^)(NSString* password))fetchBlock{
     self = [super init];
     if(self){
         self.hdSeedId = -1;
@@ -74,8 +74,8 @@
         self.allCompletedAddresses = [[NSMutableArray alloc]init];
         NSMutableArray* as = [[NSMutableArray alloc]init];
         NSMutableArray* uncompPubs = [[NSMutableArray alloc]init];
-        if(fetchDelegate){
-            NSArray* pubs = [fetchDelegate getRemoteExistsPublicKeysWithPassword:password];
+        if(fetchBlock){
+            NSArray* pubs = fetchBlock(password);
             if(pubs && pubs.count > 0){
                 BTBIP32Key* root = [self externalChainRoot:password];
                 NSData* pubDerived = [root deriveSoftened:0].pubKey;
@@ -163,14 +163,14 @@
     return pubs.count;
 }
 
--(NSArray*)completeAddressesWithCount:(UInt32)count password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemotePublicKeys>*)fetchDelegate{
+-(NSArray*)completeAddressesWithCount:(UInt32)count password:(NSString*)password andFetchBlock:(void (^)(NSString* password, NSArray* partialPubs)) fetchBlock{
     UInt32 uncompletedAddressCount = self.uncompletedAddressCount;
     if(uncompletedAddressCount < count){
         [NSException raise:@"Not enough uncompleted addesses" format:@"Not enough uncompleted addesses. Need %d, Has %d", count, uncompletedAddressCount, nil];
     }
     NSMutableArray* as = [NSMutableArray new];
     NSArray* pubs = [[BTAddressProvider instance]getUncompletedHDMAddressPubs:self.hdSeedId andCount:count];
-    [fetchDelegate completeRemotePublicKeysWithPassword:password andPartialPubs:pubs];
+    fetchBlock(password, pubs);
     for(BTHDMPubs* p in pubs){
         if(p.isCompleted){
             [as addObject:[[BTHDMAddress alloc] initWithPubs:p andKeychain:self]];

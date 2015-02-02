@@ -20,14 +20,6 @@
 #import "BTBIP32Key.h"
 #import "BTPasswordSeed.h"
 
-@protocol BTHDMFetchRemotePublicKeys
--(void)completeRemotePublicKeysWithPassword:(NSString*)password andPartialPubs:(NSArray*)partialPubs;
-@end
-
-@protocol BTHDMFetchRemoteAddressesDelegate
--(NSArray*) getRemoteExistsPublicKeysWithPassword:(NSString*)password;
-@end
-
 @protocol BTHDMAddressChangeDelegate
 -(void)hdmAddressAdded:(BTHDMAddress*)address;
 @end
@@ -47,10 +39,10 @@
 
 -(instancetype)initWithSeedId:(int)seedId;
 
--(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeed password:(NSString*) password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate;
+-(instancetype)initWithEncrypted:(NSString*)encryptedMnemonicSeedStr password:(NSString*) password andFetchBlock:(NSArray* (^)(NSString* password))fetchBlock;
 
 -(NSUInteger)prepareAddressesWithCount:(UInt32)count password:(NSString*)password andColdExternalPub:(NSData*)coldExternalPub;
--(NSArray*)completeAddressesWithCount:(UInt32)count password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemotePublicKeys>*)fetchDelegate;
+-(NSArray*)completeAddressesWithCount:(UInt32)count password:(NSString*)password andFetchBlock:(void (^)(NSString* password, NSArray* partialPubs)) fetchBlock;
 
 -(BTBIP32Key*)externalKeyWithIndex:(uint) index andPassword:(NSString*)password;
 -(NSData*)externalChainRootPubExtended:(NSString*)password;

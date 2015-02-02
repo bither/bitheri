@@ -15,14 +15,14 @@
     return @"RECOVER";
 }
 
--(instancetype)initWithColdExternalRootPub:(NSData*)coldExternalRootPub password:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchRemoteAddressesDelegate>*)fetchDelegate{
+-(instancetype)initWithColdExternalRootPub:(NSData*)coldExternalRootPub password:(NSString*)password andFetchBlock:(NSArray* (^)(NSString* password))fetchBlock{
     self = [super initWithSeedId:[[BTAddressProvider instance] addHDSeedWithEncryptSeed:[BTHDMKeychainRecover RecoverPlaceHolder] andEncryptHDSeed:[BTHDMKeychainRecover RecoverPlaceHolder]  andFirstAddress:[BTHDMKeychainRecover RecoverPlaceHolder] andIsXRandom:NO andPasswordSeed:nil]];
     if(self){
         BTBIP32Key* coldRoot = [[BTBIP32Key alloc]initWithMasterPubKey:[NSData dataWithBytes:coldExternalRootPub.bytes length:coldExternalRootPub.length]];
         NSMutableArray* as = [[NSMutableArray alloc]init];
         NSMutableArray* uncompPubs = [[NSMutableArray alloc]init];
-        if(fetchDelegate){
-            NSArray* pubs = [fetchDelegate getRemoteExistsPublicKeysWithPassword:password];
+        if(fetchBlock){
+            NSArray* pubs = fetchBlock(password);
             if(pubs.count > 0){
                 NSData* pubFetched = ((BTHDMPubs *)pubs[0]).cold;
                 NSData* pubDerived = [coldRoot deriveSoftened:((BTHDMPubs *)pubs[0]).index].pubKey;

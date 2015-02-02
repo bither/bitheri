@@ -42,11 +42,6 @@
 
 @end
 
-@protocol BTHDMFetchOtherSignatureDelegate
--(NSArray*) getOtherSignatureWithIndex:(UInt32)index password:(NSString*)password unsignedHashes:(NSArray*)unsignHashes andTx:(BTTx*)tx;
-@end
-
-
 @interface BTHDMAddress : BTAddress
 
 @property (nonatomic, strong) BTHDMPubs *pubs;
@@ -64,11 +59,11 @@
 
 -(instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString*)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain;
 
--(void)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*) fetchDelegate;
+-(void)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx)) fetchBlock;
 
--(void)signTx:(BTTx *)tx withPassword:(NSString *)password coldDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateCold andRemoteDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate> *)fetchDelegateRemote;
+-(void)signTx:(BTTx *)tx withPassword:(NSString *)password coldBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockCold andRemoteBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockRemote;
 
--(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherDelegate:(NSObject<BTHDMFetchOtherSignatureDelegate>*)delegate;
+-(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))block;
 
 -(NSArray*)signMyPartUnsignedHashes:(NSArray*) unsignedHashes withPassword:(NSString*)password;
 

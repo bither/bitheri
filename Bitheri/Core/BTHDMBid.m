@@ -18,8 +18,23 @@
 #import "BTHDMBid.h"
 #import "BTAddressProvider.h"
 
+@interface BTHDMBid()
+
+@property (nonatomic, copy) NSData *password;
+@property (nonatomic) long serviceRandom;
+
+@end
+
 @implementation BTHDMBid {
 
+}
+
+- (instancetype)initWithHDMBid:(NSString *)address; {
+    if (!(self = [super init])) return nil;
+
+    self.address = address;
+
+    return self;
 }
 
 - (instancetype)initWithHDMBid:(NSString *)address andEncryptBitherPassword:(NSString *)encryptBitherPassword;{
@@ -34,4 +49,18 @@
 + (BTHDMBid *)getHDMBidFromDb {
     return [[BTAddressProvider instance] getHDMBid];
 }
+
+- (NSString *)getPreSignHashAndError:(NSError **)error;{
+    self.password = [NSData randomWithSize:32];
+    return nil;
+}
+
+- (void)changeBidPasswordWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError **)error; {
+
+}
+
+- (NSArray *)recoverHDMWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError **)error; {
+
+}
+
 @end

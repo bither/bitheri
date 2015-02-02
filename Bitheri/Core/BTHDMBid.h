@@ -27,8 +27,8 @@
 
 + (BTHDMBid *)getHDMBidFromDb;
 
-- (NSString *)getPreSignHashAndError:(NSError *)error;
-- (void)changeBidPasswordWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError *)error;
-- (NSArray *)recoverHDMWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError *)error;
+- (NSString *)getPreSignHashAndError:(NSError **)error;
+- (void)changeBidPasswordWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError **)error;
+- (NSArray *)recoverHDMWithSignature:(NSString *)signature andPassword:(NSString *)password andError:(NSError **)error;
 
 @end

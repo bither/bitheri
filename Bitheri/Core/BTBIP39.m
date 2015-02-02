@@ -107,6 +107,13 @@
         return nil;
     }
 }
+-(NSString *)toMnemonicWithArray:(NSArray *)a{
+    if (a != nil) {
+        return CFBridgingRelease(CFStringCreateByCombiningStrings(SecureAllocator(), (__bridge CFArrayRef)a, CFSTR(" ")));
+    } else {
+        return nil;
+    }
+}
 
 - (NSData *)toEntropy:(NSString *)code
 {

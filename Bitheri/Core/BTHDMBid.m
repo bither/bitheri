@@ -16,6 +16,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #import "BTHDMBid.h"
+#import "BTAddressProvider.h"
 
 @implementation BTHDMBid {
 
@@ -30,8 +31,7 @@
     return self;
 }
 
-+(BTHDMBid*)getHDMBidFromDb{
-    //TODO: get hdm bid from db
-    return nil;
++ (BTHDMBid *)getHDMBidFromDb {
+    return [[BTAddressProvider instance] getHDMBid];
 }
 @end

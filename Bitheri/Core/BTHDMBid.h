@@ -19,11 +19,16 @@
 
 @interface BTHDMBid : NSObject
 
+- (instancetype)initWithHDMBid:(NSString *)address;
 - (instancetype)initWithHDMBid:(NSString *)address andEncryptBitherPassword:(NSString *)encryptBitherPassword;
 
 @property (nonatomic, copy) NSString *address;
 @property (nonatomic, copy) NSString *encryptedBitherPassword;
 
-+(BTHDMBid*)getHDMBidFromDb;
++ (BTHDMBid *)getHDMBidFromDb;
+
+- (NSString *)getPreSignMessage;
+- (void)changeBidPasswordWithSignature:(NSString *)signature andPassword:(NSString *)password;
+- (NSArray *)recoverHDMWithSignature:(NSString *)signature andPassword:(NSString *)password;
 
 @end

@@ -55,4 +55,6 @@
 - (BOOL)check:(NSString *)code;
 - (NSData *)toSeed:(NSString *)code withPassphrase:(NSString *)passphrase;
 
+- (NSArray *)getWords;
+
 @end

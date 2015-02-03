@@ -325,6 +325,9 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     if (_key == nil && _secret != nil) {
         _key = [BTKey keyWithSecret:_secret compressed:YES];
     }
+    if (_key==nil&&_pubKey!=nil) {
+        _key=[BTKey keyWithPublicKey:_pubKey];
+    }
     return _key;
 }
 

@@ -234,6 +234,9 @@
     NSString* encrypted = [self encryptedHDSeed];
     if(![BTUtils isEmpty:encrypted]){
         self.hdSeed = [[[BTEncryptData alloc]initWithStr:encrypted]decrypt:password];
+        if(!self.hdSeed){
+            [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
+        }
     }
 }
 
@@ -244,6 +247,9 @@
     NSString* encrypted = [self encryptedMnemonicSeed];
     if(![BTUtils isEmpty:encrypted]){
         self.mnemonicSeed = [[[BTEncryptData alloc]initWithStr:encrypted]decrypt:password];
+        if(!self.mnemonicSeed){
+            [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
+        }
     }
 }
 

@@ -36,6 +36,8 @@
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address;
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address andPage:(int)page;
 
+-(uint64_t)sentFromAddress:(NSData * )txHash address:( NSString *) address;
+
 - (bool)isAddress:(NSString *) address containsTx:(BTTx *) txItem;
 - (bool)isTxDoubleSpendWithConfirmedTx:(BTTx *)tx;
 - (NSArray *)getInAddresses:(BTTx *)tx;

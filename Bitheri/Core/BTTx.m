@@ -27,6 +27,7 @@
 #import "BTScriptOpCodes.h"
 #import "BTIn.h"
 #import "BTOut.h"
+#import "BTTxProvider.h"
 
 @implementation BTTx
 
@@ -617,16 +618,7 @@ sequence:(uint32_t)sequence
             receive += [self.outputAmounts[i] unsignedLongLongValue];
         i++;
     }
-
-    i = 0;
-    for (NSData *hash in self.inputHashes) {
-        uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
-        BTOut *outItem = [[BTTxProvider instance] getOutByTxHash:hash andOutSn:n];
-
-        if ([addr.address isEqualToString:outItem.outAddress]) {
-            sent += outItem.outValue;
-        }
-    }
+    sent=[[BTTxProvider instance] sentFromAddress:self.txHash address:addr.address];
     return receive - sent;
 }
 

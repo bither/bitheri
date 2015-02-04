@@ -150,6 +150,7 @@ static BTTxProvider *provider;
     return txs;
 }
 
+
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address andPage:(int)page;{
     __block NSMutableArray *txs = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
@@ -195,6 +196,26 @@ static BTTxProvider *provider;
         }
     }];
     return txs;
+}
+
+
+
+-(uint64_t)sentFromAddress:(NSData * )txHash address:( NSString *) address {
+
+    long sum = 0;
+    __block uint32_t result = 0;
+
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString * sql = @"select  sum(o.out_value) out_value from ins i,outs o where "
+                " i.tx_hash=? and o.tx_hash=i.prev_tx_hash and i.prev_out_sn=o.out_sn and o.out_address=?";
+        FMResultSet *rs = [db executeQuery:sql,[NSString base58WithData:txHash], address];
+        if ([rs next]) {
+            result = (uint32_t) [rs intForColumnIndex:0];
+        }
+        [rs close];
+    }];
+
+    return sum;
 }
 
 - (NSArray *)getPublishedTxs {

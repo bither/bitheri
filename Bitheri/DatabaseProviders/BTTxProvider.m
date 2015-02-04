@@ -199,23 +199,25 @@ static BTTxProvider *provider;
 }
 
 
-
 -(uint64_t)sentFromAddress:(NSData * )txHash address:( NSString *) address {
 
-    long sum = 0;
-    __block uint32_t result = 0;
+    __block uint64_t result = 0;
 
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString * sql = @"select  sum(o.out_value) out_value from ins i,outs o where "
                 " i.tx_hash=? and o.tx_hash=i.prev_tx_hash and i.prev_out_sn=o.out_sn and o.out_address=?";
         FMResultSet *rs = [db executeQuery:sql,[NSString base58WithData:txHash], address];
+
         if ([rs next]) {
-            result = (uint32_t) [rs intForColumnIndex:0];
+            if ([rs columnIndexForName:@"out_value"] >= 0) {
+                result = (uint64_t) [rs longLongIntForColumn:@"out_value"];
+            }
+
         }
         [rs close];
     }];
 
-    return sum;
+    return result;
 }
 
 - (NSArray *)getPublishedTxs {

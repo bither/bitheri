@@ -51,6 +51,9 @@
 @property (nonatomic, strong, readonly) BTTx *recentlyTx;
 - (void)updateCache;
 
+-(NSArray *)sortTx:(NSArray *)array;
+
+- (NSArray *)txs:(int) page;
 
 //-(instancetype) initWithPassphrase:(NSString *)passphrase isXRandom:(BOOL)isXRandom;
 //

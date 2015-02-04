@@ -113,6 +113,15 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     [txs sortUsingComparator:txComparator];
     return txs;
 }
+-(NSArray *)sortTx:(NSArray *)array{
+    NSMutableArray *txs=[NSMutableArray arrayWithArray:array];
+    [txs sortUsingComparator:txComparator];
+    return txs;
+}
+
+- (NSArray *)txs:(int) page{
+    return [[BTTxProvider instance] getTxAndDetailByAddress:self.address andPage:page];
+}
 
 
 - (void)removeTx:(NSData *)txHash {

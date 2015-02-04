@@ -25,7 +25,7 @@
 @property (nonatomic, copy) NSString *address;
 @property (nonatomic, copy) NSString *encryptedBitherPassword;
 @property (nonatomic, copy) NSData *password;
-@property (nonatomic) long serviceRandom;
+@property (nonatomic) long long serviceRandom;
 
 + (BTHDMBid *)getHDMBidFromDb;
 

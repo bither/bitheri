@@ -59,9 +59,9 @@
 
 -(instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString*)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain;
 
--(void)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx)) fetchBlock;
+-(BOOL)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx)) fetchBlock;
 
--(void)signTx:(BTTx *)tx withPassword:(NSString *)password coldBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockCold andRemoteBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockRemote;
+-(BOOL)signTx:(BTTx *)tx withPassword:(NSString *)password coldBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockCold andRemoteBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockRemote;
 
 -(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))block;
 

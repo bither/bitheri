@@ -107,16 +107,21 @@ static NSData* EMPTYBYTES;
     NSArray* unsigns = tx.unsignedInHashes;
     NSArray* coldSigs = fetchBlockCold(self.index, password, unsigns, tx);
     NSArray* remoteSigs = fetchBlockRemote(self.index, password, unsigns, tx);
-    assert(coldSigs.count == remoteSigs.count && coldSigs.count == unsigns.count);
-    NSArray* joined = [self formatInScriptFromSigns1:coldSigs andSigns2:remoteSigs];
-    return [tx signWithSignatures:joined];
+    if(coldSigs.count == remoteSigs.count && coldSigs.count == unsigns.count){
+        NSArray* joined = [self formatInScriptFromSigns1:coldSigs andSigns2:remoteSigs];
+        return [tx signWithSignatures:joined];
+    }else{
+        return NO;
+    }
 }
 
 -(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))block{
     NSArray* hotSigs = [self signMyPartUnsignedHashes:unsignedHashes withPassword:password];
     NSArray* otherSigs = block(self.index, password, unsignedHashes, tx);
-    assert(hotSigs.count == otherSigs.count && hotSigs.count == unsignedHashes.count);
-    return [self formatInScriptFromSigns1:hotSigs andSigns2:otherSigs];
+    if(hotSigs.count == otherSigs.count && hotSigs.count == unsignedHashes.count){
+        return [self formatInScriptFromSigns1:hotSigs andSigns2:otherSigs];
+    }
+    return [NSArray new];
 }
 
 -(NSArray*)signMyPartUnsignedHashes:(NSArray*) unsignedHashes withPassword:(NSString*)password{

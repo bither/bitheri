@@ -72,3 +72,5 @@
 @interface BTHDMColdPubNotSameException : NSException
 @end
 
+@interface BTHDMPasswordWrongException : NSException
+@end

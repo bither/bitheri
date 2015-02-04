@@ -124,6 +124,9 @@ static NSData* EMPTYBYTES;
         [NSException raise:@"recovery hdm address can not sign" format:nil];
     }
     BTBIP32Key* key = [self.keychain externalKeyWithIndex:self.index andPassword:password];
+    if(!key){
+        [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
+    }
     NSMutableArray* sigs = [NSMutableArray new];
     for(NSData* hash in unsignedHashes){
         NSMutableData *sig = [NSMutableData data];
@@ -191,4 +194,7 @@ static NSData* EMPTYBYTES;
 @end
 
 @implementation BTHDMColdPubNotSameException
+@end
+
+@implementation BTHDMPasswordWrongException
 @end

@@ -191,7 +191,8 @@ static NSData* EMPTYBYTES;
         NSMutableArray* signs = [NSMutableArray new];
         [signs addObject:signs1[i]];
         [signs addObject:signs2[i]];
-        [result addObject:[BTScriptBuilder createP2SHMultisigInputScriptWithSignatures:signs andMultisigProgram:self.pubKey]];
+        BTScript *script=[BTScriptBuilder createP2SHMultisigInputScriptWithSignatures:signs andMultisigProgram:self.pubKey];
+        [result addObject:[script program]];
     }
     return result;
 }

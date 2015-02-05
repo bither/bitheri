@@ -353,15 +353,17 @@ sequence:(uint32_t)sequence
             [keys addObject:[BTKey keyWithPublicKey:[script getPubKey]]];
             in.inScript = d;
             [scripts addObject:script];
-        }
-        for (NSUInteger i = 0; i < self.ins.count; i++) {
-            NSData *unSignHash = [self toDataWithSubscriptIndex:i withInScripts:inScripts].SHA256_2;
-//            NSData *unSignHash2 = [self toDataWithSubscriptIndex:i].SHA256_2;
-            BTKey *key = keys[i];
-            NSData *signedHash = ((BTScriptChunk *)((BTScript *)scripts[i]).chunks[0]).data;
-            if (![key verify:unSignHash signature:signedHash])
+            if (![script correctlySpends:[[BTScript alloc] initWithProgram:in.inScript] and:YES])
                 return NO;
         }
+//        for (NSUInteger i = 0; i < self.ins.count; i++) {
+//            NSData *unSignHash = [self toDataWithSubscriptIndex:i withInScripts:inScripts].SHA256_2;
+////            NSData *unSignHash2 = [self toDataWithSubscriptIndex:i].SHA256_2;
+//            BTKey *key = keys[i];
+//            NSData *signedHash = ((BTScriptChunk *)((BTScript *)scripts[i]).chunks[0]).data;
+//            if (![key verify:unSignHash signature:signedHash])
+//                return NO;
+//        }
         return YES;
     } else {
         return NO;

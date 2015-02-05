@@ -442,7 +442,7 @@ static BTAddressProvider *provider;
         if (!isExist) {
             [db beginTransaction];
             for (BTHDMAddress *address in addresses) {
-                success &= [db executeUpdate:sql, [NSString base58WithData:address.pubs.remote], address, @(hdSeedId), @(address.pubs.index)];
+                success &= [db executeUpdate:sql, [NSString base58WithData:address.pubs.remote], address.address, @(hdSeedId), @(address.pubs.index)];
             }
             if (success) {
                 [db commit];

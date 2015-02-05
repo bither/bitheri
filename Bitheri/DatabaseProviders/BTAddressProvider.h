@@ -34,15 +34,14 @@
 - (NSArray *)getHDSeedIds;
 - (NSString *)getEncryptSeed:(int)hdSeedId;
 - (NSString *)getEncryptHDSeed:(int)hdSeedId;
-- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptHDSeed:(NSString *)encryptHDSeed;
-- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
+//- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptHDSeed:(NSString *)encryptHDSeed;
+//- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
 - (BOOL)isHDSeedFromXRandom:(int)hdSeedId;
 - (NSString *)getHDFirstAddress:(int)hdSeedId;
 - (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom andPasswordSeed:(NSString *)passwordSeed;
 
 - (BTHDMBid *)getHDMBid;
 - (BOOL)addHDMBid:(BTHDMBid *)hdmBid andPasswordSeed:(NSString *)passwordSeed;
-- (void)changeHDMBIdPassword:(BTHDMBid *)hdmBid;
 
 - (NSArray *)getHDMAddressInUse:(BTHDMKeychain *)keychain;
 - (BOOL)prepareHDMAddressesWithHDSeedId:(int)hdSeedId andPubs:(NSArray *)pubs;

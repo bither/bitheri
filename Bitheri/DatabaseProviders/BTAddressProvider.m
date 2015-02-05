@@ -317,7 +317,9 @@ static BTAddressProvider *provider;
             } else {
                 [db rollback];
             }
-
+        } else {
+            sql = @"update hdm_bid set encrypt_bither_password=? where hdm_bid=?";
+            [db executeUpdate:sql, hdmBid.encryptedBitherPassword, hdmBid.address];
         }
     }];
     return success;

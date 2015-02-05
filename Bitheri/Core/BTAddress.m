@@ -542,8 +542,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (in.inSignature != nil) {
             BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
             if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
-                NSData *sig = [script getSig];
-                if (sig != nil) {
+                for (NSData *sig in [script getSigs]) {
                     NSData *r = [BTKey getRFromSignature:sig];
                     if ([rs containsObject:r]) {
                         return NO;
@@ -562,8 +561,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (in.inSignature != nil) {
             BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
             if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
-                NSData *sig = [script getSig];
-                if (sig != nil) {
+                for (NSData *sig in [script getSigs]) {
                     NSData *r = [BTKey getRFromSignature:sig];
                     [rs addObject:r];
                 }

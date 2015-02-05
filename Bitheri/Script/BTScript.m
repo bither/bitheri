@@ -221,6 +221,36 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     }
 }
 
+- (NSArray *)getSigs; {
+    NSMutableArray *result = [NSMutableArray new];
+    if (self.chunks.count == 1 && [((BTScriptChunk *) self.chunks[0]) isPushData]) {
+        [result addObject:((BTScriptChunk *) self.chunks[0]).data];
+    } else if (self.chunks.count == 2 && [((BTScriptChunk *) self.chunks[0]) isPushData]
+            && [((BTScriptChunk *) self.chunks[1]) isPushData]
+            && ((BTScriptChunk *) self.chunks[0]).data != nil
+            && ((BTScriptChunk *) self.chunks[0]).data.length > 2
+            && ((BTScriptChunk *) self.chunks[1]).data != nil
+            && ((BTScriptChunk *) self.chunks[1]).data.length > 2) {
+        [result addObject:((BTScriptChunk *) self.chunks[0]).data];
+    } else if (self.chunks.count >= 3 && ((BTScriptChunk *)self.chunks[0]).opCode == OP_0) {
+        BOOL isPay2SHScript = YES;
+        for (NSUInteger i = 1; i < self.chunks.count; i++) {
+            isPay2SHScript &= (((BTScriptChunk *) self.chunks[i]).data != nil && ((BTScriptChunk *) self.chunks[i]).data.length > 2);
+        }
+        if (isPay2SHScript) {
+            for (NSUInteger i = 1; i < self.chunks.count - 1; i++) {
+                BTScriptChunk *chunk = (BTScriptChunk *)self.chunks[i];
+                if ([chunk isPushData] && chunk.data != nil
+                        && chunk.data.length > 0
+                        && [chunk.data UInt8AtOffset:0] == 48) {
+                    [result addObject:chunk.data];
+                }
+            }
+        }
+    }
+    return result;
+}
+
 - (NSString *)getFromAddress; {
     if (self.chunks.count == 2
             && ((BTScriptChunk *)self.chunks[0]).data != nil && ((BTScriptChunk *)self.chunks[0]).data.length > 2

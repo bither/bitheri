@@ -37,6 +37,7 @@ const static int SIG_SIZE = 75;
 - (NSString *)getFromAddress;
 - (NSString *)getToAddress;
 - (NSData *)getSig;
+- (NSArray *)getSigs;
 
 
 - (BOOL)correctlySpends:(BTScript *)scriptPubKey and:(BOOL) enforceP2SH;

@@ -267,7 +267,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 
 - (NSString *)toEncryptedString; {
     return [[BTQRCodeUtil joinedQRCode:@[[NSString hexWithData:self.encryptedData]
-            , [NSString hexWithData:self.iv], [NSString hexWithData:self.salt]]] uppercaseString];
+            , [NSString hexWithData:self.iv], [NSString hexWithData:self.salt]]] toUppercaseStringWithEn];
 }
 
 - (NSString *)toEncryptedStringForQRCodeWithIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom; {

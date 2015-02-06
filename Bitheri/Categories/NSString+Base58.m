@@ -411,4 +411,8 @@ breakout:
 - (NSString *)toUppercaseStringWithEn {
     return [self uppercaseStringWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
 }
+
+- (NSString *)toLowercaseStringWithEn {
+    return [self lowercaseStringWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
+}
 @end

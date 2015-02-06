@@ -312,7 +312,7 @@
 -(NSString*)signHDMBIdWithMessageHash:(NSString*)messageHash andPassword:(NSString*)password{
     BTBIP32Key *key = [self externalKeyWithIndex:0 andPassword:password];
     NSData* sign = [key.key signHash:[messageHash hexToData]];
-    return [NSString hexWithQRCodeData:sign];
+    return [NSString hexWithData:sign];
 }
 
 -(BOOL)isFromXRandom{

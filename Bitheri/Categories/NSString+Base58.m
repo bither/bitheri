@@ -233,10 +233,6 @@ breakout:
     return hex;
 }
 
-+(NSString *)hexWithQRCodeData:(NSData *)d {
-    return [[NSString hexWithData:d] toUppercaseStringWithEn];
-}
-
 + (NSString *)addressWithScript:(NSData *)script
 {
     static NSData *suffix = nil;
@@ -414,5 +410,9 @@ breakout:
 
 - (NSString *)toUppercaseStringWithEn {
     return [self uppercaseStringWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
+}
+
+- (NSString *)toLowercaseStringWithEn {
+    return [self lowercaseStringWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
 }
 @end

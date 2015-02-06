@@ -441,7 +441,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error{
-    return [[BTTxBuilder instance] buildTxForAddress:self.address andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
+    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self.address andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
+    if ([self isHDM]) {
+        for (BTIn *btIn in tx.ins) {
+            btIn.inScript = self.pubKey;
+        }
+    }
+    return tx;
 }
 
 //- (NSArray *)selectOuts:(uint64_t)amount andOuts:(NSArray *)outs; {

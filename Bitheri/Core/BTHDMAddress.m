@@ -134,11 +134,9 @@ static NSData* EMPTYBYTES;
     }
     NSMutableArray* sigs = [NSMutableArray new];
     for(NSData* hash in unsignedHashes){
-        NSMutableData *sig = [NSMutableData data];
         NSMutableData *s = [NSMutableData dataWithData:[key.key sign:hash]];
         [s appendUInt8:SIG_HASH_ALL];
-        [sig appendScriptPushData:s];
-        [sigs addObject:sig];
+        [sigs addObject:s];
     }
     [key wipe];
     return sigs;

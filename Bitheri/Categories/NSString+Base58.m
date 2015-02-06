@@ -230,7 +230,7 @@ breakout:
         [hex appendFormat:@"%02x", bytes[i]];
     }
     
-    return hex;
+    return [hex toUppercaseStringWithEn];
 }
 
 + (NSString *)addressWithScript:(NSData *)script

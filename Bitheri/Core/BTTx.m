@@ -527,17 +527,24 @@ sequence:(uint32_t)sequence
     self.sawByPeerCnt += 1;
 }
 
+- (BTOut *)getOut:(uint)outSn;{
+    for (BTOut *out in self.outs) {
+        if (out.outSn == outSn) {
+            return out;
+        }
+    }
+    return nil;
+}
+
 // returns the fee for the given transaction if all its inputs are from wallet transactions, UINT64_MAX otherwise
 - (uint64_t)feeForTransaction;{
     uint64_t amount = 0;
-    NSUInteger i = 0;
 
-    for (NSData *hash in self.inputHashes) {
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
+    for (BTIn *btIn in self.ins) {
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
 
-        if (n >= tx.outputAmounts.count) return UINT64_MAX;
-        amount += [tx.outputAmounts[n] unsignedLongLongValue];
+        amount += [tx getOut:n].outValue;
     }
 
     for (NSNumber *amt in self.outputAmounts) {
@@ -553,14 +560,12 @@ sequence:(uint32_t)sequence
 - (uint32_t)blockHeightUntilFree; {
     // TODO: calculate estimated time based on the median priority of free transactions in last 144 blocks (24hrs)
     NSMutableArray *amounts = [NSMutableArray array], *heights = [NSMutableArray array];
-    NSUInteger i = 0;
 
-    for (NSData *hash in self.inputHashes) { // get the amounts and block heights of all the transaction inputs
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
+    for (BTIn *btIn in self.ins) { // get the amounts and block heights of all the transaction inputs
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
 
-        if (n >= tx.outputAmounts.count) break;
-        [amounts addObject:tx.outputAmounts[n]];
+        [amounts addObject:@([tx getOut:n].outValue)];
         [heights addObject:@(tx.blockNo)];
     };
 
@@ -570,12 +575,10 @@ sequence:(uint32_t)sequence
 // returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)
 - (uint64_t)amountReceivedFrom:(BTAddress *)addr;{
     uint64_t amount = 0;
-    NSUInteger n = 0;
 
-    for (NSString *address in self.outputAddresses) {
-        if ([addr.address isEqualToString:address])
-            amount += [self.outputAmounts[n] unsignedLongLongValue];
-        n++;
+    for (BTOut *out in self.outs) {
+        if ([addr.address isEqualToString:out.outAddress])
+            amount += out.outValue;
     }
 
     return amount;
@@ -584,14 +587,14 @@ sequence:(uint32_t)sequence
 // returns the amount sent from the wallet by the transaction (total wallet outputs consumed, change and fee included)
 - (uint64_t)amountSentFrom:(BTAddress *)addr;{
     uint64_t amount = 0;
-    NSUInteger i = 0;
 
-    for (NSData *hash in self.inputHashes) {
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [self.inputIndexes[i++] unsignedIntValue];
+    for (BTIn *btIn in self.ins) {
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
 
-        if (n < tx.outputAddresses.count && [addr.address isEqualToString:tx.outputAddresses[n]]) {
-            amount += [tx.outputAmounts[n] unsignedLongLongValue];
+        BTOut *out = [tx getOut:n];
+        if ([addr.address isEqualToString:out.outAddress]) {
+            amount += out.outValue;
         }
     }
 
@@ -600,12 +603,10 @@ sequence:(uint32_t)sequence
 
 - (uint64_t)amountSentTo:(NSString *)addr;{
     uint64_t amount = 0;
-    NSUInteger n = 0;
 
-    for (NSString *address in self.outputAddresses) {
-        if ([addr isEqualToString:address])
-            amount += [self.outputAmounts[n] unsignedLongLongValue];
-        n++;
+    for (BTOut *out in self.outs) {
+        if ([addr isEqualToString:out.outAddress])
+            amount += out.outValue;
     }
 
     return amount;
@@ -614,12 +615,10 @@ sequence:(uint32_t)sequence
 - (int64_t)deltaAmountFrom:(BTAddress *)addr;{
     uint64_t receive = 0;
     uint64_t sent = 0;
-    NSUInteger i = 0;
 
-    for (NSString *address in self.outputAddresses) {
-        if ([addr.address isEqualToString:address])
-            receive += [self.outputAmounts[i] unsignedLongLongValue];
-        i++;
+    for (BTOut *out in self.outs) {
+        if ([addr.address isEqualToString:out.outAddress])
+            receive += out.outValue;
     }
     sent=[[BTTxProvider instance] sentFromAddress:self.txHash address:addr.address];
     return receive - sent;
@@ -795,7 +794,7 @@ sequence:(uint32_t)sequence
 }
 
 - (BOOL)verify; {
-    if (self.inputHashes.count == 0 || self.outputAmounts.count == 0)
+    if (self.ins.count == 0 || self.outs.count == 0)
         return NO;
 
 //    if (this.getMessageSize() > Block.MAX_BLOCK_SIZE)
@@ -810,7 +809,7 @@ sequence:(uint32_t)sequence
     }
     BOOL isCoinBase = NO;
     BTIn *firstIn = self.ins[0];
-    if (self.inputHashes.count == 1 && [self.inputHashes[0] isEqualToData:[@"0000000000000000000000000000000000000000000000000000000000000000" hexToData]]
+    if (self.ins.count == 1 && [((BTIn *)self.ins[0]).prevTxHash isEqualToData:[@"0000000000000000000000000000000000000000000000000000000000000000" hexToData]]
             && firstIn.prevOutSn == 0xFFFFFFFFL) {
         isCoinBase = YES;
     }
@@ -819,17 +818,17 @@ sequence:(uint32_t)sequence
         if ( ((NSData *)self.inputSignatures[0]).length < 2 || ((NSData *)self.inputSignatures[0]).length > 100)
             return NO;
     } else {
-        for (NSData *inputHash in self.inputHashes) {
-            if ([inputHash isEqualToData:[@"0000000000000000000000000000000000000000000000000000000000000000" hexToData]]
+        for (BTIn *btIn in self.ins) {
+            if ([btIn.prevTxHash isEqualToData:[@"0000000000000000000000000000000000000000000000000000000000000000" hexToData]]
                     && firstIn.prevOutSn == 0xFFFFFFFFL)
                 return NO;
         }
     }
     NSMutableSet *prevOutSet = [NSMutableSet new];
-    for (NSUInteger i = 0; i < self.inputIndexes.count; i++) {
+    for (BTIn *btIn in self.ins) {
         NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
-        [d appendData:self.inputHashes[i]];
-        [d appendUInt32:[self.inputIndexes[i] unsignedIntValue]];
+        [d appendData:btIn.prevTxHash];
+        [d appendUInt32:btIn.prevOutSn];
         if ([prevOutSet containsObject:d]) {
             return NO;
         } else {

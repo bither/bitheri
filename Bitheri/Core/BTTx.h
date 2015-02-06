@@ -26,6 +26,7 @@
 
 @class BTKey;
 @class BTAddress;
+@class BTOut;
 
 #if TX_FEE_07_RULES
 #define TX_FEE_PER_KB        50000llu    // standard tx fee per kb of tx size, rounded up to the nearest kb (0.7 rules)
@@ -95,6 +96,8 @@ sequence:(uint32_t)sequence;
 - (uint32_t)blockHeightUntilFreeForAmounts:(NSArray *)amounts withBlockHeights:(NSArray *)heights;
 
 - (void)sawByPeer;
+
+- (BTOut *)getOut:(uint)outSn;
 
 // returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)
 - (uint64_t)amountReceivedFrom:(BTAddress *)addr;;

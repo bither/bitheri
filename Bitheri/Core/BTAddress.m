@@ -30,10 +30,20 @@
 #import "BTAddressProvider.h"
 
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
+    BTTx *tx1 = (BTTx *)obj1;
+    BTTx *tx2 = (BTTx *)obj2;
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
     if ([obj1 blockNo] < [obj2 blockNo]) return NSOrderedDescending;
-    if ([[obj1 inputHashes] containsObject:[obj2 txHash]]) return NSOrderedDescending;
-    if ([[obj2 inputHashes] containsObject:[obj1 txHash]]) return NSOrderedAscending;
+    NSMutableSet *inputHashSet1 = [NSMutableSet new];
+    for (BTIn *in in tx1.ins) {
+        [inputHashSet1 addObject:in.prevTxHash];
+    }
+    NSMutableSet *inputHashSet2 = [NSMutableSet new];
+    for (BTIn *in in tx2.ins) {
+        [inputHashSet2 addObject:in.prevTxHash];
+    }
+    if ([inputHashSet1 containsObject:[obj2 txHash]]) return NSOrderedDescending;
+    if ([inputHashSet2 containsObject:[obj1 txHash]]) return NSOrderedAscending;
     if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
     if ([obj1 txTime] < [obj2 txTime]) return NSOrderedDescending;
     return NSOrderedSame;
@@ -129,7 +139,11 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BOOL)containsTransaction:(BTTx *)transaction {
-    if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:self.address]) return YES;
+    for (BTOut *out in transaction.outs) {
+        if ([out.outAddress isEqualToString:self.address]) {
+            return YES;
+        }
+    }
     return [[BTTxProvider instance] isAddress:self.address containsTx:transaction];
 }
 
@@ -202,29 +216,29 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
     for (BTTx *tx in [txs reverseObjectEnumerator]) {
         NSMutableSet *spent = [NSMutableSet set];
-        uint32_t i = 0, n = 0;
 
-        for (NSData *hash in tx.inputHashes) {
-            n = [tx.inputIndexes[i++] unsignedIntValue];
-            [spent addObject:getOutPoint(hash, n)];
+        for (BTIn *btIn in tx.ins) {
+            [spent addObject:getOutPoint(btIn.prevTxHash, btIn.prevOutSn)];
         }
 
         // check if any inputs are invalid or already spent
+        NSMutableSet *inputHashSet = [NSMutableSet new];
+        for (BTIn *in in tx.ins) {
+            [inputHashSet addObject:in.prevTxHash];
+        }
         if (tx.blockNo == TX_UNCONFIRMED &&
-                ([spent intersectsSet:spentOutputs] || [[NSSet setWithArray:tx.inputHashes] intersectsSet:invalidTx])) {
+                ([spent intersectsSet:spentOutputs] || [inputHashSet intersectsSet:invalidTx])) {
             [invalidTx addObject:tx.txHash];
             continue;
         }
 
         [spentOutputs unionSet:spent]; // add inputs to spent output set
-        n = 0;
 
-        for (NSString *address in tx.outputAddresses) { // add outputs to UTXO set
-            if ([self containsAddress:address]) {
-                [utxos addObject:getOutPoint(tx.txHash, n)];
-                balance += [tx.outputAmounts[n] unsignedLongLongValue];
+        for (BTOut *out in tx.outs) { // add outputs to UTXO set
+            if ([self containsAddress:out.outAddress]) {
+                [utxos addObject:getOutPoint(tx.txHash, out.outSn)];
+                balance += out.outValue;
             }
-            n++;
         }
 
         // transaction ordering is not guaranteed, so check the entire UTXO set against the entire spent output set
@@ -233,10 +247,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
         for (NSData *o in spent) { // remove any spent outputs from UTXO set
             BTTx *transaction = [[BTTxProvider instance] getTxDetailByTxHash:[o hashAtOffset:0]];
-            n = [o UInt32AtOffset:CC_SHA256_DIGEST_LENGTH];
+            uint n = [o UInt32AtOffset:CC_SHA256_DIGEST_LENGTH];
 
             [utxos removeObject:o];
-            balance -= [transaction.outputAmounts[n] unsignedLongLongValue];
+            balance -= [transaction getOut:n].outValue;
         }
     }
     return balance;
@@ -263,11 +277,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 // returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)
 - (uint64_t)amountReceivedFromTransaction:(BTTx *)transaction {
     uint64_t amount = 0;
-    NSUInteger n = 0;
 
-    for (NSString *address in transaction.outputAddresses) {
-        if ([self containsAddress:address]) amount += [transaction.outputAmounts[n] unsignedLongLongValue];
-        n++;
+    for (BTOut *out in transaction.outs) {
+        if ([self containsAddress:out.outAddress])
+            amount += out.outValue;
     }
 
     return amount;
@@ -276,14 +289,14 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 // returns the amount sent from the wallet by the transaction (total wallet outputs consumed, change and fee included)
 - (uint64_t)amountSentByTransaction:(BTTx *)transaction {
     uint64_t amount = 0;
-    NSUInteger i = 0;
 
-    for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
+    for (BTIn *btIn in transaction.ins) {
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
 
-        if (n < tx.outputAddresses.count && [self containsAddress:tx.outputAddresses[n]]) {
-            amount += [tx.outputAmounts[n] unsignedLongLongValue];
+        BTOut *out = [tx getOut:n];
+        if ([self containsAddress:out.outAddress]) {
+            amount += out.outValue;
         }
     }
 
@@ -293,18 +306,16 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 // returns the fee for the given transaction if all its inputs are from wallet transactions, UINT64_MAX otherwise
 - (uint64_t)feeForTransaction:(BTTx *)transaction {
     uint64_t amount = 0;
-    NSUInteger i = 0;
 
-    for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
+    for (BTIn *btIn in transaction.ins) {
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
 
-        if (n >= tx.outputAmounts.count) return UINT64_MAX;
-        amount += [tx.outputAmounts[n] unsignedLongLongValue];
+        amount += [tx getOut:n].outValue;
     }
 
-    for (NSNumber *amt in transaction.outputAmounts) {
-        amount -= amt.unsignedLongLongValue;
+    for (BTOut *out in transaction.outs) {
+        amount -= out.outValue;
     }
 
     return amount;
@@ -314,9 +325,9 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (NSString *)addressForTransaction:(BTTx *)transaction {
     uint64_t sent = [self amountSentByTransaction:transaction];
 
-    for (NSString *address in transaction.outputAddresses) {
+    for (BTOut *out in transaction.outs) {
         // first non-wallet address if it's a send transaction, first wallet address if it's a receive transaction
-        if ((sent > 0) != [self containsAddress:address]) return address;
+        if ((sent > 0) != [self containsAddress:out.outAddress]) return out.outAddress;
     }
 
     return nil;
@@ -328,14 +339,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (uint32_t)blockHeightUntilFree:(BTTx *)transaction {
     // TODO: calculate estimated time based on the median priority of free transactions in last 144 blocks (24hrs)
     NSMutableArray *amounts = [NSMutableArray array], *heights = [NSMutableArray array];
-    NSUInteger i = 0;
 
-    for (NSData *hash in transaction.inputHashes) { // get the amounts and block heights of all the transaction inputs
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
 
-        if (n >= tx.outputAmounts.count) break;
-        [amounts addObject:tx.outputAmounts[n]];
+    for (BTIn *btIn in transaction.ins) { // get the amounts and block heights of all the transaction inputs
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
+
+        [amounts addObject:@([tx getOut:n].outValue)];
         [heights addObject:@(tx.blockNo)];
     };
 

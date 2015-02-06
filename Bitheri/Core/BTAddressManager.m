@@ -264,7 +264,11 @@
 }
 
 - (BOOL)isAddress:(NSString *)address containsTransaction:(BTTx *)transaction {
-    if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:address]) return YES;
+    for (BTOut *out in transaction.outs) {
+        if ([out.outAddress isEqualToString:address]) {
+            return YES;
+        }
+    }
     return [[BTTxProvider instance] isAddress:address containsTx:transaction];
 }
 

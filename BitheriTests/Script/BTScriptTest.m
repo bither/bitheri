@@ -22,6 +22,7 @@
 #import "BTTestHelper.h"
 #import "BTScriptOpCodes.h"
 #import "BTKey.h"
+#import "BTIn.h"
 
 @interface BTScriptTest : XCTestCase
 
@@ -111,7 +112,7 @@
         BOOL result = YES;
         for (NSUInteger i = 0; i < tx.inputIndexes.count; i++) {
             BTScript *scriptSig = [[BTScript alloc] initWithProgram:tx.inputSignatures[i]];
-            BTScript *scriptPubKey = scriptPubKeys[tx.inputHashes[i]];
+            BTScript *scriptPubKey = scriptPubKeys[((BTIn *)tx.ins[i]).prevTxHash];
             scriptSig.tx = tx;
             scriptPubKey.tx = tx;
             scriptSig.index = i;
@@ -153,7 +154,7 @@
             BOOL result = YES;
             for (NSUInteger i = 0; i < tx.inputIndexes.count; i++) {
                 BTScript *scriptSig = [[BTScript alloc] initWithProgram:tx.inputSignatures[i]];
-                BTScript *scriptPubKey = scriptPubKeys[tx.inputHashes[i]];//scriptPubKeys[@""];
+                BTScript *scriptPubKey = scriptPubKeys[((BTIn *)tx.ins[i]).prevTxHash];//scriptPubKeys[@""];
                 scriptSig.tx = tx;
                 scriptSig.index = i;
 

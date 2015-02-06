@@ -49,6 +49,7 @@
 #import "BTPeerManager.h"
 #import "BTOut.h"
 #import "BTAddressManager.h"
+#import "BTIn.h"
 
 typedef enum {
     error = 0,
@@ -813,14 +814,15 @@ services:(uint64_t)services
     NSMutableArray *checkedTxs = [NSMutableArray new];
     for (BTTx *eachTx in needCheckDependencyTxs){
         BOOL valid = YES;
-        for (NSUInteger i = 0; i < eachTx.inputIndexes.count; i++) {
-            if ([eachTx.inputHashes[i] isEqualToData:tx.txHash]) {
-                if ([eachTx.inputIndexes[i] unsignedIntValue] < tx.outputAddresses.count) {
-                    NSData *outScript = tx.outputScripts[[eachTx.inputIndexes[i] unsignedIntValue]];
+        for (BTIn *btIn in eachTx.ins) {
+            if ([btIn.prevTxHash isEqualToData:tx.txHash]) {
+                if ([tx getOut:btIn.prevOutSn] != nil) {
+                    BTOut *out = [tx getOut:btIn.prevOutSn];
+                    NSData *outScript = out.outScript;
                     BTScript *pubKeyScript = [[BTScript alloc] initWithProgram:outScript];
-                    BTScript *script = [[BTScript alloc] initWithProgram:eachTx.inputSignatures[i]];
+                    BTScript *script = [[BTScript alloc] initWithProgram:btIn.inSignature];
                     script.tx = eachTx;
-                    script.index = i;
+                    script.index = btIn.prevOutSn;
                     valid &= [script correctlySpends:pubKeyScript and:YES];
                 } else {
                     valid = NO;

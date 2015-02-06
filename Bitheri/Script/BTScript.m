@@ -191,7 +191,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         result &= (chunk.data != nil && chunk.data.length > 2);
     }
     if (result) {
-        BTScript *multiSigRedeem = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.firstObject).data];
+        BTScript *multiSigRedeem = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.lastObject).data];
         result &= multiSigRedeem != nil;
         if (result) {
             result &= [multiSigRedeem isMultiSigRedeem];

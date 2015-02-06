@@ -354,6 +354,7 @@ sequence:(uint32_t)sequence
             in.inScript = d;
             [scripts addObject:script];
             script.tx = self;
+            script.index = in.inSn;
             if (![script correctlySpends:[[BTScript alloc] initWithProgram:in.inScript] and:YES])
                 return NO;
         }

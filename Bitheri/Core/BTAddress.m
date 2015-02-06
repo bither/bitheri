@@ -110,6 +110,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return _address;
 }
 
+- (NSData *)scriptPubKey {
+    NSMutableData *_scriptPubKey = [NSMutableData data];
+    [_scriptPubKey appendScriptPubKeyForAddress:_address];
+    return _scriptPubKey;
+}
+
 - (NSArray *)unspentOuts {
     NSMutableArray *result = [NSMutableArray new];
     for (BTOut *outItem in [[BTTxProvider instance] getUnSpendOutCanSpendWithAddress:self.address]) {
@@ -451,12 +457,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error{
-    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self.address andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
-    if ([self isHDM]) {
-        for (BTIn *btIn in tx.ins) {
-            btIn.inScript = self.pubKey;
-        }
-    }
+    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self.address andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
     return tx;
 }
 

@@ -37,6 +37,7 @@
 @property (nonatomic, copy) NSData *pubKey;
 @property (nonatomic, readwrite) BOOL isSyncComplete;
 @property (nonatomic, readonly) NSString *address;
+@property (nonatomic, readonly) NSData *scriptPubKey;
 @property bool hasPrivKey;
 
 @property (nonatomic, readonly) uint64_t balance;

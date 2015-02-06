@@ -64,7 +64,7 @@ static NSData* EMPTYBYTES;
     return [BTScriptBuilder createMultisigScriptWithThreshold:2 andPubKeys:@[self.hot, self.cold, self.remote]];
 }
 
--(NSString*)address{
+- (NSString*)address{
     return [self p2shAddressFromHash:self.multisigScript.program.hash160];
 }
 
@@ -193,6 +193,11 @@ static NSData* EMPTYBYTES;
         [result addObject:[script program]];
     }
     return result;
+}
+
+
+- (NSData *)scriptPubKey; {
+    return self.pubKey;
 }
 
 @end

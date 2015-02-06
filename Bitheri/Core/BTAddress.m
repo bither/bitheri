@@ -576,11 +576,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     for (BTIn *in in tx.ins) {
         BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
-        NSData *sig = [script getSig];
-        NSData *r = [BTKey getRFromSignature:sig];
-        if ([rs containsObject:r])
-            return NO;
-        [rs addObject:r];
+        for (NSData *sig in [script getSigs]) {
+            NSData *r = [BTKey getRFromSignature:sig];
+            if ([rs containsObject:r])
+                return NO;
+            [rs addObject:r];
+        }
     }
     return YES;
 }

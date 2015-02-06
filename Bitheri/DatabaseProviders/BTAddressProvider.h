@@ -29,6 +29,7 @@
 #pragma mark - password
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
 - (BTPasswordSeed *)getPasswordSeed;
+-(BOOL)hasPasswordSeed;
 
 #pragma mark - hdm
 - (NSArray *)getHDSeedIds;

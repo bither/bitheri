@@ -353,6 +353,7 @@ sequence:(uint32_t)sequence
             [keys addObject:[BTKey keyWithPublicKey:[script getPubKey]]];
             in.inScript = d;
             [scripts addObject:script];
+            script.tx = self;
             if (![script correctlySpends:[[BTScript alloc] initWithProgram:in.inScript] and:YES])
                 return NO;
         }

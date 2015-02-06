@@ -360,14 +360,40 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         }
         [p2shStack removeLastObject];
 
-//        if (!castToBool(p2shStack.pollLast())) {
-//            DDLogWarn(@"[Script Error] P2SH script execution resulted in a non-true stack");
-//            return NO;
-////            throw new ScriptException("P2SH script execution resulted in a non-true stack");
-//        }
     }
 
     return YES;
+}
+
+- (NSArray *)getP2SHPubKeysWithScriptPubKey:(BTScript *)scriptPubKey;{
+    if ([self program].length > 10000 || scriptPubKey.program.length > 10000) {
+        DDLogWarn(@"[Script Error] Script larger than 10,000 bytes");
+        return nil;
+    }
+    NSMutableArray *stack = [NSMutableArray new];
+    NSMutableArray *p2shStack = nil;
+    if (![self executeScript:self withStack:stack])
+        return nil;
+    p2shStack = [NSMutableArray arrayWithArray:stack];
+
+    if ([scriptPubKey isPayToScriptHash]) {
+        for (BTScriptChunk *chunk in self.chunks) {
+            if ([chunk isOpCode] && chunk.opCode > OP_16) {
+                DDLogWarn(@"[Script Error] Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
+                return nil;
+            }
+        }
+
+
+        NSData *scriptPubKeyBytes = p2shStack.lastObject;
+        [p2shStack removeLastObject];
+        BTScript *scriptPubKeyP2SH = [[BTScript alloc] initWithProgram:scriptPubKeyBytes];
+
+        [self executeScript:scriptPubKeyP2SH withStack:p2shStack];
+        return [self getMultiSigPubKeysFrom:p2shStack script:scriptPubKeyP2SH];
+    }
+
+    return nil;
 }
 
 - (BOOL)executeScript:(BTScript *)script withStack:(NSMutableArray *)stack; {
@@ -1206,6 +1232,68 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         }
     }
     return YES;
+}
+
+- (NSArray *)getMultiSigPubKeysFrom:(NSMutableArray *)stack script:(BTScript *)script; {
+    if ([stack count] < 2) {
+        DDLogWarn(@"[Script Error] Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < 2");
+        return nil;
+    }
+    if (![self checkCastToInt:stack.lastObject])
+        return nil;
+    int pubKeyCount = ((BTScriptChunk *)script.chunks[script.chunks.count - 2]).opCode - 80;
+    int sigCount = ((BTScriptChunk *)script.chunks[0]).opCode - 80;
+    if (pubKeyCount < 0 || pubKeyCount > 20) {
+        DDLogWarn(@"[Script Error] OP_CHECKMULTISIG(VERIFY) with pubkey count out of range");
+        return nil;
+    }
+    if ([stack count] < pubKeyCount + 1) {
+        DDLogWarn(@"[Script Error] Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < num_of_pubkeys + 2");
+        return nil;
+    }
+
+    NSMutableArray *pubKeys = [NSMutableArray new];
+    for (NSUInteger i = 0; i < pubKeyCount; i++) {
+        BTScriptChunk *chunk = script.chunks[i + 1];
+        [pubKeys addObject:chunk.data];
+    }
+
+    if (sigCount < 0 || sigCount > pubKeyCount) {
+        DDLogWarn(@"[Script Error] OP_CHECKMULTISIG(VERIFY) with sig count out of range");
+        return nil;
+    }
+    if ([stack count] < sigCount + 1) {
+        DDLogWarn(@"[Script Error] Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < num_of_pubkeys + num_of_signatures + 3");
+        return nil;
+    }
+
+    NSMutableArray *sigs = [NSMutableArray new];
+    for (int i = 0; i < sigCount; i++) {
+        NSData *sig = stack.lastObject;
+        [stack removeLastObject];
+        [sigs addObject:sig];
+    }
+
+    NSMutableArray *result = [NSMutableArray new];
+    while ([sigs count] > 0) {
+        NSData *pubKey = pubKeys.firstObject;
+        [pubKeys removeObjectAtIndex:0];
+
+        BTKey *key = [BTKey keyWithPublicKey:pubKey];
+        NSData *sig = sigs.firstObject;
+        if (sig.length > 0) {
+            NSData *hash = [self.tx hashForSignature:self.index connectedScript:script.program
+                                         sigHashType:[sig UInt8AtOffset:sig.length - 1]];
+            if ([key verify:hash signature:sig]) {
+                [result addObject:pubKey];
+                [sigs removeObjectAtIndex:0];
+            }
+        }
+        if ([sigs count] > [pubKeys count]) {
+            break;
+        }
+    }
+    return result;
 }
 
 + (NSData *)removeAllInstancesOf:(NSData *)inputScript and:(NSData *)chunkToRemove; {

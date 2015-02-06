@@ -41,6 +41,7 @@ const static int SIG_SIZE = 75;
 
 
 - (BOOL)correctlySpends:(BTScript *)scriptPubKey and:(BOOL) enforceP2SH;
+- (NSArray *)getP2SHPubKeysWithScriptPubKey:(BTScript *)scriptPubKey;
 
 
 #pragma mark - help method

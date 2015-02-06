@@ -28,4 +28,8 @@
 - (NSString *)toPasswordSeedString;
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
 
++(BOOL)hasPasswordSeed;
++(BTPasswordSeed *)getPasswordSeed;
+
+
 @end

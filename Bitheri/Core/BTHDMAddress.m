@@ -159,6 +159,10 @@ static NSData* EMPTYBYTES;
     return self.pubs.cold;
 }
 
+-(NSData*)pubRemote{
+    return self.pubs.remote;
+}
+
 -(NSArray*)pubKeys{
     NSMutableArray* keys = [NSMutableArray new];
     [keys addObject:self.pubHot];
@@ -169,10 +173,6 @@ static NSData* EMPTYBYTES;
 
 -(BOOL)isInRecovery{
     return self.keychain.isInRecovery;
-}
-
--(NSData*)pubRemote{
-    return self.pubs.remote;
 }
 
 -(BOOL)isFromXRandom{

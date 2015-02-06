@@ -21,6 +21,7 @@
 #import "BTEncryptData.h"
 #import "BTPrivateKeyUtil.h"
 #import "BTUtils.h"
+#import "BTAddressProvider.h"
 
 @interface BTPasswordSeed ()
 
@@ -89,6 +90,11 @@
             toEncryptedStringForQRCodeWithIsCompressed:encryptedData.isCompressed andIsXRandom:encryptedData.isXRandom];
     return ![BTUtils isEmpty:self.keyStr];
 }
-
++(BOOL)hasPasswordSeed {
+    return [[BTAddressProvider instance] hasPasswordSeed];
+}
++(BTPasswordSeed *)getPasswordSeed {
+    return [[BTAddressProvider instance] getPasswordSeed];
+}
 
 @end

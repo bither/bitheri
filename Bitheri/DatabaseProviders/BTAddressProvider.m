@@ -157,6 +157,18 @@ static BTAddressProvider *provider;
     return passwordSeed;
 }
 
+-(BOOL)hasPasswordSeed{
+    __block BOOL  hasPasswordSeed= NO;
+    NSString *sql = @"select ifnull(count(0),0) cnt from password_seed";
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        FMResultSet *rs = [db executeQuery:sql];
+        if ([rs next]) {
+            hasPasswordSeed = [rs intForColumn:@"cnt"] > 0;
+        }
+    }];
+
+    return hasPasswordSeed;
+}
 - (BOOL)addPasswordSeedWithPasswordSeed:(BTPasswordSeed *)passwordSeed andDB:(FMDatabase *)db {
     NSString *sql = @"select ifnull(count(0),0) from password_seed";
     FMResultSet *rs = [db executeQuery:sql];

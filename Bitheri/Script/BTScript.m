@@ -184,6 +184,33 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             ([program UInt8AtOffset:22] & 0xff) == OP_EQUAL;
 }
 
+- (BOOL)isPayFromMultiSig; {
+    BOOL result = ((BTScriptChunk *)self.chunks.firstObject).opCode == OP_0;
+    for (NSUInteger i = 1; i < self.chunks.count; i++) {
+        BTScriptChunk *chunk = self.chunks[i];
+        result &= (chunk.data != nil && chunk.data.length > 2);
+    }
+    if (result) {
+        BTScript *multiSigRedeem = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.firstObject).data];
+        result &= multiSigRedeem != nil;
+        if (result) {
+            result &= [multiSigRedeem isMultiSigRedeem];
+        }
+    }
+    return result;
+}
+
+- (BOOL)isMultiSigRedeem; {
+    BOOL result = OP_1 < ((BTScriptChunk *)self.chunks.firstObject).opCode < OP_16;
+    for (NSUInteger i = 1; i < self.chunks.count - 1; i++) {
+        BTScriptChunk *chunk = self.chunks[i];
+        result &= (chunk.data != nil && chunk.data.length > 2);
+    }
+    result &= OP_1 < ((BTScriptChunk *)self.chunks[self.chunks.count - 2]).opCode < OP_16;
+    result &= ((BTScriptChunk *)self.chunks[self.chunks.count - 2]).opCode == OP_CHECKMULTISIG;
+    return result;
+}
+
 - (NSData *)getPubKeyHash; {
     if ([self isSentToAddress])
         return ((BTScriptChunk *) self.chunks[2]).data;
@@ -365,35 +392,54 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     return YES;
 }
 
-- (NSArray *)getP2SHPubKeysWithScriptPubKey:(BTScript *)scriptPubKey;{
-    if ([self program].length > 10000 || scriptPubKey.program.length > 10000) {
-        DDLogWarn(@"[Script Error] Script larger than 10,000 bytes");
+- (NSArray *)getP2SHPubKeys;{
+    if ([self isPayFromMultiSig]) {
         return nil;
     }
-    NSMutableArray *stack = [NSMutableArray new];
-    NSMutableArray *p2shStack = nil;
-    if (![self executeScript:self withStack:stack])
+    BTScript *scriptPubKey = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.lastObject).data];
+    int pubKeyCount = ((BTScriptChunk *)scriptPubKey.chunks[scriptPubKey.chunks.count - 2]).opCode - 80;
+    int sigCount = ((BTScriptChunk *)scriptPubKey.chunks[0]).opCode - 80;
+    if (pubKeyCount < 0 || pubKeyCount > 20) {
+        DDLogWarn(@"[Script Error] OP_CHECKMULTISIG(VERIFY) with pubkey count out of range");
         return nil;
-    p2shStack = [NSMutableArray arrayWithArray:stack];
+    }
+    NSMutableArray *pubKeys = [NSMutableArray new];
+    for (NSUInteger i = 0; i < pubKeyCount; i++) {
+        BTScriptChunk *chunk = scriptPubKey.chunks[i + 1];
+        [pubKeys addObject:chunk.data];
+    }
 
-    if ([scriptPubKey isPayToScriptHash]) {
-        for (BTScriptChunk *chunk in self.chunks) {
-            if ([chunk isOpCode] && chunk.opCode > OP_16) {
-                DDLogWarn(@"[Script Error] Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
-                return nil;
+    if (sigCount < 0 || sigCount > pubKeyCount) {
+        DDLogWarn(@"[Script Error] OP_CHECKMULTISIG(VERIFY) with sig count out of range");
+        return nil;
+    }
+
+    NSMutableArray *sigs = [NSMutableArray new];
+    for (NSUInteger i = 1; i < sigCount + 1; i++) {
+        [sigs addObject:((BTScriptChunk *)self.chunks[i]).data];
+    }
+
+    NSMutableArray *result = [NSMutableArray new];
+    while ([sigs count] > 0) {
+        NSData *pubKey = pubKeys.lastObject;
+        [pubKeys removeLastObject];
+
+        BTKey *key = [BTKey keyWithPublicKey:pubKey];
+        NSData *sig = sigs.lastObject;
+        if (sig.length > 0) {
+            NSData *hash = [self.tx hashForSignature:self.index connectedScript:scriptPubKey.program
+                                         sigHashType:[sig UInt8AtOffset:sig.length - 1]];
+            if ([key verify:hash signature:sig]) {
+                [result addObject:pubKey];
+                [sigs removeLastObject];
             }
         }
-
-
-        NSData *scriptPubKeyBytes = p2shStack.lastObject;
-        [p2shStack removeLastObject];
-        BTScript *scriptPubKeyP2SH = [[BTScript alloc] initWithProgram:scriptPubKeyBytes];
-
-        [self executeScript:scriptPubKeyP2SH withStack:p2shStack];
-        return [self getMultiSigPubKeysFrom:p2shStack script:scriptPubKeyP2SH];
+        if ([sigs count] > [pubKeys count]) {
+            break;
+        }
     }
 
-    return nil;
+    return result;
 }
 
 - (BOOL)executeScript:(BTScript *)script withStack:(NSMutableArray *)stack; {
@@ -1232,68 +1278,6 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         }
     }
     return YES;
-}
-
-- (NSArray *)getMultiSigPubKeysFrom:(NSMutableArray *)stack script:(BTScript *)script; {
-    if ([stack count] < 2) {
-        DDLogWarn(@"[Script Error] Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < 2");
-        return nil;
-    }
-    if (![self checkCastToInt:stack.lastObject])
-        return nil;
-    int pubKeyCount = ((BTScriptChunk *)script.chunks[script.chunks.count - 2]).opCode - 80;
-    int sigCount = ((BTScriptChunk *)script.chunks[0]).opCode - 80;
-    if (pubKeyCount < 0 || pubKeyCount > 20) {
-        DDLogWarn(@"[Script Error] OP_CHECKMULTISIG(VERIFY) with pubkey count out of range");
-        return nil;
-    }
-    if ([stack count] < pubKeyCount + 1) {
-        DDLogWarn(@"[Script Error] Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < num_of_pubkeys + 2");
-        return nil;
-    }
-
-    NSMutableArray *pubKeys = [NSMutableArray new];
-    for (NSUInteger i = 0; i < pubKeyCount; i++) {
-        BTScriptChunk *chunk = script.chunks[i + 1];
-        [pubKeys addObject:chunk.data];
-    }
-
-    if (sigCount < 0 || sigCount > pubKeyCount) {
-        DDLogWarn(@"[Script Error] OP_CHECKMULTISIG(VERIFY) with sig count out of range");
-        return nil;
-    }
-    if ([stack count] < sigCount + 1) {
-        DDLogWarn(@"[Script Error] Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < num_of_pubkeys + num_of_signatures + 3");
-        return nil;
-    }
-
-    NSMutableArray *sigs = [NSMutableArray new];
-    for (int i = 0; i < sigCount; i++) {
-        NSData *sig = stack.lastObject;
-        [stack removeLastObject];
-        [sigs addObject:sig];
-    }
-
-    NSMutableArray *result = [NSMutableArray new];
-    while ([sigs count] > 0) {
-        NSData *pubKey = pubKeys.firstObject;
-        [pubKeys removeObjectAtIndex:0];
-
-        BTKey *key = [BTKey keyWithPublicKey:pubKey];
-        NSData *sig = sigs.firstObject;
-        if (sig.length > 0) {
-            NSData *hash = [self.tx hashForSignature:self.index connectedScript:script.program
-                                         sigHashType:[sig UInt8AtOffset:sig.length - 1]];
-            if ([key verify:hash signature:sig]) {
-                [result addObject:pubKey];
-                [sigs removeObjectAtIndex:0];
-            }
-        }
-        if ([sigs count] > [pubKeys count]) {
-            break;
-        }
-    }
-    return result;
 }
 
 + (NSData *)removeAllInstancesOf:(NSData *)inputScript and:(NSData *)chunkToRemove; {

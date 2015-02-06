@@ -165,6 +165,7 @@ static BTAddressProvider *provider;
         if ([rs next]) {
             hasPasswordSeed = [rs intForColumn:@"cnt"] > 0;
         }
+        [rs close];
     }];
 
     return hasPasswordSeed;

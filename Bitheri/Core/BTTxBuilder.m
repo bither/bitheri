@@ -493,7 +493,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
                     return nil;
                 }
             }
-            [tx addOutputScript:addresses[i] amount:amount];
+            [tx addOutputAddress:addresses[i] amount:amount];
         }
     }
     for (BTOut *outItem in outs) {

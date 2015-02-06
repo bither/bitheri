@@ -645,7 +645,7 @@ sequence:(uint32_t)sequence
         BTIn *in = self.ins[i];
         in.inSignature = signatures[i];
     }
-    if (![self isSigned])
+    if (![self verifySignatures])
         return NO;
 
     _txHash = self.data.SHA256_2;

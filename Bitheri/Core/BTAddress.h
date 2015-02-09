@@ -75,8 +75,7 @@
 
 - (BOOL)initTxs:(NSArray *)txs;
 - (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
-
-//- (BOOL)initTxs:(NSArray *)txs;
+- (NSArray *)sortTxs:(NSArray *)txs;
 
 //- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses;
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error;

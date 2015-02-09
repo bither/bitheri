@@ -185,6 +185,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return YES;
 }
 
+- (NSArray *)sortTxs:(NSArray *)txs;{
+    NSMutableArray *result = [NSMutableArray arrayWithArray:txs];
+    [result sortUsingComparator:txComparator];
+    return result;
+}
+
 - (void)setBlockHeight:(uint)height forTxHashes:(NSArray *)txHashes {
     NSMutableArray *needUpdateTxHash = [NSMutableArray new];
     for (NSData *hash in txHashes) {

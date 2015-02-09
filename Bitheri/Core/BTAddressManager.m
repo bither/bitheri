@@ -434,8 +434,12 @@
     for(int i=addresses.count-1;i>=0;i--){
         BTAddress *address=[addresses objectAtIndex:i];
         if (address.hasPrivKey) {
-            [[BTAddressManager instance].privKeyAddresses insertObject:address atIndex:0];
-            [[BTAddressManager instance].addressesSet addObject:address.address];
+            if(address.isTrashed){
+                [[BTAddressManager instance].trashAddresses insertObject:address atIndex:0];
+            }else {
+                [[BTAddressManager instance].privKeyAddresses insertObject:address atIndex:0];
+                [[BTAddressManager instance].addressesSet addObject:address.address];
+            }
         } else {
             [[BTAddressManager instance].watchOnlyAddresses insertObject:address atIndex:0];
             [[BTAddressManager instance].addressesSet addObject:address.address];

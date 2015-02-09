@@ -95,6 +95,7 @@ static NSData* EMPTYBYTES;
     if(self){
         self.pubs = pubs;
         self.keychain = keychain;
+        self.isSyncComplete = isSyncCompleted;
     }
     return self;
 }

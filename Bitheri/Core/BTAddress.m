@@ -42,8 +42,8 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     for (BTIn *in in tx2.ins) {
         [inputHashSet2 addObject:in.prevTxHash];
     }
-    if ([inputHashSet1 containsObject:[obj2 txHash]]) return NSOrderedDescending;
-    if ([inputHashSet2 containsObject:[obj1 txHash]]) return NSOrderedAscending;
+    if ([inputHashSet1 containsObject:[obj2 txHash]]) return NSOrderedAscending;
+    if ([inputHashSet2 containsObject:[obj1 txHash]]) return NSOrderedDescending;
     if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
     if ([obj1 txTime] < [obj2 txTime]) return NSOrderedDescending;
     return NSOrderedSame;

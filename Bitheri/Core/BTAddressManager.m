@@ -433,7 +433,7 @@
     BOOL result=[[BTAddressProvider instance] addAddresses:addresses andPasswordSeed:passwordSeed];
     for(int i=addresses.count-1;i>=0;i--){
         BTAddress *address=[addresses objectAtIndex:i];
-        if (address.hasPrivKey) {
+        if (address.hasPrivKey&&!address.isTrashed) {
             [[BTAddressManager instance].privKeyAddresses insertObject:address atIndex:0];
             [[BTAddressManager instance].addressesSet addObject:address.address];
         } else {

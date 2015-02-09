@@ -72,12 +72,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self;
 }
 
-- (instancetype)initWithAddress:(NSString *)address pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey  isXRandom:(BOOL) isXRandom {
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey  isXRandom:(BOOL) isXRandom {
 
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = hasPrivKey;
-    _encryptPrivKeyForCreate = nil;
+    _encryptPrivKeyForCreate = encryptPrivKey;
     _address = address;
     _pubKey = pubKey;
     _isFromXRandom=isXRandom;

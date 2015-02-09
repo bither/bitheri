@@ -427,6 +427,9 @@
     [addresses addObjectsFromArray:[BTAddressManager getPrivKeyAddressFromFile]];
     [addresses addObjectsFromArray:[BTAddressManager getTrashAddressFromFile]];
     [addresses addObjectsFromArray:[BTAddressManager getWatchOnlyAddressFromFile]];
+    for (BTAddress * address in addresses){
+        [address setIsSyncComplete:NO];
+    }
     return [[BTAddressProvider instance] addAddresses:addresses andPasswordSeed:passwordSeed];
 }
 
@@ -448,7 +451,10 @@
                 isFromXRandom = [BTUtils compareString:XRANDOM_FLAG compare:array[3]];
 
             }
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
+            NSString * addressStr=[str substringToIndex:(NSUInteger) (length - 4)];
+            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], addressStr];
+            NSString * encryptString=[BTUtils readFile:privateKeyFullFileName];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             [privKeyAddresses addObject:btAddress];
@@ -482,7 +488,7 @@
                 isFromXrandm= [BTUtils compareString:XRANDOM_FLAG compare:array[3]];
 
             }
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:NO isXRandom:isFromXrandm];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] encryptPrivKey:nil pubKey:[array[0] hexToData] hasPrivKey:NO isXRandom:isFromXrandm];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             [watchOnlyAddresses addObject:btAddress];
@@ -517,7 +523,10 @@
 
             }
 
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
+            NSString * addressStr=[str substringToIndex:(NSUInteger) (length - 4)];
+            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], addressStr];
+            NSString * encryptString=[BTUtils readFile:privateKeyFullFileName];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             btAddress.isTrashed = YES;

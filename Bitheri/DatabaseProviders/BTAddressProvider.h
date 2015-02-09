@@ -52,7 +52,7 @@
 - (BOOL)completeHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
 - (void)setHDMPubsRemoteWithHDSeedId:(int)hdSeedId andIndex:(int) index andPubKeyRemote:(NSData *) pubKeyRemote;
 - (int)uncompletedHDMAddressCount:(int)hdSeedId;
-- (void)syncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(int)hdSeedIndex;
+- (void)updateSyncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(uint)hdSeedIndex syncComplete:(BOOL)syncComplete;
 
 #pragma mark - normal
 - (NSArray *)getAddresses;

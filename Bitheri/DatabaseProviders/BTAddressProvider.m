@@ -499,10 +499,10 @@ static BTAddressProvider *provider;
     return cnt;
 }
 
-- (void)syncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(int)hdSeedIndex;{
+- (void)updateSyncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(uint)hdSeedIndex syncComplete:(BOOL)syncComplete{
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"update hdm_addresses set is_synced=1 where hd_seed_id=? and hd_seed_index=?";
-        [db executeUpdate:sql, @(hdSeedId), @(hdSeedIndex)];
+        NSString *sql = @"update hdm_addresses set is_synced=? where hd_seed_id=? and hd_seed_index=?";
+        [db executeUpdate:sql, (syncComplete ? @1 : @0), @(hdSeedId), @(hdSeedIndex)];
     }];
 }
 

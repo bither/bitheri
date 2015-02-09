@@ -18,6 +18,7 @@
 #import "BTHDMAddress.h"
 #import "BTHDMKeychain.h"
 #import "BTScriptBuilder.h"
+#import "BTAddressProvider.h"
 
 @implementation BTHDMPubs
 static NSData* EMPTYBYTES;
@@ -182,6 +183,10 @@ static NSData* EMPTYBYTES;
 
 -(BOOL)isHDM{
     return YES;
+}
+
+- (void)updateSyncComplete;{
+    [[BTAddressProvider instance] updateSyncCompleteHDSeedId:self.keychain.hdSeedId hdSeedIndex:self.index syncComplete:self.isSyncComplete];
 }
 
 -(NSArray*)formatInScriptFromSigns1:(NSArray*)signs1 andSigns2:(NSArray*)signs2{

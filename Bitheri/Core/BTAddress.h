@@ -51,6 +51,7 @@
 @property (nonatomic, readonly) uint32_t txCount;
 @property (nonatomic, strong, readonly) BTTx *recentlyTx;
 - (void)updateCache;
+- (void)updateSyncComplete;
 
 -(NSArray *)sortTx:(NSArray *)array;
 

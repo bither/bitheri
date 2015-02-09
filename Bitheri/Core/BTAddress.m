@@ -609,6 +609,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self updateRecentlyTx];
 }
 
+- (void)updateSyncComplete;{
+    [[BTAddressProvider instance] updateSyncComplete:self];
+}
+
 - (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase;{
     BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
     return [key signMessage:message];

@@ -165,6 +165,7 @@ static BTAddressProvider *provider;
         if ([rs next]) {
             hasPasswordSeed = [rs intForColumn:@"cnt"] > 0;
         }
+        [rs close];
     }];
 
     return hasPasswordSeed;
@@ -647,7 +648,7 @@ static BTAddressProvider *provider;
     BOOL isTrashed = [rs boolForColumn:@"is_trash"];
     BOOL isSyncComplete = [rs boolForColumn:@"is_synced"];
     long long int sortTime = [rs longLongIntForColumn:@"sort_time"];
-    BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address pubKey:pubKey hasPrivKey:hasPrivKey isXRandom:isFromXRandom];
+    BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address encryptPrivKey:nil pubKey:pubKey hasPrivKey:hasPrivKey isXRandom:isFromXRandom];
     btAddress.isTrashed = isTrashed;
     btAddress.isSyncComplete = isSyncComplete;
     btAddress.sortTime = sortTime;

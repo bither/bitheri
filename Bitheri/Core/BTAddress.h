@@ -61,7 +61,7 @@
 - (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase;
 
 - (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom;
-- (instancetype)initWithAddress:(NSString *)address pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom;
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom;
 - (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey;
 
 //- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;

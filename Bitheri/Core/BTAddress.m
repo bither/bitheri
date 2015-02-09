@@ -136,7 +136,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSArray *)txs:(int) page{
-    return [[BTTxProvider instance] getTxAndDetailByAddress:self.address andPage:page];
+    return [self sortTx:[[BTTxProvider instance] getTxAndDetailByAddress:self.address andPage:page]];
 }
 
 

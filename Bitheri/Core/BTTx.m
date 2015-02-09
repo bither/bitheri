@@ -179,7 +179,7 @@ sequence:(uint32_t)sequence
             [addresses addObject:addr];
         } else {
             NSData *signature = in.inSignature;
-            if (signature != (id) [NSNull null]){
+            if (signature != nil){
                 BTScript *script = [[BTScript alloc] initWithProgram:signature];
                 if (script != nil) {
                     NSString *address = script.getFromAddress;
@@ -548,8 +548,8 @@ sequence:(uint32_t)sequence
         amount += [tx getOut:n].outValue;
     }
 
-    for (NSNumber *amt in self.outputAmounts) {
-        amount -= amt.unsignedLongLongValue;
+    for (BTOut *out in self.outs) {
+        amount -= out.outValue;
     }
 
     return amount;
@@ -707,13 +707,27 @@ sequence:(uint32_t)sequence
 }
 
 - (NSData *) hashForSignature:(NSUInteger) inputIndex connectedScript:(NSData *) connectedScript sigHashType:(uint8_t) sigHashType; {
-    NSMutableArray *inputHashes = [NSMutableArray arrayWithArray:self.inputHashes];
-    NSMutableArray *inputIndexes = [NSMutableArray arrayWithArray:self.inputIndexes];
-    NSMutableArray *inputScripts = [NSMutableArray arrayWithArray:self.inputScripts];
-    NSMutableArray *inputSignatures = [NSMutableArray arrayWithArray:self.inputSignatures];
-    NSMutableArray *inputSequences = [NSMutableArray arrayWithArray:self.inputSequences];
-    NSMutableArray *outputScripts = [NSMutableArray arrayWithArray:self.outputScripts];
-    NSMutableArray *outputAmounts = [NSMutableArray arrayWithArray:self.outputAmounts];
+    NSMutableArray *inputHashes = [NSMutableArray new];
+    NSMutableArray *inputIndexes = [NSMutableArray new];
+    NSMutableArray *inputScripts = [NSMutableArray new];
+    NSMutableArray *inputSignatures = [NSMutableArray new];
+    NSMutableArray *inputSequences = [NSMutableArray new];
+    NSMutableArray *outputScripts = [NSMutableArray new];
+    NSMutableArray *outputAmounts = [NSMutableArray new];
+
+    for (BTIn *in in self.ins) {
+        [inputHashes addObject:in.prevTxHash];
+        [inputIndexes addObject:@(in.prevOutSn)];
+        [inputScripts addObject:in.inScript ?: [NSNull null]];
+        [inputSignatures addObject:in.inSignature ?: [NSNull null]];
+        [inputSequences addObject:@(in.inSequence)];
+    }
+
+    for (BTOut *out in self.outs) {
+        [outputScripts addObject:out.outScript];
+        [outputAmounts addObject:@(out.outValue)];
+    }
+
     for (NSUInteger i = 0; i < inputHashes.count; i++){
         inputScripts[i] = [NSData data];
     }
@@ -723,7 +737,7 @@ sequence:(uint32_t)sequence
         connectedScript = [BTScript removeAllInstancesOf:connectedScript and:codeSeparator];
         inputScripts[inputIndex] = connectedScript;
     } else {
-        inputScripts[inputIndex] = self.inputScripts[inputIndex];
+        inputScripts[inputIndex] = ((BTIn *)self.ins[inputIndex]).inScript;
     }
 
 
@@ -801,12 +815,10 @@ sequence:(uint32_t)sequence
 //    if (this.getMessageSize() > Block.MAX_BLOCK_SIZE)
 //        throw new VerificationException("Transaction larger than MAX_BLOCK_SIZE");
     uint64_t valueOut = 0;
-    for (NSNumber *outAmount in self.outputAmounts) {
-        // amount < 0
-        uint64_t outAmountValue = [outAmount unsignedLongLongValue];
-        if (outAmountValue > 2100000000000000)
+    for (BTOut *out in self.outs) {
+        if (out.outValue > 2100000000000000)
             return NO;
-        valueOut += outAmountValue;
+        valueOut += out.outValue;
     }
     BOOL isCoinBase = NO;
     BTIn *firstIn = self.ins[0];
@@ -816,7 +828,7 @@ sequence:(uint32_t)sequence
     }
 
     if (isCoinBase) {
-        if ( ((NSData *)self.inputSignatures[0]).length < 2 || ((NSData *)self.inputSignatures[0]).length > 100)
+        if (firstIn.inSignature.length < 2 || firstIn.inSignature.length > 100)
             return NO;
     } else {
         for (BTIn *btIn in self.ins) {

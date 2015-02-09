@@ -139,7 +139,7 @@
     return (size_t) (10 + 149 * inCount + 34 * outCount);
 }
 
-+ (BOOL)needMinFee:(NSArray *)amounts;{
++ (BOOL)needMinFee:(BTTx *)tx;{
     // note: for now must require fee because zero fee maybe cause the tx confirmed in long time
     return YES;
 //    for (NSNumber *amount in amounts) {
@@ -243,11 +243,11 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     int lastCalculatedSize = 0;
     uint64_t valueNeeded;
     uint64_t value = 0;
-    for (NSNumber *amount in tx.outputAmounts) {
-        value += [amount unsignedLongLongValue];
+    for (BTOut *out in tx.outs) {
+        value += out.outValue;
     }
 
-    BOOL needAtLeastReferenceFee = [BTTxBuilder needMinFee:tx.outputAmounts];
+    BOOL needAtLeastReferenceFee = [BTTxBuilder needMinFee:tx];
 
     NSArray *bestCoinSelection = nil;
     BTOut *bestChangeOutput = nil;
@@ -280,7 +280,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
                 needAtLeastReferenceFee = YES;
                 continue;
             }
-            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outputAmounts.count];
+            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outs.count];
             if (total - value > CENT)
                 s += 34;
             if (![BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s) {
@@ -335,7 +335,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
             }
         }
 
-        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outputAmounts.count];
+        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outs.count];
         if (size / 1000 > lastCalculatedSize / 1000 && feeBase > 0) {
             lastCalculatedSize = size;
             // We need more fees anyway, just try again with the same additional value
@@ -454,10 +454,10 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
     NSMutableArray *unspendOuts = [NSMutableArray arrayWithArray:[BTTxBuilder getUnspendOutsFromTxs:unspendTxs]];
 
     uint64_t value = 0;
-    for (NSNumber *amount in tx.outputAmounts) {
-        value += [amount unsignedLongLongValue];
+    for (BTOut *out in tx.outs) {
+        value += out.outValue;
     }
-    BOOL needMinFee = [BTTxBuilder needMinFee:tx.outputAmounts];
+    BOOL needMinFee = [BTTxBuilder needMinFee:tx];
 
     if (value != [BTTxBuilder getAmount:unspendOuts] || value != [BTTxBuilder getAmount:outs]) {
         return nil;
@@ -468,33 +468,33 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
         fees = feeBase;
     } else {
         // no fee logic
-        size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outputAmounts.count];
+        size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outs.count];
         if (! [BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s){
             fees = feeBase;
         }
     }
 
-    size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outputAmounts.count];
+    size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outs.count];
     if (size > 1000) {
         fees = (size / 1000 + 1) * feeBase;
     }
 
     // note : like bitcoinj, empty wallet will not check min output
     if (fees > 0) {
-        NSArray *amounts = tx.outputAmounts;
-        NSArray *addresses = tx.outputAddresses;
-        tx = [BTTx new];
-        for (NSUInteger i = 0; i < amounts.count; i++) {
-            uint64_t amount = [amounts[i] unsignedLongLongValue];
-            if (i == amounts.count - 1) {
+        BTTx *newTx = [BTTx new];
+        for (NSUInteger i = 0; i < tx.outs.count; i++) {
+            BTOut *out = tx.outs[i];
+            uint64_t amount = out.outValue;
+            if (i == tx.outs.count - 1) {
                 if (amount > fees) {
                     amount -= fees;
                 } else {
                     return nil;
                 }
             }
-            [tx addOutputAddress:addresses[i] amount:amount];
+            [newTx addOutputAddress:out.outAddress amount:out.outValue];
         }
+        tx = newTx;
     }
     for (BTOut *outItem in outs) {
         [tx addInputHash:outItem.txHash index:outItem.outSn script:scriptPubKey];

@@ -38,6 +38,7 @@
 
 #import "BTBloomFilter.h"
 #import "BTTx.h"
+#import "BTOut.h"
 
 #define BLOOM_MAX_HASH_FUNCS 50
 
@@ -173,18 +174,16 @@ flags:(uint8_t)flags
 - (void)updateWithTransaction:(BTTx *)tx
 {
     NSMutableData *d = [NSMutableData data];
-    int n = 0;
 
-    for (NSData *script in tx.outputScripts) {
+    for (BTOut *out in tx.outs) {
+        NSData *script = out.outScript;
         for (NSData *elem in [script scriptDataElements]) {
             if (! [self containsData:elem]) continue;
             [d setData:tx.txHash];
-            [d appendUInt32:n];
+            [d appendUInt32:out.outSn];
             [self insertData:d]; // update bloom filter with matched txout
             break;
         }
-
-        n++;
     }
 }
 

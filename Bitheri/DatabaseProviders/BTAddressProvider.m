@@ -18,6 +18,7 @@
 #import "BTAddressProvider.h"
 #import "BTDatabaseManager.h"
 #import "BTEncryptData.h"
+#import "BTQRCodeUtil.h"
 
 static BTAddressProvider *provider;
 
@@ -180,8 +181,9 @@ static BTAddressProvider *provider;
     [rs close];
     BOOL result = YES;
     if (!isExist) {
+        NSString * passwordSeedStr=[BTQRCodeUtil replaceNewQRCode:[passwordSeed  toPasswordSeedString]];
         sql = @"insert into password_seed(password_seed) values(?)";
-        result = [db executeUpdate:sql, [passwordSeed toPasswordSeedString]];
+        result = [db executeUpdate:sql,passwordSeedStr];
     }
     return result;
 }

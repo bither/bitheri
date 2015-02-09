@@ -1599,6 +1599,7 @@
     txItem.txHash = [[array[0] hexToData] reverse];
     txItem.blockNo = [array[1] unsignedIntValue];
     txItem.ins = [NSMutableArray new];
+    txItem.txTime = 0;
     for (NSArray *sub in array[2]) {
         BTIn *inItem = [BTIn new];
         inItem.txHash = txItem.txHash;

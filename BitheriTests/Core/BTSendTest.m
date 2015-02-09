@@ -78,9 +78,9 @@
     ]];
     [provider add:txItem2];
 
-    tx = [address txForAmounts:@[@(1000000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"] andError:&error];
+    tx = [address txForAmounts:@[@(990000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"] andError:&error];
     XCTAssertEqual(1, [self getInIndexes:tx].count);
-    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:@[@(1000000)]]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:@[@(990000)]]);
     XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
     XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
@@ -93,7 +93,7 @@
 
     tx = [address txForAmounts:@[@(1000000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"] andError:&error];
     XCTAssertEqual(1, [self getInIndexes:tx].count);
-    NSArray *array = @[[NSNumber numberWithUnsignedLongLong:1000000], [NSNumber numberWithUnsignedLongLong:4000000]];
+    NSArray *array = @[[NSNumber numberWithUnsignedLongLong:1000000], [NSNumber numberWithUnsignedLongLong:3990000]];
     XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000006" hexToData] reverse]]]);
     XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
@@ -241,7 +241,7 @@
 }
 
 - (BOOL)isArrayEqual:(NSArray *)array1 and:(NSArray *)array2;{
-    if ([array1 count] != [array1 count]) return NO;
+    if ([array1 count] != [array2 count]) return NO;
     for (NSUInteger i = 0; i < [array1 count]; i++) {
         if (![array1[i] isEqual:array2[i]])
             return NO;

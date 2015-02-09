@@ -111,7 +111,7 @@
 
         BOOL result = YES;
         for (NSUInteger i = 0; i < tx.ins.count; i++) {
-            BTScript *scriptSig = [[BTScript alloc] initWithProgram:((BTIn *)tx.ins[i]).inScript];
+            BTScript *scriptSig = [[BTScript alloc] initWithProgram:((BTIn *)tx.ins[i]).inSignature];
             BTScript *scriptPubKey = scriptPubKeys[((BTIn *)tx.ins[i]).prevTxHash];
             scriptSig.tx = tx;
             scriptPubKey.tx = tx;

@@ -50,7 +50,7 @@
     [filter insertData:[@"b9300670b4c5366e95b2699e8b18bc75e5f729c5" hexToData]];
    
     DDLogInfo(@"str %s",[[NSString hexWithData:filter.data] UTF8String]);
-    XCTAssertTrue([@"03614e9b050000000000000001" isEqualToString:[NSString hexWithData:filter.data]]," bloomFilter");
+    XCTAssertTrue([@"03614E9B050000000000000001" isEqualToString:[NSString hexWithData:filter.data]]," bloomFilter");
     
     
     filter=[[BTBloomFilter alloc] initWithFalsePositiveRate:0.01 forElementCount:3 tweak:2147483649 flags:BLOOM_UPDATE_P2PUBKEY_ONLY];
@@ -60,7 +60,7 @@
     [filter insertData:[@"b9300670b4c5366e95b2699e8b18bc75e5f729c5" hexToData]];
 
     DDLogInfo(@"str %s",[[NSString hexWithData:filter.data] UTF8String]);
-    XCTAssertTrue([@"03ce4299050000000100008002" isEqualToString:[NSString hexWithData:filter.data]]," bloomFilter");
+    XCTAssertTrue([@"03CE4299050000000100008002" isEqualToString:[NSString hexWithData:filter.data]]," bloomFilter");
   //  XCTAssertTrue(1==1, [NSString hexWithData:filter.data]);
     //XCTFail(@"No implementation for \"%s\"", __PRETTY_FUNCTION__);
 }

@@ -110,8 +110,8 @@
         BOOL enforceP2SH = [sub[2] boolValue];
 
         BOOL result = YES;
-        for (NSUInteger i = 0; i < tx.inputIndexes.count; i++) {
-            BTScript *scriptSig = [[BTScript alloc] initWithProgram:tx.inputSignatures[i]];
+        for (NSUInteger i = 0; i < tx.ins.count; i++) {
+            BTScript *scriptSig = [[BTScript alloc] initWithProgram:((BTIn *)tx.ins[i]).inScript];
             BTScript *scriptPubKey = scriptPubKeys[((BTIn *)tx.ins[i]).prevTxHash];
             scriptSig.tx = tx;
             scriptPubKey.tx = tx;
@@ -152,8 +152,8 @@
             BOOL enforceP2SH = [sub[2] boolValue];
 
             BOOL result = YES;
-            for (NSUInteger i = 0; i < tx.inputIndexes.count; i++) {
-                BTScript *scriptSig = [[BTScript alloc] initWithProgram:tx.inputSignatures[i]];
+            for (NSUInteger i = 0; i < tx.ins.count; i++) {
+                BTScript *scriptSig = [[BTScript alloc] initWithProgram:((BTIn *)tx.ins[i]).inSignature];
                 BTScript *scriptPubKey = scriptPubKeys[((BTIn *)tx.ins[i]).prevTxHash];//scriptPubKeys[@""];
                 scriptSig.tx = tx;
                 scriptSig.index = i;

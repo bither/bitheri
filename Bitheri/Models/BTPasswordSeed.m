@@ -36,7 +36,7 @@
     if (!(self = [super init])) return nil;
 
     self.address = address;
-    self.keyStr = encryptStr;
+    self.keyStr = [BTQRCodeUtil replaceNewQRCode:encryptStr];
 
     return self;
 }
@@ -52,8 +52,7 @@
             _address = [addressString hexToBase58check];
         }
 
-        _keyStr = [message substringFromIndex:addressString.length + 1];
-
+        _keyStr = [BTQRCodeUtil replaceNewQRCode:[message substringFromIndex:addressString.length + 1]] ;
     }
     return self;
 }

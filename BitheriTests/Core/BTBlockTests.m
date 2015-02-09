@@ -56,7 +56,7 @@
     BTBlock * block=[[BTBlock alloc] initWithVersion:2 prevBlock:prevBlock merkleRoot:merkle timestamp:1400928750 target:409544770 nonce:4079278699 height:302400];
     NSString * str=[NSString hexWithData:block.blockHash.reverse];
     DDLogInfo(@"block %s",[str UTF8String]);
-    XCTAssertTrue([str isEqualToString:@"0000000000000000472132c4daaf358acaf461ff1c3e96577a74e5ebf91bb170"], @"hash is error");
+    XCTAssertTrue([str isEqualToString:@"0000000000000000472132C4DAAF358ACAF461FF1C3E96577A74E5EBF91BB170"], @"hash is error");
     /**
      @"00000000000000000ead30f2a70f979a6b07f841ca05302497a92b3c9a9488a3:{\"nonce\": 3837102513, \"prev_block\": \"00000000000000000401800189014bad6a3ca1af029e19b362d6ef3c5425a8dc\", \"ver\": 2, \"block_no\": 304416, \"mrkl_root\": \"4785b428de83e1462c5e57556a44849344a1341f70220f1720b51d483d748701\", \"time\": 1402004993, \"bits\": 408782234}"
      **/
@@ -69,7 +69,7 @@
     
     str=[NSString hexWithData:block.blockHash.reverse];
     DDLogInfo(@"block %s",[str UTF8String]);
-    XCTAssertTrue([str isEqualToString:@"00000000000000000ead30f2a70f979a6b07f841ca05302497a92b3c9a9488a3"], @"hash is error");
+    XCTAssertTrue([str isEqualToString:@"00000000000000000EAD30F2A70F979A6B07F841CA05302497A92B3C9A9488A3"], @"hash is error");
     
     
     //insert  block

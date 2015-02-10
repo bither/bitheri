@@ -235,7 +235,7 @@ sequence:(uint32_t)sequence
     
     if (! [self isSigned]) return NO;
     
-    _txHash = self.data.SHA256_2;
+    _txHash = [self toData].SHA256_2;
     // update in & out 's tx hash
     for (BTIn *in in self.ins) {
         in.txHash = _txHash;
@@ -248,8 +248,7 @@ sequence:(uint32_t)sequence
 }
 
 // checks if all signatures exist, but does not verify them
-- (BOOL)isSigned
-{
+- (BOOL)isSigned {
     if (self.ins.count > 0) {
         for (BTIn *in in self.ins) {
             if (in.inSignature == nil) {
@@ -259,8 +258,6 @@ sequence:(uint32_t)sequence
         return YES;
     }
     return NO;
-//    return (self.signatures.count > 0 && self.signatures.count == self.ins.count &&
-//            ! [self.signatures containsObject:[NSNull null]]);
 }
 
 - (BOOL)verifySignatures;{
@@ -390,13 +387,11 @@ sequence:(uint32_t)sequence
     return d;
 }
 
-- (NSData *)toData
-{
+- (NSData *)toData {
     return [self toDataWithSubscriptIndex:NSNotFound];
 }
 
-- (size_t)size
-{
+- (size_t)size {
 //    //TODO: not all keys come from this wallet (private keys can be swept), might cause a lower than standard tx fee
 //    size_t sigSize = 149; // electrum seeds generate uncompressed keys, bip32 uses compressed
 ////    size_t sigSize = 181;
@@ -578,7 +573,7 @@ sequence:(uint32_t)sequence
     if (![self verifySignatures])
         return NO;
 
-    _txHash = self.data.SHA256_2;
+    _txHash = [self toData].SHA256_2;
     // update in & out 's tx hash
     for (BTIn *in in self.ins) {
         in.txHash = _txHash;

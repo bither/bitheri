@@ -47,13 +47,15 @@
 @property (nonatomic, strong) NSMutableArray *ins;
 @property (nonatomic, strong) NSMutableArray *outs;
 
-//@property (nonatomic, readonly) NSArray *inputAddresses;
 - (NSArray *)getInAddresses;
 
-@property (nonatomic, readonly) size_t size;
+
 @property (nonatomic, readonly) uint64_t standardFee;
-@property (nonatomic, readonly) BOOL isSigned; // checks if all signatures exist, but does not verify them
-@property (nonatomic, readonly, getter = toData) NSData *data;
+
+- (NSData *)toData;
+
+- (size_t)size;
+- (BOOL)isSigned;
 
 
 @property (nonatomic, readonly) uint confirmationCnt;

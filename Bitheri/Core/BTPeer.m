@@ -976,7 +976,7 @@ services:(uint64_t)services
                 transaction = [self.delegate peer:self requestedTransaction:hash];
 
                 if (transaction) {
-                    [self sendMessage:transaction.data type:MSG_TX];
+                    [self sendMessage:[transaction toData] type:MSG_TX];
                     break;
                 }
 

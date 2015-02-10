@@ -24,6 +24,7 @@
 #import "BTKey.h"
 
 #define UINT24_MAX 8388607
+#define SIG_SIZE 75
 
 static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
@@ -182,6 +183,27 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             ([program UInt8AtOffset:0] & 0xff) == OP_HASH160 &&
             ([program UInt8AtOffset:1] & 0xff) == 0x14 &&
             ([program UInt8AtOffset:22] & 0xff) == OP_EQUAL;
+}
+
+- (BOOL)isSentToOldMultiSig; {
+    if (self.chunks.count < 4) return NO;
+    BTScriptChunk *chunk = self.chunks[self.chunks.count - 1];
+    // Must end in OP_CHECKMULTISIG[VERIFY].
+    if (![chunk isOpCode]) return NO;
+    if (!(chunk.opCode == OP_CHECKMULTISIG || chunk.opCode == OP_CHECKMULTISIGVERIFY)) return NO;
+
+    // Second to last chunk must be an OP_N opcode and there should be that many data chunks (keys).
+    BTScriptChunk *m = self.chunks[self.chunks.count - 2];
+    if (![m isOpCode]) return NO;
+    long long numKeys = [BTScript decodeFromOpN:(uint8_t) m.opCode];
+    if (numKeys < 1 || self.chunks.count != 3 + numKeys) return NO;
+    for (int i = 1; i < self.chunks.count - 2; i++) {
+        if ([((BTScriptChunk *)self.chunks[i]) isOpCode]) return NO;
+    }
+    // First chunk must be an OP_N opcode too.
+    if ([BTScript decodeFromOpN:(uint8_t) ((BTScriptChunk *) self.chunks[0]).opCode] < 1) return NO;
+
+    return YES;
 }
 
 - (BOOL)isPayFromMultiSig; {
@@ -440,6 +462,24 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     }
 
     return result;
+}
+
+- (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript; {
+    if ([self isPayToScriptHash]) {
+        BTScriptChunk *chunk = redeemScript.chunks[0];
+        int n = (int) [BTScript decodeFromOpN:(uint8_t) chunk.opCode];
+        return n * SIG_SIZE + redeemScript.program.length;
+    } else if ([self isSentToOldMultiSig]) {
+        BTScriptChunk *chunk = self.chunks[0];
+        int n = (int) [BTScript decodeFromOpN:(uint8_t) chunk.opCode];
+        return n * SIG_SIZE + 1;
+    } else if ([self isSentToRawPubKey]) {
+        return SIG_SIZE;
+    } else if ([self isSentToAddress]) {
+        int uncompressedPubKeySize = 65;
+        return SIG_SIZE + uncompressedPubKeySize;
+    }
+    return 1000;
 }
 
 - (BOOL)executeScript:(BTScript *)script withStack:(NSMutableArray *)stack; {

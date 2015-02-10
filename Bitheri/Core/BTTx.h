@@ -115,4 +115,6 @@ sequence:(uint32_t)sequence;
 
 - (BOOL)hasDustOut;
 
+- (uint)estimateSize;
+
 @end

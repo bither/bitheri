@@ -28,6 +28,7 @@
 #import "BTIn.h"
 #import "BTOut.h"
 #import "BTTxProvider.h"
+#import "BTScriptBuilder.h"
 
 @implementation BTTx
 
@@ -473,12 +474,13 @@ sequence:(uint32_t)sequence
 
 - (size_t)size
 {
-    //TODO: not all keys come from this wallet (private keys can be swept), might cause a lower than standard tx fee
-    size_t sigSize = 149; // electrum seeds generate uncompressed keys, bip32 uses compressed
-//    size_t sigSize = 181;
-
-    return (size_t) (8 + [NSMutableData sizeOfVarInt:self.ins.count] + [NSMutableData sizeOfVarInt:self.outs.count] +
-               sigSize*self.ins.count + 34*self.outs.count);
+//    //TODO: not all keys come from this wallet (private keys can be swept), might cause a lower than standard tx fee
+//    size_t sigSize = 149; // electrum seeds generate uncompressed keys, bip32 uses compressed
+////    size_t sigSize = 181;
+//
+//    return (size_t) (8 + [NSMutableData sizeOfVarInt:self.ins.count] + [NSMutableData sizeOfVarInt:self.outs.count] +
+//               sigSize*self.ins.count + 34*self.outs.count);
+    return [self estimateSize];
 }
 
 // priority = sum(input_amount_in_satoshis*input_age_in_blocks)/size_in_bytes
@@ -871,5 +873,29 @@ sequence:(uint32_t)sequence
         }
     }
     return NO;
+}
+
+- (uint)estimateSize;{
+    uint size = 8 + [NSMutableData sizeOfVarInt:self.ins.count] + [NSMutableData sizeOfVarInt:self.outs.count];
+    for (BTIn *btIn in self.ins) {
+        if (btIn.inSignature != nil) {
+            size += 32 + 4 + [NSMutableData sizeOfVarInt:btIn.inSignature.length] + btIn.inSignature.length + 4;
+        } else if (btIn.inScript != nil) {
+            BTScript *scriptPubKey = [[BTScript alloc] initWithProgram:btIn.inScript];
+            BTScript *redeemScript = nil;
+            if ([scriptPubKey isMultiSigRedeem]) {
+                redeemScript = scriptPubKey;
+                scriptPubKey = [BTScriptBuilder createP2SHOutputScriptWithScript:redeemScript];
+            }
+            uint sigScriptSize = [scriptPubKey getSizeRequiredToSpendWithRedeemScript:redeemScript];
+            size += 32 + 4 + [NSMutableData sizeOfVarInt:sigScriptSize] + sigScriptSize + 4;
+        } else {
+            size += 32 + 4 + 1 + 108 + 4;
+        }
+    }
+    for (BTOut *out in self.outs) {
+        size += 8 + [NSMutableData sizeOfVarInt:out.outScript.length] + out.outScript.length ;
+    }
+    return size;
 }
 @end

@@ -23,6 +23,7 @@
 #import "BTSettings.h"
 #import "BTTxProvider.h"
 #import "BTOut.h"
+#import "BTScriptBuilder.h"
 
 @implementation BTTxBuilder {
     BTTxBuilderEmptyWallet *emptyWallet;
@@ -82,7 +83,7 @@
 
     BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs
                                                    andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress];
-    if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
+    if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andScriptPubKey:scriptPubKey andOuts:emptyWalletTx.outs] <= TX_MAX_SIZE) {
         return emptyWalletTx;
     } else if (emptyWalletTx != nil) {
         *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_MAX_SIZE_CODE userInfo:nil];
@@ -102,7 +103,7 @@
     for (NSObject<BTTxBuilderProtocol> *builder in txBuilders) {
         BTTx *tx = [builder buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs
                                         andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress];
-        if (tx != nil && [BTTxBuilder estimationTxSizeWithInCount:tx.ins.count andOutCount:tx.outs.count] <= TX_MAX_SIZE) {
+        if (tx != nil && [BTTxBuilder estimationTxSizeWithInCount:tx.ins.count andScriptPubKey:scriptPubKey andOuts:tx.outs] <= TX_MAX_SIZE) {
             [txs addObject:tx];
         } else if (tx != nil) {
             mayTxMaxSize = YES;
@@ -135,8 +136,26 @@
     return tx;
 }
 
-+ (size_t)estimationTxSizeWithInCount:(NSUInteger)inCount andOutCount:(NSUInteger)outCount;{
-    return (size_t) (10 + 149 * inCount + 34 * outCount);
+//+ (size_t)estimationTxSizeWithInCount:(NSUInteger)inCount andOutCount:(NSUInteger)outCount;{
+//    return (size_t) (10 + 149 * inCount + 34 * outCount);
+//}
+
++ (size_t)estimationTxSizeWithInCount:(NSUInteger)inCount andScriptPubKey:(NSData *)scriptPubKeyData andOuts:(NSArray *)outs;{
+    uint size = 8 + [NSMutableData sizeOfVarInt:inCount] + [NSMutableData sizeOfVarInt:outs.count];
+
+    BTScript *scriptPubKey = [[BTScript alloc] initWithProgram:scriptPubKeyData];
+    BTScript *redeemScript = nil;
+    if ([scriptPubKey isMultiSigRedeem]) {
+        redeemScript = scriptPubKey;
+        scriptPubKey = [BTScriptBuilder createP2SHOutputScriptWithScript:redeemScript];
+    }
+    uint sigScriptSize = [scriptPubKey getSizeRequiredToSpendWithRedeemScript:redeemScript];
+    size += inCount * (32 + 4 + [NSMutableData sizeOfVarInt:sigScriptSize] + sigScriptSize + 4);
+
+    for (BTOut *out in outs) {
+        size += 8 + [NSMutableData sizeOfVarInt:out.outScript.length] + out.outScript.length ;
+    }
+    return size;
 }
 
 + (BOOL)needMinFee:(BTTx *)tx;{
@@ -280,7 +299,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
                 needAtLeastReferenceFee = YES;
                 continue;
             }
-            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outs.count];
+            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andScriptPubKey:scriptPubKey andOuts:tx.outs];
             if (total - value > CENT)
                 s += 34;
             if (![BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s) {
@@ -335,7 +354,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
             }
         }
 
-        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outs.count];
+        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andScriptPubKey:scriptPubKey andOuts:tx.outs];
         if (size / 1000 > lastCalculatedSize / 1000 && feeBase > 0) {
             lastCalculatedSize = size;
             // We need more fees anyway, just try again with the same additional value
@@ -468,13 +487,13 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
         fees = feeBase;
     } else {
         // no fee logic
-        size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outs.count];
+        size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs];
         if (! [BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s){
             fees = feeBase;
         }
     }
 
-    size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outs.count];
+    size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs];
     if (size > 1000) {
         fees = (size / 1000 + 1) * feeBase;
     }

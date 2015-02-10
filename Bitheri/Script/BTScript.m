@@ -476,8 +476,8 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     } else if ([self isSentToRawPubKey]) {
         return SIG_SIZE;
     } else if ([self isSentToAddress]) {
-        int uncompressedPubKeySize = 65;
-        return SIG_SIZE + uncompressedPubKeySize;
+        int compressedPubKeySize = 33;
+        return SIG_SIZE + compressedPubKeySize;
     }
     return 1000;
 }

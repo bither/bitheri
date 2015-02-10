@@ -417,7 +417,7 @@
 }
 
 - (BOOL)isSendFromMe:(BTTx *) tx;{
-    NSArray *fromAddresses = [tx inputAddresses];
+    NSArray *fromAddresses = [tx getInAddresses];
     return [self.addressesSet intersectsSet:[NSSet setWithArray:fromAddresses]];
 }
 
@@ -431,8 +431,8 @@
         [address setIsSyncComplete:NO];
     }
     BOOL result=[[BTAddressProvider instance] addAddresses:addresses andPasswordSeed:passwordSeed];
-    for(int i=addresses.count-1;i>=0;i--){
-        BTAddress *address=[addresses objectAtIndex:i];
+    for (int i = addresses.count - 1; i >= 0; i--) {
+        BTAddress *address = addresses[i];
         if (address.hasPrivKey) {
             if(address.isTrashed){
                 [[BTAddressManager instance].trashAddresses insertObject:address atIndex:0];

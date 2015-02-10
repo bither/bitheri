@@ -172,8 +172,7 @@ sequence:(uint32_t)sequence
     in.inScript = d;
 }
 
-- (NSArray *)inputAddresses
-{
+- (NSArray *)getInAddresses {
     NSMutableArray *addresses = [NSMutableArray arrayWithCapacity:self.ins.count];
 
     for (NSUInteger i = 0; i < self.ins.count; i++) {
@@ -199,82 +198,6 @@ sequence:(uint32_t)sequence
     }
 
     return addresses;
-}
-
-- (NSArray *)inputHashes
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTIn *in in self.ins) {
-        [result addObject:in.prevTxHash];
-    }
-    return result;
-}
-
-- (NSArray *)inputIndexes
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTIn *in in self.ins) {
-        [result addObject:@(in.prevOutSn)];
-    }
-    return result;
-}
-
-- (NSArray *)inputScripts
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTIn *in in self.ins) {
-        [result addObject:in.inScript ?: [NSNull null]];
-    }
-    return result;
-}
-
-- (NSArray *)inputSignatures
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTIn *in in self.ins) {
-        [result addObject:in.inSignature ?: [NSNull null]];
-    }
-    return result;
-}
-
-- (NSArray *)inputSequences
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTIn *in in self.ins) {
-        [result addObject:@(in.inSequence)];
-    }
-    return result;
-}
-
-- (NSArray *)outputAmounts
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTOut *out in self.outs) {
-        [result addObject:@(out.outValue)];
-    }
-    return result;
-}
-
-- (NSArray *)outputAddresses
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTOut *out in self.outs) {
-        [result addObject:out.outAddress ?: [NSNull null]];
-    }
-    return result;
-}
-
-- (NSArray *)outputScripts
-{
-    NSMutableArray *result = [NSMutableArray new];
-    for (BTOut *out in self.outs) {
-        [result addObject:out.outScript];
-    }
-    return result;
-}
-
-- (NSArray *)inValues {
-    return [[BTTxProvider instance] txInValues:self.txHash];
 }
 
 //TODO: support signing pay2pubkey outputs (typically used for coinbase outputs)

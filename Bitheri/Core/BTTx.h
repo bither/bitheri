@@ -47,7 +47,8 @@
 @property (nonatomic, strong) NSMutableArray *ins;
 @property (nonatomic, strong) NSMutableArray *outs;
 
-@property (nonatomic, readonly) NSArray *inputAddresses;
+//@property (nonatomic, readonly) NSArray *inputAddresses;
+- (NSArray *)getInAddresses;
 
 @property (nonatomic, readonly) size_t size;
 @property (nonatomic, readonly) uint64_t standardFee;

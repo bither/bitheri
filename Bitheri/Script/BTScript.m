@@ -415,7 +415,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (NSArray *)getP2SHPubKeys;{
-    if ([self isPayFromMultiSig]) {
+    if (![self isPayFromMultiSig]) {
         return nil;
     }
     BTScript *scriptPubKey = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.lastObject).data];

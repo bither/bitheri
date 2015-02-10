@@ -53,4 +53,8 @@
     script.index = self.inSn;
     return [script getP2SHPubKeys];
 }
+
+- (BOOL)isCoinBase {
+    return [self.prevTxHash isEqualToData:[NSMutableData secureDataWithLength:32]] && (self.prevOutSn & 0xFFFFFFFFL) == 0xFFFFFFFFL;
+}
 @end

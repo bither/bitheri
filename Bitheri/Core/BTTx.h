@@ -49,19 +49,6 @@
 
 @property (nonatomic, readonly) NSArray *inputAddresses;
 
-@property (nonatomic, readonly) NSArray *inputHashes;
-@property (nonatomic, readonly) NSArray *inputIndexes;
-@property (nonatomic, readonly) NSArray *inputScripts;
-@property (nonatomic, readonly) NSArray *inputSignatures;
-@property (nonatomic, readonly) NSArray *inputSequences;
-@property (nonatomic, readonly) NSArray *outputAmounts;
-@property (nonatomic, readonly) NSArray *outputAddresses;
-@property (nonatomic, readonly) NSArray *outputScripts;
-@property (nonatomic, readonly) NSArray *inValues;
-
-
-
-
 @property (nonatomic, readonly) size_t size;
 @property (nonatomic, readonly) uint64_t standardFee;
 @property (nonatomic, readonly) BOOL isSigned; // checks if all signatures exist, but does not verify them
@@ -69,7 +56,7 @@
 
 
 @property (nonatomic, readonly) uint confirmationCnt;
-
+@property (nonatomic, readonly) BOOL isCoinBase;
 
 
 + (instancetype)transactionWithMessage:(NSData *)message;

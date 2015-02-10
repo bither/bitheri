@@ -31,6 +31,10 @@
 
 @implementation BTTx
 
+- (BOOL)isCoinBase {
+    return self.ins.count == 1 && ((BTIn *)self.ins[0]).isCoinBase;
+}
+
 + (instancetype)transactionWithMessage:(NSData *)message
 {
     return [[self alloc] initWithMessage:message];

@@ -223,13 +223,13 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (BOOL)isMultiSigRedeem; {
-    BOOL result = OP_1 < ((BTScriptChunk *)self.chunks.firstObject).opCode < OP_16;
-    for (NSUInteger i = 1; i < self.chunks.count - 1; i++) {
+    BOOL result = OP_1 <= ((BTScriptChunk *)self.chunks.firstObject).opCode <= OP_16;
+    for (NSUInteger i = 1; i < self.chunks.count - 2; i++) {
         BTScriptChunk *chunk = self.chunks[i];
         result &= (chunk.data != nil && chunk.data.length > 2);
     }
-    result &= OP_1 < ((BTScriptChunk *)self.chunks[self.chunks.count - 2]).opCode < OP_16;
-    result &= ((BTScriptChunk *)self.chunks[self.chunks.count - 2]).opCode == OP_CHECKMULTISIG;
+    result &= OP_1 <= ((BTScriptChunk *)self.chunks[self.chunks.count - 2]).opCode <= OP_16;
+    result &= ((BTScriptChunk *)self.chunks[self.chunks.count - 1]).opCode == OP_CHECKMULTISIG;
     return result;
 }
 

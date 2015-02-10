@@ -362,11 +362,11 @@
     [BTUtils compareString:self.firstAddressFromDb compare:[BTHDMKeychainRecover RecoverPlaceHolder]];
 }
 -(NSString *)getFullEncryptPrivKey {
-    return [BTEncryptData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
+    return [BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
 }
 
 -(NSString *)getFullEncryptPrivKeyWithHDMFlag {
-    return [HDM_QR_CODE_FLAG stringByAppendingString: [BTEncryptData encryptedString:self.encryptedHDSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
+    return [HDM_QR_CODE_FLAG stringByAppendingString: [BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
 
 }
 

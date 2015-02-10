@@ -511,7 +511,7 @@ NSComparator const unspentOutComparator=^NSComparisonResult(id obj1, id obj2) {
                     return nil;
                 }
             }
-            [newTx addOutputAddress:out.outAddress amount:out.outValue];
+            [newTx addOutputAddress:out.outAddress amount:amount];
         }
         tx = newTx;
     }

@@ -174,10 +174,6 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (BOOL)isSentToP2SH; {
-    return [self isPayToScriptHash];
-}
-
-- (BOOL)isPayToScriptHash; {
     NSData *program = [self program];
     return program.length == 23 &&
             ([program UInt8AtOffset:0] & 0xff) == OP_HASH160 &&
@@ -206,7 +202,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     return YES;
 }
 
-- (BOOL)isPayFromMultiSig; {
+- (BOOL)isSendFromMultiSig; {
     BOOL result = ((BTScriptChunk *)self.chunks.firstObject).opCode == OP_0;
     for (NSUInteger i = 1; i < self.chunks.count; i++) {
         BTScriptChunk *chunk = self.chunks[i];
@@ -236,7 +232,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 - (NSData *)getPubKeyHash; {
     if ([self isSentToAddress])
         return ((BTScriptChunk *) self.chunks[2]).data;
-    else if ([self isPayToScriptHash])
+    else if ([self isSentToP2SH])
         return ((BTScriptChunk *) self.chunks[1]).data;
     else
         return nil;
@@ -320,7 +316,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 - (NSString *)getToAddress; {
     if ([self isSentToAddress])
         return [self addressFromHash:[self getPubKeyHash]];
-    else if ([self isPayToScriptHash])
+    else if ([self isSentToP2SH])
         return [self p2shAddressFromHash:[self getPubKeyHash]];
     else
         return nil;
@@ -382,7 +378,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     }
     [stack removeLastObject];
 
-    if (enforceP2SH && [scriptPubKey isPayToScriptHash]) {
+    if (enforceP2SH && [scriptPubKey isSentToP2SH]) {
         for (BTScriptChunk *chunk in self.chunks) {
             if ([chunk isOpCode] && chunk.opCode > OP_16) {
                 DDLogWarn(@"[Script Error] Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
@@ -415,7 +411,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (NSArray *)getP2SHPubKeys;{
-    if (![self isPayFromMultiSig]) {
+    if (![self isSendFromMultiSig]) {
         return nil;
     }
     BTScript *scriptPubKey = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.lastObject).data];
@@ -465,7 +461,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript; {
-    if ([self isPayToScriptHash]) {
+    if ([self isSentToP2SH]) {
         BTScriptChunk *chunk = redeemScript.chunks[0];
         int n = (int) [BTScript decodeFromOpN:(uint8_t) chunk.opCode];
         return n * SIG_SIZE + redeemScript.program.length;

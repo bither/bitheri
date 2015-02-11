@@ -44,7 +44,16 @@ const static int SIG_SIZE = 75;
 - (NSArray *)getP2SHPubKeys;
 - (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript;
 
+#pragma mark - standard script
+- (BOOL)isSentToRawPubKey;
+- (BOOL)isSentToAddress;
+- (BOOL)isSentToP2SH;
+- (BOOL)isSentToOldMultiSig;
+
+- (BOOL)isSendFromMultiSig;
+
 - (BOOL)isMultiSigRedeem;
+
 
 #pragma mark - help method
 + (NSData *)removeAllInstancesOf:(NSData *) inputScript and:(NSData *) chunkToRemove;

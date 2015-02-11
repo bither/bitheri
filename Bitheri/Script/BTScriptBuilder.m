@@ -83,7 +83,7 @@
 }
 
 #pragma mark - p2sh
-+ (BTScript *)createMultisigScriptWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys;{
++ (BTScript *)createMultiSigRedeemWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys;{
     BTScriptBuilder *builder = [[[BTScriptBuilder alloc] init] smallNum:threshold];
     for (NSData *pubKey in pubKeys) {
         [builder data:pubKey];
@@ -93,7 +93,7 @@
     return [builder build];
 }
 
-+ (BTScript *)createP2SHMultisigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram;{
++ (BTScript *)createP2SHMultiSigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram;{
     BTScriptBuilder *builder = [[[BTScriptBuilder alloc] init] smallNum:0];
     for (NSData *signature in signatures) {
         [builder data:signature];
@@ -106,7 +106,7 @@
     return [[[[[[BTScriptBuilder alloc] init] op:OP_HASH160] data:hash] op:OP_EQUAL] build];
 }
 
-+ (BTScript *)createP2SHOutputScriptWithScript:(BTScript *)script;{
++ (BTScript *)createP2SHOutputScriptWithMultiSigRedeem:(BTScript *)script;{
     return [BTScriptBuilder createP2SHOutputScriptWithHash:[[script program] hash160]];
 }
 @end

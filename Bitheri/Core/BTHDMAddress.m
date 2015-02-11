@@ -62,7 +62,7 @@ static NSData* EMPTYBYTES;
     if(!self.isCompleted){
         [NSException raise:@"BTHDMPubs not completed" format:@"Can not get multisig script when pubs are not completed"];
     }
-    return [BTScriptBuilder createMultisigScriptWithThreshold:2 andPubKeys:@[self.hot, self.cold, self.remote]];
+    return [BTScriptBuilder createMultiSigRedeemWithThreshold:2 andPubKeys:@[self.hot, self.cold, self.remote]];
 }
 
 - (NSString*)address{
@@ -195,7 +195,7 @@ static NSData* EMPTYBYTES;
         NSMutableArray* signs = [NSMutableArray new];
         [signs addObject:signs1[i]];
         [signs addObject:signs2[i]];
-        BTScript *script=[BTScriptBuilder createP2SHMultisigInputScriptWithSignatures:signs andMultisigProgram:self.pubKey];
+        BTScript *script= [BTScriptBuilder createP2SHMultiSigInputScriptWithSignatures:signs andMultisigProgram:self.pubKey];
         [result addObject:[script program]];
     }
     return result;

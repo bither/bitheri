@@ -30,9 +30,9 @@
 - (BTScriptBuilder *)smallNum:(int)num;
 - (BTScript *)build;
 
-+ (BTScript *)createMultisigScriptWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys;
-+ (BTScript *)createP2SHMultisigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram;
++ (BTScript *)createMultiSigRedeemWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys;
++ (BTScript *)createP2SHMultiSigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram;
 + (BTScript *)createP2SHOutputScriptWithHash:(NSData *)hash;
-+ (BTScript *)createP2SHOutputScriptWithScript:(BTScript *)script;
++ (BTScript *)createP2SHOutputScriptWithMultiSigRedeem:(BTScript *)script;
 
 @end

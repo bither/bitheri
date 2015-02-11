@@ -147,7 +147,7 @@
     BTScript *redeemScript = nil;
     if ([scriptPubKey isMultiSigRedeem]) {
         redeemScript = scriptPubKey;
-        scriptPubKey = [BTScriptBuilder createP2SHOutputScriptWithScript:redeemScript];
+        scriptPubKey = [BTScriptBuilder createP2SHOutputScriptWithMultiSigRedeem:redeemScript];
     }
     uint sigScriptSize = [scriptPubKey getSizeRequiredToSpendWithRedeemScript:redeemScript];
     size += inCount * (32 + 4 + [NSMutableData sizeOfVarInt:sigScriptSize] + sigScriptSize + 4);

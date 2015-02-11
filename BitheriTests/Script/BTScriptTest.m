@@ -216,8 +216,8 @@
     NSData *pubKey1 = [@"020000000000000000000000000000000000000000000000000000000000000001" hexToData];
     NSData *pubKey2 = [@"020000000000000000000000000000000000000000000000000000000000000002" hexToData];
     NSData *pubKey3 = [@"020000000000000000000000000000000000000000000000000000000000000003" hexToData];
-    BTScript *multiSigRedeemScript = [BTScriptBuilder createMultisigScriptWithThreshold:2 andPubKeys:@[pubKey1, pubKey2, pubKey3]];
-    BTScript *multiSigScript = [BTScriptBuilder createP2SHOutputScriptWithScript:multiSigRedeemScript];
+    BTScript *multiSigRedeemScript = [BTScriptBuilder createMultiSigRedeemWithThreshold:2 andPubKeys:@[pubKey1, pubKey2, pubKey3]];
+    BTScript *multiSigScript = [BTScriptBuilder createP2SHOutputScriptWithMultiSigRedeem:multiSigRedeemScript];
 
     XCTAssertEqual([multiSigScript getSizeRequiredToSpendWithRedeemScript:multiSigRedeemScript], 255);
     

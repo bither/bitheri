@@ -35,4 +35,6 @@
 + (BTScript *)createP2SHOutputScriptWithHash:(NSData *)hash;
 + (BTScript *)createP2SHOutputScriptWithMultiSigRedeem:(BTScript *)script;
 
++ (BTScript *)createPubKeyHashInSignatureWithSignature:(NSData *)signature andPubKey:(NSData *)pubKey;
+
 @end

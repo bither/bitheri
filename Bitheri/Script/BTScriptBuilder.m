@@ -109,4 +109,8 @@
 + (BTScript *)createP2SHOutputScriptWithMultiSigRedeem:(BTScript *)script;{
     return [BTScriptBuilder createP2SHOutputScriptWithHash:[[script program] hash160]];
 }
+
++ (BTScript *)createPubKeyHashInSignatureWithSignature:(NSData *)signature andPubKey:(NSData *)pubKey;{
+    return [[[[[BTScriptBuilder alloc] init] data:signature] data:pubKey] build];
+}
 @end

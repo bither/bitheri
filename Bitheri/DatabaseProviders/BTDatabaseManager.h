@@ -23,23 +23,34 @@
 
 @interface BTDatabaseManager : NSObject
 
-@property (nonatomic, copy) NSString *createTableBlocksSql;
-@property (nonatomic, copy) NSString *createIndexBlocksBlockNoSql;
-@property (nonatomic, copy) NSString *createIndexBlocksBlockPrevSql;
-@property (nonatomic, copy) NSString *createTableTxsSql;
-@property (nonatomic, copy) NSString *createTableAddressesTxsSql;
-@property (nonatomic, copy) NSString *createTableInsSql;
-@property (nonatomic, copy) NSString *createTableOutsSql;
-@property (nonatomic, copy) NSString *createTablePeersSql;
+#pragma mark - tx db
+@property (nonatomic, copy, readonly) NSString *createTableBlocksSql;
+@property (nonatomic, copy, readonly) NSString *createIndexBlocksBlockNoSql;
+@property (nonatomic, copy, readonly) NSString *createIndexBlocksBlockPrevSql;
+@property (nonatomic, copy, readonly) NSString *createTableTxsSql;
+@property (nonatomic, copy, readonly) NSString *createIndexTxsBlockNoSql;
+@property (nonatomic, copy, readonly) NSString *createTableAddressesTxsSql;
+@property (nonatomic, copy, readonly) NSString *createTableInsSql;
+@property (nonatomic, copy, readonly) NSString *createIndexInsPrevTxHashSql;
+@property (nonatomic, copy, readonly) NSString *createTableOutsSql;
+@property (nonatomic, copy, readonly) NSString *createIndexOutsOutAddressSql;
+@property (nonatomic, copy, readonly) NSString *createTablePeersSql;
+
+#pragma mark - address db
+@property (nonatomic, copy, readonly) NSString *createTablePasswordSeedSql;
+@property (nonatomic, copy, readonly) NSString *createTableAddressesSql;
+@property (nonatomic, copy, readonly) NSString *createTableHDSeedsSql;
+@property (nonatomic, copy, readonly) NSString *createTableHDMAddressesSql;
+@property (nonatomic, copy, readonly) NSString *createTableHDMBidSql;
+
 + (instancetype)instance;
 
-- (void)closeDatabase;
-
-- (FMDatabaseQueue *)getDbQueue;
+- (FMDatabaseQueue *)getTxDbQueue;
+- (FMDatabaseQueue *)getAddressDbQueue;
 
 -(BOOL)initDatabase;
-
-- (BOOL)dbIsOpen;
+//- (void)closeDatabase;
+//- (BOOL)dbIsOpen;
 
 @end
 

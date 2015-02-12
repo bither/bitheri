@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 
 #define XRANDOM_FLAG @"+"
+#define HDM_QR_CODE_FLAG  @"-"
 
 typedef enum {
     NORMAL,

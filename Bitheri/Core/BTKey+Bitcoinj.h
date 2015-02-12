@@ -24,14 +24,10 @@
 + (instancetype)keyWithBitcoinj:(NSString *)key andPassphrase:(NSString *)passphrase;
 - (NSString *)bitcoinjKeyWithPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv flag:(uint8_t) flag;
 
-- (NSData *)encryptSecret:(NSData *)secret withPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv;
-- (NSData *)decryptFrom:(NSData *)encrypted andPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv;
-
-
-+(NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString * )encryptPrivKey oldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
-
-+ (NSData *)saltWithBitcoinj:(NSString *)key;
-+ (NSData *)ivWithBitcoinj:(NSString *)key;
+//+(NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString * )encryptPrivKey oldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
+//
+//+ (NSData *)saltWithBitcoinj:(NSString *)key;
+//+ (NSData *)ivWithBitcoinj:(NSString *)key;
 
 + (BOOL)isXRandom:(NSString *)encryptPrivKey;
 

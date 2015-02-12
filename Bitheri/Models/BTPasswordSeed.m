@@ -18,7 +18,10 @@
 
 #import "BTPasswordSeed.h"
 #import "BTQRCodeUtil.h"
-#import "NSString+Base58.h"
+#import "BTEncryptData.h"
+#import "BTPrivateKeyUtil.h"
+#import "BTUtils.h"
+#import "BTAddressProvider.h"
 
 @interface BTPasswordSeed ()
 
@@ -28,30 +31,39 @@
 @end
 
 @implementation BTPasswordSeed
+
+- (instancetype)initWithAddress:(NSString *)address andEncryptStr:(NSString *)encryptStr; {
+    if (!(self = [super init])) return nil;
+
+    self.address = address;
+    self.keyStr = [BTQRCodeUtil replaceNewQRCode:encryptStr];
+
+    return self;
+}
+
 - (instancetype)initWithString:(NSString *)message {
     self = [super init];
     if (self) {
         NSArray *array = [BTQRCodeUtil splitQRCode:message];
-        NSString * addressString=array[0];
+        NSString *addressString = array[0];
         if ([BTQRCodeUtil isOldQRCodeVerion:message]) {
             _address = addressString;
-        }else{
-            _address=[addressString hexToBase58check];
+        } else {
+            _address = [addressString hexToBase58check];
         }
-       
-        _keyStr = [message substringFromIndex:addressString.length + 1];
 
+        _keyStr = [BTQRCodeUtil replaceNewQRCode:[message substringFromIndex:addressString.length + 1]] ;
     }
     return self;
 }
 
 - (instancetype)initWithBTAddress:(BTAddress *)btAddress {
-    self = [super init];
-    if (self) {
-        _address = btAddress.address;
-        _keyStr = btAddress.encryptPrivKey;
+    if (!(self = [super init])) return nil;
 
-    }
+    _address = btAddress.address;
+    _keyStr = [BTEncryptData encryptedString:btAddress.encryptPrivKey
+                             addIsCompressed:btAddress.pubKey.length < 65 andIsXRandom:btAddress.isFromXRandom];
+
     return self;
 }
 
@@ -63,10 +75,25 @@
         return NO;
     }
 }
--(NSString *)toPasswrodSeedString{
-    NSArray *array=[[NSArray alloc] initWithObjects:[self.address base58checkToHex],self.keyStr, nil];
+
+- (NSString *)toPasswordSeedString {
+    NSArray *array = @[[self.address base58checkToHex], self.keyStr];
     return [[BTQRCodeUtil joinedQRCode:array] toUppercaseStringWithEn];
 }
 
+- (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;{
+    BTEncryptData *encryptedData = [[BTEncryptData alloc] initWithStr:self.keyStr];
+    self.keyStr = [[[BTEncryptData alloc] initWithData:[encryptedData decrypt:oldPassword]
+                                             andPassowrd:newPassword andIsCompressed:encryptedData.isCompressed
+                                            andIsXRandom:encryptedData.isXRandom]
+            toEncryptedStringForQRCodeWithIsCompressed:encryptedData.isCompressed andIsXRandom:encryptedData.isXRandom];
+    return ![BTUtils isEmpty:self.keyStr];
+}
++(BOOL)hasPasswordSeed {
+    return [[BTAddressProvider instance] hasPasswordSeed];
+}
++(BTPasswordSeed *)getPasswordSeed {
+    return [[BTAddressProvider instance] getPasswordSeed];
+}
 
 @end

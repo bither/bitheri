@@ -466,16 +466,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 }
 
-// unconfirmed transactions that aren't in the mempools of any of connected peers have likely dropped off the network
-- (void)removeUnrelayedTransactions {
-    for (BTAddress *addr in [[BTAddressManager instance] allAddresses]) {
-        for (BTTx *tx in addr.txs) {
-            if (tx.blockNo != TX_UNCONFIRMED) break;
-            if ([self.txRelays[tx.txHash] count] == 0 && tx.source == 0) [addr removeTx:tx.txHash];
-        }
-    }
-}
-
 #pragma mark - BTPeerDelegate
 
 - (void)peerConnected:(BTPeer *)peer {

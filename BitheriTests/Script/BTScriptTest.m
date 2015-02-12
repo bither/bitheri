@@ -22,6 +22,8 @@
 #import "BTTestHelper.h"
 #import "BTScriptOpCodes.h"
 #import "BTKey.h"
+#import "BTIn.h"
+#import "BTScriptBuilder.h"
 
 @interface BTScriptTest : XCTestCase
 
@@ -109,9 +111,9 @@
         BOOL enforceP2SH = [sub[2] boolValue];
 
         BOOL result = YES;
-        for (NSUInteger i = 0; i < tx.inputIndexes.count; i++) {
-            BTScript *scriptSig = [[BTScript alloc] initWithProgram:tx.inputSignatures[i]];
-            BTScript *scriptPubKey = scriptPubKeys[tx.inputHashes[i]];
+        for (NSUInteger i = 0; i < tx.ins.count; i++) {
+            BTScript *scriptSig = [[BTScript alloc] initWithProgram:((BTIn *)tx.ins[i]).inSignature];
+            BTScript *scriptPubKey = scriptPubKeys[((BTIn *)tx.ins[i]).prevTxHash];
             scriptSig.tx = tx;
             scriptPubKey.tx = tx;
             scriptSig.index = i;
@@ -151,9 +153,9 @@
             BOOL enforceP2SH = [sub[2] boolValue];
 
             BOOL result = YES;
-            for (NSUInteger i = 0; i < tx.inputIndexes.count; i++) {
-                BTScript *scriptSig = [[BTScript alloc] initWithProgram:tx.inputSignatures[i]];
-                BTScript *scriptPubKey = scriptPubKeys[tx.inputHashes[i]];//scriptPubKeys[@""];
+            for (NSUInteger i = 0; i < tx.ins.count; i++) {
+                BTScript *scriptSig = [[BTScript alloc] initWithProgram:((BTIn *)tx.ins[i]).inSignature];
+                BTScript *scriptPubKey = scriptPubKeys[((BTIn *)tx.ins[i]).prevTxHash];//scriptPubKeys[@""];
                 scriptSig.tx = tx;
                 scriptSig.index = i;
 
@@ -208,6 +210,21 @@
         }
     }
     return [[BTScript alloc] initWithProgram:out];
+}
+
+- (void)testGetSizeRequiredToSpend; {
+    NSData *pubKey1 = [@"020000000000000000000000000000000000000000000000000000000000000001" hexToData];
+    NSData *pubKey2 = [@"020000000000000000000000000000000000000000000000000000000000000002" hexToData];
+    NSData *pubKey3 = [@"020000000000000000000000000000000000000000000000000000000000000003" hexToData];
+    BTScript *multiSigRedeemScript = [BTScriptBuilder createMultiSigRedeemWithThreshold:2 andPubKeys:@[pubKey1, pubKey2, pubKey3]];
+    BTScript *multiSigScript = [BTScriptBuilder createP2SHOutputScriptWithMultiSigRedeem:multiSigRedeemScript];
+
+    XCTAssertEqual([multiSigScript getSizeRequiredToSpendWithRedeemScript:multiSigRedeemScript], 255);
+    
+    NSMutableData *scriptData = [NSMutableData new];
+    [scriptData appendScriptPubKeyForHash:[pubKey1 hash160]];
+    BTScript *pubKeyScript = [[BTScript alloc] initWithProgram:scriptData];
+    XCTAssertEqual([pubKeyScript getSizeRequiredToSpendWithRedeemScript:nil], 108);
 }
 
 @end

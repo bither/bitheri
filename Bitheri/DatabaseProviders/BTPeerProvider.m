@@ -36,7 +36,7 @@ static BTPeerProvider *provider;
 
 - (NSMutableArray *)getAllPeers;{
     __block NSMutableArray *peers = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from peers";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]){
@@ -48,7 +48,7 @@ static BTPeerProvider *provider;
 }
 
 - (void)deletePeersNotInAddresses:(NSSet *) peerAddresses;{
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select peer_address from peers";
         FMResultSet *rs = [db executeQuery:sql];
         NSMutableArray *needDeletePeer = [NSMutableArray new];
@@ -70,7 +70,7 @@ static BTPeerProvider *provider;
 
 - (NSArray *)exists:(NSSet *) peerAddresses;{
     __block NSMutableArray *exists = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(0) cnt from peers where peer_address=?";
         for (NSNumber *peerAddress in peerAddresses){
             FMResultSet *rs = [db executeQuery:sql, peerAddress];
@@ -86,7 +86,7 @@ static BTPeerProvider *provider;
 }
 
 - (void)addPeers:(NSArray *) peers;{
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *existSql = @"select count(0) cnt from peers where peer_address=?";
         NSString *sql = @"insert into peers(peer_address,peer_port,peer_services,peer_timestamp,peer_connected_cnt)"
                 " values(?,?,?,?,?)";
@@ -107,7 +107,7 @@ static BTPeerProvider *provider;
 }
 
 - (void)updatePeersTimestamp:(NSArray *)peerAddresses;{
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update peers set peer_timestamp=? where peer_address=?";
         [db beginTransaction];
         int timestamp = (int) [[NSDate new] timeIntervalSinceReferenceDate];
@@ -119,14 +119,14 @@ static BTPeerProvider *provider;
 }
 
 - (void)removePeer:(uint)address;{
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"delete from peers where peer_address=?";
         [db executeUpdate:sql, @(address)];
     }];
 }
 
 - (void)connectFail:(uint)address;{
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(0) cnt from peers where peer_address=? and peer_connected_cnt=?";
         FMResultSet *rs = [db executeQuery:sql, @(address), @0];
         int cnt = 0;
@@ -146,7 +146,7 @@ static BTPeerProvider *provider;
 }
 
 - (void)connectSucceed:(uint)address;{
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update peers set peer_connected_cnt=?,peer_timestamp=?  where peer_address=?";
         [db executeUpdate:sql, @1, @([NSDate new].timeIntervalSinceReferenceDate), @(address)];
     }];
@@ -154,7 +154,7 @@ static BTPeerProvider *provider;
 
 - (NSArray *)getPeersWithLimit:(int)limit;{
     __block NSMutableArray *result = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from peers limit %d";
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, limit]];
         while ([rs next]){
@@ -167,7 +167,7 @@ static BTPeerProvider *provider;
 
 - (void)cleanPeers;{
     int maxPeerSaveCnt = 12;
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *disconnectingPeerCntSql = @"select count(0) cnt from peers where peer_connected_cnt<>1";
         int disconnectingPeerCnt = 0;
         FMResultSet *rs = [db executeQuery:disconnectingPeerCntSql];
@@ -205,7 +205,7 @@ static BTPeerProvider *provider;
 }
 
 - (void)recreate;{
-    [[[BTDatabaseManager instance] getDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         [db beginTransaction];
         [db executeUpdate:@"drop table peers;"];
         [db executeUpdate:[BTDatabaseManager instance].createTablePeersSql];

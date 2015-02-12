@@ -29,7 +29,7 @@ const static int SIG_SIZE = 75;
 @property NSUInteger index;
 @property (nonatomic, copy) NSData *program;
 - (instancetype)initWithProgram:(NSData *)program;
-
+- (instancetype)initWithChunks:(NSArray *)chunks;
 
 - (NSData *)getPubKey;
 - (NSData *)getPubKeyHash;
@@ -37,9 +37,22 @@ const static int SIG_SIZE = 75;
 - (NSString *)getFromAddress;
 - (NSString *)getToAddress;
 - (NSData *)getSig;
+- (NSArray *)getSigs;
 
 
 - (BOOL)correctlySpends:(BTScript *)scriptPubKey and:(BOOL) enforceP2SH;
+- (NSArray *)getP2SHPubKeys;
+- (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript;
+
+#pragma mark - standard script
+- (BOOL)isSentToRawPubKey;
+- (BOOL)isSentToAddress;
+- (BOOL)isSentToP2SH;
+- (BOOL)isSentToOldMultiSig;
+
+- (BOOL)isSendFromMultiSig;
+
+- (BOOL)isMultiSigRedeem;
 
 
 #pragma mark - help method

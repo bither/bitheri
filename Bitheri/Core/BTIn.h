@@ -43,4 +43,8 @@ static NSData *getOutPoint(NSData *txHash, uint32_t n) {
 @property (nonatomic, weak) BTTx *tx;
 @property (nonatomic, copy) NSData *inScript;
 
+@property (nonatomic, readonly) BOOL isCoinBase;
+
+- (NSArray *)getP2SHPubKeys;
+
 @end

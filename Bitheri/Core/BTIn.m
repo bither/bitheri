@@ -19,6 +19,7 @@
 
 #import "BTTx.h"
 #import "BTIn.h"
+#import "BTScript.h"
 
 @implementation BTIn {
 
@@ -44,5 +45,16 @@
     return (self.inSn == item.inSn) && [self.prevTxHash isEqualToData:item.prevTxHash]
             && (self.prevOutSn == item.prevOutSn) && [self.txHash isEqualToData:item.txHash]
             && (self.inSequence == item.inSequence);
+}
+
+- (NSArray *)getP2SHPubKeys;{
+    BTScript *script = [[BTScript alloc] initWithProgram:self.inSignature];
+    script.tx = self.tx;
+    script.index = self.inSn;
+    return [script getP2SHPubKeys];
+}
+
+- (BOOL)isCoinBase {
+    return [self.prevTxHash isEqualToData:[NSMutableData secureDataWithLength:32]] && (self.prevOutSn & 0xFFFFFFFFL) == 0xFFFFFFFFL;
 }
 @end

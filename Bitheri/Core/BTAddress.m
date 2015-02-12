@@ -18,21 +18,27 @@
 
 #import "BTAddress.h"
 #import "BTTxProvider.h"
-//#import "BTOutItem.h"
-#import "BTUtils.h"
 #import "BTBlockChain.h"
 #import "BTTxBuilder.h"
 #import "BTIn.h"
-#import "BTOut.h"
-#import "BTSettings.h"
-#import "BTQRCodeUtil.h"
 #import "BTScript.h"
+#import "BTAddressProvider.h"
 
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
+    BTTx *tx1 = (BTTx *)obj1;
+    BTTx *tx2 = (BTTx *)obj2;
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
     if ([obj1 blockNo] < [obj2 blockNo]) return NSOrderedDescending;
-    if ([[obj1 inputHashes] containsObject:[obj2 txHash]]) return NSOrderedDescending;
-    if ([[obj2 inputHashes] containsObject:[obj1 txHash]]) return NSOrderedAscending;
+    NSMutableSet *inputHashSet1 = [NSMutableSet new];
+    for (BTIn *in in tx1.ins) {
+        [inputHashSet1 addObject:in.prevTxHash];
+    }
+    NSMutableSet *inputHashSet2 = [NSMutableSet new];
+    for (BTIn *in in tx2.ins) {
+        [inputHashSet2 addObject:in.prevTxHash];
+    }
+    if ([inputHashSet1 containsObject:[obj2 txHash]]) return NSOrderedAscending;
+    if ([inputHashSet2 containsObject:[obj1 txHash]]) return NSOrderedDescending;
     if ([obj1 txTime] > [obj2 txTime]) return NSOrderedAscending;
     if ([obj1 txTime] < [obj2 txTime]) return NSOrderedDescending;
     return NSOrderedSame;
@@ -51,7 +57,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom {
     if (!(self = [super init])) return nil;
     _hasPrivKey = encryptPrivKey != nil;
-    _encryptPrivKey = encryptPrivKey;
+    _encryptPrivKeyForCreate = encryptPrivKey;
     _address = key.address;
     _pubKey = key.publicKey;
     _isSyncComplete = NO;
@@ -61,12 +67,11 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self;
 }
 
-- (instancetype)initWithAddress:(NSString *)address pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey  isXRandom:(BOOL) isXRandom {
-
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey  isXRandom:(BOOL) isXRandom {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = hasPrivKey;
-    _encryptPrivKey = nil;
+    _encryptPrivKeyForCreate = encryptPrivKey;
     _address = address;
     _pubKey = pubKey;
     _isFromXRandom=isXRandom;
@@ -74,14 +79,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self updateCache];
 
     return self;
-
 }
 
 - (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey; {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = encryptPrivKey != nil;
-    _encryptPrivKey = encryptPrivKey;
+    _encryptPrivKeyForCreate = encryptPrivKey;
     _pubKey = [pubKey hexToData];
     _address = [NSString addressWithPubKey:_pubKey];
     _isFromXRandom = [BTKey isXRandom:encryptPrivKey];
@@ -91,12 +95,14 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self;
 }
 
-//- (uint32_t)txCount {
-//    return [[BTTxProvider instance] txCount:self.address];
-//}
-
 - (NSString *)address {
     return _address;
+}
+
+- (NSData *)scriptPubKey {
+    NSMutableData *_scriptPubKey = [NSMutableData data];
+    [_scriptPubKey appendScriptPubKeyForAddress:_address];
+    return _scriptPubKey;
 }
 
 - (NSArray *)unspentOuts {
@@ -107,35 +113,19 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return result;
 }
 
-- (NSArray *)txs {
-    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTTxProvider instance] getTxAndDetailByAddress:self.address]];
-    [txs sortUsingComparator:txComparator];
-    return txs;
-}
-
-
-- (void)removeTx:(NSData *)txHash {
-    [[BTTxProvider instance] remove:txHash];
-}
-
-- (BOOL)containsTransaction:(BTTx *)transaction {
-    if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:self.address]) return YES;
-    return [[BTTxProvider instance] isAddress:self.address containsTx:transaction];
-}
-
-- (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
-    uint64_t oldBalance = _balance;
-    [self updateCache];
-    if (_balance != oldBalance) {
-        int deltaBalance = (int) (_balance - oldBalance);
-        DDLogWarn(@"[notification]%@ recieve tx[%@], delta balance is %d", _address, [NSString hexWithHash:tx.txHash], deltaBalance);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification
-                                                                object:@[_address, @(_balance - oldBalance), tx, @(txNotificationType)]];
-        });
+- (NSString *)encryptPrivKey {
+    if (self.hasPrivKey) {
+        return [[BTAddressProvider instance] getEncryptPrivKeyWith:[self address]];
+    } else {
+        return nil;
     }
 }
 
+-(BOOL)isHDM{
+    return NO;
+}
+
+#pragma mark - manage tx
 - (BOOL)initTxs:(NSArray *)txs {
     NSMutableArray *txItemList = [NSMutableArray new];
     for (BTTx *tx  in txs) {
@@ -153,6 +143,23 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         });
     }
     return YES;
+}
+
+- (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
+    uint64_t oldBalance = _balance;
+    [self updateCache];
+    if (_balance != oldBalance) {
+        int deltaBalance = (int) (_balance - oldBalance);
+        DDLogWarn(@"[notification]%@ recieve tx[%@], delta balance is %d", _address, [NSString hexWithHash:tx.txHash], deltaBalance);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification
+                                                                object:@[_address, @(_balance - oldBalance), tx, @(txNotificationType)]];
+        });
+    }
+}
+
+- (void)removeTx:(NSData *)txHash {
+    [[BTTxProvider instance] remove:txHash];
 }
 
 - (void)setBlockHeight:(uint)height forTxHashes:(NSArray *)txHashes {
@@ -178,36 +185,51 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 }
 
+
+#pragma mark - update status
+- (void)updateCache;{
+    [self updateBalance];
+    _txCount = [[BTTxProvider instance] txCount:_address];
+    [self updateRecentlyTx];
+}
+
 - (void)updateBalance {
+    _balance = [[BTTxProvider instance] getConfirmedBalanceWithAddress:self.address] + [self calculateUnconfirmedBalance];
+}
+
+- (uint64_t)calculateUnconfirmedBalance {
     uint64_t balance = 0;
     NSMutableOrderedSet *utxos = [NSMutableOrderedSet orderedSet];
     NSMutableSet *spentOutputs = [NSMutableSet set], *invalidTx = [NSMutableSet set];
 
-    for (BTTx *tx in [self.txs reverseObjectEnumerator]) {
-        NSMutableSet *spent = [NSMutableSet set];
-        uint32_t i = 0, n = 0;
+    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTTxProvider instance] getUnconfirmedTxWithAddress:self.address]];
+    [txs sortUsingComparator:txComparator];
 
-        for (NSData *hash in tx.inputHashes) {
-            n = [tx.inputIndexes[i++] unsignedIntValue];
-            [spent addObject:getOutPoint(hash, n)];
+    for (BTTx *tx in [txs reverseObjectEnumerator]) {
+        NSMutableSet *spent = [NSMutableSet set];
+
+        for (BTIn *btIn in tx.ins) {
+            [spent addObject:getOutPoint(btIn.prevTxHash, btIn.prevOutSn)];
         }
 
         // check if any inputs are invalid or already spent
+        NSMutableSet *inputHashSet = [NSMutableSet new];
+        for (BTIn *in in tx.ins) {
+            [inputHashSet addObject:in.prevTxHash];
+        }
         if (tx.blockNo == TX_UNCONFIRMED &&
-                ([spent intersectsSet:spentOutputs] || [[NSSet setWithArray:tx.inputHashes] intersectsSet:invalidTx])) {
+                ([spent intersectsSet:spentOutputs] || [inputHashSet intersectsSet:invalidTx])) {
             [invalidTx addObject:tx.txHash];
             continue;
         }
 
         [spentOutputs unionSet:spent]; // add inputs to spent output set
-        n = 0;
 
-        for (NSString *address in tx.outputAddresses) { // add outputs to UTXO set
-            if ([self containsAddress:address]) {
-                [utxos addObject:getOutPoint(tx.txHash, n)];
-                balance += [tx.outputAmounts[n] unsignedLongLongValue];
+        for (BTOut *out in tx.outs) { // add outputs to UTXO set
+            if ([self.address isEqualToString:out.outAddress]) {
+                [utxos addObject:getOutPoint(tx.txHash, out.outSn)];
+                balance += out.outValue;
             }
-            n++;
         }
 
         // transaction ordering is not guaranteed, so check the entire UTXO set against the entire spent output set
@@ -216,281 +238,48 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
         for (NSData *o in spent) { // remove any spent outputs from UTXO set
             BTTx *transaction = [[BTTxProvider instance] getTxDetailByTxHash:[o hashAtOffset:0]];
-            n = [o UInt32AtOffset:CC_SHA256_DIGEST_LENGTH];
+            uint n = [o UInt32AtOffset:CC_SHA256_DIGEST_LENGTH];
 
             [utxos removeObject:o];
-            balance -= [transaction.outputAmounts[n] unsignedLongLongValue];
+            balance -= [transaction getOut:n].outValue;
         }
     }
-
-    if (balance != _balance) {
-        _balance = balance;
-
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification object:nil];
-//        });
-    }
+    return balance;
 }
 
-- (BOOL)containsAddress:(NSString *)address {
-    return [self.address isEqualToString:address];
-}
-
-
-#pragma mark - transactions
-
-// sign any inputs in the given transaction that can be signed using private keys from the wallet
-- (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase; {
-    [transaction signWithPrivateKeys:@[[BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase].privateKey]];
-    return [transaction isSigned];
-}
-
-// true if the given transaction has been added to the wallet
-- (BOOL)transactionIsRegistered:(NSData *)txHash {
-    return [[BTTxProvider instance] isExist:txHash];
-}
-
-// returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)
-- (uint64_t)amountReceivedFromTransaction:(BTTx *)transaction {
-    uint64_t amount = 0;
-    NSUInteger n = 0;
-
-    for (NSString *address in transaction.outputAddresses) {
-        if ([self containsAddress:address]) amount += [transaction.outputAmounts[n] unsignedLongLongValue];
-        n++;
-    }
-
-    return amount;
-}
-
-// returns the amount sent from the wallet by the transaction (total wallet outputs consumed, change and fee included)
-- (uint64_t)amountSentByTransaction:(BTTx *)transaction {
-    uint64_t amount = 0;
-    NSUInteger i = 0;
-
-    for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
-
-        if (n < tx.outputAddresses.count && [self containsAddress:tx.outputAddresses[n]]) {
-            amount += [tx.outputAmounts[n] unsignedLongLongValue];
-        }
-    }
-
-    return amount;
-}
-
-// returns the fee for the given transaction if all its inputs are from wallet transactions, UINT64_MAX otherwise
-- (uint64_t)feeForTransaction:(BTTx *)transaction {
-    uint64_t amount = 0;
-    NSUInteger i = 0;
-
-    for (NSData *hash in transaction.inputHashes) {
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
-
-        if (n >= tx.outputAmounts.count) return UINT64_MAX;
-        amount += [tx.outputAmounts[n] unsignedLongLongValue];
-    }
-
-    for (NSNumber *amt in transaction.outputAmounts) {
-        amount -= amt.unsignedLongLongValue;
-    }
-
-    return amount;
-}
-
-// returns the first non-change transaction output address, or nil if there aren't any
-- (NSString *)addressForTransaction:(BTTx *)transaction {
-    uint64_t sent = [self amountSentByTransaction:transaction];
-
-    for (NSString *address in transaction.outputAddresses) {
-        // first non-wallet address if it's a send transaction, first wallet address if it's a receive transaction
-        if ((sent > 0) != [self containsAddress:address]) return address;
-    }
-
-    return nil;
-}
-
-// Returns the block height after which the transaction is likely to be processed without including a fee. This is based
-// on the default satoshi client settings, but on the real network it's way off. In testing, a 0.01btc transaction that
-// was expected to take an additional 90 days worth of blocks to confirm was confirmed in under an hour by Eligius pool.
-- (uint32_t)blockHeightUntilFree:(BTTx *)transaction {
-    // TODO: calculate estimated time based on the median priority of free transactions in last 144 blocks (24hrs)
-    NSMutableArray *amounts = [NSMutableArray array], *heights = [NSMutableArray array];
-    NSUInteger i = 0;
-
-    for (NSData *hash in transaction.inputHashes) { // get the amounts and block heights of all the transaction inputs
-        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:hash];
-        uint32_t n = [transaction.inputIndexes[i++] unsignedIntValue];
-
-        if (n >= tx.outputAmounts.count) break;
-        [amounts addObject:tx.outputAmounts[n]];
-        [heights addObject:@(tx.blockNo)];
-    };
-
-    return [transaction blockHeightUntilFreeForAmounts:amounts withBlockHeights:heights];
-}
-
-
-
-- (void)savePrivate {
-    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
-    [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
-}
-
-- (void)savePrivateWithPubKey{
-    NSString *watchOnlyFullFileName = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
-    NSString *watchOnlyContent = [NSString stringWithFormat:@"%@:%@:%lld%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString],self.sortTime,[self getXRandomString]];
-    [BTUtils writeFile:watchOnlyFullFileName content:watchOnlyContent];
-   
-}
-
-- (void)saveWatchOnly  {
-    NSString *content = [NSString stringWithFormat:@"%@:%@:%lld%@", [NSString hexWithData:self.pubKey], [self getSyncCompleteString],self.sortTime,[self getXRandomString]];
-    NSString *dir = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
-    [BTUtils writeFile:dir content:content];
-
-}
-
-
-- (void)updateAddressWithPub{
-    if ([self hasPrivKey]) {
-        [self savePrivateWithPubKey];
+- (void)updateRecentlyTx;{
+    NSArray *txs = [self getRecentlyTxsWithConfirmationCntLessThan:6 andLimit:1];
+    if (txs != nil && [txs count] > 0) {
+        _recentlyTx = txs[0];
     } else {
-        [self saveWatchOnly];
+        _recentlyTx = nil;
     }
 }
-
--(void)saveNewAddress:(long long)sortTime{
-    self.sortTime=sortTime;
-    if ([self hasPrivKey]) {
-        [self savePrivate];
-        [self savePrivateWithPubKey];
-    }else{
-        [self saveWatchOnly];
-    }
-}
-
-- (void)removeWatchOnly{
-    NSString *file = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getWatchOnlyDir], self.address];
-    [BTUtils removeFile:file];
-}
-
-- (void)trashPrivKey; {
-    NSString *oldPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
-    NSString *newPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], self.address];
-
-    NSString *oldWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
-    NSString *newWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getTrashDir], self.address];
-
-    self.isTrashed = YES;
-    [BTUtils moveFile:oldPrivKeyFile to:newPrivKeyFile];
-    [BTUtils moveFile:oldWatchOnlyFile to:newWatchOnlyFile];
-}
-
-- (void)restorePrivKey; {
-    NSString *oldPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], self.address];
-    NSString *newPrivKeyFile = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], self.address];
-
-    NSString *oldWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getTrashDir], self.address];
-    NSString *newWatchOnlyFile = [NSString stringWithFormat:WATCH_ONLY_FILE_NAME, [BTUtils getPrivDir], self.address];
-
-    [BTUtils moveFile:oldPrivKeyFile to:newPrivKeyFile];
-    [BTUtils moveFile:oldWatchOnlyFile to:newWatchOnlyFile];
-
-    self.isTrashed = NO;
-    _isSyncComplete = NO;
-    [self updateAddressWithPub];
-
-    [self updateCache];
-}
-
-- (void)saveTrash; {
-    NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], self.address];
-    [BTUtils writeFile:privateKeyFullFileName content:self.encryptPrivKey];
-}
-
-- (NSString *)getSyncCompleteString {
-    return _isSyncComplete ? @"1" : @"0";
-}
--(NSString * )getXRandomString{
-    if (self.isFromXRandom) {
-        return [NSString stringWithFormat:@":%@",XRANDOM_FLAG];
-    }else{
-        return @"";
-    }
-}
-- (NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
-    return [BTKey reEncryptPrivKeyWithOldPassphrase:self.encryptPrivKey oldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-}
-
-#pragma mark - calculate fee and out
-
-- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error {
-    return [self txForAmounts:amounts andAddress:addresses andChangeAddress:self.address andError:error];
-}
-
-- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error{
-    return [[BTTxBuilder instance] buildTxForAddress:self.address andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
-}
-
-//- (NSArray *)selectOuts:(uint64_t)amount andOuts:(NSArray *)outs; {
-//    NSMutableArray *result = [NSMutableArray new];
-//    uint64_t sum = 0;
-//    for (BTOutItem *outItem in outs) {
-//        sum += outItem.outValue;
-//        [result addObject:outItem];
-//        if (sum >= amount) break;
-//    }
-//    return result;
-//}
 
 - (NSArray *)getRecentlyTxsWithConfirmationCntLessThan:(int)confirmationCnt andLimit:(int)limit; {
     int blockNo = [BTBlockChain instance].lastBlock.blockNo - confirmationCnt + 1;
     return [[BTTxProvider instance] getRecentlyTxsByAddress:self.address andGreaterThanBlockNo:blockNo andLimit:limit];
 }
 
-- (void)updateRecentlyTx;{
-    NSArray *txs = [self getRecentlyTxsWithConfirmationCntLessThan:6 andLimit:1];
-    if (txs != nil && [txs count] > 0) {
-        _recentlyTx = [txs objectAtIndex:0];
-    } else {
-        _recentlyTx = nil;
-    }
+- (void)updateSyncComplete;{
+    [[BTAddressProvider instance] updateSyncComplete:self];
 }
 
-//- (uint64_t)getAmount:(NSArray *)outs; {
-//    uint64_t amount = 0;
-//    for (BTOutItem *outItem in outs) {
-//        amount += outItem.outValue;
-//    }
-//    return amount;
-//}
 
-//- (uint64_t)getCoinDepth:(NSArray *)outs; {
-//    uint64_t coinDepth = 0;
-//    for (BTOutItem *outItem in outs) {
-//        coinDepth += outItem.coinDepth;
-//    }
-//    return coinDepth;
-//}
+#pragma mark - send tx
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error {
+    return [self txForAmounts:amounts andAddress:addresses andChangeAddress:self.address andError:error];
+}
 
-- (NSString *)encryptPrivKey {
-    if (self.hasPrivKey) {
-        if (_encryptPrivKey) {
-            return _encryptPrivKey;
-        } else {
-            NSString *dirStr = [BTUtils getPrivDir];
-            if(self.isTrashed){
-                dirStr = [BTUtils getTrashDir];
-            }
-            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, dirStr, self.address];
-            _encryptPrivKey = [BTUtils readFile:privateKeyFullFileName];
-            return _encryptPrivKey;
-        }
-    }
-    return nil;
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error{
+    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self.address andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
+    return tx;
+}
+
+// sign any inputs in the given transaction that can be signed using private keys from the wallet
+- (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase; {
+    [transaction signWithPrivateKeys:@[[BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase].privateKey]];
+    return [transaction isSigned];
 }
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase; {
@@ -508,15 +297,103 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return result;
 }
 
-- (BOOL)isEqual:(id)object {
-    if ([object isMemberOfClass:[BTAddress class]]) {
-        BTAddress *other = object;
-        return [self.address isEqualToString:other.address];
-    } else {
-        return NO;
-    }
+- (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase;{
+    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
+    return [key signMessage:message];
 }
 
+
+#pragma mark - query tx
+- (NSArray *)txs:(int) page{
+    return [self sortTxs:[[BTTxProvider instance] getTxAndDetailByAddress:self.address andPage:page]];
+}
+
+- (NSArray *)sortTxs:(NSArray *)txs;{
+    NSMutableArray *result = [NSMutableArray arrayWithArray:txs];
+    [result sortUsingComparator:txComparator];
+    return result;
+}
+
+// returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)
+- (uint64_t)amountReceivedFromTransaction:(BTTx *)transaction {
+    uint64_t amount = 0;
+
+    for (BTOut *out in transaction.outs) {
+        if ([self.address isEqualToString:out.outAddress])
+            amount += out.outValue;
+    }
+
+    return amount;
+}
+
+// returns the amount sent from the wallet by the transaction (total wallet outputs consumed, change and fee included)
+- (uint64_t)amountSentByTransaction:(BTTx *)transaction {
+    uint64_t amount = 0;
+
+    for (BTIn *btIn in transaction.ins) {
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
+
+        BTOut *out = [tx getOut:n];
+        if ([self.address isEqualToString:out.outAddress]) {
+            amount += out.outValue;
+        }
+    }
+
+    return amount;
+}
+
+// returns the fee for the given transaction if all its inputs are from wallet transactions, UINT64_MAX otherwise
+- (uint64_t)feeForTransaction:(BTTx *)transaction {
+    uint64_t amount = 0;
+
+    for (BTIn *btIn in transaction.ins) {
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
+
+        amount += [tx getOut:n].outValue;
+    }
+
+    for (BTOut *out in transaction.outs) {
+        amount -= out.outValue;
+    }
+
+    return amount;
+}
+
+// returns the first non-change transaction output address, or nil if there aren't any
+- (NSString *)addressForTransaction:(BTTx *)transaction {
+    uint64_t sent = [self amountSentByTransaction:transaction];
+
+    for (BTOut *out in transaction.outs) {
+        // first non-wallet address if it's a send transaction, first wallet address if it's a receive transaction
+        if ((sent > 0) != [self.address isEqualToString:out.outAddress]) return out.outAddress;
+    }
+
+    return nil;
+}
+
+// Returns the block height after which the transaction is likely to be processed without including a fee. This is based
+// on the default satoshi client settings, but on the real network it's way off. In testing, a 0.01btc transaction that
+// was expected to take an additional 90 days worth of blocks to confirm was confirmed in under an hour by Eligius pool.
+- (uint32_t)blockHeightUntilFree:(BTTx *)transaction {
+    // TODO: calculate estimated time based on the median priority of free transactions in last 144 blocks (24hrs)
+    NSMutableArray *amounts = [NSMutableArray array], *heights = [NSMutableArray array];
+
+
+    for (BTIn *btIn in transaction.ins) { // get the amounts and block heights of all the transaction inputs
+        BTTx *tx = [[BTTxProvider instance] getTxDetailByTxHash:btIn.prevTxHash];
+        uint32_t n = btIn.prevOutSn;
+
+        [amounts addObject:@([tx getOut:n].outValue)];
+        [heights addObject:@(tx.blockNo)];
+    };
+
+    return [transaction blockHeightUntilFreeForAmounts:amounts withBlockHeights:heights];
+}
+
+
+#pragma mark - r check
 - (void)completeInSignature:(NSArray *)ins; {
     [[BTTxProvider instance] completeInSignatureWithIns:ins];
 }
@@ -531,8 +408,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (in.inSignature != nil) {
             BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
             if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
-                NSData *sig = [script getSig];
-                if (sig != nil) {
+                for (NSData *sig in [script getSigs]) {
                     NSData *r = [BTKey getRFromSignature:sig];
                     if ([rs containsObject:r]) {
                         return NO;
@@ -551,8 +427,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (in.inSignature != nil) {
             BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
             if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
-                NSData *sig = [script getSig];
-                if (sig != nil) {
+                for (NSData *sig in [script getSigs]) {
                     NSData *r = [BTKey getRFromSignature:sig];
                     [rs addObject:r];
                 }
@@ -561,24 +436,22 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     for (BTIn *in in tx.ins) {
         BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
-        NSData *sig = [script getSig];
-        NSData *r = [BTKey getRFromSignature:sig];
-        if ([rs containsObject:r])
-            return NO;
-        [rs addObject:r];
+        for (NSData *sig in [script getSigs]) {
+            NSData *r = [BTKey getRFromSignature:sig];
+            if ([rs containsObject:r])
+                return NO;
+            [rs addObject:r];
+        }
     }
     return YES;
 }
 
-- (void)updateCache;{
-    [self updateBalance];
-    _txCount = [[BTTxProvider instance] txCount:_address];
-    [self updateRecentlyTx];
+- (BOOL)isEqual:(id)object {
+    if ([object isMemberOfClass:[BTAddress class]]) {
+        BTAddress *other = object;
+        return [self.address isEqualToString:other.address];
+    } else {
+        return NO;
+    }
 }
-
-- (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase;{
-    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
-    return [key signMessage:message];
-}
-
 @end

@@ -34,6 +34,9 @@
 - (BTTx *)getTxDetailByTxHash:(NSData *) txHash;
 
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address;
+- (NSArray *)getTxAndDetailByAddress:(NSString *)address andPage:(int)page;
+
+-(uint64_t)sentFromAddress:(NSData * )txHash address:( NSString *) address;
 
 - (bool)isAddress:(NSString *) address containsTx:(BTTx *) txItem;
 - (bool)isTxDoubleSpendWithConfirmedTx:(BTTx *)tx;
@@ -73,4 +76,7 @@
 - (void)completeInSignatureWithIns:(NSArray *) ins;
 - (uint32_t)needCompleteInSignature:(NSString *)address;
 
+- (uint64_t)getConfirmedBalanceWithAddress:(NSString *)address;
+- (NSArray *)getUnconfirmedTxWithAddress:(NSString *)address;
+- (uint64_t)getTotalReceiveWithAddress:(NSString *)address;
 @end

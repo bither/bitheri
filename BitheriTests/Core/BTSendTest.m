@@ -17,10 +17,7 @@
 //  limitations under the License.
 
 #import <XCTest/XCTest.h>
-//#import "BTDatabaseManager.h"
 #import "BTTxProvider.h"
-//#import "BTInItem.h"
-//#import "BTOutItem.h"
 #import "NSString+Base58.h"
 #import "NSData+Hash.h"
 #import "BTAddress.h"
@@ -57,7 +54,7 @@
 }
 
 - (void)testSendWithoutFee;{
-    BTAddress *address = [[BTAddress alloc] initWithAddress:@"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3" pubKey:[NSData new] hasPrivKey:YES isXRandom:NO];
+    BTAddress *address = [[BTAddress alloc] initWithAddress:@"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3" encryptPrivKey:nil pubKey:[NSData new] hasPrivKey:YES isXRandom:NO];
 
     [[BTBlockChain instance] addSPVBlock:[BTBlockTestData getMainBlock:100]];
 
@@ -69,10 +66,10 @@
 
     NSError *error;
     BTTx *tx = [address txForAmounts:@[@(1000000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:@[@(1000000)]]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:@[@(1000000)]]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     // second tx 's coin depth is small than first tx, so use first tx
     BTTx *txItem2 = [self formatTx:@[@"00000000000000000000000000000004", @302402, @[@[@0, @"00000000000000000000000000000003", @0]], @[
@@ -81,11 +78,11 @@
     ]];
     [provider add:txItem2];
 
-    tx = [address txForAmounts:@[@(1000000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:@[@(1000000)]]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    tx = [address txForAmounts:@[@(990000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"] andError:&error];
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:@[@(990000)]]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     // third tx 's coin depth is more than first tx, so use third tx
     BTTx *txItem3 = [self formatTx:@[@"00000000000000000000000000000006", @302404, @[@[@0, @"00000000000000000000000000000005", @0]], @[
@@ -95,26 +92,26 @@
     [provider add:txItem3];
 
     tx = [address txForAmounts:@[@(1000000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
-    NSArray *array = @[[NSNumber numberWithUnsignedLongLong:1000000], [NSNumber numberWithUnsignedLongLong:4000000]];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000006" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
+    NSArray *array = @[[NSNumber numberWithUnsignedLongLong:1000000], [NSNumber numberWithUnsignedLongLong:3990000]];
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000006" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     // todo: not imp, I think should like this
 //    tx = [address calculateTxWithAmounts:@[@(4950000)] andAddress:@[@"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"]];
-//    XCTAssertEqual(2, tx.inputIndexes.count);
+//    XCTAssertEqual(2, [self getInIndexes:tx].count);
 //    array = @[[NSNumber numberWithUnsignedLongLong:4950000], [NSNumber numberWithUnsignedLongLong:150000]];
-//    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+//    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
 //    array = @[[[@"00000000000000000000000000000006" hexToData] reverse], [[@"00000000000000000000000000000002" hexToData] reverse]];
-//    XCTAssert([self isArrayEqual:tx.inputHashes and:array]);
+//    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:array]);
 //    array = @[@(0), @(0)];
-//    XCTAssert([self isArrayEqual:tx.inputIndexes and:array]);
+//    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:array]);
 }
 
 - (void)testSendWithFee;{
 //    [BTSettings instance].feeBase = 100000;
-    BTAddress *address = [[BTAddress alloc] initWithAddress:bitherAddr pubKey:[NSData new] hasPrivKey:YES isXRandom:NO];
+    BTAddress *address = [[BTAddress alloc] initWithAddress:bitherAddr encryptPrivKey:nil pubKey:[NSData new] hasPrivKey:YES isXRandom:NO];
 
     [[BTBlockChain instance] addSPVBlock:[BTBlockTestData getMainBlock:100]];
 
@@ -126,30 +123,30 @@
 
     NSError *error;
     BTTx *tx = [address txForAmounts:@[@(90000)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     NSArray *array = @[@(90000)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:@[satoshiAddr]]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:@[satoshiAddr]]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     tx = [address txForAmounts:@[@(80000)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     array = @[@(80000), @(10000)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     array = @[satoshiAddr, bitherAddr];
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:array]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     tx = [address txForAmounts:@[@(89999)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     array = @[@(89999), @(1)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     array = @[satoshiAddr, bitherAddr];
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:array]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     // when change < fee per kb, and add change will cause increase fee. so ignore change is a good option.
     NSMutableArray *amounts1 = [NSMutableArray new];
@@ -159,8 +156,8 @@
         [addresses1 addObject:satoshiAddr];
     }
 //    tx = [address txForAmounts:amounts1 andAddress:addresses1];
-//    XCTAssertEqual(1, tx.inputIndexes.count);
-//    XCTAssertEqual(24, tx.outputAddresses.count);
+//    XCTAssertEqual(1, [self getInIndexes:tx].count);
+//    XCTAssertEqual(24, [self getOutAddresses:tx].count);
 
     BTTx *txItem2 = [self formatTx:@[@"00000000000000000000000000000004", @302402, @[@[@0, @"00000000000000000000000000000003", @0]], @[
             @[@0, @"2", @100000, @"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3"]
@@ -169,36 +166,36 @@
     [provider add:txItem2];
 
     tx = [address txForAmounts:@[@(90000)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     array = @[@(90000)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:@[satoshiAddr]]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:@[satoshiAddr]]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     tx = [address txForAmounts:@[@(80000)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     array = @[@(80000), @(10000)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     array = @[satoshiAddr, bitherAddr];
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:array]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000002" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     tx = [address txForAmounts:@[@(89999)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(2, tx.inputIndexes.count);
+    XCTAssertEqual(2, [self getInIndexes:tx].count);
     array = @[@(89999), @(100001)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     array = @[satoshiAddr, bitherAddr];
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:array]);
     array = @[[[@"00000000000000000000000000000002" hexToData] reverse], [[@"00000000000000000000000000000004" hexToData] reverse]];
-    XCTAssert([self isArrayEqual:tx.inputHashes and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:array]);
     array = @[@(0), @(0)];
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:array]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:array]);
 
 //    tx = [address txForAmounts:amounts1 andAddress:addresses1];
-//    XCTAssertEqual(1, tx.inputIndexes.count);
-//    XCTAssertEqual(24, tx.outputAddresses.count);
+//    XCTAssertEqual(1, [self getInIndexes:tx].count);
+//    XCTAssertEqual(24, [self getOutAddresses:tx].count);
 
     BTTx *txItem3 = [self formatTx:@[@"00000000000000000000000000000006", @302404, @[@[@0, @"00000000000000000000000000000005", @0]], @[
             @[@0, @"3", @500000, @"1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3"]
@@ -207,44 +204,44 @@
     [provider add:txItem3];
 
     tx = [address txForAmounts:@[@(90000)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     array = @[@(90000), @(400000)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     array = @[satoshiAddr, bitherAddr];
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:array]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000006" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000006" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     tx = [address txForAmounts:@[@(80000)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     array = @[@(80000), @(410000)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     array = @[satoshiAddr, bitherAddr];
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:array]);
-    XCTAssert([self isArrayEqual:tx.inputHashes and:@[[[@"00000000000000000000000000000006" hexToData] reverse]]]);
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:@[@(0)]]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:@[[[@"00000000000000000000000000000006" hexToData] reverse]]]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:@[@(0)]]);
 
     tx = [address txForAmounts:@[@(89999)] andAddress:@[satoshiAddr] andError:&error];
-    XCTAssertEqual(1, tx.inputIndexes.count);
+    XCTAssertEqual(1, [self getInIndexes:tx].count);
     array = @[@(89999), @(400001)];
-    XCTAssert([self isArrayEqual:tx.outputAmounts and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAmounts:tx] and:array]);
     array = @[satoshiAddr, bitherAddr];
-    XCTAssert([self isArrayEqual:tx.outputAddresses and:array]);
+    XCTAssert([self isArrayEqual:[self getOutAddresses:tx] and:array]);
     array = @[[[@"00000000000000000000000000000006" hexToData] reverse]];
-    XCTAssert([self isArrayEqual:tx.inputHashes and:array]);
+    XCTAssert([self isArrayEqual:[self getInHashes:tx] and:array]);
     array = @[@(0)];
-    XCTAssert([self isArrayEqual:tx.inputIndexes and:array]);
+    XCTAssert([self isArrayEqual:[self getInIndexes:tx] and:array]);
 
     // unfortunately, it doesn't the best choice.
 //    tx = [address txForAmounts:amounts1 andAddress:addresses1];
-//    XCTAssertEqual(1, tx.inputIndexes.count);
-//    XCTAssertEqual(25, tx.outputAddresses.count);
-//    XCTAssertEqual(394560, [tx.outputAmounts[24] unsignedLongLongValue]);
+//    XCTAssertEqual(1, [self getInIndexes:tx].count);
+//    XCTAssertEqual(25, [self getOutAddresses:tx].count);
+//    XCTAssertEqual(394560, [[self getOutAmounts:tx][24] unsignedLongLongValue]);
 
 }
 
 - (BOOL)isArrayEqual:(NSArray *)array1 and:(NSArray *)array2;{
-    if ([array1 count] != [array1 count]) return NO;
+    if ([array1 count] != [array2 count]) return NO;
     for (NSUInteger i = 0; i < [array1 count]; i++) {
         if (![array1[i] isEqual:array2[i]])
             return NO;
@@ -279,6 +276,38 @@
         [txItem.outs addObject:outItem];
     }
     return txItem;
+}
+
+- (NSArray *)getInHashes:(BTTx *) tx {
+    NSMutableArray *result = [NSMutableArray new];
+    for (BTIn *in in tx.ins) {
+        [result addObject:in.prevTxHash];
+    }
+    return result;
+}
+
+- (NSArray *)getInIndexes:(BTTx *) tx {
+    NSMutableArray *result = [NSMutableArray new];
+    for (BTIn *in in tx.ins) {
+        [result addObject:@(in.prevOutSn)];
+    }
+    return result;
+}
+
+- (NSArray *)getOutAmounts:(BTTx *) tx {
+    NSMutableArray *result = [NSMutableArray new];
+    for (BTOut *out in tx.outs) {
+        [result addObject:@(out.outValue)];
+    }
+    return result;
+}
+
+- (NSArray *)getOutAddresses:(BTTx *) tx {
+    NSMutableArray *result = [NSMutableArray new];
+    for (BTOut *out in tx.outs) {
+        [result addObject:out.outAddress ?: [NSNull null]];
+    }
+    return result;
 }
 
 @end

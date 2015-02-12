@@ -19,19 +19,15 @@
 #import "BTAddressManager.h"
 #import "BTUtils.h"
 #import "BTTxProvider.h"
-//#import "BTOutItem.h"
 #import "BTIn.h"
-#import "BTOut.h"
 #import "BTQRCodeUtil.h"
-#import "asn1t.h"
+#import "BTAddressProvider.h"
 
-//static NSData *txOutput(NSData *txHash, uint32_t n) {
-//    NSMutableData *d = [NSMutableData dataWithCapacity:CC_SHA256_DIGEST_LENGTH + sizeof(uint32_t)];
-//
-//    [d appendData:txHash];
-//    [d appendUInt32:n];
-//    return d;
-//}
+@interface BTAddressManager()<BTHDMAddressChangeDelegate>{
+    BTHDMKeychain* _hdmKeychain;
+}
+
+@end
 
 @implementation BTAddressManager {
  NSCondition *tc;
@@ -64,9 +60,37 @@
         return;
     }
     [tc lock];
-    [self initPrivKeyAddressByDesc];
-    [self initWatchOnlyAddressByDesc];
-    [self initTrashAddressByDesc];
+    NSArray *allAddresses = [[BTAddressProvider instance] getAddresses];
+    for (BTAddress *address in allAddresses) {
+        if (address.hasPrivKey && !address.isTrashed) {
+            [_privKeyAddresses addObject:address];
+            [_addressesSet addObject:address.address];
+        } else if (address.hasPrivKey && address.isTrashed) {
+            [_trashAddresses addObject:address];
+        } else {
+            [_watchOnlyAddresses addObject:address];
+            [_addressesSet addObject:address.address];
+        }
+    }
+    [_privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+        if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
+    [_watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+        if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
+    [_trashAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+        if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
+    [self initHDMKeychain];
+//    [self initPrivKeyAddressByDesc];
+//    [self initWatchOnlyAddressByDesc];
+//    [self initTrashAddressByDesc];
     self.isReady=YES;
     [tc signal];
     [tc unlock];
@@ -74,12 +98,17 @@
         [[NSNotificationCenter defaultCenter] postNotificationName:BTAddressManagerIsReady
                                                             object:nil userInfo:nil];
     });
-   
-    
+}
+
+-(void)initHDMKeychain{
+    NSArray* seeds = [[BTAddressProvider instance]getHDSeedIds];
+    if(seeds.count > 0){
+        self.hdmKeychain = [[BTHDMKeychain alloc]initWithSeedId:((NSNumber*)seeds[0]).intValue];
+    }
 }
 
 - (NSInteger)addressCount {
-    return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count];
+    return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count] + (self.hasHDMKeychain ? self.hdmKeychain.addresses.count : 0);
 }
 
 -(NSMutableArray*)privKeyAddresses{
@@ -128,116 +157,17 @@
     return _addressesSet;
 }
 
-- (void)initPrivKeyAddressByDesc {
-    BOOL isSort=NO;
-    for (NSString *str in [BTUtils filesByModDate:[BTUtils getPrivDir]]) {
-        NSInteger length = str.length;
-        if ([str rangeOfString:@".pub"].length > 0) {
-            NSString *note = [BTUtils readFile:[[BTUtils getPrivDir] stringByAppendingPathComponent:str]];
-            NSArray *array = [note componentsSeparatedByString:@":"];
-            long long sortTime=0;
-            BOOL isFromXRandom =NO;
-            if (array.count>3) {
-                sortTime=[[array objectAtIndex:2] longLongValue];
-                if (sortTime>0) {
-                    isSort=YES;
-                }
-                isFromXRandom =[BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
-                
-            }
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
-            [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
-            [btAddress setSortTime:sortTime];
-            [_privKeyAddresses addObject:btAddress];
-            [_addressesSet addObject:btAddress.address];
-        }
-    }
-    if (isSort) {
-        [_privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
-            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
-            return NSOrderedSame;
-        }];
-    }
-}
-
-- (void)initWatchOnlyAddressByDesc {
-    BOOL isSort=NO;
-    for (NSString *str in [BTUtils filesByModDate:[BTUtils getWatchOnlyDir]]) {
-        NSInteger length = str.length;
-        if ([str rangeOfString:@".pub"].length > 0) {
-            NSString *note = [BTUtils readFile:[[BTUtils getWatchOnlyDir] stringByAppendingPathComponent:str]];
-            NSArray *array = [note componentsSeparatedByString:@":"];
-            long long sortTime=0;
-            BOOL isFromXrandm=NO;
-            if (array.count>3) {
-                sortTime=[[array objectAtIndex:2] longLongValue];
-                if (sortTime>0) {
-                    isSort=YES;
-                }
-                isFromXrandm=[BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
-                
-            }
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:NO isXRandom:isFromXrandm];
-            [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
-            [btAddress setSortTime:sortTime];
-            [_watchOnlyAddresses addObject:btAddress];
-            [_addressesSet addObject:btAddress.address];
-        }
-    }
-    if (isSort) {
-        [_watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
-            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
-            return NSOrderedSame;
-        }];
-    }
-}
-
-- (void)initTrashAddressByDesc {
-    BOOL isSort = NO;
-    for (NSString *str in [BTUtils filesByModDate:[BTUtils getTrashDir]]) {
-        NSInteger length = str.length;
-        if ([str rangeOfString:@".pub"].length > 0) {
-            NSString *note = [BTUtils readFile:[[BTUtils getTrashDir] stringByAppendingPathComponent:str]];
-            NSArray *array = [note componentsSeparatedByString:@":"];
-            long long sortTime = 0;
-            BOOL isFromXRandom = NO;
-            if (array.count > 3) {
-                sortTime = [[array objectAtIndex:2] longLongValue];
-                if (sortTime > 0) {
-                    isSort = YES;
-                }
-                isFromXRandom = [BTUtils compareString:XRANDOM_FLAG compare:[array objectAtIndex:3]];
-
-            }
-
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
-            [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
-            [btAddress setSortTime:sortTime];
-            btAddress.isTrashed = YES;
-
-            [_trashAddresses addObject:btAddress];
-        }
-    }
-    if (isSort) {
-        [_trashAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
-            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
-            return NSOrderedSame;
-        }];
-    }
-}
-
 - (void)addAddress:(BTAddress *)address {
     DDLogDebug(@"addAddress %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
 
     if (address.hasPrivKey) {
-        [address saveNewAddress:[self getPrivKeySortTime]];
+        address.sortTime = [self getPrivKeySortTime];
+        [[BTAddressProvider instance] addAddress:address];
         [self.privKeyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
     } else {
-        [address saveNewAddress:self.getWatchOnlySortTime];
+        address.sortTime = [self getWatchOnlySortTime];
+        [[BTAddressProvider instance] addAddress:address];
         [self.watchOnlyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
     }
@@ -246,7 +176,8 @@
 
 - (void)stopMonitor:(BTAddress *)address {
     DDLogDebug(@"stopMonitor %@ ,hasPrivKey %d", address.address, address.hasPrivKey);
-    [address removeWatchOnly];
+    [[BTAddressProvider instance] removeWatchOnlyAddress:address];
+//    [address removeWatchOnly];
     [self.watchOnlyAddresses removeObject:address];
     [self.addressesSet removeObject:address.address];
 }
@@ -254,7 +185,7 @@
 - (void)trashPrivKey:(BTAddress *)address; {
     if (address.hasPrivKey && address.balance == 0) {
         DDLogDebug(@"trash priv key %@", address.address);
-        [address trashPrivKey];
+        [[BTAddressProvider instance] trashPrivKeyAddress:address];
         [self.privKeyAddresses removeObject:address];
         [self.addressesSet removeObject:address.address];
         [self.trashAddresses addObject:address];
@@ -264,8 +195,11 @@
 - (void)restorePrivKey:(BTAddress *)address; {
     if (address.hasPrivKey) {
         DDLogDebug(@"restore priv key %@", address.address);
-        [address restorePrivKey];
-        [address saveNewAddress:[self getPrivKeySortTime]];
+        address.sortTime = [self getPrivKeySortTime];
+        address.isTrashed = NO;
+        address.isSyncComplete = NO;
+        [address updateCache];
+        [[BTAddressProvider instance] restorePrivKeyAddress:address];
         [self.privKeyAddresses insertObject:address atIndex:0];
         [self.addressesSet addObject:address.address];
         [self.trashAddresses removeObject:address];
@@ -276,6 +210,9 @@
     NSMutableArray *allAddresses = [NSMutableArray new];
     [allAddresses addObjectsFromArray:self.privKeyAddresses];
     [allAddresses addObjectsFromArray:self.watchOnlyAddresses];
+    if(self.hasHDMKeychain){
+        [allAddresses addObjectsFromArray:self.hdmKeychain.addresses];
+    }
     return allAddresses;
 }
 
@@ -314,37 +251,7 @@
 }
 
 - (BOOL)changePassphraseWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase; {
-    NSMutableArray *encryptPrivKeys = [NSMutableArray new];
-    NSMutableArray *privAddresses = [NSMutableArray new];
-    NSMutableArray *encryptTrashKeys = [NSMutableArray new];
-    NSMutableArray *trashAddresses = [NSMutableArray new];
-    for (BTAddress *address in self.privKeyAddresses) {
-        NSString *encryptPrivKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-        if (encryptPrivKey == nil) {
-            return NO;
-        }
-        [encryptPrivKeys addObject:encryptPrivKey];
-        [privAddresses addObject:address];
-    }
-    for (BTAddress *address in self.trashAddresses) {
-        NSString *encryptTrashKey = [address reEncryptPrivKeyWithOldPassphrase:oldPassphrase andNewPassphrase:newPassphrase];
-        if (encryptTrashKey == nil) {
-            return NO;
-        }
-        [encryptTrashKeys addObject:encryptTrashKey];
-        [trashAddresses addObject:address];
-    }
-    for (NSUInteger i = 0; i < privAddresses.count; i++) {
-        BTAddress *address = privAddresses[i];
-        address.encryptPrivKey = encryptPrivKeys[i];
-        [address savePrivate];
-    }
-    for (NSUInteger i = 0; i < trashAddresses.count; i++) {
-        BTAddress *address = trashAddresses[i];
-        address.encryptPrivKey = encryptTrashKeys[i];
-        [address saveTrash];
-    }
-    return YES;
+    return [[BTAddressProvider instance] changePasswordWithOldPassword:oldPassphrase andNewPassword:newPassphrase];
 }
 
 - (BOOL)isTxRelated:(BTTx *)tx;{
@@ -357,42 +264,55 @@
 }
 
 - (BOOL)isAddress:(NSString *)address containsTransaction:(BTTx *)transaction {
-    if ([[NSSet setWithArray:transaction.outputAddresses] containsObject:address]) return YES;
+    for (BTOut *out in transaction.outs) {
+        if ([out.outAddress isEqualToString:address]) {
+            return YES;
+        }
+    }
     return [[BTTxProvider instance] isAddress:address containsTx:transaction];
 }
 
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
-    if ([[BTTxProvider instance] isExist:tx.txHash]) {
-        // already in db
-        return YES;
-    }
-
     if ([[BTTxProvider instance] isTxDoubleSpendWithConfirmedTx:tx]) {
         // double spend with confirmed tx
         return false;
     }
 
+    BOOL isRegister = NO;
+    BTTx *compressedTx = [self compressTx:tx];
     NSMutableSet *needNotifyAddressHashSet = [NSMutableSet new];
     for (BTOut *out in tx.outs) {
         if ([self.addressesSet containsObject:out.outAddress])
             [needNotifyAddressHashSet addObject:out.outAddress];
     }
 
-    NSArray *inAddresses = [[BTTxProvider instance] getInAddresses:tx];
-    for (NSString *address in inAddresses) {
-        if ([self.addressesSet containsObject:address])
-            [needNotifyAddressHashSet addObject:address];
+    BTTx *txInDb = [[BTTxProvider instance] getTxDetailByTxHash:tx.txHash];
+    if (txInDb != nil) {
+        for (BTOut *out in txInDb.outs) {
+            if ([needNotifyAddressHashSet containsObject:out.outAddress]) {
+                [needNotifyAddressHashSet removeObject:out.outAddress];
+            }
+        }
+        isRegister = YES;
+    } else {
+        NSArray *inAddresses = [[BTTxProvider instance] getInAddresses:compressedTx];
+        for (NSString *address in inAddresses) {
+            if ([self.addressesSet containsObject:address]) {
+                [needNotifyAddressHashSet addObject:address];
+            }
+        }
+        isRegister = needNotifyAddressHashSet.count > 0;
     }
     if (needNotifyAddressHashSet.count > 0) {
-        [[BTTxProvider instance] add:tx];
-        DDLogDebug(@"register tx %@", [NSString hexWithHash:tx.txHash]);
+        [[BTTxProvider instance] add:compressedTx];
+        DDLogDebug(@"register tx %@", [NSString hexWithHash:compressedTx.txHash]);
     }
     for (BTAddress *address in [BTAddressManager instance].allAddresses) {
         if ([needNotifyAddressHashSet containsObject:address.address]) {
-            [address registerTx:tx withTxNotificationType:txNotificationType];
+            [address registerTx:compressedTx withTxNotificationType:txNotificationType];
         }
     }
-    return needNotifyAddressHashSet.count > 0;
+    return isRegister;
 }
 
 - (NSArray *)outs; {
@@ -413,9 +333,228 @@
     return result;
 }
 
+-(void)hdmAddressAdded:(BTHDMAddress *)address{
+    [_addressesSet addObject:address.address];
+}
+
+-(void)setHdmKeychain:(BTHDMKeychain *)hdmKeychain{
+    if(!hdmKeychain){
+        _hdmKeychain = nil;
+        return;
+    }
+    _hdmKeychain = hdmKeychain;
+    hdmKeychain.addressChangeDelegate = self;
+    NSArray* addresses = hdmKeychain.addresses;
+    for(BTHDMAddress* a in addresses){
+        [_addressesSet addObject:a.address];
+    }
+}
+
+-(BOOL)hasHDMKeychain{
+    if([[BTSettings instance] getAppMode] == COLD){
+        return _hdmKeychain != nil;
+    } else {
+        return _hdmKeychain && _hdmKeychain.addresses.count > 0;
+    }
+}
+
+-(BTHDMKeychain*)hdmKeychain{
+    return _hdmKeychain;
+}
+
 - (void)blockChainChanged; {
     for (BTAddress *address in self.allAddresses) {
         [address updateCache];
     }
+}
+
+- (NSArray *)compressTxsForApi:(NSArray *)txList andAddress:(NSString *)address;{
+    NSMutableDictionary *txDict = [NSMutableDictionary new];
+    for (BTTx *tx in txList) {
+        txDict[tx.txHash] = tx;
+    }
+    for (BTTx *tx in txList) {
+        if (![self isSendFromMe:tx andTxHashDict:txDict andAddress:address] && tx.outs.count > COMPRESS_OUT_NUM) {
+            NSMutableArray *outList = [NSMutableArray new];
+            for (BTOut *out in tx.outs) {
+                if ([out.outAddress isEqualToString:address]) {
+                    [outList addObject:out];
+                }
+            }
+            tx.outs = outList;
+        }
+    }
+    return txList;
+}
+
+- (BOOL)isSendFromMe:(BTTx *)tx andTxHashDict:(NSDictionary *)txDict andAddress:(NSString *)address;{
+    for (BTIn *btIn in tx.ins) {
+        if (txDict[btIn.prevTxHash] != nil) {
+            BTTx *prevTx = txDict[btIn.prevTxHash];
+            for (BTOut *out in prevTx.outs) {
+                if (out.outSn == btIn.prevOutSn) {
+                    if ([out.outAddress isEqualToString:address]) {
+                        return YES;
+                    }
+                }
+            }
+        }
+    }
+    return NO;
+}
+
+- (BTTx *)compressTx:(BTTx *)tx {
+    if (![self isSendFromMe:tx] && tx.outs.count > COMPRESS_OUT_NUM) {
+        NSMutableArray *outList = [NSMutableArray new];
+        for (BTOut *out in tx.outs) {
+            if ([self.addressesSet containsObject:out.outAddress]) {
+                [outList addObject:out];
+            }
+        }
+        tx.outs = outList;
+    }
+    return tx;
+}
+
+- (BOOL)isSendFromMe:(BTTx *) tx;{
+    NSArray *fromAddresses = [tx getInAddresses];
+    return [self.addressesSet intersectsSet:[NSSet setWithArray:fromAddresses]];
+}
+
+#pragma mark - for old version
++ (BOOL)updateKeyStoreFromFileToDbWithPasswordSeed:(BTPasswordSeed *)passwordSeed; {
+    NSMutableArray *addresses = [NSMutableArray new];
+    [addresses addObjectsFromArray:[BTAddressManager getPrivKeyAddressFromFile]];
+    [addresses addObjectsFromArray:[BTAddressManager getTrashAddressFromFile]];
+    [addresses addObjectsFromArray:[BTAddressManager getWatchOnlyAddressFromFile]];
+    for (BTAddress * address in addresses){
+        [address setIsSyncComplete:NO];
+    }
+    BOOL result=[[BTAddressProvider instance] addAddresses:addresses andPasswordSeed:passwordSeed];
+    for (int i = addresses.count - 1; i >= 0; i--) {
+        BTAddress *address = addresses[i];
+        if (address.hasPrivKey) {
+            if(address.isTrashed){
+                [[BTAddressManager instance].trashAddresses insertObject:address atIndex:0];
+            }else {
+                [[BTAddressManager instance].privKeyAddresses insertObject:address atIndex:0];
+                [[BTAddressManager instance].addressesSet addObject:address.address];
+            }
+        } else {
+            [[BTAddressManager instance].watchOnlyAddresses insertObject:address atIndex:0];
+            [[BTAddressManager instance].addressesSet addObject:address.address];
+        }
+    }
+    return  result;
+}
+
++ (NSArray *)getPrivKeyAddressFromFile; {
+    BOOL isSort=NO;
+    NSMutableArray *privKeyAddresses = [NSMutableArray new];
+    for (NSString *str in [BTUtils filesByModDate:[BTUtils getPrivDir]]) {
+        NSInteger length = str.length;
+        if ([str rangeOfString:@".pub"].length > 0) {
+            NSString *note = [BTUtils readFile:[[BTUtils getPrivDir] stringByAppendingPathComponent:str]];
+            NSArray *array = [note componentsSeparatedByString:@":"];
+            long long sortTime=0;
+            BOOL isFromXRandom =NO;
+            if (array.count>3) {
+                sortTime=[array[2] longLongValue];
+                if (sortTime>0) {
+                    isSort=YES;
+                }
+                isFromXRandom = [BTUtils compareString:XRANDOM_FLAG compare:array[3]];
+
+            }
+            NSString * addressStr=[str substringToIndex:(NSUInteger) (length - 4)];
+            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], addressStr];
+            NSString * encryptString=[BTUtils readFile:privateKeyFullFileName];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
+            [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
+            [btAddress setSortTime:sortTime];
+            [privKeyAddresses addObject:btAddress];
+        }
+    }
+    if (isSort) {
+        [privKeyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+            return NSOrderedSame;
+        }];
+    }
+    return privKeyAddresses;
+}
+
++ (NSArray *)getWatchOnlyAddressFromFile; {
+    BOOL isSort=NO;
+    NSMutableArray *watchOnlyAddresses = [NSMutableArray new];
+    for (NSString *str in [BTUtils filesByModDate:[BTUtils getWatchOnlyDir]]) {
+        NSInteger length = str.length;
+        if ([str rangeOfString:@".pub"].length > 0) {
+            NSString *note = [BTUtils readFile:[[BTUtils getWatchOnlyDir] stringByAppendingPathComponent:str]];
+            NSArray *array = [note componentsSeparatedByString:@":"];
+            long long sortTime=0;
+            BOOL isFromXrandm=NO;
+            if (array.count>3) {
+                sortTime=[array[2] longLongValue];
+                if (sortTime>0) {
+                    isSort=YES;
+                }
+                isFromXrandm= [BTUtils compareString:XRANDOM_FLAG compare:array[3]];
+
+            }
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] encryptPrivKey:nil pubKey:[array[0] hexToData] hasPrivKey:NO isXRandom:isFromXrandm];
+            [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
+            [btAddress setSortTime:sortTime];
+            [watchOnlyAddresses addObject:btAddress];
+        }
+    }
+    if (isSort) {
+        [watchOnlyAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+            return NSOrderedSame;
+        }];
+    }
+    return watchOnlyAddresses;
+}
+
++ (NSArray *)getTrashAddressFromFile; {
+    BOOL isSort = NO;
+    NSMutableArray *trashAddresses = [NSMutableArray new];
+    for (NSString *str in [BTUtils filesByModDate:[BTUtils getTrashDir]]) {
+        NSInteger length = str.length;
+        if ([str rangeOfString:@".pub"].length > 0) {
+            NSString *note = [BTUtils readFile:[[BTUtils getTrashDir] stringByAppendingPathComponent:str]];
+            NSArray *array = [note componentsSeparatedByString:@":"];
+            long long sortTime = 0;
+            BOOL isFromXRandom = NO;
+            if (array.count > 3) {
+                sortTime = [array[2] longLongValue];
+                if (sortTime > 0) {
+                    isSort = YES;
+                }
+                isFromXRandom = [BTUtils compareString:XRANDOM_FLAG compare:array[3]];
+
+            }
+
+            NSString * addressStr=[str substringToIndex:(NSUInteger) (length - 4)];
+            NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], addressStr];
+            NSString * encryptString=[BTUtils readFile:privateKeyFullFileName];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
+            [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
+            [btAddress setSortTime:sortTime];
+            btAddress.isTrashed = YES;
+            [trashAddresses addObject:btAddress];
+        }
+    }
+    if (isSort) {
+        [trashAddresses sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 sortTime] > [obj2 sortTime]) return NSOrderedAscending;
+            if ([obj1 sortTime] < [obj2 sortTime]) return NSOrderedDescending;
+            return NSOrderedSame;
+        }];
+    }
+    return trashAddresses;
 }
 @end

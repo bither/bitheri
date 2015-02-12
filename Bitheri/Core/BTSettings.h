@@ -32,6 +32,8 @@
 #define TX_VERSION    0x00000001u
 #define TX_LOCKTIME   0x00000000u
 #define TX_IN_SEQUENCE UINT32_MAX
+#define COMPRESS_OUT_NUM 5
+#define TX_PAGE_SIZE 20
 
 #define SIG_HASH_ALL    0x00000001u
 #define SIG_HASH_NONE   0x00000002u
@@ -98,7 +100,7 @@
 #define MSG_ALERT       @"alert"
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
-#define BITHERI_VERSION @"1.2.3"
+#define BITHERI_VERSION @"1.3.1"
 #define BITHERI_NAME @"Bitheri"
 #define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 

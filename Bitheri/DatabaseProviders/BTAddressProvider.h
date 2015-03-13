@@ -39,6 +39,8 @@
 //- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
 - (BOOL)isHDSeedFromXRandom:(int)hdSeedId;
 - (NSString *)getHDFirstAddress:(int)hdSeedId;
+- (NSString *)getSingularModeBackup:(int)hdSeedId;
+- (void)setSingularModeBackupWithHDSeedId:(int)hdSeedId andSingularModeBackup:(NSString *)singularModeBackup;
 - (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom andPasswordSeed:(NSString *)passwordSeed;
 
 - (BTHDMBid *)getHDMBid;

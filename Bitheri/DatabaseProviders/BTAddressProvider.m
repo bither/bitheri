@@ -268,6 +268,26 @@ static BTAddressProvider *provider;
     return firstAddress;
 }
 
+- (NSString *)getSingularModeBackup:(int)hdSeedId;{
+    __block NSString *singularModeBackup = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select singular_mode_backup from hd_seeds where hd_seed_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(hdSeedId)];
+        if ([rs next]) {
+            singularModeBackup = [rs stringForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return singularModeBackup;
+}
+
+- (void)setSingularModeBackupWithHDSeedId:(int)hdSeedId andSingularModeBackup:(NSString *)singularModeBackup;{
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update hd_seeds set singular_mode_backup=? where hd_seed_id=?";
+        [db executeUpdate:sql, singularModeBackup, @(hdSeedId)];
+    }];
+}
+
 - (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed
                 andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom
                 andPasswordSeed:(NSString *)passwordSeed;{

@@ -42,6 +42,7 @@
 @property (nonatomic, copy, readonly) NSString *createTableHDSeedsSql;
 @property (nonatomic, copy, readonly) NSString *createTableHDMAddressesSql;
 @property (nonatomic, copy, readonly) NSString *createTableHDMBidSql;
+@property (nonatomic, copy, readonly) NSString *createTableAliasesSql;
 
 + (instancetype)instance;
 

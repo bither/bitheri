@@ -24,7 +24,7 @@ const int CURRENT_TX_DB_VERSION = 1;
 
 NSString *const ADDRESS_DB_VERSION = @"address_db_version";
 NSString *const ADDRESS_DB_NAME = @"address.sqlite";
-const int CURRENT_ADDRESS_DB_VERSION = 1;
+const int CURRENT_ADDRESS_DB_VERSION = 2;
 
 static BOOL canOpenTxDb;
 static BOOL canOpenAddressDb;
@@ -116,7 +116,8 @@ static BTDatabaseManager *databaseProvide;
             ", encrypt_seed text not null"
             ", encrypt_hd_seed text"
             ", hdm_address text not null"
-            ", is_xrandom integer not null);";
+            ", is_xrandom integer not null"
+            ", singular_mode_backup text);";
     _createTableHDMAddressesSql = @"create table if not exists hdm_addresses "
             "(hd_seed_id integer not null"
             ", hd_seed_index integer not null"
@@ -129,6 +130,9 @@ static BTDatabaseManager *databaseProvide;
     _createTableHDMBidSql = @"create table if not exists hdm_bid "
             "(hdm_bid text not null primary key"
             ", encrypt_bither_password text not null);";
+    _createTableAliasesSql = @"create table if not exists aliases "
+            "(address text not null primary key"
+            ", alias text not null);";
     return self;
 }
 
@@ -162,7 +166,7 @@ static BTDatabaseManager *databaseProvide;
             if (txDbVersion < CURRENT_TX_DB_VERSION) {
                 switch (txDbVersion) {
                     case 0:
-                        success = [self txV1:db];
+                        success = [self txInit:db];
                         break;
                     default:
                         break;
@@ -198,12 +202,23 @@ static BTDatabaseManager *databaseProvide;
         }
         self.addressQueue = [FMDatabaseQueue databaseQueueWithPath:writableDBPath];
         [self.addressQueue inDatabase:^(FMDatabase *db) {
-            BOOL success = NO;
+            BOOL success = YES;
             if (addressDbVersion < CURRENT_ADDRESS_DB_VERSION) {
                 switch (addressDbVersion) {
                     case 0:
-                        success = [self addressV1:db];
+                        success &= [self addressInit:db];
                         break;
+                    case 1:
+                        if (success) {
+                            success &= [self addressV1ToV2:db];
+                        } else {
+                            break;
+                        }
+                        if (success) {
+                            [userDefaultUtil setInteger:2 forKey:ADDRESS_DB_VERSION];
+                        } else {
+                            break;
+                        }
                     default:
                         break;
                 }
@@ -223,7 +238,7 @@ static BTDatabaseManager *databaseProvide;
 //    return canOpenDb;
 //}
 
-- (BOOL)txV1:(FMDatabase *)db {
+- (BOOL)txInit:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
         [db executeUpdate:self.createTableBlocksSql];
@@ -244,7 +259,7 @@ static BTDatabaseManager *databaseProvide;
     }
 }
 
-- (BOOL)addressV1:(FMDatabase *)db {
+- (BOOL)addressInit:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
         [db executeUpdate:self.createTablePasswordSeedSql];
@@ -252,6 +267,19 @@ static BTDatabaseManager *databaseProvide;
         [db executeUpdate:self.createTableHDSeedsSql];
         [db executeUpdate:self.createTableHDMAddressesSql];
         [db executeUpdate:self.createTableHDMBidSql];
+        [db executeUpdate:self.createTableAliasesSql];
+        [db commit];
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+- (BOOL)addressV1ToV2:(FMDatabase *)db {
+    if ([db open]) {
+        [db beginTransaction];
+        [db executeUpdate:self.createTableAliasesSql];
+        [db executeUpdate:@"alter table hd_seeds add column singular_mode_backup text;"];
         [db commit];
         return YES;
     } else {

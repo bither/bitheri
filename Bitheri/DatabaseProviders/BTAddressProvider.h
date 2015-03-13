@@ -66,4 +66,8 @@
 - (void)trashPrivKeyAddress:(BTAddress *)address;
 - (void)restorePrivKeyAddress:(BTAddress *)address;
 - (void)updateSyncComplete:(BTAddress *)address;
+
+- (NSString *)getAlias:(NSString *)address;
+- (NSDictionary *)getAliases;
+- (void)updateAliasWithAddress:(NSString *)address andAlias:(NSString *)alias;
 @end

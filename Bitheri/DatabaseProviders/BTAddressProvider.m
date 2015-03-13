@@ -662,6 +662,42 @@ static BTAddressProvider *provider;
     }];
 }
 
+- (NSString *)getAlias:(NSString *)address; {
+    __block NSString *alias = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select alias from aliases where address=?";
+        FMResultSet *rs = [db executeQuery:sql, address];
+        if ([rs next]) {
+            alias = [rs stringForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return alias;
+}
+
+- (NSDictionary *)getAliases; {
+    __block NSMutableDictionary *aliases = [NSMutableDictionary dictionary];
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select address,alias from aliases";
+        FMResultSet *rs = [db executeQuery:sql];
+        while ([rs next]) {
+            aliases[[rs stringForColumnIndex:0]] = [rs stringForColumnIndex:1];
+        }
+        [rs close];
+    }];
+    return aliases;
+}
+
+- (void)updateAliasWithAddress:(NSString *)address andAlias:(NSString *)alias; {
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        if (alias == nil) {
+            [db executeUpdate:@"delete from aliases where address=?", address];
+        } else {
+            [db executeUpdate:@"insert or replace into aliases(address,alias) values(?,?)",address, alias];
+        }
+    }];
+}
+
 - (BTAddress *)formatAddress:(FMResultSet *)rs;{
     NSString *address = [rs stringForColumn:@"address"];
     BOOL hasPrivKey = [rs boolForColumn:@"has_priv_key"];

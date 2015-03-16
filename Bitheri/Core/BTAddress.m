@@ -454,4 +454,17 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         return NO;
     }
 }
+
+#pragma  mark - alias
+
+-(void)updateAlias:(NSString *)alias {
+    _alias=alias;
+    [[BTAddressProvider instance] updateAliasWithAddress:self.address andAlias:self.alias];
+
+}
+
+-(void)removeAlias {
+    _alias= nil;
+    [[BTAddressProvider instance] updateAliasWithAddress:self.address andAlias:self.alias];
+}
 @end

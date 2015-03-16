@@ -88,9 +88,7 @@
         return NSOrderedSame;
     }];
     [self initHDMKeychain];
-//    [self initPrivKeyAddressByDesc];
-//    [self initWatchOnlyAddressByDesc];
-//    [self initTrashAddressByDesc];
+    [self initAlias];
     self.isReady=YES;
     [tc signal];
     [tc unlock];
@@ -107,6 +105,40 @@
     }
 }
 
+-(void)initAlias{
+    NSDictionary * dictionary=[[BTAddressProvider instance] getAliases];
+    if(_privKeyAddresses&&_privKeyAddresses.count>0){
+        for (BTAddress *address in _privKeyAddresses){
+            if ([[dictionary allKeys] containsObject:address.address]){
+                address.alias= [dictionary objectForKey:address.address];
+            }
+        }
+    }
+    if(_watchOnlyAddresses&&_watchOnlyAddresses.count>0){
+        for (BTAddress *address in _watchOnlyAddresses){
+            if ([[dictionary allKeys] containsObject:address.address]){
+                address.alias= [dictionary objectForKey:address.address];
+            }
+        }
+    }
+
+    if(_trashAddresses&&_trashAddresses.count>0){
+        for (BTAddress *address in _trashAddresses){
+            if ([[dictionary allKeys] containsObject:address.address]){
+                address.alias= [dictionary objectForKey:address.address];
+            }
+        }
+    }
+
+    if(_hdmKeychain&&_hdmKeychain.allCompletedAddresses.count>0){
+        for (BTAddress *address in _hdmKeychain.allCompletedAddresses){
+            if ([[dictionary allKeys] containsObject:address.address]){
+                address.alias= [dictionary objectForKey:address.address];
+            }
+        }
+    }
+
+}
 - (NSInteger)addressCount {
     return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count] + (self.hasHDMKeychain ? self.hdmKeychain.addresses.count : 0);
 }

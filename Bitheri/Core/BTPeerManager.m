@@ -491,6 +491,14 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         [peer connectSucceed];
         _bloomFilter = nil; // make sure the bloom filter is updated
         [peer sendFilterLoadMessage:[self peerBloomFilter:peer]];
+
+        if (!self.doneSyncFromSPV && self.lastBlockHeight >= peer.versionLastBlock) {
+            NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+            [userDefaults setBool:YES forKey:BITHERI_DONE_SYNC_FROM_SPV];
+            [userDefaults synchronize];
+            [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFromSPVFinishedNotification object:nil];
+        }
+
         if (self.downloadPeer.versionLastBlock >= peer.versionLastBlock
                 || self.lastBlockHeight >= peer.versionLastBlock) {
             if (self.lastBlockHeight < self.downloadPeer.versionLastBlock)

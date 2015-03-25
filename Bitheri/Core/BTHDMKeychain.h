@@ -51,4 +51,5 @@
 -(BOOL)checkWithPassword:(NSString*)password;
 -(NSString*)signHDMBIdWithMessageHash:(NSString*)messageHash andPassword:(NSString*)password;
 -(NSString*) getFullEncryptPrivKeyWithHDMFlag;
+-(void)setSingularModeBackup:(NSString*)singularModeBackup;
 @end

@@ -37,6 +37,7 @@
 @property BOOL isFromXRandom;
 @property BOOL isTrashed;
 @property (nonatomic, readonly) BOOL isHDM;
+@property (nonatomic, strong) NSString * alias;
 
 @property (nonatomic, readonly) uint32_t txCount;
 @property (nonatomic, strong, readonly) BTTx *recentlyTx;
@@ -81,5 +82,9 @@
 - (uint32_t)needCompleteInSignature;
 - (BOOL)checkRValues;
 - (BOOL)checkRValuesForTx:(BTTx *)tx;
+
+#pragma  mark - alias
+-(void)updateAlias:(NSString *) alias;
+-(void)removeAlias;
 
 @end

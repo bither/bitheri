@@ -268,6 +268,26 @@ static BTAddressProvider *provider;
     return firstAddress;
 }
 
+- (NSString *)getSingularModeBackup:(int)hdSeedId;{
+    __block NSString *singularModeBackup = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select singular_mode_backup from hd_seeds where hd_seed_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(hdSeedId)];
+        if ([rs next]) {
+            singularModeBackup = [rs stringForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return singularModeBackup;
+}
+
+- (void)setSingularModeBackupWithHDSeedId:(int)hdSeedId andSingularModeBackup:(NSString *)singularModeBackup;{
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"update hd_seeds set singular_mode_backup=? where hd_seed_id=?";
+        [db executeUpdate:sql, singularModeBackup, @(hdSeedId)];
+    }];
+}
+
 - (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed
                 andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom
                 andPasswordSeed:(NSString *)passwordSeed;{
@@ -639,6 +659,42 @@ static BTAddressProvider *provider;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update addresses set is_synced=? where address=?";
         [db executeUpdate:sql, address.isSyncComplete ? @1 : @0, address.address];
+    }];
+}
+
+- (NSString *)getAlias:(NSString *)address; {
+    __block NSString *alias = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select alias from aliases where address=?";
+        FMResultSet *rs = [db executeQuery:sql, address];
+        if ([rs next]) {
+            alias = [rs stringForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return alias;
+}
+
+- (NSDictionary *)getAliases; {
+    __block NSMutableDictionary *aliases = [NSMutableDictionary dictionary];
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select address,alias from aliases";
+        FMResultSet *rs = [db executeQuery:sql];
+        while ([rs next]) {
+            aliases[[rs stringForColumnIndex:0]] = [rs stringForColumnIndex:1];
+        }
+        [rs close];
+    }];
+    return aliases;
+}
+
+- (void)updateAliasWithAddress:(NSString *)address andAlias:(NSString *)alias; {
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        if (alias == nil) {
+            [db executeUpdate:@"delete from aliases where address=?", address];
+        } else {
+            [db executeUpdate:@"insert or replace into aliases(address,alias) values(?,?)",address, alias];
+        }
     }];
 }
 

@@ -21,7 +21,7 @@
 #import "NSMutableData+Bitcoin.h"
 #import "NSString+Base58.h"
 
-@interface BTScriptChunk()
+@interface BTScriptChunk ()
 
 @end
 
@@ -29,16 +29,16 @@
     int _startLocationInProgram;
 }
 
-- (instancetype)initWithOpCode:(int) opCode andData:(NSData *)data;{
-    if (! (self = [super init])) return nil;
+- (instancetype)initWithOpCode:(int)opCode andData:(NSData *)data; {
+    if (!(self = [super init])) return nil;
     _opCode = opCode;
     _data = data;
     _startLocationInProgram = -1;
     return self;
 }
 
-- (instancetype)initWithOpCode:(int) opCode andData:(NSData *)data andStartLocationInProgram:(int)startLocationInProgram;{
-    if (! (self = [super init])) return nil;
+- (instancetype)initWithOpCode:(int)opCode andData:(NSData *)data andStartLocationInProgram:(int)startLocationInProgram; {
+    if (!(self = [super init])) return nil;
     _opCode = opCode;
     _data = data;
     _startLocationInProgram = startLocationInProgram;
@@ -49,11 +49,11 @@
     return opCode == self.opCode;
 }
 
-- (BOOL)isOpCode;{
+- (BOOL)isOpCode; {
     return self.opCode > OP_PUSHDATA4;
 }
 
-- (BOOL)isPushData;{
+- (BOOL)isPushData; {
     return self.opCode <= OP_16;
 }
 
@@ -66,7 +66,7 @@
     if (self.data.length == 0)
         return self.opCode == OP_0;
     if (self.data.length == 1) {
-        int b = *((const uint8_t *)self.data.bytes);
+        int b = *((const uint8_t *) self.data.bytes);
         if (b >= 0x01 && b <= 0x10)
             return self.opCode == OP_1 + b - 1;
         if (b == 0x81)
@@ -83,7 +83,7 @@
     return self.opCode == OP_PUSHDATA4;
 }
 
-- (NSData *)toData;{
+- (NSData *)toData; {
     NSMutableData *result = [NSMutableData secureData];
     if ([self isOpCode]) {
         [result appendUInt8:(uint8_t) self.opCode];
@@ -140,9 +140,9 @@
 
 - (NSUInteger)hash {
     int result = self.opCode;
-    result = 31 * result + (self.data != nil ? (int)[self.data hash] : 0);
+    result = 31 * result + (self.data != nil ? (int) [self.data hash] : 0);
     result = 31 * result + _startLocationInProgram;
-    return (NSUInteger)result;
+    return (NSUInteger) result;
 }
 
 @end

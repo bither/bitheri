@@ -1,5 +1,5 @@
 //
-//  BTKeyParameter.h
+//  BTHDAccountAddress.h
 //  bitheri
 //
 //  Copyright 2014 http://Bither.net
@@ -14,17 +14,27 @@
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
-//  limitations under the License.#import <Foundation/Foundation.h>
+//  limitations under the License.
 
-#import "openssl/bn.h"
+#import <Foundation/Foundation.h>
 
-#define ECKEY_MAX_N @"fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
-#define ECKEY_MIN_N @"00"
 
-@interface BTKeyParameter : NSObject
+typedef enum {
+    EXTERNAL_ROOT_PATH = 0, INTERNAL_ROOT_PATH = 1,
 
-+ (BIGNUM *)maxN;
+} PathType;
 
-+ (BIGNUM *)minN;
+@interface BTHDAccountAddress : NSObject
+
+
+@property(nonatomic, strong) NSString *address;
+@property(nonatomic, strong) NSData *pub;
+@property(nonatomic, readwrite) PathType pathType;
+@property(nonatomic, readwrite) int  index;
+@property(nonatomic, readwrite) BOOL isSyncedComplete;
+@property(nonatomic, readwrite) BOOL isIssued;
+
++(PathType) getPathType:(int) type;
+
 
 @end

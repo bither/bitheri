@@ -57,27 +57,40 @@ CFAllocatorRef SecureAllocator();
 @interface NSString (Base58)
 
 + (NSString *)base58WithData:(NSData *)d;
+
 + (NSString *)base58checkWithData:(NSData *)d;
+
 + (NSString *)hexWithData:(NSData *)d;
+
 + (NSString *)addressWithScript:(NSData *)script;
+
 + (NSString *)addressWithPubKey:(NSData *)pubKey;
+
 + (NSString *)hexWithHash:(NSData *)d;
 
 - (NSData *)base58ToData;
+
 - (NSString *)hexToBase58;
+
 - (NSString *)base58ToHex;
 
 - (NSData *)base58checkToData;
+
 - (NSString *)hexToBase58check;
+
 - (NSString *)base58checkToHex;
 
 - (NSData *)hexToData;
+
 - (NSData *)addressToHash160;
 
 - (BOOL)isValidBitcoinAddress;
+
 - (BOOL)isValidBitcoinPrivateKey;
+
 - (BOOL)isValidBitcoinBIP38Key; // BIP38 encrypted keys: https://github.com/bitcoin/bips/blob/master/bip-0038.mediawiki
 
 - (NSString *)toUppercaseStringWithEn;
+
 - (NSString *)toLowercaseStringWithEn;
 @end

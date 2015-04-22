@@ -9,7 +9,7 @@
 #import "BTHDMKeychain.h"
 
 @interface BTHDMKeychainRecover : BTHDMKeychain
-+(NSString*) RecoverPlaceHolder;
++ (NSString *)RecoverPlaceHolder;
 
--(instancetype)initWithColdExternalRootPub:(NSData*)coldExternalRootPub password:(NSString*)password andFetchBlock:(NSArray* (^)(NSString* password))fetchBlock;
+- (instancetype)initWithColdExternalRootPub:(NSData *)coldExternalRootPub password:(NSString *)password andFetchBlock:(NSArray *(^)(NSString *password))fetchBlock;
 @end

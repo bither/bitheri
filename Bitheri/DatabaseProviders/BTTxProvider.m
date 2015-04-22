@@ -19,7 +19,8 @@
 #import "BTTxProvider.h"
 #import "BTOut.h"
 #import "BTIn.h"
-#import "BTSettings.h"
+#import "BTTxHelper.h"
+
 
 static BTTxProvider *provider;
 
@@ -44,7 +45,7 @@ static BTTxProvider *provider;
                 "order by b.block_no";
         FMResultSet *rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            [txs addObject:[self format:rs]];
+            [txs addObject:[BTTxHelper format:rs]];
         }
         [rs close];
         callback(txs);
@@ -59,7 +60,7 @@ static BTTxProvider *provider;
                 "order by b.block_no";
         FMResultSet *rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            [txs addObject:[self format:rs]];
+            [txs addObject:[BTTxHelper format:rs]];
         }
         [rs close];
     }];
@@ -74,7 +75,7 @@ static BTTxProvider *provider;
                 "order by b.block_no";
         FMResultSet *rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTTx *txItem = [self format:rs];
+            BTTx *txItem = [BTTxHelper format:rs];
             txItem.ins = [NSMutableArray new];
             txItem.outs = [NSMutableArray new];
             [txs addObject:txItem];
@@ -86,7 +87,7 @@ static BTTxProvider *provider;
                 "order by b.tx_hash ,b.in_sn";
         rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTIn *inItem = [self formatIn:rs];
+            BTIn *inItem = [BTTxHelper formatIn:rs];
             BTTx *txItem = txDict[inItem.txHash];
             [txItem.ins addObject:inItem];
             inItem.tx = txItem;
@@ -97,7 +98,7 @@ static BTTxProvider *provider;
                 "order by b.tx_hash,b.out_sn";
         rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTOut *outItem = [self formatOut:rs];
+            BTOut *outItem = [BTTxHelper formatOut:rs];
             BTTx *txItem = txDict[outItem.txHash];
             [txItem.outs addObject:outItem];
             outItem.tx = txItem;
@@ -117,7 +118,7 @@ static BTTxProvider *provider;
                 "order by b.block_no";
         FMResultSet *rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTTx *txItem = [self format:rs];
+            BTTx *txItem = [BTTxHelper format:rs];
             txItem.ins = [NSMutableArray new];
             txItem.outs = [NSMutableArray new];
             [txs addObject:txItem];
@@ -129,7 +130,7 @@ static BTTxProvider *provider;
                 "order by b.tx_hash ,b.in_sn";
         rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTIn *inItem = [self formatIn:rs];
+            BTIn *inItem = [BTTxHelper formatIn:rs];
             BTTx *txItem = txDict[inItem.txHash];
             [txItem.ins addObject:inItem];
             inItem.tx = txItem;
@@ -140,7 +141,7 @@ static BTTxProvider *provider;
                 "order by b.tx_hash,b.out_sn";
         rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTOut *outItem = [self formatOut:rs];
+            BTOut *outItem = [BTTxHelper formatOut:rs];
             BTTx *txItem = txDict[outItem.txHash];
             [txItem.outs addObject:outItem];
             outItem.tx = txItem;
@@ -151,7 +152,7 @@ static BTTxProvider *provider;
 }
 
 
-- (NSArray *)getTxAndDetailByAddress:(NSString *)address andPage:(int)page;{
+- (NSArray *)getTxAndDetailByAddress:(NSString *)address andPage:(int)page; {
     __block NSMutableArray *txs = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableDictionary *txDict = [NSMutableDictionary new];
@@ -161,7 +162,7 @@ static BTTxProvider *provider;
         FMResultSet *rs = [db executeQuery:sql, address, @(start), @(TX_PAGE_SIZE)];
         NSMutableString *txsStrBuilder = [NSMutableString new];
         while ([rs next]) {
-            BTTx *txItem = [self format:rs];
+            BTTx *txItem = [BTTxHelper format:rs];
             txItem.ins = [NSMutableArray new];
             txItem.outs = [NSMutableArray new];
             [txs addObject:txItem];
@@ -176,7 +177,7 @@ static BTTxProvider *provider;
                                                      " order by b.tx_hash ,b.in_sn", txsStr];
             rs = [db executeQuery:sql];
             while ([rs next]) {
-                BTIn *inItem = [self formatIn:rs];
+                BTIn *inItem = [BTTxHelper formatIn:rs];
                 BTTx *txItem = txDict[inItem.txHash];
                 [txItem.ins addObject:inItem];
                 inItem.tx = txItem;
@@ -187,7 +188,7 @@ static BTTxProvider *provider;
                                                      " order by b.tx_hash,b.out_sn", txsStr];
             rs = [db executeQuery:sql];
             while ([rs next]) {
-                BTOut *outItem = [self formatOut:rs];
+                BTOut *outItem = [BTTxHelper formatOut:rs];
                 BTTx *txItem = txDict[outItem.txHash];
                 [txItem.outs addObject:outItem];
                 outItem.tx = txItem;
@@ -199,14 +200,14 @@ static BTTxProvider *provider;
 }
 
 
--(uint64_t)sentFromAddress:(NSData * )txHash address:( NSString *) address {
+- (uint64_t)sentFromAddress:(NSData *)txHash address:(NSString *)address {
 
     __block uint64_t result = 0;
 
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString * sql = @"select  sum(o.out_value) out_value from ins i,outs o where "
+        NSString *sql = @"select  sum(o.out_value) out_value from ins i,outs o where "
                 " i.tx_hash=? and o.tx_hash=i.prev_tx_hash and i.prev_out_sn=o.out_sn and o.out_address=?";
-        FMResultSet *rs = [db executeQuery:sql,[NSString base58WithData:txHash], address];
+        FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:txHash], address];
 
         if ([rs next]) {
             if ([rs columnIndexForName:@"out_value"] >= 0) {
@@ -228,7 +229,7 @@ static BTTxProvider *provider;
         NSString *sql = @"select a.* from txs a where a.block_no is null order by a.tx_hash";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
-            BTTx *txItem = [self format:rs];
+            BTTx *txItem = [BTTxHelper format:rs];
             txItem.ins = [NSMutableArray new];
             txItem.outs = [NSMutableArray new];
             [txs addObject:txItem];
@@ -239,7 +240,7 @@ static BTTxProvider *provider;
         sql = @"select b.* from txs a, ins b where a.tx_hash=b.tx_hash and a.block_no is null order by b.tx_hash,b.in_sn";
         rs = [db executeQuery:sql];
         while ([rs next]) {
-            BTIn *inItem = [self formatIn:rs];
+            BTIn *inItem = [BTTxHelper formatIn:rs];
             BTTx *txItem = txDict[inItem.txHash];
             [txItem.ins addObject:inItem];
             inItem.tx = txItem;
@@ -249,7 +250,7 @@ static BTTxProvider *provider;
         sql = @"select b.* from txs a, outs b where a.tx_hash=b.tx_hash and a.block_no is null order by b.tx_hash,b.out_sn";
         rs = [db executeQuery:sql];
         while ([rs next]) {
-            BTOut *outItem = [self formatOut:rs];
+            BTOut *outItem = [BTTxHelper formatOut:rs];
             BTTx *txItem = txDict[outItem.txHash];
             [txItem.outs addObject:outItem];
             outItem.tx = txItem;
@@ -266,7 +267,7 @@ static BTTxProvider *provider;
         NSString *sql = @"select * from txs where tx_hash=?";
         FMResultSet *rs = [db executeQuery:sql, txHashStr];
         if ([rs next]) {
-            txItem = [self format:rs];
+            txItem = [BTTxHelper format:rs];
             [rs close];
         } else {
             [rs close];
@@ -277,7 +278,7 @@ static BTTxProvider *provider;
         sql = @"select * from ins where tx_hash=? order by in_sn";
         rs = [db executeQuery:sql, txHashStr];
         while ([rs next]) {
-            BTIn *inItem = [self formatIn:rs];
+            BTIn *inItem = [BTTxHelper formatIn:rs];
             [txItem.ins addObject:inItem];
             inItem.tx = txItem;
         }
@@ -286,7 +287,7 @@ static BTTxProvider *provider;
         sql = @"select * from outs where tx_hash=? order by out_sn";
         rs = [db executeQuery:sql, txHashStr];
         while ([rs next]) {
-            BTOut *outItem = [self formatOut:rs];
+            BTOut *outItem = [BTTxHelper formatOut:rs];
             [txItem.outs addObject:outItem];
             outItem.tx = txItem;
         }
@@ -379,13 +380,13 @@ static BTTxProvider *provider;
     }];
 }
 
-- (void)addTxs:(NSArray *)txs;{
+- (void)addTxs:(NSArray *)txs; {
     // need update out\'s status in this.
     // need maintain relation table addresses_txs
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // insert tx record
         [db beginTransaction];
-        for (BTTx *txItem in txs){
+        for (BTTx *txItem in txs) {
             NSNumber *blockNo = nil;
             if (txItem.blockNo != TX_UNCONFIRMED) {
                 blockNo = @(txItem.blockNo);
@@ -537,7 +538,7 @@ static BTTxProvider *provider;
     return result;
 }
 
-- (NSArray *)getInAddresses:(BTTx *)tx;{
+- (NSArray *)getInAddresses:(BTTx *)tx; {
     __block NSMutableArray *inAddresses = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select out_address from outs where tx_hash=? and out_sn=?";
@@ -669,7 +670,7 @@ static BTTxProvider *provider;
     }];
 }
 
-- (NSArray *)getUnspendTxWithAddress:(NSString *)address;{
+- (NSArray *)getUnspendTxWithAddress:(NSString *)address; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth "
@@ -677,8 +678,8 @@ static BTTxProvider *provider;
                 " and a.out_address=? and a.out_status=?";
         FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent)];
         while ([rs next]) {
-            BTTx *txItem = [self format:rs];
-            BTOut *outItem = [self formatOut:rs];
+            BTTx *txItem = [BTTxHelper format:rs];
+            BTOut *outItem = [BTTxHelper formatOut:rs];
             outItem.coinDepth = [rs unsignedLongLongIntForColumn:@"coin_depth"];
             txItem.outs = [NSMutableArray new];
             [txItem.outs addObject:outItem];
@@ -690,14 +691,14 @@ static BTTxProvider *provider;
     return result;
 }
 
-- (NSArray *)getUnspendOutWithAddress:(NSString *)address;{
+- (NSArray *)getUnspendOutWithAddress:(NSString *)address; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
                 " and a.out_address=? and a.out_status=?";
         FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent)];
         while ([rs next]) {
-            [result addObject:[self formatOut:rs]];
+            [result addObject:[BTTxHelper formatOut:rs]];
         }
         [rs close];
     }];
@@ -713,28 +714,28 @@ static BTTxProvider *provider;
                 " and a.out_address=? and a.out_status=? and b.source>=?";
         FMResultSet *rs = [db executeQuery:confirmedOutSql, address, @(unspent)];
         while ([rs next]) {
-            BTOut *outItem = [self formatOut:rs];
+            BTOut *outItem = [BTTxHelper formatOut:rs];
             outItem.coinDepth = [rs unsignedLongLongIntForColumn:@"coin_depth"];
             [result addObject:outItem];
         }
         [rs close];
         rs = [db executeQuery:selfOutSql, address, @(unspent), @1];
         while ([rs next]) {
-            [result addObject:[self formatOut:rs]];
+            [result addObject:[BTTxHelper formatOut:rs]];
         }
         [rs close];
     }];
     return result;
 }
 
-- (NSArray *)getUnSpendOutButNotConfirmWithAddress:(NSString *)address;{
+- (NSArray *)getUnSpendOutButNotConfirmWithAddress:(NSString *)address; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *selfOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
                 " and a.out_address=? and a.out_status=? and b.source=?";
         FMResultSet *rs = [db executeQuery:selfOutSql, address, @(unspent), @0];
         while ([rs next]) {
-            [result addObject:[self formatOut:rs]];
+            [result addObject:[BTTxHelper formatOut:rs]];
         }
         [rs close];
     }];
@@ -762,47 +763,47 @@ static BTTxProvider *provider;
     }];
 }
 
-- (NSArray *)getOuts;{
+- (NSArray *)getOuts; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.* from outs a";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
-            [result addObject:[self formatOut:rs]];
+            [result addObject:[BTTxHelper formatOut:rs]];
         }
         [rs close];
     }];
     return result;
 }
 
-- (NSArray *)getUnSpentOuts;{
+- (NSArray *)getUnSpentOuts; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.* from outs a where a.out_status=?";
         FMResultSet *rs = [db executeQuery:sql, @(0)];
         while ([rs next]) {
-            [result addObject:[self formatOut:rs]];
+            [result addObject:[BTTxHelper formatOut:rs]];
         }
         [rs close];
     }];
     return result;
 }
 
-- (NSArray *)getRelatedIn:(NSString *)address;{
+- (NSArray *)getRelatedIn:(NSString *)address; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select ins.* from ins,addresses_txs "
                 "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
         FMResultSet *rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            [result addObject:[self formatIn:rs]];
+            [result addObject:[BTTxHelper formatIn:rs]];
         }
         [rs close];
     }];
     return result;
 }
 
-- (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit;{
+- (NSArray *)getRecentlyTxsByAddress:(NSString *)address andGreaterThanBlockNo:(int)blockNo andLimit:(int)limit; {
     __block NSMutableArray *txs = nil;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         txs = [NSMutableArray new];
@@ -813,7 +814,7 @@ static BTTxProvider *provider;
                 "limit %d ";
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, limit], address, @(blockNo)];
         while ([rs next]) {
-            BTTx *txItem = [self format:rs];
+            BTTx *txItem = [BTTxHelper format:rs];
             txItem.ins = [NSMutableArray new];
             txItem.outs = [NSMutableArray new];
             [txs addObject:txItem];
@@ -825,7 +826,7 @@ static BTTxProvider *provider;
             sql = @"select * from ins where tx_hash=? order by in_sn";
             rs = [db executeQuery:sql, [NSString base58WithData:txItem.txHash]];
             while ([rs next]) {
-                BTIn *inItem = [self formatIn:rs];
+                BTIn *inItem = [BTTxHelper formatIn:rs];
                 [txItem.ins addObject:inItem];
                 inItem.tx = txItem;
             }
@@ -834,7 +835,7 @@ static BTTxProvider *provider;
             sql = @"select * from outs where tx_hash=? order by out_sn";
             rs = [db executeQuery:sql, [NSString base58WithData:txItem.txHash]];
             while ([rs next]) {
-                BTOut *outItem = [self formatOut:rs];
+                BTOut *outItem = [BTTxHelper formatOut:rs];
                 [txItem.outs addObject:outItem];
                 outItem.tx = txItem;
             }
@@ -844,7 +845,7 @@ static BTTxProvider *provider;
     return txs;
 }
 
-- (NSArray *)txInValues:(NSData *)txHash;{
+- (NSArray *)txInValues:(NSData *)txHash; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select b.out_value "
@@ -863,7 +864,7 @@ static BTTxProvider *provider;
     return result;
 }
 
-- (NSDictionary *)getTxDependencies:(BTTx *)txItem;{
+- (NSDictionary *)getTxDependencies:(BTTx *)txItem; {
     __block NSMutableDictionary *result = [NSMutableDictionary new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         for (BTIn *in in txItem.ins) {
@@ -872,7 +873,7 @@ static BTTxProvider *provider;
             NSString *sql = @"select * from txs where tx_hash=?";
             FMResultSet *rs = [db executeQuery:sql, txHashStr];
             if ([rs next]) {
-                tx = [self format:rs];
+                tx = [BTTxHelper format:rs];
                 [rs close];
             } else {
                 [rs close];
@@ -883,7 +884,7 @@ static BTTxProvider *provider;
             sql = @"select * from ins where tx_hash=? order by in_sn";
             rs = [db executeQuery:sql, txHashStr];
             while ([rs next]) {
-                BTIn *inItem = [self formatIn:rs];
+                BTIn *inItem = [BTTxHelper formatIn:rs];
                 [tx.ins addObject:inItem];
                 inItem.tx = tx;
             }
@@ -892,7 +893,7 @@ static BTTxProvider *provider;
             sql = @"select * from outs where tx_hash=? order by out_sn";
             rs = [db executeQuery:sql, txHashStr];
             while ([rs next]) {
-                BTOut *outItem = [self formatOut:rs];
+                BTOut *outItem = [BTTxHelper formatOut:rs];
                 [tx.outs addObject:outItem];
                 outItem.tx = tx;
             }
@@ -902,52 +903,41 @@ static BTTxProvider *provider;
     }];
     return result;
 }
--(void)clearAllTx{
-     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-         [db beginTransaction];
-         [db executeUpdate:@"drop table txs;"];
-         [db executeUpdate:@"drop table ins;"];
-         [db executeUpdate:@"drop table outs;"];
-         [db executeUpdate:@"drop table addresses_txs;"];
-         [db executeUpdate:@"drop table peers;"];
-         [db executeUpdate:[BTDatabaseManager instance].createTableTxsSql];
-         [db executeUpdate:[BTDatabaseManager instance].createIndexTxsBlockNoSql];
-         [db executeUpdate:[BTDatabaseManager instance].createTableAddressesTxsSql];
-         [db executeUpdate:[BTDatabaseManager instance].createTableInsSql];
-         [db executeUpdate:[BTDatabaseManager instance].createIndexInsPrevTxHashSql];
-         [db executeUpdate:[BTDatabaseManager instance].createTableOutsSql];
-         [db executeUpdate:[BTDatabaseManager instance].createIndexOutsOutAddressSql];
-         [db executeUpdate:[BTDatabaseManager instance].createTablePeersSql];
-         [db commit];
-     }];
+
+- (void)clearAllTx {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        [db beginTransaction];
+        [[BTDatabaseManager instance] rebuildTxDb:db];
+        [db commit];
+    }];
 }
 
-- (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;{
+- (BTOut *)getOutByTxHash:(NSData *)txHash andOutSn:(int)outSn; {
     __block BTOut *result = nil;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *outSql = @"select * from outs where tx_hash=? and out_sn=?";
         FMResultSet *rs = [db executeQuery:outSql, [NSString base58WithData:txHash], @(outSn)];
         while ([rs next]) {
-            result = [self formatOut:rs];
+            result = [BTTxHelper formatOut:rs];
         }
         [rs close];
     }];
     return result;
 }
 
-- (void)completeInSignatureWithIns:(NSArray *) ins; {
+- (void)completeInSignatureWithIns:(NSArray *)ins; {
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *updateSql = @"update ins set in_signature=? where tx_hash=? and in_sn=? and ifnull(in_signature,'')=''";
         [db beginTransaction];
         for (BTIn *in in ins) {
             [db executeUpdate:updateSql, [NSString base58WithData:in.inSignature]
-             , [NSString base58WithData:in.txHash], @(in.inSn)];
+                    , [NSString base58WithData:in.txHash], @(in.inSn)];
         }
         [db commit];
     }];
 }
 
-- (uint32_t)needCompleteInSignature:(NSString *)address;{
+- (uint32_t)needCompleteInSignature:(NSString *)address; {
     __block uint32_t result = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select max(txs.block_no) from outs,ins,txs where outs.out_address=? "
@@ -985,7 +975,7 @@ static BTTxProvider *provider;
                 " order by b.block_no desc";
         FMResultSet *rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTTx *tx = [self format:rs];
+            BTTx *tx = [BTTxHelper format:rs];
             tx.ins = [NSMutableArray new];
             tx.outs = [NSMutableArray new];
             [txList addObject:tx];
@@ -999,7 +989,7 @@ static BTTxProvider *provider;
                 " order by b.tx_hash ,b.in_sn";
         rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTIn *in = [self formatIn:rs];
+            BTIn *in = [BTTxHelper formatIn:rs];
             BTTx *tx = txDict[in.txHash];
             if (tx != nil) {
                 [tx.ins addObject:in];
@@ -1013,7 +1003,7 @@ static BTTxProvider *provider;
                 " order by b.tx_hash,b.out_sn";
         rs = [db executeQuery:sql, address];
         while ([rs next]) {
-            BTOut *out = [self formatOut:rs];
+            BTOut *out = [BTTxHelper formatOut:rs];
             BTTx *tx = txDict[out.txHash];
             if (tx != nil) {
                 [tx.outs addObject:out];
@@ -1045,80 +1035,4 @@ static BTTxProvider *provider;
     return result;
 }
 
-- (BTTx *)format:(FMResultSet *)rs {
-    BTTx *txItem = [BTTx new];
-    if ([rs columnIsNull:@"block_no"]) {
-        txItem.blockNo = TX_UNCONFIRMED;
-    } else {
-        txItem.blockNo = (uint) [rs intForColumn:@"block_no"];
-    }
-    txItem.txHash = [[rs stringForColumn:@"tx_hash"] base58ToData];
-    txItem.source = [rs intForColumn:@"source"];
-    if (txItem.source >= 1) {
-        txItem.sawByPeerCnt = txItem.source - 1;
-        txItem.source = 1;
-    } else {
-        txItem.sawByPeerCnt = 0;
-        txItem.source = 0;
-    }
-    txItem.txTime = (uint) [rs intForColumn:@"tx_time"];
-    txItem.txVer = (uint) [rs intForColumn:@"tx_ver"];
-    txItem.txLockTime = (uint) [rs intForColumn:@"tx_locktime"];
-    return txItem;
-}
-
-- (BTIn *)formatIn:(FMResultSet *)rs {
-    BTIn *inItem = [BTIn new];
-    if ([rs columnIndexForName:@"tx_hash"] >= 0) {
-        inItem.txHash = [[rs stringForColumn:@"tx_hash"] base58ToData];
-    }
-    if ([rs columnIndexForName:@"in_sn"] >= 0) {
-        inItem.inSn = (uint) [rs intForColumn:@"in_sn"];
-    }
-    if ([rs columnIndexForName:@"prev_tx_hash"] >= 0) {
-        inItem.prevTxHash = [[rs stringForColumn:@"prev_tx_hash"] base58ToData];
-    }
-    if ([rs columnIndexForName:@"prev_out_sn"] >= 0) {
-        inItem.prevOutSn = (uint) [rs intForColumn:@"prev_out_sn"];
-    }
-    if ([rs columnIndexForName:@"in_signature"] >= 0) {
-        if ([rs columnIsNull:@"in_signature"]) {
-            inItem.inSignature = (id) [NSNull null];
-        } else {
-            inItem.inSignature = [[rs stringForColumn:@"in_signature"] base58ToData];
-        }
-    }
-    if ([rs columnIndexForName:@"in_sequence"] >= 0) {
-        inItem.inSequence = (uint) [rs intForColumn:@"in_sequence"];
-    }
-    return inItem;
-}
-
-- (BTOut *)formatOut:(FMResultSet *)rs {
-    BTOut *outItem = [BTOut new];
-    if ([rs columnIndexForName:@"tx_hash"] >= 0) {
-        outItem.txHash = [[rs stringForColumn:@"tx_hash"] base58ToData];
-    }
-    if ([rs columnIndexForName:@"out_sn"] >= 0) {
-        outItem.outSn = (uint) [rs intForColumn:@"out_sn"];
-    }
-    if ([rs columnIndexForName:@"out_script"] >= 0) {
-        outItem.outScript = [[rs stringForColumn:@"out_script"] base58ToData];
-    }
-    if ([rs columnIndexForName:@"out_value"] >= 0) {
-        outItem.outValue = [rs unsignedLongLongIntForColumn:@"out_value"];
-    }
-    if ([rs columnIndexForName:@"out_status"] >= 0) {
-        outItem.outStatus = [rs intForColumn:@"out_status"];
-    }
-    if ([rs columnIndexForName:@"out_address"] >= 0) {
-        if ([rs columnIsNull:@"out_address"]) {
-            outItem.outAddress = nil;
-        } else {
-            outItem.outAddress = [rs stringForColumn:@"out_address"];
-        }
-    }
-    outItem.coinDepth = 0;
-    return outItem;
-}
 @end

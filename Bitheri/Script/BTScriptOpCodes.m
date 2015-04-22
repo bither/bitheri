@@ -18,10 +18,10 @@
 
 #import "BTScriptOpCodes.h"
 
-@interface BTScriptOpCodes()
+@interface BTScriptOpCodes ()
 
-@property (nonatomic, strong) NSMutableDictionary *opCodeDict;
-@property (nonatomic, strong) NSMutableDictionary *opCodeNameDict;
+@property(nonatomic, strong) NSMutableDictionary *opCodeDict;
+@property(nonatomic, strong) NSMutableDictionary *opCodeNameDict;
 @end
 
 @implementation BTScriptOpCodes {
@@ -29,7 +29,7 @@
 }
 
 - (instancetype)init {
-    if (! (self = [super init])) return nil;
+    if (!(self = [super init])) return nil;
 
     _opCodeDict = [NSMutableDictionary new];
     self.opCodeDict[@(OP_0)] = @"0";
@@ -271,7 +271,7 @@
     return singleton;
 }
 
-+ (NSString *)getOpCodeName:(int)opCode;{
++ (NSString *)getOpCodeName:(int)opCode; {
     NSString *opCodeName = [BTScriptOpCodes instance].opCodeDict[@(opCode)];
     if (opCodeName == nil) {
         return [NSString stringWithFormat:@"NON_NO(%d)", opCode];
@@ -280,7 +280,7 @@
     }
 }
 
-+ (NSString *)getPushDataName:(int)opCode;{
++ (NSString *)getPushDataName:(int)opCode; {
     NSString *opCodeName = [BTScriptOpCodes instance].opCodeDict[@(opCode)];
     if (opCodeName == nil) {
         return [NSString stringWithFormat:@"PUSHDATA(%d)", opCode];
@@ -289,7 +289,7 @@
     }
 }
 
-+ (int)getOpCode:(NSString *)opCodeName;{
++ (int)getOpCode:(NSString *)opCodeName; {
     NSNumber *opCode = [BTScriptOpCodes instance].opCodeNameDict[opCodeName];
     if (opCode == nil) {
         return OP_INVALIDOPCODE;

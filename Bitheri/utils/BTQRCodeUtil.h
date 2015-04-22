@@ -28,18 +28,30 @@ typedef enum {
 
 @interface BTQRCodeUtil : NSObject
 
-+(BOOL) isOldQRCodeVerion:(NSString *)content;
-+(NSString *)replaceNewQRCode:(NSString *)content;
-+(NSArray * )splitQRCode:(NSString * )content;
-+(NSString * )oldJoinedQRCode:(NSArray * )array;
-+(NSString * )joinedQRCode:(NSArray * )array;
-+(NSString *) oldEncodeQrCodeString :(NSString* )text;
-+(NSString *)encodeQrCodeString:(NSString* )text;
-+(NSString *)decodeQrCodeString:(NSString *)text;
-+(BOOL)verifyQrcodeTransport:(NSString *)text;
-+(NSInteger)getNumOfQrCodeString:(NSInteger )length;
-+(QRQuality)qrQuality;
-+(void)setQrQuality:(QRQuality)quality;
-+(NSUInteger) maxSize;
++ (BOOL)isOldQRCodeVerion:(NSString *)content;
+
++ (NSString *)replaceNewQRCode:(NSString *)content;
+
++ (NSArray *)splitQRCode:(NSString *)content;
+
++ (NSString *)oldJoinedQRCode:(NSArray *)array;
+
++ (NSString *)joinedQRCode:(NSArray *)array;
+
++ (NSString *)oldEncodeQrCodeString:(NSString *)text;
+
++ (NSString *)encodeQrCodeString:(NSString *)text;
+
++ (NSString *)decodeQrCodeString:(NSString *)text;
+
++ (BOOL)verifyQrcodeTransport:(NSString *)text;
+
++ (NSInteger)getNumOfQrCodeString:(NSInteger)length;
+
++ (QRQuality)qrQuality;
+
++ (void)setQrQuality:(QRQuality)quality;
+
++ (NSUInteger)maxSize;
 
 @end

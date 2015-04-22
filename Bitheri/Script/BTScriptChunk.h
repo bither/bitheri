@@ -22,14 +22,20 @@
 @interface BTScriptChunk : NSObject
 
 @property int opCode;
-@property (nonatomic, copy) NSData *data;
-@property (readonly) int startLocationInProgram;
+@property(nonatomic, copy) NSData *data;
+@property(readonly) int startLocationInProgram;
 
-- (instancetype)initWithOpCode:(int) opCode andData:(NSData *)data;
-- (instancetype)initWithOpCode:(int) opCode andData:(NSData *)data andStartLocationInProgram:(int)startLocationInProgram;
+- (instancetype)initWithOpCode:(int)opCode andData:(NSData *)data;
+
+- (instancetype)initWithOpCode:(int)opCode andData:(NSData *)data andStartLocationInProgram:(int)startLocationInProgram;
+
 - (BOOL)isEqualOpCode:(int)opCode;
+
 - (NSData *)toData;
+
 - (BOOL)isShortestPossiblePushData;
+
 - (BOOL)isOpCode;
+
 - (BOOL)isPushData;
 @end

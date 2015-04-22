@@ -55,9 +55,9 @@
     #define BITCOIN_REFERENCE_BLOCK_HEIGHT 150000
     #define BITCOIN_REFERENCE_BLOCK_TIME   (1386098130.0 - NSTimeIntervalSince1970)
 #else
-    #define BITCOIN_STANDARD_PORT          8333
-    #define BITCOIN_REFERENCE_BLOCK_HEIGHT 250000
-    #define BITCOIN_REFERENCE_BLOCK_TIME   (1375533383.0 - NSTimeIntervalSince1970)
+#define BITCOIN_STANDARD_PORT          8333
+#define BITCOIN_REFERENCE_BLOCK_HEIGHT 250000
+#define BITCOIN_REFERENCE_BLOCK_TIME   (1375533383.0 - NSTimeIntervalSince1970)
 #endif
 
 // error
@@ -119,7 +119,7 @@
 #if BITCOIN_TESTNET
     #define GENESIS_BLOCK_HASH @"000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943".hexToData.reverse
 #else // main net
-    #define GENESIS_BLOCK_HASH @"000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f".hexToData.reverse
+#define GENESIS_BLOCK_HASH @"000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f".hexToData.reverse
 // blockchain checkpoints, these are also used as starting points for partial chain downloads, so they need to be at
 // difficulty transition boundaries in order to verify the block difficulty at the immediately following transition
 #endif
@@ -172,7 +172,9 @@ typedef enum {
     HOT = 2
 } AppMode;
 
+
 typedef void (^IdResponseBlock)(id response);
+
 typedef void (^VoidResponseBlock)(void);
 
 typedef void (^ArrayResponseBlock)(NSArray *array);
@@ -192,14 +194,17 @@ static int ddLogLevel = LOG_LEVEL_VERBOSE;
 
 @interface BTSettings : NSObject
 + (instancetype)instance;
-@property (atomic) BOOL ensureMinRequiredFee;
-@property (atomic) uint64_t feeBase;
-@property (atomic) int maxPeerConnections;
-@property (atomic) int maxBackgroundPeerConnections;
 
--(BOOL)needChooseMode;
--(AppMode) getAppMode;
--(void)setAppMode:(AppMode)appMode;
+@property(atomic) BOOL ensureMinRequiredFee;
+@property(atomic) uint64_t feeBase;
+@property(atomic) int maxPeerConnections;
+@property(atomic) int maxBackgroundPeerConnections;
+
+- (BOOL)needChooseMode;
+
+- (AppMode)getAppMode;
+
+- (void)setAppMode:(AppMode)appMode;
 
 - (void)openBitheriConsole;
 

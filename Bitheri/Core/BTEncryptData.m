@@ -111,17 +111,17 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     CC_XZEROMEM(x, sizeof(x));
     CC_XZEROMEM(y, sizeof(y));
     CC_XZEROMEM(z, sizeof(z));
-    CC_XZEROMEM(v, 128 * r * (int)n);
-    CC_XFREE(v, 128 * r * (int)n);
+    CC_XZEROMEM(v, 128 * r * (int) n);
+    CC_XFREE(v, 128 * r * (int) n);
     CC_XZEROMEM(&m, sizeof(m));
     return d;
 }
 
 @interface BTEncryptData ()
 
-@property (nonatomic, strong) NSData *encryptedData;
-@property (nonatomic, strong) NSData *iv;
-@property (nonatomic, strong) NSData *salt;
+@property(nonatomic, strong) NSData *encryptedData;
+@property(nonatomic, strong) NSData *iv;
+@property(nonatomic, strong) NSData *salt;
 
 @end
 
@@ -267,14 +267,11 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
 }
 
 - (NSString *)toEncryptedString; {
-    return [[BTQRCodeUtil joinedQRCode:@[[NSString hexWithData:self.encryptedData]
-            , [NSString hexWithData:self.iv], [NSString hexWithData:self.salt]]] toUppercaseStringWithEn];
+    return [[BTQRCodeUtil joinedQRCode:@[[NSString hexWithData:self.encryptedData], [NSString hexWithData:self.iv], [NSString hexWithData:self.salt]]] toUppercaseStringWithEn];
 }
 
 - (NSString *)toEncryptedStringForQRCodeWithIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom; {
-    return [[BTQRCodeUtil joinedQRCode:@[[NSString hexWithData:self.encryptedData]
-            , [NSString hexWithData:self.iv]
-            , [NSString hexWithData:[self saltWithIsCompressed:isCompressed andIsXRandom:isXRandom]]]] toUppercaseStringWithEn];
+    return [[BTQRCodeUtil joinedQRCode:@[[NSString hexWithData:self.encryptedData], [NSString hexWithData:self.iv], [NSString hexWithData:[self saltWithIsCompressed:isCompressed andIsXRandom:isXRandom]]]] toUppercaseStringWithEn];
 }
 
 - (NSData *)saltWithIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom; {
@@ -304,7 +301,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     }
     [salt appendUInt8:flag];
     if (data.length == 9) {
-        [salt appendBytes:(const unsigned char *)data.bytes + 1 length:8];
+        [salt appendBytes:(const unsigned char *) data.bytes + 1 length:8];
     } else {
         [salt appendData:data];
     }
@@ -316,7 +313,7 @@ static NSData *scrypt(NSData *password, NSData *salt, int64_t n, uint32_t r, uin
     NSData *data = [array[2] hexToData];
     NSMutableData *salt = [NSMutableData secureDataWithCapacity:8];
     if (data.length == 9) {
-        [salt appendBytes:(const unsigned char *)data.bytes + 1 length:8];
+        [salt appendBytes:(const unsigned char *) data.bytes + 1 length:8];
     } else {
         [salt appendData:data];
     }

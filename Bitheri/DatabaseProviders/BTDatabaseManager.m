@@ -33,27 +33,27 @@ static BOOL canOpenAddressDb;
 
 
 #pragma mark - tx db
-@property (nonatomic,  readonly) NSString *blocksSql;
-@property (nonatomic,  readonly) NSString *indexBlocksBlockNoSql;
-@property (nonatomic,  readonly) NSString *indexBlocksBlockPrevSql;
-@property (nonatomic,  readonly) NSString *txsSql;
-@property (nonatomic,  readonly) NSString *indexTxsBlockNoSql;
-@property (nonatomic,  readonly) NSString *addressesTxsSql;
-@property (nonatomic,  readonly) NSString *insSql;
-@property (nonatomic,  readonly) NSString *indexInsPrevTxHashSql;
-@property (nonatomic,  readonly) NSString *outsSql;
-@property (nonatomic,  readonly) NSString *indexOutsOutAddressSql;
-@property (nonatomic,  readonly) NSString *peersSql;
-@property (nonatomic,  readonly) NSString *hdAccountAddress;
+@property(nonatomic, readonly) NSString *blocksSql;
+@property(nonatomic, readonly) NSString *indexBlocksBlockNoSql;
+@property(nonatomic, readonly) NSString *indexBlocksBlockPrevSql;
+@property(nonatomic, readonly) NSString *txsSql;
+@property(nonatomic, readonly) NSString *indexTxsBlockNoSql;
+@property(nonatomic, readonly) NSString *addressesTxsSql;
+@property(nonatomic, readonly) NSString *insSql;
+@property(nonatomic, readonly) NSString *indexInsPrevTxHashSql;
+@property(nonatomic, readonly) NSString *outsSql;
+@property(nonatomic, readonly) NSString *indexOutsOutAddressSql;
+@property(nonatomic, readonly) NSString *peersSql;
+@property(nonatomic, readonly) NSString *hdAccountAddress;
 
 #pragma mark - address db
-@property (nonatomic,  readonly) NSString *passwordSeedSql;
-@property (nonatomic,  readonly) NSString *addressesSql;
-@property (nonatomic,  readonly) NSString *hdSeedsSql;
-@property (nonatomic,  readonly) NSString *hdmAddressesSql;
-@property (nonatomic,  readonly) NSString *hdmBidSql;
-@property (nonatomic,  readonly) NSString *aliasesSql;
-@property (nonatomic,  readonly) NSString *hdAccountSql;
+@property(nonatomic, readonly) NSString *passwordSeedSql;
+@property(nonatomic, readonly) NSString *addressesSql;
+@property(nonatomic, readonly) NSString *hdSeedsSql;
+@property(nonatomic, readonly) NSString *hdmAddressesSql;
+@property(nonatomic, readonly) NSString *hdmBidSql;
+@property(nonatomic, readonly) NSString *aliasesSql;
+@property(nonatomic, readonly) NSString *hdAccountSql;
 
 
 @property(nonatomic, strong) FMDatabaseQueue *txQueue;
@@ -75,9 +75,9 @@ static BTDatabaseManager *databaseProvide;
 }
 
 - (instancetype)init {
-    if (! (self = [super init])) return nil;
+    if (!(self = [super init])) return nil;
 
-    #pragma mark - tx db
+#pragma mark - tx db
     _blocksSql = @"create table if not exists blocks "
             "(block_no integer not null"
             ", block_hash text not null primary key"
@@ -127,7 +127,8 @@ static BTDatabaseManager *databaseProvide;
             ", peer_services integer not null"
             ", peer_timestamp integer not null"
             ", peer_connected_cnt integer not null);";
-    _hdAccountAddress =@"create table if not exists hd_account_addresses "
+
+    _hdAccountAddress = @"create table if not exists hd_account_addresses "
             "(path_type integer not null"
             ", address_index integer not null"
             ", is_issued integer not null"
@@ -136,7 +137,7 @@ static BTDatabaseManager *databaseProvide;
             ", is_synced integer not null"
             ", primary key (address));";
 
-    #pragma mark - address db
+#pragma mark - address db
 
     _passwordSeedSql = @"create table if not exists password_seed "
             "(password_seed text not null primary key);";
@@ -170,7 +171,7 @@ static BTDatabaseManager *databaseProvide;
     _aliasesSql = @"create table if not exists aliases "
             "(address text not null primary key"
             ", alias text not null);";
-    _hdAccountAddress =@"create table if not exists  hd_account "
+    _hdAccountAddress = @"create table if not exists  hd_account "
             "( hd_account_id integer not null primary key autoincrement"
             ", encrypt_seed text not null"
             ", encrypt_mnemonic_seed text"
@@ -214,7 +215,7 @@ static BTDatabaseManager *databaseProvide;
                         success = [self txInit:db];
                         break;
                     case 1://upgrade 1->2
-                        success = [self txV1ToV2:db];
+                        success &= [self txV1ToV2:db];
                     default:
                         break;
                 }
@@ -325,25 +326,26 @@ static BTDatabaseManager *databaseProvide;
         return NO;
     }
 }
--(BOOL)addressV2ToV3:(FMDatabase *)db{
-    if ([db open]){
+
+- (BOOL)addressV2ToV3:(FMDatabase *)db {
+    if ([db open]) {
         [db beginTransaction];
         [db executeUpdate:self.hdAccountAddress];
         [db commit];
         return YES;
-    } else{
+    } else {
         return NO;
     }
 }
 
--(BOOL)txV1ToV2:(FMDatabase *)db{
-    if ([db open]){
+- (BOOL)txV1ToV2:(FMDatabase *)db {
+    if ([db open]) {
         [db beginTransaction];
         [db executeUpdate:self.hdmAddressesSql];
         [db executeUpdate:@"alter table outs add column hd_account_id integer;"];
         [db commit];
         return YES;
-    }else{
+    } else {
         return NO;
     }
 }
@@ -361,5 +363,29 @@ static BTDatabaseManager *databaseProvide;
     [self.addressQueue close];
 }
 
+-(void)rebuildTxDb:(FMDatabase *) db{
+    [db executeUpdate:@"drop table txs;"];
+    [db executeUpdate:@"drop table ins;"];
+    [db executeUpdate:@"drop table outs;"];
+    [db executeUpdate:@"drop table addresses_txs;"];
+    [db executeUpdate:@"drop table peers;"];
+
+    [db executeUpdate:self.txsSql];
+    [db executeUpdate:self.indexTxsBlockNoSql];
+
+    [db executeUpdate:self.addressesTxsSql];
+    [db executeUpdate:self.insSql];
+
+    [db executeUpdate:self.indexInsPrevTxHashSql];
+    [db executeUpdate:self.outsSql];
+    [db executeUpdate:self.indexOutsOutAddressSql];
+    [db executeUpdate:self.peersSql];
+
+}
+
+-(void)rebuildPeers:(FMDatabase *) db{
+    [db executeUpdate:@"drop table peers;"];
+    [db executeUpdate:[BTDatabaseManager instance].peersSql];
+}
 
 @end

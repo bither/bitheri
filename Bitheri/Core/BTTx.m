@@ -33,11 +33,11 @@
 @implementation BTTx
 
 - (BOOL)isCoinBase {
-    return self.ins.count == 1 && ((BTIn *)self.ins[0]).isCoinBase;
+    return self.ins.count == 1 && ((BTIn *) self.ins[0]).isCoinBase;
 }
 
-- (uint)confirmationCnt;{
-    if (self.blockNo == TX_UNCONFIRMED){
+- (uint)confirmationCnt; {
+    if (self.blockNo == TX_UNCONFIRMED) {
         return 0;
     } else {
         return [[BTBlockChain instance] lastBlock].blockNo - self.blockNo + 1;
@@ -49,8 +49,8 @@
 }
 
 - (instancetype)init {
-    if (! (self = [super init])) return nil;
-    
+    if (!(self = [super init])) return nil;
+
     _txVer = TX_VERSION;
     _ins = [NSMutableArray new];
     _outs = [NSMutableArray new];
@@ -63,7 +63,7 @@
 }
 
 - (instancetype)initWithMessage:(NSData *)message {
-    if (! (self = [self init])) return nil;
+    if (!(self = [self init])) return nil;
 
     _ins = [NSMutableArray new];
     _outs = [NSMutableArray new];
@@ -83,7 +83,7 @@
     for (NSUInteger i = 0; i < count; i++) { // inputs
         BTIn *in = [BTIn new];
         d = [message hashAtOffset:off]; // input tx hash
-        if (! d) return nil; // required
+        if (!d) return nil; // required
         in.prevTxHash = d;
         off += CC_SHA256_DIGEST_LENGTH;
         in.prevOutSn = [message UInt32AtOffset:off];
@@ -101,7 +101,7 @@
 
     count = [message varIntAtOffset:off length:&l]; // output count
     off += l;
-    
+
     for (NSUInteger i = 0; i < count; i++) { // outputs
         BTOut *out = [BTOut new];
         out.outValue = [message UInt64AtOffset:off];
@@ -115,19 +115,20 @@
         out.outSn = self.outs.count;
         [self.outs addObject:out];
     }
-    
+
     _txLockTime = [message UInt32AtOffset:off]; // tx locktime
-    
+
     return self;
 }
 
 #pragma mark - manage in & out
+
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script {
     [self addInputHash:hash index:index script:script signature:nil sequence:TX_IN_SEQUENCE];
 }
 
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script signature:(NSData *)signature
-sequence:(uint32_t)sequence {
+            sequence:(uint32_t)sequence {
     BTIn *in = [BTIn new];
     in.prevTxHash = hash;
     in.prevOutSn = index;
@@ -146,7 +147,7 @@ sequence:(uint32_t)sequence {
     in.inScript = d;
 }
 
-- (void)setInScript:(NSData *)script forInHash:(NSData *)inHash andInIndex:(NSUInteger) inIndex;{
+- (void)setInScript:(NSData *)script forInHash:(NSData *)inHash andInIndex:(NSUInteger)inIndex; {
     for (BTIn *in in self.ins) {
         if ([in.prevTxHash isEqualToData:inHash] && in.prevOutSn == inIndex) {
             in.inScript = script;
@@ -154,7 +155,7 @@ sequence:(uint32_t)sequence {
     }
 }
 
-- (void)clearIns;{
+- (void)clearIns; {
     [self.ins removeAllObjects];
 }
 
@@ -183,16 +184,17 @@ sequence:(uint32_t)sequence {
 
 
 #pragma mark - sign
+
 //TODO: support signing pay2pubkey outputs (typically used for coinbase outputs)
 - (BOOL)signWithPrivateKeys:(NSArray *)privateKeys {
     NSMutableArray *addresses = [NSMutableArray arrayWithCapacity:privateKeys.count],
-                   *keys = [NSMutableArray arrayWithCapacity:privateKeys.count];
-    
+            *keys = [NSMutableArray arrayWithCapacity:privateKeys.count];
+
     for (NSString *pk in privateKeys) {
         BTKey *key = [BTKey keyWithPrivateKey:pk];
 
-        if (! key) continue;
- 
+        if (!key) continue;
+
         [keys addObject:key];
         [addresses addObject:key.hash160];
     }
@@ -200,10 +202,10 @@ sequence:(uint32_t)sequence {
     for (NSUInteger i = 0; i < self.ins.count; i++) {
         BTIn *in = self.ins[i];
         NSUInteger keyIdx = [addresses indexOfObject:[in.inScript
-                             subdataWithRange:NSMakeRange([in.inScript length] - 22, 20)]];
+                subdataWithRange:NSMakeRange([in.inScript length] - 22, 20)]];
 
         if (keyIdx == NSNotFound) continue;
-    
+
         NSMutableData *sig = [NSMutableData data];
         NSData *hash = [self toDataWithSubscriptIndex:i].SHA256_2;
         NSMutableData *s = [NSMutableData dataWithData:[keys[keyIdx] sign:hash]];
@@ -214,9 +216,9 @@ sequence:(uint32_t)sequence {
 
         in.inSignature = sig;
     }
-    
-    if (! [self isSigned]) return NO;
-    
+
+    if (![self isSigned]) return NO;
+
     _txHash = [self toData].SHA256_2;
     // update in & out 's tx hash
     for (BTIn *in in self.ins) {
@@ -225,11 +227,11 @@ sequence:(uint32_t)sequence {
     for (BTOut *out in self.outs) {
         out.txHash = _txHash;
     }
-        
+
     return YES;
 }
 
-- (NSArray *)unsignedInHashes;{
+- (NSArray *)unsignedInHashes; {
     NSMutableArray *result = [NSMutableArray new];
     for (NSUInteger i = 0; i < self.ins.count; i++) {
         [result addObject:[self toDataWithSubscriptIndex:i].SHA256_2];
@@ -237,7 +239,7 @@ sequence:(uint32_t)sequence {
     return result;
 }
 
-- (BOOL)signWithSignatures:(NSArray *)signatures;{
+- (BOOL)signWithSignatures:(NSArray *)signatures; {
     for (NSUInteger i = 0; i < signatures.count; i++) {
         BTIn *in = self.ins[i];
         in.inSignature = signatures[i];
@@ -257,7 +259,7 @@ sequence:(uint32_t)sequence {
     return YES;
 }
 
-- (NSData *) hashForSignature:(NSUInteger) inputIndex connectedScript:(NSData *) connectedScript sigHashType:(uint8_t) sigHashType; {
+- (NSData *)hashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType; {
     NSMutableArray *inputHashes = [NSMutableArray new];
     NSMutableArray *inputIndexes = [NSMutableArray new];
     NSMutableArray *inputScripts = [NSMutableArray new];
@@ -279,7 +281,7 @@ sequence:(uint32_t)sequence {
         [outputAmounts addObject:@(out.outValue)];
     }
 
-    for (NSUInteger i = 0; i < inputHashes.count; i++){
+    for (NSUInteger i = 0; i < inputHashes.count; i++) {
         inputScripts[i] = [NSData data];
     }
     if (connectedScript != nil) {
@@ -288,7 +290,7 @@ sequence:(uint32_t)sequence {
         connectedScript = [BTScript removeAllInstancesOf:connectedScript and:codeSeparator];
         inputScripts[inputIndex] = connectedScript;
     } else {
-        inputScripts[inputIndex] = ((BTIn *)self.ins[inputIndex]).inScript;
+        inputScripts[inputIndex] = ((BTIn *) self.ins[inputIndex]).inScript;
     }
 
 
@@ -312,7 +314,7 @@ sequence:(uint32_t)sequence {
             outputAmounts[i] = @0xffffffffffffffff;
             outputScripts[i] = [NSData data];
         }
-        for (NSUInteger i = 0; i < inputHashes.count; i++){
+        for (NSUInteger i = 0; i < inputHashes.count; i++) {
             if (i != inputIndex) {
                 inputSequences[i] = @0;
             }
@@ -474,7 +476,7 @@ sequence:(uint32_t)sequence {
     }
     BOOL isCoinBase = NO;
     BTIn *firstIn = self.ins[0];
-    if (self.ins.count == 1 && [((BTIn *)self.ins[0]).prevTxHash isEqualToData:[@"0000000000000000000000000000000000000000000000000000000000000000" hexToData]]
+    if (self.ins.count == 1 && [((BTIn *) self.ins[0]).prevTxHash isEqualToData:[@"0000000000000000000000000000000000000000000000000000000000000000" hexToData]]
             && firstIn.prevOutSn == 0xFFFFFFFFL) {
         isCoinBase = YES;
     }
@@ -504,7 +506,7 @@ sequence:(uint32_t)sequence {
     return YES;
 }
 
-- (BOOL)verifySignatures;{
+- (BOOL)verifySignatures; {
     if ([self isSigned]) {
         NSMutableArray *inScripts = [NSMutableArray new];
         NSMutableArray *keys = [NSMutableArray new];
@@ -535,6 +537,7 @@ sequence:(uint32_t)sequence {
 
 
 #pragma mark - query
+
 - (NSArray *)getInAddresses {
     NSMutableArray *addresses = [NSMutableArray arrayWithCapacity:self.ins.count];
 
@@ -546,11 +549,11 @@ sequence:(uint32_t)sequence {
             [addresses addObject:addr];
         } else {
             NSData *signature = in.inSignature;
-            if (signature != nil){
+            if (signature != nil) {
                 BTScript *script = [[BTScript alloc] initWithProgram:signature];
                 if (script != nil) {
                     NSString *address = script.getFromAddress;
-                    if (address != nil){
+                    if (address != nil) {
                         [addresses addObject:address];
                         continue;
                     }
@@ -571,7 +574,7 @@ sequence:(uint32_t)sequence {
     return [self estimateSize];
 }
 
-- (uint)estimateSize;{
+- (uint)estimateSize; {
     uint size = 8 + [NSMutableData sizeOfVarInt:self.ins.count] + [NSMutableData sizeOfVarInt:self.outs.count];
     for (BTIn *btIn in self.ins) {
         if (btIn.inSignature != nil) {
@@ -590,7 +593,7 @@ sequence:(uint32_t)sequence {
         }
     }
     for (BTOut *out in self.outs) {
-        size += 8 + [NSMutableData sizeOfVarInt:out.outScript.length] + out.outScript.length ;
+        size += 8 + [NSMutableData sizeOfVarInt:out.outScript.length] + out.outScript.length;
     }
     return size;
 }
@@ -604,7 +607,7 @@ sequence:(uint32_t)sequence {
     return NO;
 }
 
-- (BTOut *)getOut:(uint)outSn;{
+- (BTOut *)getOut:(uint)outSn; {
     for (BTOut *out in self.outs) {
         if (out.outSn == outSn) {
             return out;
@@ -616,20 +619,20 @@ sequence:(uint32_t)sequence {
 // priority = sum(input_amount_in_satoshis*input_age_in_blocks)/size_in_bytes
 - (uint64_t)priorityForAmounts:(NSArray *)amounts withAges:(NSArray *)ages {
     uint64_t p = 0;
-    
+
     if (amounts.count != self.ins.count || ages.count != self.ins.count || [ages containsObject:@(0)]) return 0;
-    
-    for (NSUInteger i = 0; i < amounts.count; i++) {    
-        p += [amounts[i] unsignedLongLongValue]*[ages[i] unsignedLongLongValue];
+
+    for (NSUInteger i = 0; i < amounts.count; i++) {
+        p += [amounts[i] unsignedLongLongValue] * [ages[i] unsignedLongLongValue];
     }
-    
-    return p/self.size;
+
+    return p / self.size;
 }
 
 // the block height after which the transaction can be confirmed without a fee, or TX_UNCONFIRMRED for never
 - (uint32_t)blockHeightUntilFreeForAmounts:(NSArray *)amounts withBlockHeights:(NSArray *)heights {
     if (amounts.count != self.ins.count || heights.count != self.ins.count ||
-        self.size > TX_FREE_MAX_SIZE || [heights containsObject:@(TX_UNCONFIRMED)]) {
+            self.size > TX_FREE_MAX_SIZE || [heights containsObject:@(TX_UNCONFIRMED)]) {
         return TX_UNCONFIRMED;
     }
 
@@ -638,22 +641,22 @@ sequence:(uint32_t)sequence {
     }
 
     uint64_t amountTotal = 0, amountsByHeights = 0;
-    
+
     for (NSUInteger i = 0; i < amounts.count; i++) {
         amountTotal += [amounts[i] unsignedLongLongValue];
-        amountsByHeights += [amounts[i] unsignedLongLongValue]*[heights[i] unsignedLongLongValue];
+        amountsByHeights += [amounts[i] unsignedLongLongValue] * [heights[i] unsignedLongLongValue];
     }
-    
+
     if (amountTotal == 0) return TX_UNCONFIRMED;
-    
+
     // this could possibly overflow a uint64 for very large input amounts and far in the future block heights,
     // however we should be okay up to the largest current bitcoin balance in existence for the next 40 years or so,
     // and the worst case is paying a transaction fee when it's not needed
-    return (uint32_t)((TX_FREE_MIN_PRIORITY*(uint64_t)self.size + amountsByHeights + amountTotal - 1llu)/amountTotal);
+    return (uint32_t) ((TX_FREE_MIN_PRIORITY * (uint64_t) self.size + amountsByHeights + amountTotal - 1llu) / amountTotal);
 }
 
 // returns the fee for the given transaction if all its inputs are from wallet transactions, UINT64_MAX otherwise
-- (uint64_t)feeForTransaction;{
+- (uint64_t)feeForTransaction; {
     uint64_t amount = 0;
 
     for (BTIn *btIn in self.ins) {
@@ -689,7 +692,7 @@ sequence:(uint32_t)sequence {
 }
 
 // returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)
-- (uint64_t)amountReceivedFrom:(BTAddress *)addr;{
+- (uint64_t)amountReceivedFrom:(BTAddress *)addr; {
     uint64_t amount = 0;
 
     for (BTOut *out in self.outs) {
@@ -701,7 +704,7 @@ sequence:(uint32_t)sequence {
 }
 
 // returns the amount sent from the wallet by the transaction (total wallet outputs consumed, change and fee included)
-- (uint64_t)amountSentFrom:(BTAddress *)addr;{
+- (uint64_t)amountSentFrom:(BTAddress *)addr; {
     uint64_t amount = 0;
 
     for (BTIn *btIn in self.ins) {
@@ -717,7 +720,7 @@ sequence:(uint32_t)sequence {
     return amount;
 }
 
-- (uint64_t)amountSentTo:(NSString *)addr;{
+- (uint64_t)amountSentTo:(NSString *)addr; {
     uint64_t amount = 0;
 
     for (BTOut *out in self.outs) {
@@ -728,7 +731,7 @@ sequence:(uint32_t)sequence {
     return amount;
 }
 
-- (int64_t)deltaAmountFrom:(BTAddress *)addr;{
+- (int64_t)deltaAmountFrom:(BTAddress *)addr; {
     uint64_t receive = 0;
     uint64_t sent = 0;
 
@@ -736,20 +739,21 @@ sequence:(uint32_t)sequence {
         if ([addr.address isEqualToString:out.outAddress])
             receive += out.outValue;
     }
-    sent=[[BTTxProvider instance] sentFromAddress:self.txHash address:addr.address];
+    sent = [[BTTxProvider instance] sentFromAddress:self.txHash address:addr.address];
     return receive - sent;
 }
 
 
 #pragma mark - confirm
-- (void)sawByPeer;{
+
+- (void)sawByPeer; {
     [[BTTxProvider instance] txSentBySelfHasSaw:self.txHash];
     self.sawByPeerCnt += 1;
 }
 
 - (NSUInteger)hash {
     if (self.txHash.length < sizeof(NSUInteger)) return [super hash];
-    return *(const NSUInteger *)self.txHash.bytes;
+    return *(const NSUInteger *) self.txHash.bytes;
 }
 
 - (BOOL)isEqual:(id)object {
@@ -764,23 +768,23 @@ sequence:(uint32_t)sequence {
     if ((self.blockNo == item.blockNo) && [self.txHash isEqualToData:item.txHash] && self.source == item.source
             && self.sawByPeerCnt == item.sawByPeerCnt && self.txTime == item.txTime && self.txVer == item.txVer
             && self.txLockTime == item.txLockTime) {
-        if (self.ins.count != item.ins.count){
+        if (self.ins.count != item.ins.count) {
             DDLogVerbose(@"ins count is not match");
             return NO;
         }
-        if (self.outs.count != item.outs.count){
+        if (self.outs.count != item.outs.count) {
             DDLogVerbose(@"outs count is not match");
             return NO;
         }
         for (NSUInteger i = 0; i < self.ins.count; i++) {
-            if (![self.ins[i] isEqual:item.ins[i]]){
+            if (![self.ins[i] isEqual:item.ins[i]]) {
                 DDLogVerbose(@"ins[%lu] is not match", i);
                 return NO;
             }
         }
         for (NSUInteger i = 0; i < self.outs.count; i++) {
-            if (![self.outs[i] isEqual:item.outs[i]]){
-                DDLogVerbose(@"outs[%lu] is not match", (unsigned long)i);
+            if (![self.outs[i] isEqual:item.outs[i]]) {
+                DDLogVerbose(@"outs[%lu] is not match", (unsigned long) i);
                 return NO;
             }
         }

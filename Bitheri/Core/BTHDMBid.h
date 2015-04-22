@@ -20,12 +20,13 @@
 @interface BTHDMBid : NSObject
 
 - (instancetype)initWithHDMBid:(NSString *)address;
+
 - (instancetype)initWithHDMBid:(NSString *)address andEncryptBitherPassword:(NSString *)encryptBitherPassword;
 
-@property (nonatomic, copy) NSString *address;
-@property (nonatomic, copy) NSString *encryptedBitherPassword;
-@property (nonatomic, copy) NSData *password;
-@property (nonatomic) long long serviceRandom;
+@property(nonatomic, copy) NSString *address;
+@property(nonatomic, copy) NSString *encryptedBitherPassword;
+@property(nonatomic, copy) NSData *password;
+@property(nonatomic) long long serviceRandom;
 
 + (BTHDMBid *)getHDMBidFromDb;
 

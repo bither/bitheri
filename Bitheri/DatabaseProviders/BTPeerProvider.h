@@ -25,11 +25,11 @@
 
 - (NSMutableArray *)getAllPeers;
 
-- (void)deletePeersNotInAddresses:(NSSet *) peerAddresses;
+- (void)deletePeersNotInAddresses:(NSSet *)peerAddresses;
 
-- (NSArray *)exists:(NSSet *) peerAddresses;
+- (NSArray *)exists:(NSSet *)peerAddresses;
 
-- (void)addPeers:(NSArray *) peers;
+- (void)addPeers:(NSArray *)peers;
 
 - (void)updatePeersTimestamp:(NSArray *)peerAddresses;
 

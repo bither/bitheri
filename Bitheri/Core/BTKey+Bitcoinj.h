@@ -22,7 +22,8 @@
 @interface BTKey (Bitcoinj)
 
 + (instancetype)keyWithBitcoinj:(NSString *)key andPassphrase:(NSString *)passphrase;
-- (NSString *)bitcoinjKeyWithPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *) iv flag:(uint8_t) flag;
+
+- (NSString *)bitcoinjKeyWithPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv flag:(uint8_t)flag;
 
 //+(NSString *)reEncryptPrivKeyWithOldPassphrase:(NSString * )encryptPrivKey oldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
 //

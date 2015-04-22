@@ -22,50 +22,50 @@
 
 @class BTHDMKeychain;
 
-@interface BTHDMPubs :NSObject
-+(NSData*)EmptyBytes;
+@interface BTHDMPubs : NSObject
++ (NSData *)EmptyBytes;
 
-@property (nonatomic, copy) NSData *hot;
-@property (nonatomic, copy) NSData *cold;
-@property (nonatomic, copy) NSData *remote;
-@property (nonatomic) UInt32 index;
+@property(nonatomic, copy) NSData *hot;
+@property(nonatomic, copy) NSData *cold;
+@property(nonatomic, copy) NSData *remote;
+@property(nonatomic) UInt32 index;
 
-@property (nonatomic, readonly) BTScript* multisigScript;
+@property(nonatomic, readonly) BTScript *multisigScript;
 
-@property (nonatomic, readonly) BOOL hasHot;
-@property (nonatomic, readonly) BOOL hasCold;
-@property (nonatomic, readonly) BOOL hasRemote;
-@property (nonatomic, readonly) BOOL isCompleted;
-@property (nonatomic, readonly) NSString* address;
+@property(nonatomic, readonly) BOOL hasHot;
+@property(nonatomic, readonly) BOOL hasCold;
+@property(nonatomic, readonly) BOOL hasRemote;
+@property(nonatomic, readonly) BOOL isCompleted;
+@property(nonatomic, readonly) NSString *address;
 
--(instancetype)initWithHot:(NSData*)hot cold:(NSData*)cold remote:(NSData*)remote andIndex:(UInt32)index;
+- (instancetype)initWithHot:(NSData *)hot cold:(NSData *)cold remote:(NSData *)remote andIndex:(UInt32)index;
 
 @end
 
 @interface BTHDMAddress : BTAddress
 
-@property (nonatomic, strong) BTHDMPubs *pubs;
-@property (nonatomic, weak) BTHDMKeychain *keychain;
-@property (nonatomic, readonly) UInt32 index;
+@property(nonatomic, strong) BTHDMPubs *pubs;
+@property(nonatomic, weak) BTHDMKeychain *keychain;
+@property(nonatomic, readonly) UInt32 index;
 
-@property (nonatomic, readonly) NSData* pubCold;
-@property (nonatomic, readonly) NSData* pubHot;
-@property (nonatomic, readonly) NSData* pubRemote;
-@property (nonatomic, readonly) NSArray* pubKeys;
+@property(nonatomic, readonly) NSData *pubCold;
+@property(nonatomic, readonly) NSData *pubHot;
+@property(nonatomic, readonly) NSData *pubRemote;
+@property(nonatomic, readonly) NSArray *pubKeys;
 
-@property (nonatomic, readonly) BOOL isInRecovery;
+@property(nonatomic, readonly) BOOL isInRecovery;
 
--(instancetype)initWithPubs:(BTHDMPubs*)pubs andKeychain:(BTHDMKeychain*)keychain;
+- (instancetype)initWithPubs:(BTHDMPubs *)pubs andKeychain:(BTHDMKeychain *)keychain;
 
--(instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString*)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain;
+- (instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString *)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain;
 
--(BOOL)signTx:(BTTx*)tx withPassword:(NSString*)password andFetchBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx)) fetchBlock;
+- (BOOL)signTx:(BTTx *)tx withPassword:(NSString *)password andFetchBlock:(NSArray *(^)(UInt32 index, NSString *password, NSArray *unsignHashes, BTTx *tx))fetchBlock;
 
--(BOOL)signTx:(BTTx *)tx withPassword:(NSString *)password coldBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockCold andRemoteBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))fetchBlockRemote;
+- (BOOL)signTx:(BTTx *)tx withPassword:(NSString *)password coldBlock:(NSArray *(^)(UInt32 index, NSString *password, NSArray *unsignHashes, BTTx *tx))fetchBlockCold andRemoteBlock:(NSArray *(^)(UInt32 index, NSString *password, NSArray *unsignHashes, BTTx *tx))fetchBlockRemote;
 
--(NSArray*)signUnsginedHashes:(NSArray*)unsignedHashes withPassword:(NSString*)password tx:(BTTx*)tx andOtherBlock:(NSArray* (^)(UInt32 index, NSString* password, NSArray* unsignHashes, BTTx* tx))block;
+- (NSArray *)signUnsginedHashes:(NSArray *)unsignedHashes withPassword:(NSString *)password tx:(BTTx *)tx andOtherBlock:(NSArray *(^)(UInt32 index, NSString *password, NSArray *unsignHashes, BTTx *tx))block;
 
--(NSArray*)signMyPartUnsignedHashes:(NSArray*) unsignedHashes withPassword:(NSString*)password;
+- (NSArray *)signMyPartUnsignedHashes:(NSArray *)unsignedHashes withPassword:(NSString *)password;
 
 @end
 

@@ -22,14 +22,20 @@
 @interface BTPasswordSeed : NSObject
 
 - (instancetype)initWithAddress:(NSString *)address andEncryptStr:(NSString *)encryptStr;
+
 - (instancetype)initWithString:(NSString *)message;
+
 - (instancetype)initWithBTAddress:(BTAddress *)btAddress;
+
 - (BOOL)checkPassword:(NSString *)password;
+
 - (NSString *)toPasswordSeedString;
+
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
 
-+(BOOL)hasPasswordSeed;
-+(BTPasswordSeed *)getPasswordSeed;
++ (BOOL)hasPasswordSeed;
+
++ (BTPasswordSeed *)getPasswordSeed;
 
 
 @end

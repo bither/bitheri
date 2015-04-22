@@ -27,11 +27,13 @@
 - (int)getBlockCount;
 
 - (NSMutableArray *)getAllBlocks;
-- (NSArray *)getBlocksWithLimit:(NSInteger) limit ;
+
+- (NSArray *)getBlocksWithLimit:(NSInteger)limit;
 
 - (NSMutableArray *)getBlocksFrom:(uint)blockNo;
 
 - (BTBlock *)getLastBlock;
+
 - (BTBlock *)getLastOrphanBlock;
 
 - (BTBlock *)getBlock:(NSData *)blockHash;

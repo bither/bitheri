@@ -19,8 +19,7 @@
 #import <Foundation/Foundation.h>
 #import "DDFileLogger.h"
 
-@interface BTCompressingLogFileManager : DDLogFileManagerDefault
-{
+@interface BTCompressingLogFileManager : DDLogFileManagerDefault {
     BOOL upToDate;
     BOOL isCompressing;
 }

@@ -25,15 +25,15 @@
 
 }
 
--(instancetype)init{
+- (instancetype)init {
     self = [super init];
-    if(self){
+    if (self) {
         _chunks = [[NSMutableArray alloc] init];
     }
     return self;
 }
 
-- (BTScriptBuilder *)addChunk:(BTScriptChunk *)chunk{
+- (BTScriptBuilder *)addChunk:(BTScriptChunk *)chunk {
     [_chunks addObject:chunk];
     return self;
 }
@@ -52,7 +52,7 @@
     if (copy.length == 0) {
         opCode = OP_0;
     } else if (copy.length == 1) {
-        uint8_t b = *((const uint8_t *)copy.bytes);
+        uint8_t b = *((const uint8_t *) copy.bytes);
         if (b >= 1 && b <= 16) {
             opCode = [BTScript encodeToOpN:b];
         } else {
@@ -78,22 +78,23 @@
     }
 }
 
-- (BTScript *)build;{
+- (BTScript *)build; {
     return [[BTScript alloc] initWithChunks:self.chunks];
 }
 
 #pragma mark - p2sh
-+ (BTScript *)createMultiSigRedeemWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys;{
+
++ (BTScript *)createMultiSigRedeemWithThreshold:(int)threshold andPubKeys:(NSArray *)pubKeys; {
     BTScriptBuilder *builder = [[[BTScriptBuilder alloc] init] smallNum:threshold];
     for (NSData *pubKey in pubKeys) {
         [builder data:pubKey];
     }
-    [builder smallNum:(int)pubKeys.count];
+    [builder smallNum:(int) pubKeys.count];
     [builder op:OP_CHECKMULTISIG];
     return [builder build];
 }
 
-+ (BTScript *)createP2SHMultiSigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram;{
++ (BTScript *)createP2SHMultiSigInputScriptWithSignatures:(NSArray *)signatures andMultisigProgram:(NSData *)multisigProgram; {
     BTScriptBuilder *builder = [[[BTScriptBuilder alloc] init] smallNum:0];
     for (NSData *signature in signatures) {
         [builder data:signature];
@@ -102,15 +103,15 @@
     return [builder build];
 }
 
-+ (BTScript *)createP2SHOutputScriptWithHash:(NSData *)hash;{
++ (BTScript *)createP2SHOutputScriptWithHash:(NSData *)hash; {
     return [[[[[[BTScriptBuilder alloc] init] op:OP_HASH160] data:hash] op:OP_EQUAL] build];
 }
 
-+ (BTScript *)createP2SHOutputScriptWithMultiSigRedeem:(BTScript *)script;{
++ (BTScript *)createP2SHOutputScriptWithMultiSigRedeem:(BTScript *)script; {
     return [BTScriptBuilder createP2SHOutputScriptWithHash:[[script program] hash160]];
 }
 
-+ (BTScript *)createPubKeyHashInSignatureWithSignature:(NSData *)signature andPubKey:(NSData *)pubKey;{
++ (BTScript *)createPubKeyHashInSignatureWithSignature:(NSData *)signature andPubKey:(NSData *)pubKey; {
     return [[[[[BTScriptBuilder alloc] init] data:signature] data:pubKey] build];
 }
 @end

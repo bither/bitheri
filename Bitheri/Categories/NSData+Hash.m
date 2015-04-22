@@ -42,62 +42,57 @@
 
 @implementation NSData (Hash)
 
-- (NSData *)SHA1
-{
+- (NSData *)SHA1 {
     NSMutableData *d = [NSMutableData dataWithLength:CC_SHA1_DIGEST_LENGTH];
 
-    CC_SHA1(self.bytes, (CC_LONG)self.length, d.mutableBytes);
+    CC_SHA1(self.bytes, (CC_LONG) self.length, d.mutableBytes);
 
     return d;
 }
 
-- (NSData *)SHA256
-{
+- (NSData *)SHA256 {
     NSMutableData *d = [NSMutableData dataWithLength:CC_SHA256_DIGEST_LENGTH];
-    
-    CC_SHA256(self.bytes, (CC_LONG)self.length, d.mutableBytes);
-    
+
+    CC_SHA256(self.bytes, (CC_LONG) self.length, d.mutableBytes);
+
     return d;
 }
 
-- (NSData *)SHA256_2
-{
+- (NSData *)SHA256_2 {
     NSMutableData *d = [NSMutableData dataWithLength:CC_SHA256_DIGEST_LENGTH];
-    
-    CC_SHA256(self.bytes, (CC_LONG)self.length, d.mutableBytes);
-    CC_SHA256(d.bytes, (CC_LONG)d.length, d.mutableBytes);
-    
+
+    CC_SHA256(self.bytes, (CC_LONG) self.length, d.mutableBytes);
+    CC_SHA256(d.bytes, (CC_LONG) d.length, d.mutableBytes);
+
     return d;
 }
 
-- (NSData *)RMD160
-{
+- (NSData *)RMD160 {
     NSMutableData *d = [NSMutableData dataWithLength:RIPEMD160_DIGEST_LENGTH];
-    
+
     RIPEMD160(self.bytes, self.length, d.mutableBytes);
-    
+
     return d;
 }
 
-- (NSData *)hash160
-{
+- (NSData *)hash160 {
     return self.SHA256.RMD160;
 }
 
-- (NSData *)reverse
-{
+- (NSData *)reverse {
     NSUInteger l = self.length;
     NSMutableData *d = [NSMutableData dataWithLength:l];
     uint8_t *b1 = d.mutableBytes;
     const uint8_t *b2 = self.bytes;
-    
+
     for (NSUInteger i = 0; i < l; i++) {
         b1[i] = b2[l - i - 1];
     }
-    
+
     return d;
 }
--(NSInteger)compare:(NSData *)data {
+
+- (NSInteger)compare:(NSData *)data {
     BIGNUM *modulus = BN_bin2bn(self.bytes, self.length, NULL);
     BIGNUM *exponent = BN_bin2bn(data.bytes, data.length, NULL);
     int result = BN_cmp(modulus, exponent);
@@ -107,15 +102,15 @@
 }
 
 
-+ (NSData *)randomWithSize:(int) size;{
++ (NSData *)randomWithSize:(int)size; {
     OSStatus sanityCheck = noErr;
-    uint8_t * bytes = NULL;
-    bytes = malloc( size * sizeof(uint8_t) );
-    memset((void *)bytes, 0x0, size);
+    uint8_t *bytes = NULL;
+    bytes = malloc(size * sizeof(uint8_t));
+    memset((void *) bytes, 0x0, size);
     sanityCheck = SecRandomCopyBytes(kSecRandomDefault, size, bytes);
-    if (sanityCheck == noErr){
+    if (sanityCheck == noErr) {
         return [NSData dataWithBytes:bytes length:size];
-    } else{
+    } else {
         return nil;
     }
 }

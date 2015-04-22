@@ -24,8 +24,8 @@
 
 @interface BTBlockChain : NSObject
 
-@property (nonatomic, strong) NSMutableDictionary *singleBlocks;
-@property (nonatomic, strong, readonly) BTBlock *lastBlock;
+@property(nonatomic, strong) NSMutableDictionary *singleBlocks;
+@property(nonatomic, strong, readonly) BTBlock *lastBlock;
 
 
 + (instancetype)instance;
@@ -37,12 +37,15 @@
 - (NSArray *)blockLocatorArray;
 
 - (void)relayedBlock:(BTBlock *)block withCallback:(void (^)(BTBlock *b, BOOL isConfirm))callback;
-- (int)relayedBlockHeadersForMainChain:(NSArray *) blocks;
-- (int)relayedBlocks:(NSArray *) blocks;
+
+- (int)relayedBlockHeadersForMainChain:(NSArray *)blocks;
+
+- (int)relayedBlocks:(NSArray *)blocks;
 
 - (BOOL)rollbackBlock:(uint32_t)blockNo;
 
--(NSArray *) getAllBlocks;
-- (NSArray *)getBlocksWithLimit:(NSInteger) limit ;
+- (NSArray *)getAllBlocks;
+
+- (NSArray *)getBlocksWithLimit:(NSInteger)limit;
 
 @end

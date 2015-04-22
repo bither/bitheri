@@ -25,15 +25,15 @@ typedef enum {
 
 @interface BTOut : NSObject
 
-@property (nonatomic, copy) NSData *txHash;
+@property(nonatomic, copy) NSData *txHash;
 @property uint outSn;
-@property (nonatomic, copy) NSData *outScript;
+@property(nonatomic, copy) NSData *outScript;
 @property uint64_t outValue;
 @property int outStatus;
-@property (nonatomic, copy) NSString *outAddress;
+@property(nonatomic, copy) NSString *outAddress;
 
 @property uint64_t coinDepth;
 
-@property (nonatomic, weak) BTTx *tx;
+@property(nonatomic, weak) BTTx *tx;
 
 @end

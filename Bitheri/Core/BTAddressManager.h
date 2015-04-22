@@ -25,33 +25,42 @@
 
 @interface BTAddressManager : NSObject
 
-@property (nonatomic, strong) NSMutableArray *privKeyAddresses;
-@property (nonatomic, strong) NSMutableArray *watchOnlyAddresses;
-@property (nonatomic, strong) NSMutableArray *trashAddresses;
-@property (nonatomic, strong) BTHDMKeychain* hdmKeychain;
-@property (nonatomic, readonly) BOOL hasHDMKeychain;
-@property (nonatomic, strong) NSMutableSet *addressesSet;
-@property (nonatomic, readonly) NSMutableArray *allAddresses;
-@property (nonatomic, readonly) NSTimeInterval creationTime; // interval since refrence date, 00:00:00 01/01/01 GMT
-@property (nonatomic,readwrite) BOOL isReady;
+@property(nonatomic, strong) NSMutableArray *privKeyAddresses;
+@property(nonatomic, strong) NSMutableArray *watchOnlyAddresses;
+@property(nonatomic, strong) NSMutableArray *trashAddresses;
+@property(nonatomic, strong) BTHDMKeychain *hdmKeychain;
+@property(nonatomic, readonly) BOOL hasHDMKeychain;
+@property(nonatomic, strong) NSMutableSet *addressesSet;
+@property(nonatomic, readonly) NSMutableArray *allAddresses;
+@property(nonatomic, readonly) NSTimeInterval creationTime; // interval since refrence date, 00:00:00 01/01/01 GMT
+@property(nonatomic, readwrite) BOOL isReady;
+
 + (instancetype)instance;
 
 - (void)initAddress;
+
 - (NSInteger)addressCount;
 
 - (void)addAddress:(BTAddress *)address;
 
 - (void)stopMonitor:(BTAddress *)address;
+
 - (void)trashPrivKey:(BTAddress *)address;
+
 - (void)restorePrivKey:(BTAddress *)address;
 
 - (NSMutableArray *)allAddresses;
+
 - (BOOL)changePassphraseWithOldPassphrase:(NSString *)oldPassphrase andNewPassphrase:(NSString *)newPassphrase;
+
 - (BOOL)allSyncComplete;
 
 - (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
+
 - (BOOL)isTxRelated:(BTTx *)tx;
+
 - (NSArray *)outs;
+
 - (NSArray *)unSpentOuts;
 
 - (void)blockChainChanged;
@@ -59,5 +68,6 @@
 - (NSArray *)compressTxsForApi:(NSArray *)txList andAddress:(NSString *)address;
 
 #pragma mark - for old version
+
 + (BOOL)updateKeyStoreFromFileToDbWithPasswordSeed:(BTPasswordSeed *)passwordSeed;
 @end

@@ -26,9 +26,12 @@
 + (instancetype)instance;
 
 - (FMDatabaseQueue *)getTxDbQueue;
+
 - (FMDatabaseQueue *)getAddressDbQueue;
 
--(BOOL)initDatabase;
+- (BOOL)initDatabase;
+-(void)rebuildTxDb:(FMDatabase *) db;
+-(void)rebuildPeers:(FMDatabase *) db;
 //- (void)closeDatabase;
 //- (BOOL)dbIsOpen;
 

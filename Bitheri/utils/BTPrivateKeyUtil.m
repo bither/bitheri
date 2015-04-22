@@ -24,13 +24,13 @@
 
 @implementation BTPrivateKeyUtil
 
-+(NSString *)getPrivateKeyString:(BTKey *) key passphrase:(NSString *)passphrase {
-    uint8_t flag=[key getKeyFlag];
++ (NSString *)getPrivateKeyString:(BTKey *)key passphrase:(NSString *)passphrase {
+    uint8_t flag = [key getKeyFlag];
     NSString *encryptPrivKey = [key bitcoinjKeyWithPassphrase:passphrase andSalt:[NSData randomWithSize:8] andIV:[NSData randomWithSize:16] flag:flag];
     return encryptPrivKey;
 }
 
-+ (BOOL)verifyMessage:(NSString *)message andSignedMessage:(NSString *)signedMessage withAddress:(NSString *)address;{
++ (BOOL)verifyMessage:(NSString *)message andSignedMessage:(NSString *)signedMessage withAddress:(NSString *)address; {
     BTKey *key = [BTKey signedMessageToKey:message andSignatureBase64:signedMessage];
     NSString *signAddress = [key address];
     return [BTUtils compareString:address compare:signAddress];

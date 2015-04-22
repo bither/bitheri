@@ -44,30 +44,39 @@
 
 @interface BTKey : NSObject
 
-@property (nonatomic, copy) NSString *privateKey;
-@property (nonatomic, copy) NSData *publicKey;
-@property (nonatomic, readonly) NSString *address;
-@property (nonatomic, readonly) NSData *hash160;
+@property(nonatomic, copy) NSString *privateKey;
+@property(nonatomic, copy) NSData *publicKey;
+@property(nonatomic, readonly) NSString *address;
+@property(nonatomic, readonly) NSData *hash160;
 @property BOOL compressed;
 @property BOOL isFromXRandom;
 
 + (instancetype)keyWithPrivateKey:(NSString *)privateKey;
+
 + (instancetype)keyWithSecret:(NSData *)secret compressed:(BOOL)compressed;
+
 + (instancetype)keyWithPublicKey:(NSData *)publicKey;
 
 - (instancetype)initWithPrivateKey:(NSString *)privateKey;
+
 - (instancetype)initWithSecret:(NSData *)secret compressed:(BOOL)compressed;
+
 - (instancetype)initWithPublicKey:(NSData *)publicKey;
 
 - (NSData *)sign:(NSData *)d;
+
 - (BOOL)verify:(NSData *)d signature:(NSData *)sig;
--(uint8_t)getKeyFlag;
+
+- (uint8_t)getKeyFlag;
 
 + (NSData *)getRFromSignature:(NSData *)sig;
 
 - (NSString *)signMessage:(NSString *)message;
+
 - (NSData *)signHash:(NSData *)hash;
+
 - (BOOL)verifyMessage:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;
+
 + (BTKey *)signedMessageToKey:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;
 
 @end

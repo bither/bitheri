@@ -23,27 +23,6 @@
 
 @interface BTDatabaseManager : NSObject
 
-#pragma mark - tx db
-@property (nonatomic, copy, readonly) NSString *createTableBlocksSql;
-@property (nonatomic, copy, readonly) NSString *createIndexBlocksBlockNoSql;
-@property (nonatomic, copy, readonly) NSString *createIndexBlocksBlockPrevSql;
-@property (nonatomic, copy, readonly) NSString *createTableTxsSql;
-@property (nonatomic, copy, readonly) NSString *createIndexTxsBlockNoSql;
-@property (nonatomic, copy, readonly) NSString *createTableAddressesTxsSql;
-@property (nonatomic, copy, readonly) NSString *createTableInsSql;
-@property (nonatomic, copy, readonly) NSString *createIndexInsPrevTxHashSql;
-@property (nonatomic, copy, readonly) NSString *createTableOutsSql;
-@property (nonatomic, copy, readonly) NSString *createIndexOutsOutAddressSql;
-@property (nonatomic, copy, readonly) NSString *createTablePeersSql;
-
-#pragma mark - address db
-@property (nonatomic, copy, readonly) NSString *createTablePasswordSeedSql;
-@property (nonatomic, copy, readonly) NSString *createTableAddressesSql;
-@property (nonatomic, copy, readonly) NSString *createTableHDSeedsSql;
-@property (nonatomic, copy, readonly) NSString *createTableHDMAddressesSql;
-@property (nonatomic, copy, readonly) NSString *createTableHDMBidSql;
-@property (nonatomic, copy, readonly) NSString *createTableAliasesSql;
-
 + (instancetype)instance;
 
 - (FMDatabaseQueue *)getTxDbQueue;

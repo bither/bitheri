@@ -20,16 +20,42 @@
 
 NSString *const TX_DB_VERSION = @"db_version";
 NSString *const TX_DB_NAME = @"bitheri.sqlite";
-const int CURRENT_TX_DB_VERSION = 1;
+const int CURRENT_TX_DB_VERSION = 2;
 
 NSString *const ADDRESS_DB_VERSION = @"address_db_version";
 NSString *const ADDRESS_DB_NAME = @"address.sqlite";
-const int CURRENT_ADDRESS_DB_VERSION = 2;
+const int CURRENT_ADDRESS_DB_VERSION = 3;
 
 static BOOL canOpenTxDb;
 static BOOL canOpenAddressDb;
 
 @interface BTDatabaseManager ()
+
+
+#pragma mark - tx db
+@property (nonatomic,  readonly) NSString *blocksSql;
+@property (nonatomic,  readonly) NSString *indexBlocksBlockNoSql;
+@property (nonatomic,  readonly) NSString *indexBlocksBlockPrevSql;
+@property (nonatomic,  readonly) NSString *txsSql;
+@property (nonatomic,  readonly) NSString *indexTxsBlockNoSql;
+@property (nonatomic,  readonly) NSString *addressesTxsSql;
+@property (nonatomic,  readonly) NSString *insSql;
+@property (nonatomic,  readonly) NSString *indexInsPrevTxHashSql;
+@property (nonatomic,  readonly) NSString *outsSql;
+@property (nonatomic,  readonly) NSString *indexOutsOutAddressSql;
+@property (nonatomic,  readonly) NSString *peersSql;
+@property (nonatomic,  readonly) NSString *hdAccountAddress;
+
+#pragma mark - address db
+@property (nonatomic,  readonly) NSString *passwordSeedSql;
+@property (nonatomic,  readonly) NSString *addressesSql;
+@property (nonatomic,  readonly) NSString *hdSeedsSql;
+@property (nonatomic,  readonly) NSString *hdmAddressesSql;
+@property (nonatomic,  readonly) NSString *hdmBidSql;
+@property (nonatomic,  readonly) NSString *aliasesSql;
+@property (nonatomic,  readonly) NSString *hdAccountSql;
+
+
 @property(nonatomic, strong) FMDatabaseQueue *txQueue;
 @property(nonatomic, strong) FMDatabaseQueue *addressQueue;
 @end
@@ -51,8 +77,8 @@ static BTDatabaseManager *databaseProvide;
 - (instancetype)init {
     if (! (self = [super init])) return nil;
 
-    // init sql
-    _createTableBlocksSql = @"create table if not exists blocks "
+    #pragma mark - tx db
+    _blocksSql = @"create table if not exists blocks "
             "(block_no integer not null"
             ", block_hash text not null primary key"
             ", block_root text not null"
@@ -62,21 +88,21 @@ static BTDatabaseManager *databaseProvide;
             ", block_time integer not null"
             ", block_prev text"
             ", is_main integer not null);";
-    _createIndexBlocksBlockNoSql = @"create index idx_blocks_block_no on blocks (block_no);";
-    _createIndexBlocksBlockPrevSql = @"create index idx_blocks_block_prev on blocks (block_prev);";
-    _createTableTxsSql = @"create table if not exists txs "
+    _indexBlocksBlockNoSql = @"create index idx_blocks_block_no on blocks (block_no);";
+    _indexBlocksBlockPrevSql = @"create index idx_blocks_block_prev on blocks (block_prev);";
+    _txsSql = @"create table if not exists txs "
             "(tx_hash text primary key"
             ", tx_ver integer"
             ", tx_locktime integer"
             ", tx_time integer"
             ", block_no integer"
             ", source integer);";
-    _createIndexTxsBlockNoSql = @"create index idx_tx_block_no on txs (block_no);";
-    _createTableAddressesTxsSql = @"create table if not exists addresses_txs "
+    _indexTxsBlockNoSql = @"create index idx_tx_block_no on txs (block_no);";
+    _addressesTxsSql = @"create table if not exists addresses_txs "
             "(address text not null"
             ", tx_hash text not null"
             ", primary key (address, tx_hash));";
-    _createTableInsSql = @"create table if not exists ins "
+    _insSql = @"create table if not exists ins "
             "(tx_hash text not null"
             ", in_sn integer not null"
             ", prev_tx_hash text"
@@ -84,26 +110,37 @@ static BTDatabaseManager *databaseProvide;
             ", in_signature text"
             ", in_sequence integer"
             ", primary key (tx_hash, in_sn));";
-    _createIndexInsPrevTxHashSql = @"create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
-    _createTableOutsSql = @"create table if not exists outs "
+    _indexInsPrevTxHashSql = @"create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
+    _outsSql = @"create table if not exists outs "
             "(tx_hash text not null"
             ", out_sn integer not null"
             ", out_script text not null"
             ", out_value integer not null"
             ", out_status integer not null"
             ", out_address text"
+            ", hd_account_id integer "
             ", primary key (tx_hash, out_sn));";
-    _createIndexOutsOutAddressSql = @"create index idx_out_out_address on outs (out_address);";
-    _createTablePeersSql = @"create table if not exists peers "
+    _indexOutsOutAddressSql = @"create index idx_out_out_address on outs (out_address);";
+    _peersSql = @"create table if not exists peers "
             "(peer_address integer primary key"
             ", peer_port integer not null"
             ", peer_services integer not null"
             ", peer_timestamp integer not null"
             ", peer_connected_cnt integer not null);";
+    _hdAccountAddress =@"create table if not exists hd_account_addresses "
+            "(path_type integer not null"
+            ", address_index integer not null"
+            ", is_issued integer not null"
+            ", address text not null"
+            ", pub text not null"
+            ", is_synced integer not null"
+            ", primary key (address));";
 
-    _createTablePasswordSeedSql = @"create table if not exists password_seed "
+    #pragma mark - address db
+
+    _passwordSeedSql = @"create table if not exists password_seed "
             "(password_seed text not null primary key);";
-    _createTableAddressesSql = @"create table if not exists addresses "
+    _addressesSql = @"create table if not exists addresses "
             "(address text not null primary key"
             ", encrypt_private_key text"
             ", pub_key text not null"
@@ -111,14 +148,14 @@ static BTDatabaseManager *databaseProvide;
             ", is_trash integer not null"
             ", is_synced integer not null"
             ", sort_time integer not null);";
-    _createTableHDSeedsSql = @"create table if not exists hd_seeds "
+    _hdSeedsSql = @"create table if not exists hd_seeds "
             "(hd_seed_id integer not null primary key autoincrement"
             ", encrypt_seed text not null"
             ", encrypt_hd_seed text"
             ", hdm_address text not null"
             ", is_xrandom integer not null"
             ", singular_mode_backup text);";
-    _createTableHDMAddressesSql = @"create table if not exists hdm_addresses "
+    _hdmAddressesSql = @"create table if not exists hdm_addresses "
             "(hd_seed_id integer not null"
             ", hd_seed_index integer not null"
             ", pub_key_hot text not null"
@@ -127,12 +164,20 @@ static BTDatabaseManager *databaseProvide;
             ", address text"
             ", is_synced integer not null"
             ", primary key (hd_seed_id, hd_seed_index));";
-    _createTableHDMBidSql = @"create table if not exists hdm_bid "
+    _hdmBidSql = @"create table if not exists hdm_bid "
             "(hdm_bid text not null primary key"
             ", encrypt_bither_password text not null);";
-    _createTableAliasesSql = @"create table if not exists aliases "
+    _aliasesSql = @"create table if not exists aliases "
             "(address text not null primary key"
             ", alias text not null);";
+    _hdAccountAddress =@"create table if not exists  hd_account "
+            "( hd_account_id integer not null primary key autoincrement"
+            ", encrypt_seed text not null"
+            ", encrypt_mnemonic_seed text"
+            ", hd_address text not null"
+            ", external_pub text not null"
+            ", internal_pub text not null"
+            ", is_xrandom integer not null);";
     return self;
 }
 
@@ -165,9 +210,11 @@ static BTDatabaseManager *databaseProvide;
             BOOL success = NO;
             if (txDbVersion < CURRENT_TX_DB_VERSION) {
                 switch (txDbVersion) {
-                    case 0:
+                    case 0://new
                         success = [self txInit:db];
                         break;
+                    case 1://upgrade 1->2
+                        success = [self txV1ToV2:db];
                     default:
                         break;
                 }
@@ -205,20 +252,13 @@ static BTDatabaseManager *databaseProvide;
             BOOL success = YES;
             if (addressDbVersion < CURRENT_ADDRESS_DB_VERSION) {
                 switch (addressDbVersion) {
-                    case 0:
-                        success &= [self addressInit:db];
+                    case 0://new
+                        success = [self addressInit:db];
                         break;
-                    case 1:
-                        if (success) {
-                            success &= [self addressV1ToV2:db];
-                        } else {
-                            break;
-                        }
-                        if (success) {
-                            [userDefaultUtil setInteger:2 forKey:ADDRESS_DB_VERSION];
-                        } else {
-                            break;
-                        }
+                    case 1://upgrade 1->2
+                        success &= [self addressV1ToV2:db];
+                    case 2://upgrade 2->3
+                        success &= [self addressV2ToV3:db];
                     default:
                         break;
                 }
@@ -234,24 +274,22 @@ static BTDatabaseManager *databaseProvide;
     return canOpenAddressDb;
 }
 
-//- (BOOL)dbIsOpen {
-//    return canOpenDb;
-//}
 
 - (BOOL)txInit:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
-        [db executeUpdate:self.createTableBlocksSql];
-        [db executeUpdate:self.createIndexBlocksBlockNoSql];
-        [db executeUpdate:self.createIndexBlocksBlockPrevSql];
-        [db executeUpdate:self.createTableTxsSql];
-        [db executeUpdate:self.createIndexTxsBlockNoSql];
-        [db executeUpdate:self.createTableAddressesTxsSql];
-        [db executeUpdate:self.createTableInsSql];
-        [db executeUpdate:self.createIndexInsPrevTxHashSql];
-        [db executeUpdate:self.createTableOutsSql];
-        [db executeUpdate:self.createIndexOutsOutAddressSql];
-        [db executeUpdate:self.createTablePeersSql];
+        [db executeUpdate:self.blocksSql];
+        [db executeUpdate:self.indexBlocksBlockNoSql];
+        [db executeUpdate:self.indexBlocksBlockPrevSql];
+        [db executeUpdate:self.txsSql];
+        [db executeUpdate:self.indexTxsBlockNoSql];
+        [db executeUpdate:self.addressesTxsSql];
+        [db executeUpdate:self.insSql];
+        [db executeUpdate:self.indexInsPrevTxHashSql];
+        [db executeUpdate:self.outsSql];
+        [db executeUpdate:self.indexOutsOutAddressSql];
+        [db executeUpdate:self.peersSql];
+        [db executeUpdate:self.hdAccountAddress];
         [db commit];
         return YES;
     } else {
@@ -262,12 +300,13 @@ static BTDatabaseManager *databaseProvide;
 - (BOOL)addressInit:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
-        [db executeUpdate:self.createTablePasswordSeedSql];
-        [db executeUpdate:self.createTableAddressesSql];
-        [db executeUpdate:self.createTableHDSeedsSql];
-        [db executeUpdate:self.createTableHDMAddressesSql];
-        [db executeUpdate:self.createTableHDMBidSql];
-        [db executeUpdate:self.createTableAliasesSql];
+        [db executeUpdate:self.passwordSeedSql];
+        [db executeUpdate:self.addressesSql];
+        [db executeUpdate:self.hdSeedsSql];
+        [db executeUpdate:self.hdmAddressesSql];
+        [db executeUpdate:self.hdmBidSql];
+        [db executeUpdate:self.aliasesSql];
+        [db executeUpdate:self.hdAccountSql];
         [db commit];
         return YES;
     } else {
@@ -278,11 +317,33 @@ static BTDatabaseManager *databaseProvide;
 - (BOOL)addressV1ToV2:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
-        [db executeUpdate:self.createTableAliasesSql];
+        [db executeUpdate:self.aliasesSql];
         [db executeUpdate:@"alter table hd_seeds add column singular_mode_backup text;"];
         [db commit];
         return YES;
     } else {
+        return NO;
+    }
+}
+-(BOOL)addressV2ToV3:(FMDatabase *)db{
+    if ([db open]){
+        [db beginTransaction];
+        [db executeUpdate:self.hdAccountAddress];
+        [db commit];
+        return YES;
+    } else{
+        return NO;
+    }
+}
+
+-(BOOL)txV1ToV2:(FMDatabase *)db{
+    if ([db open]){
+        [db beginTransaction];
+        [db executeUpdate:self.hdmAddressesSql];
+        [db executeUpdate:@"alter table outs add column hd_account_id integer;"];
+        [db commit];
+        return YES;
+    }else{
         return NO;
     }
 }

@@ -18,9 +18,36 @@
 
 #import <Foundation/Foundation.h>
 #import "BTHDAccountAddress.h"
+#import "BTAddress.h"
+#import "BTBloomFilter.h"
+#import "BTEncryptData.h"
 
 
-@interface BTHDAccount : NSObject
+#define kHDAccountPlaceHolder @"HDAccount"
 
+@interface BTHDAccount : BTAddress
 
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password andFromXRandom:(BOOL)fromXRandom;
+
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andSyncedComplete:(BOOL)isSyncedComplete;
+
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password andSyncedComplete:(BOOL)isSyncedComplete;
+
+- (instancetype)initWithSeedId:(int)seedId;
+
+- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addresses;
+
+- (NSString *)getQRCodeFullEncryptPrivKey;
+
+- (BOOL)isTxRelated:(BTTx *)tx;
+
+- (void)onNewTx:(BTTx *)tx withRelatedAddresses:(NSArray *)relatedAddresses andTxNotificationType:(TxNotificationType)txNotificationType;
+
+- (NSArray *)getRelatedAddressesForTx:(BTTx *)tx;
+
+- (void)updateSyncComplete:(BTHDAccountAddress *)address;
+
+- (NSUInteger)elementCountForBloomFilter;
+
+- (void)addElementsForBloomFilter:(BTBloomFilter *)filter;
 @end

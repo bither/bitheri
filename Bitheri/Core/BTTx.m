@@ -29,6 +29,9 @@
 #import "BTOut.h"
 #import "BTTxProvider.h"
 #import "BTScriptBuilder.h"
+#import "BTHDAccount.h"
+#import "BTHDAccountProvider.h"
+#import "BTUtils.h"
 
 @implementation BTTx
 
@@ -732,6 +735,9 @@
 }
 
 - (int64_t)deltaAmountFrom:(BTAddress *)addr; {
+    if ([addr isKindOfClass:[BTHDAccount class]]) {
+        return [self deltaAmountFromHDAccount:addr];
+    }
     uint64_t receive = 0;
     uint64_t sent = 0;
 
@@ -741,6 +747,29 @@
     }
     sent = [[BTTxProvider instance] sentFromAddress:self.txHash address:addr.address];
     return receive - sent;
+}
+
+- (int64_t)deltaAmountFromHDAccount:(BTHDAccount *)account {
+    long receive = 0;
+    NSSet *set = [account getBelongAccountAddressesFromAdresses:[self getOutAddressList]];
+    for (BTOut *out in [self outs]) {
+        if ([set containsObject:out.outAddress]) {
+            receive += out.outValue;
+        }
+    }
+    long sent = [[BTHDAccountProvider instance] sentFromAccount:account txHash:self.txHash];
+    return receive - sent;
+}
+
+- (NSArray *)getOutAddressList {
+    NSMutableArray *outAddressList = [NSMutableArray new];
+    for (BTOut *out in self.outs) {
+        NSString *outAddress = out.outAddress;
+        if (![BTUtils isEmpty:outAddress]) {
+            [outAddressList addObject:outAddress];
+        }
+    }
+    return outAddressList;
 }
 
 

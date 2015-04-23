@@ -371,7 +371,6 @@
 
 - (NSString *)getFullEncryptPrivKeyWithHDMFlag {
     return [HDM_QR_CODE_FLAG stringByAppendingString:[BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
-
 }
 
 - (void)setSingularModeBackup:(NSString *)singularModeBackup {

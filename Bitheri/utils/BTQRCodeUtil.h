@@ -20,6 +20,7 @@
 
 #define XRANDOM_FLAG @"+"
 #define HDM_QR_CODE_FLAG  @"-"
+#define HD_QR_CODE_FLAT @"%"
 
 typedef enum {
     NORMAL,

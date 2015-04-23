@@ -30,11 +30,14 @@ typedef enum {
 @property(nonatomic, strong) NSString *address;
 @property(nonatomic, strong) NSData *pub;
 @property(nonatomic, readwrite) PathType pathType;
-@property(nonatomic, readwrite) int  index;
+@property(nonatomic, readwrite) int index;
 @property(nonatomic, readwrite) BOOL isSyncedComplete;
 @property(nonatomic, readwrite) BOOL isIssued;
 
-+(PathType) getPathType:(int) type;
++ (PathType)getPathType:(int)type;
 
+- (instancetype)initWithPub:(NSData *)pub path:(PathType)path index:(int)index andSyncedComplete:(BOOL)isSyncedComplete;
+
+- (instancetype)initWithAddress:(NSString *)address pub:(NSData *)pub path:(PathType)path index:(int)index issued:(BOOL)issued andSyncedComplete:(BOOL)isSyncedComplete;
 
 @end

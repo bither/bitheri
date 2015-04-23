@@ -17,15 +17,35 @@
 //  limitations under the License.
 
 #import "BTHDAccountAddress.h"
+#import "BTUtils.h"
+#import "BTKey.h"
 
 
 @implementation BTHDAccountAddress {
 
 }
-+(PathType)getPathType:(int)type {
-    if (type==0){
+
+- (instancetype)initWithPub:(NSData *)pub path:(PathType)path index:(int)index andSyncedComplete:(BOOL)isSyncedComplete {
+    return [self initWithAddress:[[[BTKey alloc] initWithPublicKey:pub] address] pub:pub path:path index:index issued:NO andSyncedComplete:isSyncedComplete];
+}
+
+- (instancetype)initWithAddress:(NSString *)address pub:(NSData *)pub path:(PathType)path index:(int)index issued:(BOOL)issued andSyncedComplete:(BOOL)isSyncedComplete {
+    self = [super init];
+    if (self) {
+        self.address = address;
+        self.pub = pub;
+        self.index = index;
+        self.pathType = path;
+        self.isIssued = issued;
+        self.isSyncedComplete = isSyncedComplete;
+    }
+    return self;
+}
+
++ (PathType)getPathType:(int)type {
+    if (type == 0) {
         return EXTERNAL_ROOT_PATH;
-    }else{
+    } else {
         return INTERNAL_ROOT_PATH;
     }
 }

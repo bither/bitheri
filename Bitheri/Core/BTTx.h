@@ -27,6 +27,7 @@
 @class BTKey;
 @class BTAddress;
 @class BTOut;
+@class BTHDAccount;
 
 #if TX_FEE_07_RULES
 #define TX_FEE_PER_KB        50000llu    // standard tx fee per kb of tx size, rounded up to the nearest kb (0.7 rules)
@@ -114,6 +115,10 @@
 - (uint64_t)amountSentTo:(NSString *)addr;
 
 - (int64_t)deltaAmountFrom:(BTAddress *)addr;
+
+- (NSArray *)getOutAddressList;
+
+- (int64_t)deltaAmountFromHDAccount:(BTHDAccount *)account;
 
 - (uint64_t)feeForTransaction;
 

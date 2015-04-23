@@ -171,7 +171,7 @@ static BTDatabaseManager *databaseProvide;
     _aliasesSql = @"create table if not exists aliases "
             "(address text not null primary key"
             ", alias text not null);";
-    _hdAccountAddress = @"create table if not exists  hd_account "
+    _hdAccountSql = @"create table if not exists  hd_account "
             "( hd_account_id integer not null primary key autoincrement"
             ", encrypt_seed text not null"
             ", encrypt_mnemonic_seed text"
@@ -363,7 +363,7 @@ static BTDatabaseManager *databaseProvide;
     [self.addressQueue close];
 }
 
--(void)rebuildTxDb:(FMDatabase *) db{
+- (void)rebuildTxDb:(FMDatabase *)db {
     [db executeUpdate:@"drop table txs;"];
     [db executeUpdate:@"drop table ins;"];
     [db executeUpdate:@"drop table outs;"];
@@ -383,7 +383,7 @@ static BTDatabaseManager *databaseProvide;
 
 }
 
--(void)rebuildPeers:(FMDatabase *) db{
+- (void)rebuildPeers:(FMDatabase *)db {
     [db executeUpdate:@"drop table peers;"];
     [db executeUpdate:[BTDatabaseManager instance].peersSql];
 }

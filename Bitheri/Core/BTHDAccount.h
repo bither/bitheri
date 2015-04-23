@@ -43,6 +43,10 @@
 
 - (void)onNewTx:(BTTx *)tx withRelatedAddresses:(NSArray *)relatedAddresses andTxNotificationType:(TxNotificationType)txNotificationType;
 
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error;
+
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error;
+
 - (NSArray *)getRelatedAddressesForTx:(BTTx *)tx;
 
 - (void)updateSyncComplete:(BTHDAccountAddress *)address;

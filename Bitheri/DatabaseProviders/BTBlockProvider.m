@@ -21,7 +21,7 @@
 #import "NSString+Base58.h"
 #import "BTSettings.h"
 
-static BTBlockProvider *provider;
+static BTBlockProvider *blockProvider;
 
 @implementation BTBlockProvider {
 
@@ -29,11 +29,11 @@ static BTBlockProvider *provider;
 
 + (instancetype)instance; {
     @synchronized (self) {
-        if (provider == nil) {
-            provider = [[self alloc] init];
+        if (blockProvider == nil) {
+            blockProvider = [[self alloc] init];
         }
     }
-    return provider;
+    return blockProvider;
 }
 
 - (NSMutableArray *)getAllBlocks; {

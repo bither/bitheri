@@ -34,11 +34,20 @@
 
 #define IN_QUERY_TX_HDACCOUNT  @" (select  distinct txs.tx_hash from addresses_txs txs ,hd_account_addresses hd where txs.address=hd.address)"
 
+static BTHDAccountProvider *accountProvider;
 
 @implementation BTHDAccountProvider {
 
 }
 
++(instancetype)instance {
+    @synchronized (self) {
+        if (accountProvider == nil) {
+            accountProvider = [[self alloc] init];
+        }
+    }
+    return accountProvider;
+}
 - (void)addAddress:(NSArray *)array {
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         [db beginTransaction];

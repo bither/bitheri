@@ -19,7 +19,7 @@
 #import "BTPeerProvider.h"
 #import "BTDatabaseManager.h"
 
-static BTPeerProvider *provider;
+static BTPeerProvider *peerProvider;
 
 @implementation BTPeerProvider {
 
@@ -27,11 +27,11 @@ static BTPeerProvider *provider;
 
 + (instancetype)instance; {
     @synchronized (self) {
-        if (provider == nil) {
-            provider = [[self alloc] init];
+        if (peerProvider == nil) {
+            peerProvider = [[self alloc] init];
         }
     }
-    return provider;
+    return peerProvider;
 }
 
 - (NSMutableArray *)getAllPeers; {

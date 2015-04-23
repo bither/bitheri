@@ -22,6 +22,9 @@
 
 
 @interface BTHDAccountProvider : NSObject
+
++ (instancetype)instance;
+
 - (void)addAddress:(NSArray *)array;
 
 - (int)issuedIndex:(PathType)path;

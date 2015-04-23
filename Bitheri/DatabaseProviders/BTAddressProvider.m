@@ -20,7 +20,7 @@
 #import "BTEncryptData.h"
 #import "BTQRCodeUtil.h"
 
-static BTAddressProvider *provider;
+static BTAddressProvider *addressProvider;
 
 @implementation BTAddressProvider {
 
@@ -28,11 +28,11 @@ static BTAddressProvider *provider;
 
 + (instancetype)instance; {
     @synchronized (self) {
-        if (provider == nil) {
-            provider = [[self alloc] init];
+        if (addressProvider == nil) {
+            addressProvider = [[self alloc] init];
         }
     }
-    return provider;
+    return addressProvider;
 }
 
 #pragma mark - password

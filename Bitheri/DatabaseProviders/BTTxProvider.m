@@ -22,7 +22,7 @@
 #import "BTTxHelper.h"
 
 
-static BTTxProvider *provider;
+static BTTxProvider *txProvider;
 
 @implementation BTTxProvider {
 
@@ -31,11 +31,11 @@ static BTTxProvider *provider;
 
 + (instancetype)instance; {
     @synchronized (self) {
-        if (provider == nil) {
-            provider = [[self alloc] init];
+        if (txProvider == nil) {
+            txProvider = [[self alloc] init];
         }
     }
-    return provider;
+    return txProvider;
 }
 
 - (void)getTxByAddress:(NSString *)address callback:(ArrayResponseBlock)callback; {

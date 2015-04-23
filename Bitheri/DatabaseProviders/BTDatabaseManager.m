@@ -201,34 +201,38 @@ static BTDatabaseManager *databaseProvide;
         canOpenTxDb = [fm fileExistsAtPath:writableDBPath];
         if (!canOpenTxDb) {
             txDbVersion = 0;
-        } else {
-            if (txDbVersion == 0) {
-                txDbVersion = 1;
-            }
         }
         self.txQueue = [FMDatabaseQueue databaseQueueWithPath:writableDBPath];
         [self.txQueue inDatabase:^(FMDatabase *db) {
-            BOOL success = NO;
+            BOOL success = YES;
             if (txDbVersion < CURRENT_TX_DB_VERSION) {
                 switch (txDbVersion) {
                     case 0://new
                         success = [self txInit:db];
+                        if(success){
+                            [self setTxDbVersion];
+                        }
                         break;
                     case 1://upgrade 1->2
                         success &= [self txV1ToV2:db];
+                        if (success){
+                            [self setTxDbVersion];
+                        }
                     default:
                         break;
                 }
             }
-            if (success) {
-                canOpenTxDb = YES;
-                [userDefaultUtil setInteger:CURRENT_TX_DB_VERSION forKey:TX_DB_VERSION];
-            }
+            canOpenTxDb=success;
         }];
     } else {
         canOpenTxDb = NO;
     }
     return canOpenTxDb;
+}
+-(void) setTxDbVersion{
+    NSUserDefaults *userDefaultUtil = [NSUserDefaults standardUserDefaults];
+    [userDefaultUtil setInteger:CURRENT_TX_DB_VERSION forKey:TX_DB_VERSION];
+    [userDefaultUtil synchronize];
 }
 
 - (BOOL)initAddressDb {
@@ -243,10 +247,6 @@ static BTDatabaseManager *databaseProvide;
         canOpenAddressDb = [fm fileExistsAtPath:writableDBPath];
         if (!canOpenAddressDb) {
             addressDbVersion = 0;
-        } else {
-            if (addressDbVersion == 0) {
-                addressDbVersion = 1;
-            }
         }
         self.addressQueue = [FMDatabaseQueue databaseQueueWithPath:writableDBPath];
         [self.addressQueue inDatabase:^(FMDatabase *db) {
@@ -255,24 +255,33 @@ static BTDatabaseManager *databaseProvide;
                 switch (addressDbVersion) {
                     case 0://new
                         success = [self addressInit:db];
+                        if (success) {
+                            [self setAddressDbVersion];
+                        }
+
                         break;
                     case 1://upgrade 1->2
-                        success &= [self addressV1ToV2:db];
+                        success &=[self addressV1ToV2:db];
                     case 2://upgrade 2->3
                         success &= [self addressV2ToV3:db];
+                        if (success) {
+                            [self setAddressDbVersion];
+                        }
                     default:
                         break;
                 }
             }
-            if (success) {
-                canOpenAddressDb = YES;
-                [userDefaultUtil setInteger:CURRENT_ADDRESS_DB_VERSION forKey:ADDRESS_DB_VERSION];
-            }
+            canOpenAddressDb = success;
         }];
     } else {
         canOpenAddressDb = NO;
     }
     return canOpenAddressDb;
+}
+-(void)setAddressDbVersion{
+    NSUserDefaults *userDefaultUtil = [NSUserDefaults standardUserDefaults];
+    [userDefaultUtil setInteger:CURRENT_ADDRESS_DB_VERSION forKey:ADDRESS_DB_VERSION];
+    [userDefaultUtil synchronize];
 }
 
 

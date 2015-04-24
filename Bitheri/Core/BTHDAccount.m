@@ -25,6 +25,7 @@
 #import "BTOut.h"
 #import "BTTxProvider.h"
 #import "BTQRCodeUtil.h"
+#import "BTTxBuilder.h"
 
 #define kBTHDAccountLookAheadSize (100)
 
@@ -170,7 +171,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error {
     NSArray *outs = [[BTHDAccountProvider instance] getUnspendOutByHDAccount:self.hdSeedId];
-    BTTx *tx = nil; //TODO txbuilder
+    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:[self getNewChangeAddress] andError:error];
     if (error && !tx) {
         return nil;
     }

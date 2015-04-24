@@ -301,7 +301,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
         [spentOutputs unionSet:spent]; // add inputs to spent output set
 
-        NSArray *addressSet = [self getBelongAccountAddressesFromAdresses:[tx getOutAddressList]];
+        NSSet *addressSet = [self getBelongAccountAddressesFromAdresses:[tx getOutAddressList]];
         for (BTOut *out in tx.outs) { // add outputs to UTXO set
             if ([addressSet containsObject:out.outAddress]) {
                 [utxos addObject:getOutPoint(tx.txHash, out.outSn)];
@@ -473,7 +473,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         NSString *outAddress = out.outAddress;
         [outAddressList addObject:outAddress];
     }
-    NSArray *belongAccountOfOutList = [self getBelongAccountAddressesFromAdresses:outAddressList];
+    NSSet *belongAccountOfOutList = [self getBelongAccountAddressesFromAdresses:outAddressList];
     if (belongAccountOfOutList && belongAccountOfOutList.count > 0) {
         [hdAccountAddressList addObjectsFromArray:belongAccountOfOutList];
     }
@@ -490,14 +490,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [self getRelatedAddressesForTx:tx].count > 0;
 }
 
-- (NSArray *)getBelongAccountAddressesFromAdresses:(NSArray *)addresses {
-    //TODO hddb: getBelongAccountAddressesFromAdresses
-    return [NSArray new];
+- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addresses {
+    return [[BTHDAccountProvider instance] getBelongAccountAddressesFromAdresses:addresses];
 }
 
 - (NSArray *)getAddressFromIn:(BTTx *)tx {
-    //TODO hddb getAddressFromIn
-    return [NSArray new];
+    NSArray *addresses = [tx getInAddresses];
+    return [[BTTxProvider instance] getInAddresses:addresses];
 }
 
 - (BOOL)isSendFromMe:(BTTx *)tx {

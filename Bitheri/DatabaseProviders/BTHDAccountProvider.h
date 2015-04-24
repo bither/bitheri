@@ -65,4 +65,6 @@
 
 - (NSArray *)getRecentlyTxsByAccount:(int)greateThanBlockNo limit:(int)limit;
 
+- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList;
+
 @end

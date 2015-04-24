@@ -435,6 +435,31 @@ static BTHDAccountProvider *accountProvider;
     return txs;
 }
 
+
+-(NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList{
+    NSMutableArray * temp= [NSMutableArray new];
+    for(NSString * address in addressList){
+        [temp addObject:[NSString stringWithFormat:@"'%@'",address]];
+    }
+    __block NSMutableSet * set=[NSMutableSet new];
+
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select address from hd_account_addresses where address in (%s) ";
+        FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
+        while ([rs next]) {
+            int columnIndex = [rs columnIndexForName:@"address"];
+            if (columnIndex != -1) {
+                NSString *str = [rs stringForColumnIndex:columnIndex];
+                [set addObject:str];
+
+            }
+        }
+        [rs close];
+    }];
+    return  set;
+
+}
+
 - (void)addHDAccountAddress:(FMDatabase *)db hdAccountAddress:(BTHDAccountAddress *)address {
     NSString *sql = @"insert into hd_account_addresses(path_type,address_index"
             ",is_issued,address,pub,is_synced) "

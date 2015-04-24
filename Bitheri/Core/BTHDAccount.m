@@ -500,6 +500,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [NSArray new];
 }
 
+- (BOOL)isSendFromMe:(BTTx *)tx {
+    return [self getAddressFromIn:tx].count > 0;
+}
+
 - (NSData *)getInternalPub {
     return [[BTAddressProvider instance] getInternalPub:self.hdSeedId];
 }

@@ -54,4 +54,6 @@
 - (NSUInteger)elementCountForBloomFilter;
 
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter;
+
+- (BOOL)isSendFromMe:(BTTx *)tx;
 @end

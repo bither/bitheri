@@ -21,6 +21,8 @@
 #import "BTSettings.h"
 #import "BTHDMKeychain.h"
 
+@class BTHDAccount;
+
 #define BTAddressManagerIsReady @"BTAddressManagerIsReady"
 
 @interface BTAddressManager : NSObject
@@ -29,7 +31,9 @@
 @property(nonatomic, strong) NSMutableArray *watchOnlyAddresses;
 @property(nonatomic, strong) NSMutableArray *trashAddresses;
 @property(nonatomic, strong) BTHDMKeychain *hdmKeychain;
+@property(nonatomic, strong) BTHDAccount *hdAccount;
 @property(nonatomic, readonly) BOOL hasHDMKeychain;
+@property(nonatomic, readonly) BOOL hasHDAccount;
 @property(nonatomic, strong) NSMutableSet *addressesSet;
 @property(nonatomic, readonly) NSMutableArray *allAddresses;
 @property(nonatomic, readonly) NSTimeInterval creationTime; // interval since refrence date, 00:00:00 01/01/01 GMT

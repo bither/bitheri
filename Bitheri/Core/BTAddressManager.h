@@ -20,8 +20,7 @@
 #import "BTAddress.h"
 #import "BTSettings.h"
 #import "BTHDMKeychain.h"
-
-@class BTHDAccount;
+#import "BTHDAccount.h"
 
 #define BTAddressManagerIsReady @"BTAddressManagerIsReady"
 

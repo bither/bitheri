@@ -22,7 +22,6 @@
 #import "BTIn.h"
 #import "BTQRCodeUtil.h"
 #import "BTAddressProvider.h"
-#import "BTHDAccount.h"
 
 @interface BTAddressManager () <BTHDMAddressChangeDelegate> {
     BTHDMKeychain *_hdmKeychain;

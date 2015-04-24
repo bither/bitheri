@@ -26,6 +26,7 @@
 #import "BTTxProvider.h"
 #import "BTQRCodeUtil.h"
 #import "BTTxBuilder.h"
+#import "BTUtils.h"
 
 #define kBTHDAccountLookAheadSize (100)
 
@@ -178,6 +179,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSArray *signingAddresses = [self getSigningAddressesForInputs:tx.ins];
     BTBIP32Key *master = [self masterKey:password];
     if (!master) {
+        [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
         return nil;
     }
 
@@ -362,6 +364,19 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     self.hdSeed = [[[BTEncryptData alloc] initWithStr:encryptedHDSeed] decrypt:password];
 }
 
+- (void)decryptMnemonicSeed:(NSString *)password {
+    if (self.hdSeedId < 0 || !password) {
+        return;
+    }
+    NSString *encrypted = [self encryptedMnemonicSeed];
+    if (![BTUtils isEmpty:encrypted]) {
+        self.mnemonicSeed = [[[BTEncryptData alloc] initWithStr:encrypted] decrypt:password];
+        if (!self.mnemonicSeed) {
+            [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
+        }
+    }
+}
+
 - (NSString *)encryptedHDSeed {
     return [[BTAddressProvider instance] getHDAccountEncryptSeed:self.hdSeedId];
 }
@@ -517,6 +532,13 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (NSString *)getFullEncryptPrivKey {
     return [BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom];
+}
+
+- (NSArray *)seedWords:(NSString *)password {
+    [self decryptMnemonicSeed:password];
+    NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    [self wipeMnemonicSeed];
+    return words;
 }
 
 - (NSString *)getQRCodeFullEncryptPrivKey {

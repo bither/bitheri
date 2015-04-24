@@ -51,6 +51,8 @@
 
 - (void)updateSyncComplete:(BTHDAccountAddress *)address;
 
+- (NSArray *)seedWords:(NSString *)password;
+
 - (NSUInteger)elementCountForBloomFilter;
 
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter;

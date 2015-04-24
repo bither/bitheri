@@ -29,7 +29,7 @@
 
 #define kBTHDAccountLookAheadSize (100)
 
-NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
+NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     BTTx *tx1 = (BTTx *) obj1;
     BTTx *tx2 = (BTTx *) obj2;
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
@@ -279,7 +279,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSMutableSet *spentOutputs = [NSMutableSet set], *invalidTx = [NSMutableSet set];
 
     NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTHDAccountProvider instance] getHDAccountUnconfirmedTx]];
-    [txs sortUsingComparator:txComparator];
+    [txs sortUsingComparator:hdTxComparator];
 
     for (BTTx *tx in [txs reverseObjectEnumerator]) {
         NSMutableSet *spent = [NSMutableSet set];

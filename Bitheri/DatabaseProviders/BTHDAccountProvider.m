@@ -52,7 +52,7 @@ static BTHDAccountProvider *accountProvider;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         [db beginTransaction];
         for (BTHDAccountAddress *address in array) {
-            [self addAddress:address];
+            [self addHDAccountAddress:db hdAccountAddress:address];
         }
         [db commit];
     }];

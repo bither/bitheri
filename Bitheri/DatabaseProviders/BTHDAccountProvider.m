@@ -49,7 +49,7 @@ static BTHDAccountProvider *accountProvider;
     return accountProvider;
 }
 - (void)addAddress:(NSArray *)array {
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         [db beginTransaction];
         for (BTHDAccountAddress *address in array) {
             [self addHDAccountAddress:db hdAccountAddress:address];
@@ -61,7 +61,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (int)issuedIndex:(PathType)path {
     __block int issuedIndex = -1;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select ifnull(max(address_index),-1) address_index from hd_account_addresses where path_type=? and is_issued=? ";
         FMResultSet *resultSet = [db executeQuery:sql, @(path), @(YES)];
         if ([resultSet next]) {
@@ -75,7 +75,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (int)allGeneratedAddressCount:(PathType)pathType {
     __block int count = 0;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select ifnull(count(address),0) count  from hd_account_addresses where path_type=?  ";
         FMResultSet *resultSet = [db executeQuery:sql, @(pathType)];
         if ([resultSet next]) {
@@ -88,7 +88,7 @@ static BTHDAccountProvider *accountProvider;
 }
 
 - (void)updateIssuedIndex:(PathType)pathType index:(int)index {
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update hd_account_addresses set is_issued=? where path_type=? and address_index<=? ";
         [db executeUpdate:sql, @(YES), @(pathType), @(index)];
 
@@ -97,7 +97,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (NSString *)externalAddress {
     __block NSString *address;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select address from hd_account_addresses"
                 " where path_type=? and is_issued=? order by address_index asc limit 1  ";
         FMResultSet *resultSet = [db executeQuery:sql, @(EXTERNAL_ROOT_PATH), @(NO)];
@@ -112,7 +112,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (BTHDAccountAddress *)addressForPath:(PathType)type index:(int)index {
     __block BTHDAccountAddress *address;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select address,pub,path_type,address_index,is_issued,is_synced "
                 " from hd_account_addresses where path_type=? and address_index=? ";
         FMResultSet *rs = [db executeQuery:sql, @(type), @(index)];
@@ -127,7 +127,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (NSArray *)getPubs:(PathType)pathType {
     __block NSMutableArray *array = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select pub from hd_account_addresses where path_type=? ";
         FMResultSet *rs = [db executeQuery:sql, @(pathType)];
         while ([rs next]) {
@@ -149,7 +149,7 @@ static BTHDAccountProvider *accountProvider;
 - (NSSet *)belongAccount:(NSArray *)addresses {
 
     __block NSMutableSet *mutableSet = [NSMutableSet new];
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableArray *temp = [NSMutableArray new];
         for (NSString *str in addresses) {
             [temp addObject:[NSString stringWithFormat:@"'%@'", str]];
@@ -173,7 +173,7 @@ static BTHDAccountProvider *accountProvider;
 }
 
 - (void)updateSyncdComplete:(BTHDAccountAddress *)address {
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update hd_account_addresses set is_synced=? where address=? ";
         [db executeUpdate:sql, @(address.isSyncedComplete), address.address];
 
@@ -181,7 +181,7 @@ static BTHDAccountProvider *accountProvider;
 }
 
 - (void)setSyncdNotComplete {
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update hd_account_addresses set is_synced=? ";
         [db executeUpdate:sql, @(NO)];
 
@@ -190,7 +190,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (int)unSyncedAddressCount {
     __block int count = 0;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(address) cnt from hd_account_addresses where is_synced=? ";
         FMResultSet *resultSet = [db executeQuery:sql, @(NO)];
         if ([resultSet next]) {
@@ -203,7 +203,7 @@ static BTHDAccountProvider *accountProvider;
 }
 
 - (void)updateSyncdForIndex:(PathType)pathType index:(int)index {
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update hd_account_addresses set is_synced=? where path_type=? and address_index>? ";
         [db executeUpdate:sql, @(YES),@(pathType),@(index)];
 
@@ -213,7 +213,7 @@ static BTHDAccountProvider *accountProvider;
 - (NSArray *)getSigningAddressesForInputs:(NSArray *)inList {
 
     __block NSMutableArray *array = [NSMutableArray new];
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.address,a.path_type,a.address_index,a.is_synced"
                 " from hd_account_addresses a ,outs b"
                 " where a.address=b.out_address"
@@ -234,7 +234,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (int)hdAccountTxCount {
     __block int count = 0;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count( distinct a.tx_hash) cnt from addresses_txs a ,hd_account_addresses b where a.address=b.address  ";
         FMResultSet *resultSet = [db executeQuery:sql];
         if ([resultSet next]) {
@@ -250,7 +250,7 @@ static BTHDAccountProvider *accountProvider;
 - (long long)getHDAccountConfirmedBanlance:(int)hdAccountId {
 
     __block long long banlance = 0;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @" select ifnull(sum(a.out_value),0) sum from outs a,txs b where a.tx_hash=b.tx_hash "
             "  and a.out_status=? and a.hd_account_id=? and b.block_no is not null";
         FMResultSet *resultSet = [db executeQuery:sql,@(unspent),@(hdAccountId)];
@@ -264,7 +264,7 @@ static BTHDAccountProvider *accountProvider;
 }
 - (long long)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash {
     __block long long sum = 0;
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select  sum(o.out_value) out_value from ins i,outs o where"
             " i.tx_hash=? and o.tx_hash=i.prev_tx_hash and i.prev_out_sn=o.out_sn and o.hd_account_id=?";
         FMResultSet *resultSet = [db executeQuery:sql,[NSString base58WithData:txHash],@(hdAccountId)];
@@ -443,7 +443,7 @@ static BTHDAccountProvider *accountProvider;
     }
     __block NSMutableSet * set=[NSMutableSet new];
 
-    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select address from hd_account_addresses where address in (%s) ";
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
         while ([rs next]) {

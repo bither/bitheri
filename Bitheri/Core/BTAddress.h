@@ -37,6 +37,7 @@
 @property BOOL isFromXRandom;
 @property BOOL isTrashed;
 @property(nonatomic, readonly) BOOL isHDM;
+@property(nonatomic, readonly) BOOL isHDAccount;
 @property(nonatomic, strong) NSString *alias;
 
 @property(nonatomic, readonly) uint32_t txCount;

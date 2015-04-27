@@ -23,6 +23,7 @@
 #import "BTIn.h"
 #import "BTScript.h"
 #import "BTAddressProvider.h"
+#import "BTHDAccount.h"
 
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     BTTx *tx1 = (BTTx *) obj1;
@@ -449,6 +450,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
         }
     }
     return YES;
+}
+
+- (BOOL)isHDAccount {
+    return [self isKindOfClass:[BTHDAccount class]];
 }
 
 - (BOOL)isEqual:(id)object {

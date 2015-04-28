@@ -528,7 +528,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSString *)getFirstAddressFromDb {
-    return [[BTAddressProvider instance] getHDFirstAddress:self.hdSeedId];
+    return [[BTAddressProvider instance] getHDAccountFristAddress:self.hdSeedId];
 }
 
 - (NSString *)getFullEncryptPrivKey {

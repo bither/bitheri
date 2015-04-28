@@ -46,7 +46,7 @@
 //- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
 - (BOOL)isHDSeedFromXRandom:(int)hdSeedId;
 
-- (NSString *)getHDFirstAddress:(int)hdSeedId;
+- (NSString *)getHDMFirstAddress:(int)hdSeedId;
 
 - (NSString *)getSingularModeBackup:(int)hdSeedId;
 
@@ -121,7 +121,7 @@
 
 - (NSArray *)getHDAccountSeeds;
 
-- (NSString *)getHDFristAddress;
+- (NSString *)getHDAccountFristAddress:(int)seedId;
 
 
 @end

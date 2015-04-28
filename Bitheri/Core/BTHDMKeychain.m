@@ -288,7 +288,7 @@
 }
 
 - (NSString *)firstAddressFromDb {
-    return [[BTAddressProvider instance] getHDFirstAddress:self.hdSeedId];
+    return [[BTAddressProvider instance] getHDMFirstAddress:self.hdSeedId];
 }
 
 - (BOOL)checkWithPassword:(NSString *)password {

@@ -101,10 +101,6 @@
 
 - (uint32_t)needCompleteInSignature;
 
-- (BOOL)checkRValues;
-
-- (BOOL)checkRValuesForTx:(BTTx *)tx;
-
 #pragma  mark - alias
 
 - (void)updateAlias:(NSString *)alias;

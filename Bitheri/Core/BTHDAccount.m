@@ -458,6 +458,11 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [[BTHDAccountProvider instance] updateSyncdComplete:address];
 }
 
+- (BOOL)isSyncComplete {
+    int unsyncedAddressCount = [BTHDAccountProvider instance].unSyncedAddressCount;
+    return unsyncedAddressCount == 0;
+}
+
 - (uint32_t)txCount {
     return [[BTHDAccountProvider instance] hdAccountTxCount];
 }

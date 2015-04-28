@@ -759,7 +759,8 @@ static BTAddressProvider *addressProvider;
 #pragma mark - hd account
 
 - (int)addHDAccount:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
-       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom addressOfPS:(NSString *)addressOfPs
+       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom encryptSeedOfPS:(NSString *)encryptSeedOfPs
+        addressOfPS:(NSString *)addressOfPs
         externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub {
     __block int hdAccountId = 0;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
@@ -771,7 +772,7 @@ static BTAddressProvider *addressProvider;
                 , [NSString base58WithData:externalPub], [NSString base58WithData:internalPub]
                 , @(isXrandom)];
         if (addressOfPs != nil) {
-            success &= [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPs andEncryptStr:encryptedMnemonicSeed] andDB:db];
+            success &= [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPs andEncryptStr:encryptSeedOfPs] andDB:db];
         }
         sql = @"select hd_account_id from hd_account order by hd_account_id desc limit 1";
         FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];

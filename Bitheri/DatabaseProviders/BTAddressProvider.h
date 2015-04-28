@@ -108,7 +108,7 @@
 #pragma mark - hd account
 
 - (int)addHDAccount:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
-       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom addressOfPS:(NSString *)addressOfPs
+       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPs
         externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;
 
 - (NSData *)getExternalPub:(int)hdSeedid;

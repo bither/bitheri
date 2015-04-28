@@ -53,6 +53,8 @@
 
 - (NSArray *)seedWords:(NSString *)password;
 
+- (BOOL)checkWithPassword:(NSString *)password;
+
 - (NSUInteger)elementCountForBloomFilter;
 
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter;

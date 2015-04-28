@@ -341,7 +341,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTBIP32Key *)masterKey:(NSString *)password {
-    [self decryptHDSeed:password];
+    if (password) {
+        [self decryptHDSeed:password];
+    }
     BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
     [self wipeHDSeed];
     return master;
@@ -539,6 +541,36 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
     [self wipeMnemonicSeed];
     return words;
+}
+
+- (BOOL)checkWithPassword:(NSString *)password {
+    [self decryptHDSeed:password];
+    if (!self.hdSeed) {
+        return NO;
+    }
+    [self decryptMnemonicSeed:password];
+    if (!self.mnemonicSeed) {
+        return NO;
+    }
+    NSData *hdCopy = [NSData dataWithBytes:self.hdSeed.bytes length:self.hdSeed.length];
+    BOOL hdSeedSafe = [BTUtils compareString:[self getFirstAddressFromDb] compare:[self firstAddressFromSeed:nil]];
+    BOOL mnemonicSeefSafe = [[BTHDAccount seedFromMnemonic:self.mnemonicSeed] isEqualToData:hdCopy];
+    [self wipeHDSeed];
+    [self wipeMnemonicSeed];
+    return hdSeedSafe && mnemonicSeefSafe;
+}
+
+- (NSString *)firstAddressFromSeed:(NSString *)password {
+    BTBIP32Key *master = [self masterKey:password];
+    BTBIP32Key *account = [self getAccount:master];
+    BTBIP32Key *external = [self getChainRootKeyFromAccount:account withPathType:EXTERNAL_ROOT_PATH];
+    BTBIP32Key *key = [external deriveSoftened:0];
+    NSString *address = key.key.address;
+    [master wipe];
+    [account wipe];
+    [external wipe];
+    [key wipe];
+    return address;
 }
 
 - (NSString *)getQRCodeFullEncryptPrivKey {

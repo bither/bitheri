@@ -517,7 +517,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (NSArray *)getAddressFromIn:(BTTx *)tx {
     NSArray *addresses = [tx getInAddresses];
-    return [[BTTxProvider instance] getInAddresses:addresses];
+    return [[BTHDAccountProvider instance] belongAccount:addresses];
 }
 
 - (BOOL)isSendFromMe:(BTTx *)tx {

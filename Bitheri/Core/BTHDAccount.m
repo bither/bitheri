@@ -73,7 +73,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         self.mnemonicSeed = mnemonicSeed;
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        [self initHDAccountWithMaster:master encryptedMnemonicSeed:[[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom] encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom] andSyncedComplete:isSyncedComplete];
+        [self initHDAccountWithMaster:master encryptedMnemonicSeed:[[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom] encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom] password:password andSyncedComplete:isSyncedComplete];
     }
     return self;
 }
@@ -88,7 +88,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         }
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        [self initHDAccountWithMaster:master encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] andSyncedComplete:isSyncedComplete];
+        [self initHDAccountWithMaster:master encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] password:password andSyncedComplete:isSyncedComplete];
     }
     return self;
 }
@@ -102,15 +102,14 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self;
 }
 
-- (void)initHDAccountWithMaster:(BTBIP32Key *)master encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed andSyncedComplete:(BOOL)isSyncedComplete {
-    NSString *firstAddress;
-    BTKey *k = [[BTKey alloc] initWithSecret:self.mnemonicSeed compressed:YES];
-    NSString *address = k.address;
+- (void)initHDAccountWithMaster:(BTBIP32Key *)master encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed password:(NSString *)password andSyncedComplete:(BOOL)isSyncedComplete {
+    NSString *address = master.key.address;
+    BTEncryptData *encryptedSeedOfPasswordSeed = [[BTEncryptData alloc] initWithData:master.secret andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom];
     BTBIP32Key *accountKey = [self getAccount:master];
     BTBIP32Key *internalKey = [self getChainRootKeyFromAccount:accountKey withPathType:INTERNAL_ROOT_PATH];
     BTBIP32Key *externalKey = [self getChainRootKeyFromAccount:accountKey withPathType:EXTERNAL_ROOT_PATH];
     BTBIP32Key *key = [externalKey deriveSoftened:0];
-    firstAddress = key.address;
+    NSString *firstAddress = key.address;
     [key wipe];
     [accountKey wipe];
     [master wipe];
@@ -129,7 +128,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self wipeMnemonicSeed];
     [[BTHDAccountProvider instance] addAddress:externalAddresses];
     [[BTHDAccountProvider instance] addAddress:internalAddresses];
-    self.hdSeedId = [[BTAddressProvider instance] addHDAccount:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXrandom:encryptedMnemonicSeed.isXRandom addressOfPS:address externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
+    self.hdSeedId = [[BTAddressProvider instance] addHDAccount:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXrandom:encryptedMnemonicSeed.isXRandom encryptSeedOfPS:encryptedSeedOfPasswordSeed addressOfPS:address externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
     [internalKey wipe];
     [externalKey wipe];
 }

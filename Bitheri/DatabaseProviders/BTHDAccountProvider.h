@@ -19,6 +19,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BTHDAccountAddress.h"
+#import "BTDatabaseManager.h"
 
 
 @interface BTHDAccountProvider : NSObject
@@ -47,7 +48,7 @@
 
 - (int)unSyncedAddressCount;
 
-- (int)unSyncedCountOfPath:(PathType) pathType;
+- (int)unSyncedCountOfPath:(PathType)pathType;
 
 - (void)updateSyncdForIndex:(PathType)pathType index:(int)index;
 
@@ -68,5 +69,7 @@
 - (NSArray *)getRecentlyTxsByAccount:(int)greateThanBlockNo limit:(int)limit;
 
 - (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList;
+
+- (NSSet *)getBelongAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList;
 
 @end

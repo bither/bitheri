@@ -202,11 +202,12 @@ static BTHDAccountProvider *accountProvider;
 
     return count;
 }
--(int)unSyncedCountOfPath:(PathType)pathType {
+
+- (int)unSyncedCountOfPath:(PathType)pathType {
     __block int count = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(address) cnt from hd_account_addresses where is_synced=? and  path_type=?";
-        FMResultSet *resultSet = [db executeQuery:sql, @(NO),@(pathType)];
+        FMResultSet *resultSet = [db executeQuery:sql, @(NO), @(pathType)];
         if ([resultSet next]) {
             count = [resultSet intForColumnIndex:0];
         }
@@ -452,25 +453,32 @@ static BTHDAccountProvider *accountProvider;
 }
 
 
-- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList {
+- (NSSet *)getBelongAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList {
     NSMutableArray *temp = [NSMutableArray new];
     for (NSString *address in addressList) {
         [temp addObject:[NSString stringWithFormat:@"'%@'", address]];
     }
-    __block NSMutableSet *set = [NSMutableSet new];
+    NSMutableSet *set = [NSMutableSet new];
+    NSString *sql = @"select address from hd_account_addresses where address in (%s) ";
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
+    while ([rs next]) {
+        int columnIndex = [rs columnIndexForName:@"address"];
+        if (columnIndex != -1) {
+            NSString *str = [rs stringForColumnIndex:columnIndex];
+            [set addObject:str];
 
-    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select address from hd_account_addresses where address in (%s) ";
-        FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
-        while ([rs next]) {
-            int columnIndex = [rs columnIndexForName:@"address"];
-            if (columnIndex != -1) {
-                NSString *str = [rs stringForColumnIndex:columnIndex];
-                [set addObject:str];
-
-            }
         }
-        [rs close];
+    }
+    [rs close];
+
+    return set;
+
+}
+
+- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList {
+    __block NSMutableSet *set = [NSMutableSet new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        set = [self getBelongAccountAddressesFromDb:db addressList:addressList];
     }];
     return set;
 

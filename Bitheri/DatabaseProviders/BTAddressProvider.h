@@ -123,5 +123,7 @@
 
 - (NSString *)getHDAccountFristAddress:(int)seedId;
 
+- (BOOL)hdAccountIsXRandom:(int)seedId;
+
 
 @end

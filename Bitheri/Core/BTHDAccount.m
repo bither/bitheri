@@ -98,6 +98,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     self = [super init];
     if (self) {
         self.hdSeedId = seedId;
+        _isFromXRandom=[[BTAddressProvider instance] isHDSeedFromXRandom:seedId];
         [self updateBalance];
     }
     return self;

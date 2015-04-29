@@ -861,7 +861,7 @@ static BTAddressProvider *addressProvider;
 }
 
 
--(NSString *)getHDAccountFristAddress:(int)seedId {
+- (NSString *)getHDAccountFristAddress:(int)seedId {
     __block NSString *fristAddress;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select hd_address from hd_account where hd_account_id=?";
@@ -873,6 +873,18 @@ static BTAddressProvider *addressProvider;
     }];
     return fristAddress;
 
+}
+
+- (BOOL)hdAccountIsXRandom:(int)seedId {
+    __block BOOL result = NO;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select is_xrandom from hd_account where hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(seedId)];
+        if ([rs next]) {
+            result = [rs boolForColumnIndex:0];
+        }
+    }];
+    return result;
 }
 
 @end

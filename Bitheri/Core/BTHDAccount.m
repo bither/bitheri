@@ -593,4 +593,8 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (BOOL)isFromXRandom {
     return _isFromXRandom;
 }
+
+- (void)updateIssuedIndex:(PathType)pathType index:(int)index {
+    [[BTHDAccountProvider instance] updateIssuedIndex:pathType index:index];
+}
 @end

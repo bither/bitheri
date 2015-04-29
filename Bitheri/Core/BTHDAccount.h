@@ -60,4 +60,6 @@
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter;
 
 - (BOOL)isSendFromMe:(BTTx *)tx;
+
+-(void)updateIssuedIndex:(PathType)pathType index:(int)index;
 @end

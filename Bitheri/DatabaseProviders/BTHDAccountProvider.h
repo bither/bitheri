@@ -40,7 +40,7 @@
 
 - (NSArray *)getPubs:(PathType)pathType;
 
-- (NSSet *)belongAccount:(NSArray *)addresses;
+- (NSArray *)belongAccount:(NSArray *)addresses;
 
 - (void)updateSyncdComplete:(BTHDAccountAddress *)address;
 

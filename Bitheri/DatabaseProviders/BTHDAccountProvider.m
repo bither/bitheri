@@ -147,7 +147,7 @@ static BTHDAccountProvider *accountProvider;
     return array;
 }
 
-- (NSSet *)belongAccount:(NSArray *)addresses {
+- (NSArray *)belongAccount:(NSArray *)addresses {
 
     __block NSMutableSet *mutableSet = [NSMutableSet new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {

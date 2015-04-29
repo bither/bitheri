@@ -30,6 +30,7 @@
 #import "BTBlockChain.h"
 
 #define kBTHDAccountLookAheadSize (100)
+#define kGenerationInitialProgress (0.02)
 
 NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     BTTx *tx1 = (BTTx *) obj1;
@@ -62,24 +63,24 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 @implementation BTHDAccount
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password andFromXRandom:(BOOL)fromXRandom {
-    self = [self initWithMnemonicSeed:mnemonicSeed password:password fromXRandom:fromXRandom andSyncedComplete:YES];
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andGenerationCallback:(void (^)(CGFloat progres))callback {
+    self = [self initWithMnemonicSeed:mnemonicSeed password:password fromXRandom:fromXRandom syncedComplete:YES andGenerationCallback:callback];
     return self;
 }
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andSyncedComplete:(BOOL)isSyncedComplete {
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     self = [super init];
     if (self) {
         self.hdSeedId = -1;
         self.mnemonicSeed = mnemonicSeed;
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        [self initHDAccountWithMaster:master encryptedMnemonicSeed:[[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom] encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom] password:password andSyncedComplete:isSyncedComplete];
+        [self initHDAccountWithMaster:master encryptedMnemonicSeed:[[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom] encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom] password:password syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
 
-- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password andSyncedComplete:(BOOL)isSyncedComplete {
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     self = [super init];
     if (self) {
         self.hdSeedId = -1;
@@ -89,7 +90,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         }
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        [self initHDAccountWithMaster:master encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] password:password andSyncedComplete:isSyncedComplete];
+        [self initHDAccountWithMaster:master encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] password:password syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
@@ -108,7 +109,11 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self.hdSeedId;
 }
 
-- (void)initHDAccountWithMaster:(BTBIP32Key *)master encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed password:(NSString *)password andSyncedComplete:(BOOL)isSyncedComplete {
+- (void)initHDAccountWithMaster:(BTBIP32Key *)master encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
+    CGFloat progress = 0;
+    if (callback) {
+        callback(progress);
+    }
     _isFromXRandom = encryptedMnemonicSeed.isXRandom;
     NSString *address = master.key.address;
     BTEncryptData *encryptedSeedOfPasswordSeed = [[BTEncryptData alloc] initWithData:master.secret andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom];
@@ -121,15 +126,33 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [accountKey wipe];
     [master wipe];
 
+    progress = kGenerationInitialProgress;
+    if (callback) {
+        callback(progress);
+    }
+
+    CGFloat itemProgress = (1.0 - progress) / (double) (kBTHDAccountLookAheadSize * 2);
+
     NSMutableArray *externalAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
     NSMutableArray *internalAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
     for (NSUInteger i = 0; i < kBTHDAccountLookAheadSize; i++) {
         NSData *subExternalPub = [externalKey deriveSoftened:i].pubKey;
-        NSData *subInternalPub = [internalKey deriveSoftened:i].pubKey;
         BTHDAccountAddress *externalAddress = [[BTHDAccountAddress alloc] initWithPub:subExternalPub path:EXTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
-        BTHDAccountAddress *internalAddress = [[BTHDAccountAddress alloc] initWithPub:subInternalPub path:INTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
         [externalAddresses addObject:externalAddress];
+
+        progress += itemProgress;
+        if (callback) {
+            callback(MIN(progress, 1));
+        }
+
+        NSData *subInternalPub = [internalKey deriveSoftened:i].pubKey;
+        BTHDAccountAddress *internalAddress = [[BTHDAccountAddress alloc] initWithPub:subInternalPub path:INTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
         [internalAddresses addObject:internalAddress];
+
+        progress += itemProgress;
+        if (callback) {
+            callback(MIN(progress, 1));
+        }
     }
     [self wipeHDSeed];
     [self wipeMnemonicSeed];

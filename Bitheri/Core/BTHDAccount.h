@@ -27,11 +27,11 @@
 
 @interface BTHDAccount : BTAddress
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password andFromXRandom:(BOOL)fromXRandom;
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andGenerationCallback:(void (^)(CGFloat progres))callback;
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andSyncedComplete:(BOOL)isSyncedComplete;
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
 
-- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password andSyncedComplete:(BOOL)isSyncedComplete;
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
 
 - (instancetype)initWithSeedId:(int)seedId;
 
@@ -61,8 +61,9 @@
 
 - (BOOL)isSendFromMe:(BTTx *)tx;
 
--(void)updateIssuedIndex:(PathType)pathType index:(int)index;
+- (void)updateIssuedIndex:(PathType)pathType index:(int)index;
 
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete;
--(NSInteger)getHDAccountId;
+
+- (NSInteger)getHDAccountId;
 @end

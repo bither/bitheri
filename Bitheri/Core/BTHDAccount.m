@@ -482,7 +482,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (BOOL)initTxs:(NSArray *)txs {
     [[BTTxProvider instance] addTxs:txs];
     if (txs.count > 0) {
-        [self notificateTx:nil withNotificationType:txFromApi];
+        [self notificateTx:[txs objectAtIndex:0] withNotificationType:txFromApi];
     }
     return YES;
 }

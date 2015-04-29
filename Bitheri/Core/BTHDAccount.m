@@ -496,7 +496,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     NSSet *belongAccountOfOutList = [self getBelongAccountAddressesFromAdresses:outAddressList];
     if (belongAccountOfOutList && belongAccountOfOutList.count > 0) {
-        [hdAccountAddressList addObjectsFromArray:belongAccountOfOutList];
+        [hdAccountAddressList addObjectsFromArray:belongAccountOfOutList.allObjects];
     }
 
     NSArray *belongAccountOfInList = [self getAddressFromIn:tx];

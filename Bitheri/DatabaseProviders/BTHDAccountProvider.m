@@ -455,10 +455,14 @@ static BTHDAccountProvider *accountProvider;
 
 - (NSSet *)getBelongAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList {
     NSMutableArray *temp = [NSMutableArray new];
+
+    NSMutableSet *set = [NSMutableSet new];
+    if (addressList.count==0){
+        return set;
+    }
     for (NSString *address in addressList) {
         [temp addObject:[NSString stringWithFormat:@"'%@'", address]];
     }
-    NSMutableSet *set = [NSMutableSet new];
     NSString *sql = @"select address from hd_account_addresses where address in (%s) ";
     FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
     while ([rs next]) {

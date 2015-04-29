@@ -85,9 +85,9 @@ static BTAddressProvider *addressProvider;
             NSString *hdAccountEncryptSeed = [rs stringForColumnIndex:1];
             if (![rs columnIndexIsNull:2]) {
                 NSString *encryptHDAccountMnemonicSeed = [rs stringForColumnIndex:2];
-                encryptMnemonicSeedDict[hdAccountId] = encryptHDAccountMnemonicSeed;
+                encryptHDAccountMnemonicSeedDict[hdAccountId] = encryptHDAccountMnemonicSeed;
             }
-            encryptSeedDict[hdAccountId] = hdAccountEncryptSeed;
+            encryptHDAccountSeedDict[hdAccountId] = hdAccountEncryptSeed;
         }
 
         [rs close];
@@ -883,6 +883,7 @@ static BTAddressProvider *addressProvider;
         if ([rs next]) {
             result = [rs boolForColumnIndex:0];
         }
+        [rs close];
     }];
     return result;
 }

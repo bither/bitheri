@@ -149,7 +149,7 @@ static BTHDAccountProvider *accountProvider;
 
 - (NSArray *)belongAccount:(NSArray *)addresses {
 
-    __block NSMutableSet *mutableSet = [NSMutableSet new];
+    __block NSMutableArray *mutableArray = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableArray *temp = [NSMutableArray new];
         for (NSString *str in addresses) {
@@ -159,18 +159,13 @@ static BTHDAccountProvider *accountProvider;
                 "from hd_account_addresses  where address in (%@)";
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
         while ([rs next]) {
-            int columnIndex = [rs columnIndexForName:@"pub"];
-            if (columnIndex != -1) {
-                NSString *str = [rs stringForColumnIndex:columnIndex];
-                [mutableSet addObject:[str base58ToData]];
-
-            }
+            [mutableArray addObject:[self formatAddress:rs]];
 
         }
         [rs close];
     }];
 
-    return mutableSet;
+    return mutableArray;
 }
 
 - (void)updateSyncdComplete:(BTHDAccountAddress *)address {

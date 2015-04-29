@@ -45,6 +45,7 @@ static BOOL canOpenAddressDb;
 @property(nonatomic, readonly) NSString *indexOutsOutAddressSql;
 @property(nonatomic, readonly) NSString *peersSql;
 @property(nonatomic, readonly) NSString *hdAccountAddress;
+@property(nonatomic, readonly) NSString * indexHDAccountAddress;
 
 #pragma mark - address db
 @property(nonatomic, readonly) NSString *passwordSeedSql;
@@ -136,6 +137,7 @@ static BTDatabaseManager *databaseProvide;
             ", pub text not null"
             ", is_synced integer not null"
             ", primary key (address));";
+    _indexHDAccountAddress=@"create index idx_hd_address_address on hd_account_addresses (address);";
 
 #pragma mark - address db
 
@@ -300,6 +302,7 @@ static BTDatabaseManager *databaseProvide;
         [db executeUpdate:self.indexOutsOutAddressSql];
         [db executeUpdate:self.peersSql];
         [db executeUpdate:self.hdAccountAddress];
+        [db executeUpdate:self.indexHDAccountAddress];
         [db commit];
         return YES;
     } else {
@@ -351,6 +354,7 @@ static BTDatabaseManager *databaseProvide;
     if ([db open]) {
         [db beginTransaction];
         [db executeUpdate:self.hdAccountAddress];
+        [db executeUpdate:self.indexHDAccountAddress];
         [db executeUpdate:@"alter table outs add column hd_account_id integer;"];
         [db commit];
         return YES;

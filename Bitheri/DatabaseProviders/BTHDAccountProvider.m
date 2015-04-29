@@ -202,6 +202,20 @@ static BTHDAccountProvider *accountProvider;
 
     return count;
 }
+-(int)unSyncedCountOfPath:(PathType)pathType {
+    __block int count = 0;
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select count(address) cnt from hd_account_addresses where is_synced=? and  path_type=?";
+        FMResultSet *resultSet = [db executeQuery:sql, @(NO),@(pathType)];
+        if ([resultSet next]) {
+            count = [resultSet intForColumnIndex:0];
+        }
+        [resultSet close];
+    }];
+
+    return count;
+}
+
 
 - (void)updateSyncdForIndex:(PathType)pathType index:(int)index {
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {

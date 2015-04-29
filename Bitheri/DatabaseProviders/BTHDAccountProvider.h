@@ -47,6 +47,8 @@
 
 - (int)unSyncedAddressCount;
 
+- (int)unSyncedCountOfPath:(PathType) pathType;
+
 - (void)updateSyncdForIndex:(PathType)pathType index:(int)index;
 
 - (NSArray *)getSigningAddressesForInputs:(NSArray *)inList;

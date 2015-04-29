@@ -27,6 +27,7 @@
 #import "BTQRCodeUtil.h"
 #import "BTTxBuilder.h"
 #import "BTUtils.h"
+#import "BTBlockChain.h"
 
 #define kBTHDAccountLookAheadSize (100)
 
@@ -468,7 +469,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTTx *)recentlyTx {
-    NSArray *txs = [[BTHDAccountProvider instance] getRecentlyTxsByAccount:6 limit:1];
+    NSArray *txs = [[BTHDAccountProvider instance] getRecentlyTxsByAccount:[BTBlockChain instance].lastBlock.blockNo - 6 + 1 limit:1];
     if (txs && txs.count > 0) {
         return txs[0];
     }

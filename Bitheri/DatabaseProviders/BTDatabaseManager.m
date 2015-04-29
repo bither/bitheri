@@ -339,7 +339,7 @@ static BTDatabaseManager *databaseProvide;
 - (BOOL)addressV2ToV3:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
-        [db executeUpdate:self.hdAccountAddress];
+        [db executeUpdate:self.hdAccountSql];
         [db commit];
         return YES;
     } else {
@@ -350,7 +350,7 @@ static BTDatabaseManager *databaseProvide;
 - (BOOL)txV1ToV2:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
-        [db executeUpdate:self.hdmAddressesSql];
+        [db executeUpdate:self.hdAccountAddress];
         [db executeUpdate:@"alter table outs add column hd_account_id integer;"];
         [db commit];
         return YES;

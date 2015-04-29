@@ -489,12 +489,8 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSArray *)getRelatedAddressesForTx:(BTTx *)tx {
-    NSMutableArray *outAddressList = [NSMutableArray new];
+    NSMutableArray *outAddressList = [tx getOutAddressList];
     NSMutableArray *hdAccountAddressList = [NSMutableArray new];
-    for (BTOut *out in tx.outs) {
-        NSString *outAddress = out.outAddress;
-        [outAddressList addObject:outAddress];
-    }
     NSSet *belongAccountOfOutList = [self getBelongAccountAddressesFromAdresses:outAddressList];
     if (belongAccountOfOutList && belongAccountOfOutList.count > 0) {
         [hdAccountAddressList addObjectsFromArray:belongAccountOfOutList.allObjects];

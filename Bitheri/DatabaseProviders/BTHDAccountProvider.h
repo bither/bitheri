@@ -56,11 +56,11 @@
 
 - (int)hdAccountTxCount;
 
-- (long long)getHDAccountConfirmedBanlance:(int)hdAccountId;
+- (uint64_t)getHDAccountConfirmedBanlance:(int)hdAccountId;
 
 - (NSArray *)getHDAccountUnconfirmedTx;
 
-- (long long)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash;
+- (uint64_t)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash;
 
 - (NSArray *)getTxAndDetailByHDAccount:(int)page;
 

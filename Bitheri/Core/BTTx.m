@@ -750,14 +750,14 @@
 }
 
 - (int64_t)deltaAmountFromHDAccount:(BTHDAccount *)account {
-    long receive = 0;
+    int64_t receive = 0;
     NSSet *set = [account getBelongAccountAddressesFromAdresses:[self getOutAddressList]];
     for (BTOut *out in [self outs]) {
         if ([set containsObject:out.outAddress]) {
             receive += out.outValue;
         }
     }
-    long sent = [[BTHDAccountProvider instance] sentFromAccount:account txHash:self.txHash];
+    int64_t sent = [[BTHDAccountProvider instance] sentFromAccount:account txHash:self.txHash];
     return receive - sent;
 }
 

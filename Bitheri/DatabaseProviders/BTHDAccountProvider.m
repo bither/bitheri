@@ -258,7 +258,7 @@ static BTHDAccountProvider *accountProvider;
 }
 
 
-- (long long)getHDAccountConfirmedBanlance:(int)hdAccountId {
+- (uint64_t)getHDAccountConfirmedBanlance:(int)hdAccountId {
 
     __block long long banlance = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
@@ -274,14 +274,17 @@ static BTHDAccountProvider *accountProvider;
     return banlance;
 }
 
-- (long long)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash {
-    __block long long sum = 0;
+- (uint64_t)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash {
+    __block uint64_t sum = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select  sum(o.out_value) out_value from ins i,outs o where"
                 " i.tx_hash=? and o.tx_hash=i.prev_tx_hash and i.prev_out_sn=o.out_sn and o.hd_account_id=?";
         FMResultSet *resultSet = [db executeQuery:sql, [NSString base58WithData:txHash], @(hdAccountId)];
         if ([resultSet next]) {
-            sum = [resultSet longLongIntForColumnIndex:0];
+            if ([resultSet columnIndexForName:@"out_value"] >= 0) {
+                sum = (uint64_t) [resultSet longLongIntForColumn:@"out_value"];
+            }
+
         }
         [resultSet close];
     }];

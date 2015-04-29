@@ -311,18 +311,40 @@ static BTTxProvider *txProvider;
     return result;
 }
 
+- (NSSet *)getBelongAccountAddressesFromAdresses:(FMDatabase *)db addressList:(NSArray *)addressList {
+    NSMutableArray *temp = [NSMutableArray new];
+    for (NSString *address in addressList) {
+        [temp addObject:[NSString stringWithFormat:@"'%@'", address]];
+    }
+    NSMutableSet *set = [NSMutableSet new];
+    NSString *sql = @"select address from hd_account_addresses where address in (%s) ";
+    FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
+    while ([rs next]) {
+        int columnIndex = [rs columnIndexForName:@"address"];
+        if (columnIndex != -1) {
+            NSString *str = [rs stringForColumnIndex:columnIndex];
+            [set addObject:str];
+
+        }
+    }
+    [rs close];
+
+    return set;
+
+}
+
 - (void)add:(BTTx *)txItem; {
     // need update out\'s status in this.
     // need maintain relation table addresses_txs
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // insert tx record
         [db beginTransaction];
-        NSSet * addressSet=[[BTHDAccountProvider instance] getBelongAccountAddressesFromAdresses:[txItem getOutAddressList]];
-        for(BTOut * out in txItem.outs){
-            if([addressSet containsObject:out.outAddress]){
-                out.hdAccountId=[[[BTAddressManager instance] hdAccount] getHDAccountId];
-            } else{
-                out.hdAccountId=-1;
+        NSSet *addressSet = [self getBelongAccountAddressesFromAdresses:db addressList:[txItem getOutAddressList]];
+        for (BTOut *out in txItem.outs) {
+            if ([addressSet containsObject:out.outAddress]) {
+                out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
+            } else {
+                out.hdAccountId = -1;
             }
         }
         NSNumber *blockNo = nil;
@@ -365,7 +387,7 @@ static BTTxProvider *txProvider;
             success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                     , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                     , @(outItem.outValue), @(outItem.outStatus)
-                    , outItem.outAddress,@(outItem.hdAccountId)];
+                    , outItem.outAddress, @(outItem.hdAccountId)];
             if (outItem.outAddress != nil) {
                 [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
             }
@@ -397,12 +419,12 @@ static BTTxProvider *txProvider;
         // insert tx record
         [db beginTransaction];
         for (BTTx *txItem in txs) {
-            NSSet * addressSet=[[BTHDAccountProvider instance] getBelongAccountAddressesFromAdresses:[txItem getOutAddressList]];
-            for(BTOut * out in txItem.outs){
-                if([addressSet containsObject:out.outAddress]){
-                    out.hdAccountId=[[[BTAddressManager instance] hdAccount] getHDAccountId];
-                } else{
-                    out.hdAccountId=-1;
+            NSSet *addressSet = [self getBelongAccountAddressesFromAdresses:db addressList:[txItem getOutAddressList]];
+            for (BTOut *out in txItem.outs) {
+                if ([addressSet containsObject:out.outAddress]) {
+                    out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
+                } else {
+                    out.hdAccountId = -1;
                 }
             }
             NSNumber *blockNo = nil;
@@ -445,7 +467,7 @@ static BTTxProvider *txProvider;
                 success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                         , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                         , @(outItem.outValue), @(outItem.outStatus)
-                        , outItem.outAddress,@(outItem.hdAccountId)];
+                        , outItem.outAddress, @(outItem.hdAccountId)];
                 if (outItem.outAddress != nil) {
                     [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
                 }

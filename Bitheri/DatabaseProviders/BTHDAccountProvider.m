@@ -463,7 +463,7 @@ static BTHDAccountProvider *accountProvider;
     for (NSString *address in addressList) {
         [temp addObject:[NSString stringWithFormat:@"'%@'", address]];
     }
-    NSString *sql = @"select address from hd_account_addresses where address in (%s) ";
+    NSString *sql = @"select address from hd_account_addresses where address in (%@) ";
     FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
     while ([rs next]) {
         int columnIndex = [rs columnIndexForName:@"address"];

@@ -64,4 +64,5 @@
 -(void)updateIssuedIndex:(PathType)pathType index:(int)index;
 
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete;
+-(NSInteger)getHDAccountId;
 @end

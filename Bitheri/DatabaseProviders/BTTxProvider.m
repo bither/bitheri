@@ -20,6 +20,8 @@
 #import "BTOut.h"
 #import "BTIn.h"
 #import "BTTxHelper.h"
+#import "BTHDAccountProvider.h"
+#import "BTAddressManager.h"
 
 
 static BTTxProvider *txProvider;
@@ -315,6 +317,14 @@ static BTTxProvider *txProvider;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // insert tx record
         [db beginTransaction];
+        NSSet * addressSet=[[BTHDAccountProvider instance] getBelongAccountAddressesFromAdresses:[txItem getOutAddressList]];
+        for(BTOut * out in txItem.outs){
+            if([addressSet containsObject:out.outAddress]){
+                out.hdAccountId=[[[BTAddressManager instance] hdAccount] getHDAccountId];
+            } else{
+                out.hdAccountId=-1;
+            }
+        }
         NSNumber *blockNo = nil;
         if (txItem.blockNo != TX_UNCONFIRMED) {
             blockNo = @(txItem.blockNo);
@@ -351,11 +361,11 @@ static BTTxProvider *txProvider;
 
         // insert outs and get the out\'s addresses
         for (BTOut *outItem in txItem.outs) {
-            sql = @"insert or ignore into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address) values(?,?,?,?,?,?)";
+            sql = @"insert or ignore into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
             success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                     , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                     , @(outItem.outValue), @(outItem.outStatus)
-                    , outItem.outAddress];
+                    , outItem.outAddress,@(outItem.hdAccountId)];
             if (outItem.outAddress != nil) {
                 [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
             }
@@ -387,6 +397,14 @@ static BTTxProvider *txProvider;
         // insert tx record
         [db beginTransaction];
         for (BTTx *txItem in txs) {
+            NSSet * addressSet=[[BTHDAccountProvider instance] getBelongAccountAddressesFromAdresses:[txItem getOutAddressList]];
+            for(BTOut * out in txItem.outs){
+                if([addressSet containsObject:out.outAddress]){
+                    out.hdAccountId=[[[BTAddressManager instance] hdAccount] getHDAccountId];
+                } else{
+                    out.hdAccountId=-1;
+                }
+            }
             NSNumber *blockNo = nil;
             if (txItem.blockNo != TX_UNCONFIRMED) {
                 blockNo = @(txItem.blockNo);
@@ -423,11 +441,11 @@ static BTTxProvider *txProvider;
 
             // insert outs and get the out\'s addresses
             for (BTOut *outItem in txItem.outs) {
-                sql = @"insert or ignore into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address) values(?,?,?,?,?,?)";
+                sql = @"insert or ignore into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
                 success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                         , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                         , @(outItem.outValue), @(outItem.outStatus)
-                        , outItem.outAddress];
+                        , outItem.outAddress,@(outItem.hdAccountId)];
                 if (outItem.outAddress != nil) {
                     [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
                 }

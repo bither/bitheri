@@ -36,4 +36,6 @@ typedef enum {
 
 @property(nonatomic, weak) BTTx *tx;
 
+@property int hdAccountId;
+
 @end

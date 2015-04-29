@@ -102,6 +102,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     return self;
 }
+- (NSInteger)getHDAccountId{
+    return self.hdSeedId;
+}
 
 - (void)initHDAccountWithMaster:(BTBIP32Key *)master encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed password:(NSString *)password andSyncedComplete:(BOOL)isSyncedComplete {
     NSString *address = master.key.address;

@@ -98,16 +98,18 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     self = [super init];
     if (self) {
         self.hdSeedId = seedId;
-        _isFromXRandom=[[BTAddressProvider instance] hdAccountIsXRandom:seedId];
+        _isFromXRandom = [[BTAddressProvider instance] hdAccountIsXRandom:seedId];
         [self updateBalance];
     }
     return self;
 }
-- (NSInteger)getHDAccountId{
+
+- (NSInteger)getHDAccountId {
     return self.hdSeedId;
 }
 
 - (void)initHDAccountWithMaster:(BTBIP32Key *)master encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed password:(NSString *)password andSyncedComplete:(BOOL)isSyncedComplete {
+    _isFromXRandom = encryptedMnemonicSeed.isXRandom;
     NSString *address = master.key.address;
     BTEncryptData *encryptedSeedOfPasswordSeed = [[BTEncryptData alloc] initWithData:master.secret andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom];
     BTBIP32Key *accountKey = [self getAccount:master];
@@ -495,7 +497,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (NSArray *)getRelatedAddressesForTx:(BTTx *)tx {
     NSMutableArray *outAddressList = [tx getOutAddressList];
     NSMutableArray *hdAccountAddressList = [NSMutableArray new];
-    NSArray *belongAccountOfOutList = [[BTHDAccountProvider instance] belongAccount: outAddressList];
+    NSArray *belongAccountOfOutList = [[BTHDAccountProvider instance] belongAccount:outAddressList];
     if (belongAccountOfOutList && belongAccountOfOutList.count > 0) {
         [hdAccountAddressList addObjectsFromArray:belongAccountOfOutList];
     }

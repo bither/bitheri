@@ -74,7 +74,7 @@ static BTDatabaseManager *databaseProvide;
     }
     return databaseProvide;
 }
-
+//init 1.0.1
 - (instancetype)init {
     if (!(self = [super init])) return nil;
 
@@ -326,7 +326,7 @@ static BTDatabaseManager *databaseProvide;
         return NO;
     }
 }
-
+//v1.3.1
 - (BOOL)addressV1ToV2:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
@@ -338,7 +338,7 @@ static BTDatabaseManager *databaseProvide;
         return NO;
     }
 }
-
+//v1.3.2
 - (BOOL)addressV2ToV3:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
@@ -349,7 +349,7 @@ static BTDatabaseManager *databaseProvide;
         return NO;
     }
 }
-
+//v1.3.2
 - (BOOL)txV1ToV2:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];

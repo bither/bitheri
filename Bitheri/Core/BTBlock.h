@@ -41,37 +41,39 @@
 
 @interface BTBlock : NSObject
 
-@property (nonatomic, assign) uint32_t blockNo;
-@property (nonatomic, readonly) NSData *blockHash;
-@property (nonatomic, readonly) NSData *blockRoot;
-@property (nonatomic, readonly) uint32_t blockVer;
-@property (nonatomic, readonly) uint32_t blockBits;
-@property (nonatomic, readonly) uint32_t blockNonce;
-@property (nonatomic, readonly) uint32_t blockTime;
-@property (nonatomic, readonly) NSData *blockPrev;
-@property (nonatomic, assign) BOOL isMain;
+@property(nonatomic, assign) uint32_t blockNo;
+@property(nonatomic, readonly) NSData *blockHash;
+@property(nonatomic, readonly) NSData *blockRoot;
+@property(nonatomic, readonly) uint32_t blockVer;
+@property(nonatomic, readonly) uint32_t blockBits;
+@property(nonatomic, readonly) uint32_t blockNonce;
+@property(nonatomic, readonly) uint32_t blockTime;
+@property(nonatomic, readonly) NSData *blockPrev;
+@property(nonatomic, assign) BOOL isMain;
 
-@property (nonatomic, readonly) NSArray *txHashes; // the matched tx hashes in the block
+@property(nonatomic, readonly) NSArray *txHashes; // the matched tx hashes in the block
 
-@property (nonatomic, readonly) uint32_t totalTransactions;
-@property (nonatomic, readonly) NSData *hashes;
-@property (nonatomic, readonly) NSData *flags;
+@property(nonatomic, readonly) uint32_t totalTransactions;
+@property(nonatomic, readonly) NSData *hashes;
+@property(nonatomic, readonly) NSData *flags;
 
 // true if merkle tree and timestamp are valid, and proof-of-work matches the stated difficulty target
 // NOTE: this only checks if the block difficulty matches the difficulty target in the header, it does not check if the
 // target is correct for the block's height in the chain, use verifyDifficultyFromPreviousBlock: for that
-@property (nonatomic, readonly, getter = isValid) BOOL valid;
+@property(nonatomic, readonly, getter = isValid) BOOL valid;
 
-@property (nonatomic, readonly, getter = toData) NSData *data;
+@property(nonatomic, readonly, getter = toData) NSData *data;
 
 // message can be either a merkle block or header message
 + (instancetype)blockWithMessage:(NSData *)message;
 
 - (instancetype)initWithMessage:(NSData *)message;
+
 - (instancetype)initWithBlockHash:(NSData *)blockHash version:(uint32_t)version prevBlock:(NSData *)prevBlock
                        merkleRoot:(NSData *)merkleRoot timestamp:(NSTimeInterval)timestamp target:(uint32_t)target nonce:(uint32_t)nonce
                 totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSData *)flags height:(uint32_t)height;
-- initWithBlockNo:(uint32_t) blockNo blockHash:(NSData *)blockHash blockRoot:(NSData *)blockRoot blockVer:(uint32_t)blockVer
+
+- initWithBlockNo:(uint32_t)blockNo blockHash:(NSData *)blockHash blockRoot:(NSData *)blockRoot blockVer:(uint32_t)blockVer
         blockBits:(uint32_t)blockBits blockNonce:(uint32_t)blockNonce blockTime:(uint32_t)blockTime
         blockPrev:(NSData *)blockPrev isMain:(BOOL)isMain;
 
@@ -88,6 +90,7 @@
 //- (instancetype)initWithBlockItem:(BTBlockItem *)blockItem;
 
 - (instancetype)initWithVersion:(uint32_t)version prevBlock:(NSData *)prevBlock merkleRoot:(NSData *)merkleRoot timestamp:(NSTimeInterval)timestamp target:(uint32_t)target nonce:(uint32_t)nonce height:(uint32_t)height;
+
 - (NSData *)toDataWithHash;
 
 

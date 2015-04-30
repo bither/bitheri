@@ -44,6 +44,7 @@
 #import "BTPeerProvider.h"
 #import "BTTxProvider.h"
 #import "asn1t.h"
+#import "BTHDAccount.h"
 
 #if BITCOIN_TESTNET
 static const char *dns_seeds[] = { "testnet-seed.bitcoin.petertodd.org", "testnet-seed.bluematt.me" };
@@ -59,16 +60,16 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
 @interface BTPeerManager ()
 
-@property (nonatomic, strong) NSMutableSet *abandonPeers;
-@property (nonatomic, assign) uint32_t tweak, syncStartHeight, filterUpdateHeight;
-@property (nonatomic, strong) BTBloomFilter *bloomFilter;
-@property (nonatomic, assign) double filterFpRate;
-@property (nonatomic, assign) NSUInteger taskId, connectFailure;
+@property(nonatomic, strong) NSMutableSet *abandonPeers;
+@property(nonatomic, assign) uint32_t tweak, syncStartHeight, filterUpdateHeight;
+@property(nonatomic, strong) BTBloomFilter *bloomFilter;
+@property(nonatomic, assign) double filterFpRate;
+@property(nonatomic, assign) NSUInteger taskId, connectFailure;
 //@property (nonatomic, assign) NSTimeInterval earliestKeyTime;
-@property (nonatomic, assign) NSTimeInterval lastRelayTime;
-@property (nonatomic, strong) NSMutableDictionary *txRelays;
-@property (nonatomic, strong) NSMutableDictionary *publishedTx, *publishedCallback;
-@property (nonatomic, strong) dispatch_queue_t q;
+@property(nonatomic, assign) NSTimeInterval lastRelayTime;
+@property(nonatomic, strong) NSMutableDictionary *txRelays;
+@property(nonatomic, strong) NSMutableDictionary *publishedTx, *publishedCallback;
+@property(nonatomic, strong) dispatch_queue_t q;
 //@property (nonatomic, strong) id activeObserver;
 
 @end
@@ -133,7 +134,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     if (self.synchronizing && self.syncStartHeight > 0 && self.downloadPeer != nil
             && self.lastBlockHeight >= self.syncStartHeight
             && self.lastBlockHeight <= self.downloadPeer.versionLastBlock) {
-        return (double)(self.lastBlockHeight - self.syncStartHeight) / (double)(self.downloadPeer.versionLastBlock - self.syncStartHeight);
+        return (double) (self.lastBlockHeight - self.syncStartHeight) / (double) (self.downloadPeer.versionLastBlock - self.syncStartHeight);
     } else {
         return -1.0;
     }
@@ -166,7 +167,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     NSArray *outs = [[BTAddressManager instance] outs];
 
-    NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count;
+    NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count + ([BTAddressManager instance].hasHDAccount ? [BTAddressManager instance].hdAccount.elementCountForBloomFilter : 0);
     elemCount += 100;
     BTBloomFilter *filter = [[BTBloomFilter alloc] initWithFalsePositiveRate:self.filterFpRate
                                                              forElementCount:elemCount
@@ -183,6 +184,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     for (NSData *utxo in outs) {
         if (![filter containsData:utxo]) [filter insertData:utxo];
+    }
+
+    if ([BTAddressManager instance].hasHDAccount) {
+        [[BTAddressManager instance].hdAccount addElementsForBloomFilter:filter];
     }
 
     _bloomFilter = filter;
@@ -231,7 +236,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 }
 
 - (void)start {
-   // [self initAddress];
+    // [self initAddress];
     if (!self.running) {
         DDLogDebug(@"peer manager start");
         self.running = YES;
@@ -239,9 +244,9 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         _bloomFilter = nil;
         if (self.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
             self.connectFailure = 0; // this attempt is a manual retry
-        if(self.connectedPeers.count > 0){
+        if (self.connectedPeers.count > 0) {
             NSSet *set = [NSSet setWithSet:self.connectedPeers];
-            for(BTPeer* peer in set){
+            for (BTPeer *peer in set) {
                 [peer connectError];
                 [self.abandonPeers addObject:@(peer.peerAddress)];
                 [peer disconnectWithError:[NSError errorWithDomain:@"bitheri" code:ERR_PEER_DISCONNECT_CODE
@@ -251,9 +256,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }
         [self reconnect];
     }
-    
+
 }
--(void)initAddress{
+
+- (void)initAddress {
     dispatch_async(self.q, ^{
         [[BTAddressManager instance] initAddress];
     });
@@ -320,7 +326,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 }
 
-- (void)clearPeerAndRestart;{
+- (void)clearPeerAndRestart; {
     [self stop];
     [[BTPeerProvider instance] recreate];
     [self start];
@@ -669,7 +675,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             DDLogDebug(@"%@:%d relay %d/%d block headers. drop this peer", peer.host, peer.peerPort, relayedCount, headers.count);
         }
         [self sendSyncProgressNotification];
-        
+
         if (self.lastBlockHeight == peer.versionLastBlock) {
             [self.downloadPeer setSynchronising:NO];
             [self syncStopped];

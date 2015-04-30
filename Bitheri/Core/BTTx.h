@@ -27,6 +27,7 @@
 @class BTKey;
 @class BTAddress;
 @class BTOut;
+@class BTHDAccount;
 
 #if TX_FEE_07_RULES
 #define TX_FEE_PER_KB        50000llu    // standard tx fee per kb of tx size, rounded up to the nearest kb (0.7 rules)
@@ -36,53 +37,69 @@
 
 @interface BTTx : NSObject
 
-@property (nonatomic, assign) uint32_t blockNo;
-@property (nonatomic, copy) NSData *txHash;
-@property (nonatomic, assign) uint32_t txVer;
-@property (nonatomic, assign) uint32_t txLockTime;
-@property (nonatomic, assign) uint32_t txTime;
-@property (nonatomic, assign) int source;
-@property (nonatomic, assign) int sawByPeerCnt;
+@property(nonatomic, assign) uint32_t blockNo;
+@property(nonatomic, copy) NSData *txHash;
+@property(nonatomic, assign) uint32_t txVer;
+@property(nonatomic, assign) uint32_t txLockTime;
+@property(nonatomic, assign) uint32_t txTime;
+@property(nonatomic, assign) int source;
+@property(nonatomic, assign) int sawByPeerCnt;
 
-@property (nonatomic, strong) NSMutableArray *ins;
-@property (nonatomic, strong) NSMutableArray *outs;
+@property(nonatomic, strong) NSMutableArray *ins;
+@property(nonatomic, strong) NSMutableArray *outs;
 
-@property (nonatomic, readonly) uint confirmationCnt;
-@property (nonatomic, readonly) BOOL isCoinBase;
+@property(nonatomic, readonly) uint confirmationCnt;
+@property(nonatomic, readonly) BOOL isCoinBase;
 
 
 + (instancetype)transactionWithMessage:(NSData *)message;
+
 - (instancetype)initWithMessage:(NSData *)message;
 
 #pragma mark - manage in & out
+
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script;
+
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script signature:(NSData *)signature
-sequence:(uint32_t)sequence;
+            sequence:(uint32_t)sequence;
 
 - (void)setInputAddress:(NSString *)address atIndex:(NSUInteger)index;
-- (void)setInScript:(NSData *)script forInHash:(NSData *)inHash andInIndex:(NSUInteger) inIndex;
+
+- (void)setInScript:(NSData *)script forInHash:(NSData *)inHash andInIndex:(NSUInteger)inIndex;
 
 - (void)clearIns;
 
 - (void)addOutputAddress:(NSString *)address amount:(uint64_t)amount;
+
 - (void)addOutputScript:(NSData *)script amount:(uint64_t)amount;
 
 
 #pragma mark - sign
+
 - (BOOL)signWithPrivateKeys:(NSArray *)privateKeys;
+
 - (NSArray *)unsignedInHashes;
+
 - (BOOL)signWithSignatures:(NSArray *)signatures;
-- (NSData *) hashForSignature:(NSUInteger) inputIndex connectedScript:(NSData *) connectedScript sigHashType:(uint8_t) sigHashType;
+
+- (NSData *)hashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
 
 - (BOOL)isSigned;
+
 - (BOOL)verify;
+
 - (BOOL)verifySignatures;
 
 #pragma mark - query
+
 - (NSArray *)getInAddresses;
+
 - (NSData *)toData;
+
 - (size_t)size;
+
 - (BOOL)hasDustOut;
+
 - (BTOut *)getOut:(uint)outSn;
 
 // priority = sum(input_amount_in_satoshis*input_age_in_blocks)/tx_size_in_bytes
@@ -90,16 +107,26 @@ sequence:(uint32_t)sequence;
 
 // the block height after which the transaction can be confirmed without a fee, or TX_UNCONFIRMED for never
 - (uint32_t)blockHeightUntilFreeForAmounts:(NSArray *)amounts withBlockHeights:(NSArray *)heights;
+
 - (uint64_t)amountReceivedFrom:(BTAddress *)addr;;
+
 - (uint64_t)amountSentFrom:(BTAddress *)addr;
+
 - (uint64_t)amountSentTo:(NSString *)addr;
+
 - (int64_t)deltaAmountFrom:(BTAddress *)addr;
+
+- (NSArray *)getOutAddressList;
+
+- (int64_t)deltaAmountFromHDAccount:(BTHDAccount *)account;
+
 - (uint64_t)feeForTransaction;
 
 - (uint32_t)blockHeightUntilFree;
 
 
 #pragma mark - confirm
+
 - (void)sawByPeer;
 
 @end

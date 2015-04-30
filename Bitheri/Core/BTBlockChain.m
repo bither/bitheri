@@ -26,7 +26,7 @@ static BTBlockChain *blockChain;
 
 @interface BTBlockChain ()
 
-@property (nonatomic, strong) BTBlock *lastOrphan;
+@property(nonatomic, strong) BTBlock *lastOrphan;
 
 @end
 
@@ -119,7 +119,7 @@ static BTBlockChain *blockChain;
 }
 
 - (BTBlock *)getOrphanBlockByPrevHash:(NSData *)prevHash; {
-    return  [[BTBlockProvider instance] getOrphanBlockByPrevHash:prevHash];
+    return [[BTBlockProvider instance] getOrphanBlockByPrevHash:prevHash];
 }
 
 - (int)getBlockCount {
@@ -245,7 +245,7 @@ static BTBlockChain *blockChain;
         // new block is on a fork
         if (block.blockNo <= BITCOIN_REFERENCE_BLOCK_HEIGHT) { // fork is older than the most recent checkpoint
             DDLogDebug(@"ignoring block on fork older than most recent checkpoint, fork height: %d, blockHash: %@",
-                            block.blockNo, block.blockHash);
+                    block.blockNo, block.blockHash);
             return;
         }
 
@@ -265,7 +265,7 @@ static BTBlockChain *blockChain;
     }
 }
 
-- (int)relayedBlockHeadersForMainChain:(NSArray *) blocks;{
+- (int)relayedBlockHeadersForMainChain:(NSArray *)blocks; {
     if (blocks.count == 0)
         return 0;
     NSMutableArray *blocksToAdd = [NSMutableArray new];
@@ -301,7 +301,7 @@ static BTBlockChain *blockChain;
     return blocksToAdd.count;
 }
 
-- (int)relayedBlocks:(NSArray *) blocks;{
+- (int)relayedBlocks:(NSArray *)blocks; {
     if (blocks.count == 0) {
         return 0;
     }
@@ -399,10 +399,12 @@ static BTBlockChain *blockChain;
     }
     return YES;
 }
--(NSArray *) getAllBlocks{
+
+- (NSArray *)getAllBlocks {
     return [[BTBlockProvider instance] getAllBlocks];
 }
-- (NSArray *)getBlocksWithLimit:(NSInteger) limit {
+
+- (NSArray *)getBlocksWithLimit:(NSInteger)limit {
     return [[BTBlockProvider instance] getBlocksWithLimit:limit];
 }
 

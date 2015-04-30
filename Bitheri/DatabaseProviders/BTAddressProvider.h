@@ -27,47 +27,103 @@
 + (instancetype)instance;
 
 #pragma mark - password
+
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
+
 - (BTPasswordSeed *)getPasswordSeed;
--(BOOL)hasPasswordSeed;
+
+- (BOOL)hasPasswordSeed;
 
 #pragma mark - hdm
+
 - (NSArray *)getHDSeedIds;
-- (NSString *)getEncryptSeed:(int)hdSeedId;
+
+- (NSString *)getEncryptMnemonicSeed:(int)hdSeedId;
+
 - (NSString *)getEncryptHDSeed:(int)hdSeedId;
+
 //- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptHDSeed:(NSString *)encryptHDSeed;
 //- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
 - (BOOL)isHDSeedFromXRandom:(int)hdSeedId;
-- (NSString *)getHDFirstAddress:(int)hdSeedId;
+
+- (NSString *)getHDMFirstAddress:(int)hdSeedId;
+
 - (NSString *)getSingularModeBackup:(int)hdSeedId;
+
 - (void)setSingularModeBackupWithHDSeedId:(int)hdSeedId andSingularModeBackup:(NSString *)singularModeBackup;
-- (int)addHDSeedWithEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom andPasswordSeed:(NSString *)passwordSeed;
+
+- (int)addHDSeedWithMnemonicEncryptSeed:(NSString *)encryptMnemonicSeed andEncryptHDSeed:(NSString *)encryptHDSeed
+                        andFirstAddress:(NSString *)firstAddress andIsXRandom:(BOOL)isXRandom
+                         andAddressOfPs:(NSString *)addressOfPs;
 
 - (BTHDMBid *)getHDMBid;
-- (BOOL)addHDMBid:(BTHDMBid *)hdmBid andPasswordSeed:(NSString *)passwordSeed;
+
+- (BOOL)addHDMBid:(BTHDMBid *)hdmBid andAddressOfPS:(NSString *)addressOfPS;
 
 - (NSArray *)getHDMAddressInUse:(BTHDMKeychain *)keychain;
+
 - (BOOL)prepareHDMAddressesWithHDSeedId:(int)hdSeedId andPubs:(NSArray *)pubs;
-- (NSArray *)getUncompletedHDMAddressPubs:(int) hdSeedId andCount:(int)count;
-- (int)maxHDMAddressPubIndex:(int)hdSeedId;//including completed and uncompleted
+
+- (NSArray *)getUncompletedHDMAddressPubs:(int)hdSeedId andCount:(int)count;
+
+- (int)maxHDMAddressPubIndex:(int)hdSeedId;
+
+//including completed and uncompleted
 - (BOOL)recoverHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
+
 - (BOOL)completeHDMAddressesWithHDSeedId:(int)hdSeedId andHDMAddresses:(NSArray *)addresses;
-- (void)setHDMPubsRemoteWithHDSeedId:(int)hdSeedId andIndex:(int) index andPubKeyRemote:(NSData *) pubKeyRemote;
+
+- (void)setHDMPubsRemoteWithHDSeedId:(int)hdSeedId andIndex:(int)index andPubKeyRemote:(NSData *)pubKeyRemote;
+
 - (int)uncompletedHDMAddressCount:(int)hdSeedId;
+
 - (void)updateSyncCompleteHDSeedId:(int)hdSeedId hdSeedIndex:(uint)hdSeedIndex syncComplete:(BOOL)syncComplete;
 
 #pragma mark - normal
+
 - (NSArray *)getAddresses;
+
 - (BOOL)addAddress:(BTAddress *)address;
+
 - (BOOL)addAddresses:(NSArray *)addresses andPasswordSeed:(BTPasswordSeed *)passwordSeed;
+
 - (NSString *)getEncryptPrivKeyWith:(NSString *)address;
+
 - (void)updatePrivateKey:(BTAddress *)address;
+
 - (void)removeWatchOnlyAddress:(BTAddress *)address;
+
 - (void)trashPrivKeyAddress:(BTAddress *)address;
+
 - (void)restorePrivKeyAddress:(BTAddress *)address;
+
 - (void)updateSyncComplete:(BTAddress *)address;
 
 - (NSString *)getAlias:(NSString *)address;
+
 - (NSDictionary *)getAliases;
+
 - (void)updateAliasWithAddress:(NSString *)address andAlias:(NSString *)alias;
+
+#pragma mark - hd account
+
+- (int)addHDAccount:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
+       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPs
+        externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;
+
+- (NSData *)getExternalPub:(int)hdSeedid;
+
+- (NSData *)getInternalPub:(int)hdSeedid;
+
+- (NSString *)getHDAccountEncryptSeed:(int)hdSeedId;
+
+- (NSString *)getHDAccountEncryptMnmonicSeed:(int)hdSeedId;
+
+- (NSArray *)getHDAccountSeeds;
+
+- (NSString *)getHDAccountFristAddress:(int)seedId;
+
+- (BOOL)hdAccountIsXRandom:(int)seedId;
+
+
 @end

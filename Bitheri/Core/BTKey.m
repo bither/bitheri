@@ -50,12 +50,11 @@
 #import "BTUtils.h"
 
 // HMAC-SHA256 DRBG, using no prediction resistance or personalization string and outputing 256bits
-static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
-{
+static NSData *hmac_drbg(NSData *entropy, NSData *nonce) {
     NSMutableData *V = [NSMutableData
-                        secureDataWithCapacity:CC_SHA256_DIGEST_LENGTH + 1 + entropy.length + nonce.length],
-                  *K = [NSMutableData secureDataWithCapacity:CC_SHA256_DIGEST_LENGTH],
-                  *T = [NSMutableData secureDataWithLength:CC_SHA256_DIGEST_LENGTH];
+            secureDataWithCapacity:CC_SHA256_DIGEST_LENGTH + 1 + entropy.length + nonce.length],
+            *K = [NSMutableData secureDataWithCapacity:CC_SHA256_DIGEST_LENGTH],
+            *T = [NSMutableData secureDataWithLength:CC_SHA256_DIGEST_LENGTH];
 
     V.length = CC_SHA256_DIGEST_LENGTH;
     memset(V.mutableBytes, 0x01, V.length); // V = 0x01 0x01 0x01 ... 0x01
@@ -101,8 +100,7 @@ static NSData *hmac_drbg(NSData *entropy, NSData *nonce)
 // recid selects which key is recovered
 // if check is non-zero, additional checks are performed
 int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned char *msg,
-        int msglen, int recid, int check)
-{
+        int msglen, int recid, int check) {
     if (!eckey) return 0;
 
     int ret = 0;
@@ -123,41 +121,103 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     int i = recid / 2;
 
     const EC_GROUP *group = EC_KEY_get0_group(eckey);
-    if ((ctx = BN_CTX_new()) == NULL) { ret = -1; goto err; }
+    if ((ctx = BN_CTX_new()) == NULL) {
+        ret = -1;
+        goto err;
+    }
     BN_CTX_start(ctx);
     order = BN_CTX_get(ctx);
-    if (!EC_GROUP_get_order(group, order, ctx)) { ret = -2; goto err; }
-    x = BN_CTX_get(ctx);
-    if (!BN_copy(x, order)) { ret=-1; goto err; }
-    if (!BN_mul_word(x, i)) { ret=-1; goto err; }
-    if (!BN_add(x, x, ecsig->r)) { ret=-1; goto err; }
-    field = BN_CTX_get(ctx);
-    if (!EC_GROUP_get_curve_GFp(group, field, NULL, NULL, ctx)) { ret=-2; goto err; }
-    if (BN_cmp(x, field) >= 0) { ret=0; goto err; }
-    if ((R = EC_POINT_new(group)) == NULL) { ret = -2; goto err; }
-    if (!EC_POINT_set_compressed_coordinates_GFp(group, R, x, recid % 2, ctx)) { ret=0; goto err; }
-    if (check)
-    {
-        if ((O = EC_POINT_new(group)) == NULL) { ret = -2; goto err; }
-        if (!EC_POINT_mul(group, O, NULL, R, order, ctx)) { ret=-2; goto err; }
-        if (!EC_POINT_is_at_infinity(group, O)) { ret = 0; goto err; }
+    if (!EC_GROUP_get_order(group, order, ctx)) {
+        ret = -2;
+        goto err;
     }
-    if ((Q = EC_POINT_new(group)) == NULL) { ret = -2; goto err; }
+    x = BN_CTX_get(ctx);
+    if (!BN_copy(x, order)) {
+        ret = -1;
+        goto err;
+    }
+    if (!BN_mul_word(x, i)) {
+        ret = -1;
+        goto err;
+    }
+    if (!BN_add(x, x, ecsig->r)) {
+        ret = -1;
+        goto err;
+    }
+    field = BN_CTX_get(ctx);
+    if (!EC_GROUP_get_curve_GFp(group, field, NULL, NULL, ctx)) {
+        ret = -2;
+        goto err;
+    }
+    if (BN_cmp(x, field) >= 0) {
+        ret = 0;
+        goto err;
+    }
+    if ((R = EC_POINT_new(group)) == NULL) {
+        ret = -2;
+        goto err;
+    }
+    if (!EC_POINT_set_compressed_coordinates_GFp(group, R, x, recid % 2, ctx)) {
+        ret = 0;
+        goto err;
+    }
+    if (check) {
+        if ((O = EC_POINT_new(group)) == NULL) {
+            ret = -2;
+            goto err;
+        }
+        if (!EC_POINT_mul(group, O, NULL, R, order, ctx)) {
+            ret = -2;
+            goto err;
+        }
+        if (!EC_POINT_is_at_infinity(group, O)) {
+            ret = 0;
+            goto err;
+        }
+    }
+    if ((Q = EC_POINT_new(group)) == NULL) {
+        ret = -2;
+        goto err;
+    }
     n = EC_GROUP_get_degree(group);
     e = BN_CTX_get(ctx);
-    if (!BN_bin2bn(msg, msglen, e)) { ret=-1; goto err; }
-    if (8*msglen > n) BN_rshift(e, e, 8-(n & 7));
+    if (!BN_bin2bn(msg, msglen, e)) {
+        ret = -1;
+        goto err;
+    }
+    if (8 * msglen > n) BN_rshift(e, e, 8 - (n & 7));
     zero = BN_CTX_get(ctx);
-    if (!BN_zero(zero)) { ret=-1; goto err; }
-    if (!BN_mod_sub(e, zero, e, order, ctx)) { ret=-1; goto err; }
+    if (!BN_zero(zero)) {
+        ret = -1;
+        goto err;
+    }
+    if (!BN_mod_sub(e, zero, e, order, ctx)) {
+        ret = -1;
+        goto err;
+    }
     rr = BN_CTX_get(ctx);
-    if (!BN_mod_inverse(rr, ecsig->r, order, ctx)) { ret=-1; goto err; }
+    if (!BN_mod_inverse(rr, ecsig->r, order, ctx)) {
+        ret = -1;
+        goto err;
+    }
     sor = BN_CTX_get(ctx);
-    if (!BN_mod_mul(sor, ecsig->s, rr, order, ctx)) { ret=-1; goto err; }
+    if (!BN_mod_mul(sor, ecsig->s, rr, order, ctx)) {
+        ret = -1;
+        goto err;
+    }
     eor = BN_CTX_get(ctx);
-    if (!BN_mod_mul(eor, e, rr, order, ctx)) { ret=-1; goto err; }
-    if (!EC_POINT_mul(group, Q, eor, R, sor, ctx)) { ret=-2; goto err; }
-    if (!EC_KEY_set_public_key(eckey, Q)) { ret=-2; goto err; }
+    if (!BN_mod_mul(eor, e, rr, order, ctx)) {
+        ret = -1;
+        goto err;
+    }
+    if (!EC_POINT_mul(group, Q, eor, R, sor, ctx)) {
+        ret = -2;
+        goto err;
+    }
+    if (!EC_KEY_set_public_key(eckey, Q)) {
+        ret = -2;
+        goto err;
+    }
 
     ret = 1;
 
@@ -174,42 +234,37 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 
 @interface BTKey ()
 
-@property (nonatomic, assign) EC_KEY *key;
-@property (nonatomic, copy) NSData *secret;
+@property(nonatomic, assign) EC_KEY *key;
+@property(nonatomic, copy) NSData *secret;
 
 
 @end
 
 @implementation BTKey
 
-+ (instancetype)keyWithPrivateKey:(NSString *)privateKey
-{
++ (instancetype)keyWithPrivateKey:(NSString *)privateKey {
     return [[self alloc] initWithPrivateKey:privateKey];
 }
 
-+ (instancetype)keyWithSecret:(NSData *)secret compressed:(BOOL)compressed
-{
++ (instancetype)keyWithSecret:(NSData *)secret compressed:(BOOL)compressed {
     return [[self alloc] initWithSecret:secret compressed:compressed];
 }
 
-+ (instancetype)keyWithPublicKey:(NSData *)publicKey
-{
++ (instancetype)keyWithPublicKey:(NSData *)publicKey {
     return [[self alloc] initWithPublicKey:publicKey];
 }
 
-- (instancetype)init
-{
-    if (! (self = [super init])) return nil;
-    
+- (instancetype)init {
+    if (!(self = [super init])) return nil;
+
     _key = EC_KEY_new_by_curve_name(NID_secp256k1);
-    
+
     return _key ? self : nil;
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     NSMutableData *emptySecret = [NSMutableData new];
-    for (NSUInteger i = 0; i < 32; i++){
+    for (NSUInteger i = 0; i < 32; i++) {
         [emptySecret appendUInt8:0];
     }
     [self setSecret:emptySecret compressed:YES];
@@ -219,8 +274,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     if (_key) EC_KEY_free(_key);
 }
 
-- (instancetype)initWithSecret:(NSData *)secret compressed:(BOOL)compressed
-{
+- (instancetype)initWithSecret:(NSData *)secret compressed:(BOOL)compressed {
     if (secret.length != 32) return nil;
     BIGNUM *n = BN_bin2bn(secret.bytes, 32, NULL);
     if (BN_cmp([BTKeyParameter minN], n) >= 0 || BN_cmp([BTKeyParameter maxN], n) <= 0) {
@@ -230,35 +284,32 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
         BN_clear_free(n);
     }
 
-    if (! (self = [self init])) return nil;
+    if (!(self = [self init])) return nil;
 
     [self setSecret:secret compressed:compressed];
-    
+
     return self;
 }
 
-- (instancetype)initWithPrivateKey:(NSString *)privateKey
-{
-    if (! (self = [self init])) return nil;
-    
+- (instancetype)initWithPrivateKey:(NSString *)privateKey {
+    if (!(self = [self init])) return nil;
+
     self.privateKey = privateKey;
-    
+
     return self;
 }
 
-- (instancetype)initWithPublicKey:(NSData *)publicKey
-{
-    if (! (self = [self init])) return nil;
-    
+- (instancetype)initWithPublicKey:(NSData *)publicKey {
+    if (!(self = [self init])) return nil;
+
     self.publicKey = publicKey;
-    
+
     return self;
 }
 
-- (void)setSecret:(NSData *)secret compressed:(BOOL)compressed
-{
-    if (secret.length != 32 || ! _key) return;
-    
+- (void)setSecret:(NSData *)secret compressed:(BOOL)compressed {
+    if (secret.length != 32 || !_key) return;
+
     BN_CTX *ctx = BN_CTX_new();
     BIGNUM priv;
     const EC_GROUP *group = EC_KEY_get0_group(_key);
@@ -266,17 +317,17 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 
     if (ctx) BN_CTX_start(ctx);
     BN_init(&priv);
-    
+
     if (pub && ctx) {
         BN_bin2bn(secret.bytes, 32, &priv);
-        
+
         if (EC_POINT_mul(group, pub, &priv, NULL, NULL, ctx)) {
             EC_KEY_set_private_key(_key, &priv);
             EC_KEY_set_public_key(_key, pub);
             EC_KEY_set_conv_form(_key, compressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
         }
     }
-    
+
     if (pub) EC_POINT_free(pub);
     BN_clear_free(&priv);
     if (ctx) BN_CTX_end(ctx);
@@ -285,14 +336,13 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     self.compressed = compressed;
 }
 
-- (void)setPrivateKey:(NSString *)privateKey
-{
+- (void)setPrivateKey:(NSString *)privateKey {
     // mini private key format
     if ((privateKey.length == 30 || privateKey.length == 22) && [privateKey characterAtIndex:0] == 'S') {
-        if (! [privateKey isValidBitcoinPrivateKey]) return;
-        
+        if (![privateKey isValidBitcoinPrivateKey]) return;
+
         [self setSecret:[CFBridgingRelease(CFStringCreateExternalRepresentation(SecureAllocator(),
-                         (__bridge CFStringRef)privateKey, kCFStringEncodingUTF8, 0)) SHA256] compressed:NO];
+                (__bridge CFStringRef) privateKey, kCFStringEncodingUTF8, 0)) SHA256] compressed:NO];
         return;
     }
 
@@ -303,20 +353,19 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     uint8_t version = BITCOIN_PRIVKEY;
 #endif
 
-    if (! d || d.length == 28) d = privateKey.base58ToData;
-    if (! d) d = privateKey.hexToData;
+    if (!d || d.length == 28) d = privateKey.base58ToData;
+    if (!d) d = privateKey.hexToData;
 
-    if ((d.length == 33 || d.length == 34) && *(const unsigned char *)d.bytes == version) {
+    if ((d.length == 33 || d.length == 34) && *(const unsigned char *) d.bytes == version) {
         [self setSecret:[NSData dataWithBytesNoCopy:(unsigned char *) d.bytes + 1 length:32 freeWhenDone:NO]
              compressed:d.length == 34];
     }
     else if (d.length == 32) [self setSecret:d compressed:NO];
 }
 
-- (NSString *)privateKey
-{
-    if (! EC_KEY_check_key(_key)) return nil;
-    
+- (NSString *)privateKey {
+    if (!EC_KEY_check_key(_key)) return nil;
+
     const BIGNUM *priv = EC_KEY_get0_private_key(_key);
     NSMutableData *d = [NSMutableData secureDataWithCapacity:34];
 #if BITCOIN_TESTNET
@@ -327,42 +376,38 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 
     [d appendBytes:&version length:1];
     d.length = 33;
-    BN_bn2bin(priv, (unsigned char *)d.mutableBytes + d.length - BN_num_bytes(priv));
+    BN_bn2bin(priv, (unsigned char *) d.mutableBytes + d.length - BN_num_bytes(priv));
     if (EC_KEY_get_conv_form(_key) == POINT_CONVERSION_COMPRESSED) [d appendBytes:"\x01" length:1];
 
     return [NSString base58checkWithData:d];
 }
 
-- (void)setPublicKey:(NSData *)publicKey
-{
+- (void)setPublicKey:(NSData *)publicKey {
     const unsigned char *bytes = publicKey.bytes;
 
     o2i_ECPublicKey(&_key, &bytes, publicKey.length);
 }
 
-- (NSData *)publicKey
-{
-    if (! EC_KEY_check_key(_key)) return nil;
+- (NSData *)publicKey {
+    if (!EC_KEY_check_key(_key)) return nil;
 
     size_t l = (size_t) i2o_ECPublicKey(_key, NULL);
     NSMutableData *pubKey = [NSMutableData secureDataWithLength:l];
     unsigned char *bytes = pubKey.mutableBytes;
-    
+
     if (i2o_ECPublicKey(_key, &bytes) != l) return nil;
-    
+
     return pubKey;
 }
 
-- (NSData *)hash160
-{
+- (NSData *)hash160 {
     return [[self publicKey] hash160];
 }
 
-- (NSString *)address
-{
+- (NSString *)address {
     NSData *hash = [self hash160];
-    
-    if (! hash.length) return nil;
+
+    if (!hash.length) return nil;
 
     NSMutableData *d = [NSMutableData secureDataWithCapacity:hash.length + 1];
 #if BITCOIN_TESTNET
@@ -370,17 +415,16 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 #else
     uint8_t version = BITCOIN_PUBKEY_ADDRESS;
 #endif
-    
+
     [d appendBytes:&version length:1];
     [d appendData:hash];
 
     return [NSString base58checkWithData:d];
 }
 
-- (NSData *)sign:(NSData *)d
-{
+- (NSData *)sign:(NSData *)d {
     if (d.length != CC_SHA256_DIGEST_LENGTH) {
-        DDLogDebug(@"%s:%d: %s: Only 256 bit hashes can be signed", __FILE__, __LINE__,  __func__);
+        DDLogDebug(@"%s:%d: %s: Only 256 bit hashes can be signed", __FILE__, __LINE__, __func__);
         return nil;
     }
 
@@ -401,7 +445,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     BN_rshift1(&halforder, &order);
 
     // generate k deterministicly per RFC6979: https://tools.ietf.org/html/rfc6979
-    BN_bn2bin(priv, (unsigned char *)entropy.mutableBytes + entropy.length - BN_num_bytes(priv));
+    BN_bn2bin(priv, (unsigned char *) entropy.mutableBytes + entropy.length - BN_num_bytes(priv));
     BN_bin2bn(hmac_drbg(entropy, d).bytes, CC_SHA256_DIGEST_LENGTH, &k);
 
     EC_POINT_mul(group, p, &k, NULL, NULL, ctx); // compute r, the x-coordinate of generator*k
@@ -409,7 +453,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 
     BN_mod_inverse(&k, &k, &order, ctx); // compute the inverse of k
 
-    ECDSA_SIG *s = ECDSA_do_sign_ex(d.bytes, (int)d.length, &k, &r, _key);
+    ECDSA_SIG *s = ECDSA_do_sign_ex(d.bytes, (int) d.length, &k, &r, _key);
 
     if (s) {
         // enforce low s values, negate the value (modulo the order) if above order/2.
@@ -432,24 +476,23 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     return sig;
 }
 
-- (BOOL)verify:(NSData *)d signature:(NSData *)sig
-{
+- (BOOL)verify:(NSData *)d signature:(NSData *)sig {
     // -1 = error, 0 = bad sig, 1 = good
-    return ECDSA_verify(0, d.bytes, (int)d.length, sig.bytes, (int)sig.length, _key) == 1;
+    return ECDSA_verify(0, d.bytes, (int) d.length, sig.bytes, (int) sig.length, _key) == 1;
 }
 
--(uint8_t)getKeyFlag{
-    uint8_t flag=0;
+- (uint8_t)getKeyFlag {
+    uint8_t flag = 0;
     if (self.compressed) {
-        flag=flag+IS_COMPRESSED_FLAG;
+        flag = flag + IS_COMPRESSED_FLAG;
     }
     if (self.isFromXRandom) {
-        flag=flag+IS_FROMXRANDOM_FLAG;
+        flag = flag + IS_FROMXRANDOM_FLAG;
     }
     return flag;
 }
 
-+ (NSData *)getRFromSignature:(NSData *)sig;{
++ (NSData *)getRFromSignature:(NSData *)sig; {
     NSMutableData *data = [NSMutableData dataWithData:sig];
     unsigned char *b;
     b = data.mutableBytes;
@@ -462,15 +505,15 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     return [d subdataWithRange:NSMakeRange(0, len)];
 }
 
-+ (NSData *)bn2bin:(BIGNUM) num andLength:(int) length;{
++ (NSData *)bn2bin:(BIGNUM)num andLength:(int)length; {
     NSMutableData *data = [NSMutableData new];
     data.length = (NSUInteger) length;
     BN_bn2bin(&num, (unsigned char *) data.mutableBytes + data.length - BN_num_bytes(&num));
     return data;
 }
 
-+ (NSData *)pubKey:(EC_KEY *)key;{
-    if (! EC_KEY_check_key(key)) return nil;
++ (NSData *)pubKey:(EC_KEY *)key; {
+    if (!EC_KEY_check_key(key)) return nil;
 
     size_t l = (size_t) i2o_ECPublicKey(key, NULL);
     NSMutableData *pubKey = [NSMutableData secureDataWithLength:l];
@@ -485,7 +528,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     return [[self signHash:d] base64EncodedStringWithOptions:0];
 }
 
-- (NSData *)signHash:(NSData *)hash{
+- (NSData *)signHash:(NSData *)hash {
     ECDSA_SIG *sig = [self _sign:hash];
     int recId = -1;
     for (int i = 0; i < 4; i++) {
@@ -514,7 +557,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     return sigData;
 }
 
-- (BOOL)verifyMessage:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;{
+- (BOOL)verifyMessage:(NSString *)message andSignatureBase64:(NSString *)signatureBase64; {
     BTKey *key = [BTKey signedMessageToKey:message andSignatureBase64:signatureBase64];
     if (key != nil && [self publicKey] != nil && [key publicKey] != nil) {
         return [[self publicKey] isEqualToData:[key publicKey]];
@@ -563,9 +606,9 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     }
 }
 
-- (ECDSA_SIG *)_sign:(NSData *) d;{
+- (ECDSA_SIG *)_sign:(NSData *)d; {
     if (d.length != CC_SHA256_DIGEST_LENGTH) {
-        DDLogDebug(@"%s:%d: %s: Only 256 bit hashes can be signed", __FILE__, __LINE__,  __func__);
+        DDLogDebug(@"%s:%d: %s: Only 256 bit hashes can be signed", __FILE__, __LINE__, __func__);
         return nil;
     }
 
@@ -586,7 +629,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
     BN_rshift1(&halforder, &order);
 
     // generate k deterministicly per RFC6979: https://tools.ietf.org/html/rfc6979
-    BN_bn2bin(priv, (unsigned char *)entropy.mutableBytes + entropy.length - BN_num_bytes(priv));
+    BN_bn2bin(priv, (unsigned char *) entropy.mutableBytes + entropy.length - BN_num_bytes(priv));
     BN_bin2bn(hmac_drbg(entropy, d).bytes, CC_SHA256_DIGEST_LENGTH, &k);
 
     EC_POINT_mul(group, p, &k, NULL, NULL, ctx); // compute r, the x-coordinate of generator*k
@@ -594,7 +637,7 @@ int ECDSA_SIG_recover_key_GFp(EC_KEY *eckey, ECDSA_SIG *ecsig, const unsigned ch
 
     BN_mod_inverse(&k, &k, &order, ctx); // compute the inverse of k
 
-    ECDSA_SIG *s = ECDSA_do_sign_ex(d.bytes, (int)d.length, &k, &r, _key);
+    ECDSA_SIG *s = ECDSA_do_sign_ex(d.bytes, (int) d.length, &k, &r, _key);
 
     if (s) {
         // enforce low s values, negate the value (modulo the order) if above order/2.

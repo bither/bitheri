@@ -41,22 +41,28 @@
 
 @interface BTBIP32Key : NSObject
 
-@property (nonatomic, strong, readonly) BTKey *key;
-@property (nonatomic, copy) NSData *secret;
-@property (nonatomic, copy) NSData *pubKey;
-@property (nonatomic, copy) NSArray *path;
-@property (readonly) BOOL isPubKeyOnly;
-@property (nonatomic, readonly) NSString *address;
+@property(nonatomic, strong, readonly) BTKey *key;
+@property(nonatomic, copy) NSData *secret;
+@property(nonatomic, copy) NSData *pubKey;
+@property(nonatomic, copy) NSArray *path;
+@property(readonly) BOOL isPubKeyOnly;
+@property(nonatomic, readonly) NSString *address;
 
-+ (BTBIP32Key *)deriveChildKey:(uint) childNumber fromParent:(BTBIP32Key *)parent;
++ (BTBIP32Key *)deriveChildKey:(uint)childNumber fromParent:(BTBIP32Key *)parent;
 
 - (instancetype)initWithSeed:(NSData *)seed;
+
 - (instancetype)initWithMasterPubKey:(NSData *)masterPubKey;
+
 - (instancetype)initWithSecret:(NSData *)secret andPubKey:(NSData *)pubKey andChain:(NSData *)chain
                        andPath:(NSArray *)path;
+
 - (BTBIP32Key *)deriveSoftened:(uint)child;
+
 - (BTBIP32Key *)deriveHardened:(uint)child;
+
 - (void)clearPrivateKey;
+
 - (void)wipe;
 
 - (NSData *)getPubKeyExtended;

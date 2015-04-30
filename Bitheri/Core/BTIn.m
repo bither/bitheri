@@ -47,7 +47,7 @@
             && (self.inSequence == item.inSequence);
 }
 
-- (NSArray *)getP2SHPubKeys;{
+- (NSArray *)getP2SHPubKeys; {
     BTScript *script = [[BTScript alloc] initWithProgram:self.inSignature];
     script.tx = self.tx;
     script.index = self.inSn;

@@ -49,22 +49,28 @@
 
 @interface BTBloomFilter : NSObject
 
-@property (nonatomic, readonly) uint32_t tweak;
-@property (nonatomic, readonly) uint8_t flags;
-@property (nonatomic, readonly, getter = toData) NSData *data;
-@property (nonatomic, readonly) NSUInteger elementCount;
-@property (nonatomic, readonly) double falsePositiveRate;
-@property (nonatomic, readonly) NSUInteger length;
+@property(nonatomic, readonly) uint32_t tweak;
+@property(nonatomic, readonly) uint8_t flags;
+@property(nonatomic, readonly, getter = toData) NSData *data;
+@property(nonatomic, readonly) NSUInteger elementCount;
+@property(nonatomic, readonly) double falsePositiveRate;
+@property(nonatomic, readonly) NSUInteger length;
 
 + (instancetype)filterWithMessage:(NSData *)message;
+
 + (instancetype)filterWithFullMatch;
 
 - (instancetype)initWithMessage:(NSData *)message;
+
 - (instancetype)initWithFullMatch;
+
 - (instancetype)initWithFalsePositiveRate:(double)fpRate forElementCount:(NSUInteger)count tweak:(uint32_t)tweak
-flags:(uint8_t)flags;
+                                    flags:(uint8_t)flags;
+
 - (BOOL)containsData:(NSData *)data;
+
 - (void)insertData:(NSData *)data;
+
 - (void)updateWithTransaction:(BTTx *)tx;
 
 @end

@@ -145,7 +145,7 @@
     return trashDir;
 }
 
-+(NSArray * )getFileList:(NSString *)dir{
++ (NSArray *)getFileList:(NSString *)dir {
     NSError *error = nil;
     NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:dir
                                                                          error:&error];
@@ -155,15 +155,16 @@
     return [NSArray new];
 }
 
-+(BOOL)compareString:(NSString *)original compare:(NSString *)compare{
-    if (original==nil) {
-        return compare==nil;
-    }else{
-        return compare!=nil&&[original isEqualToString:compare];
++ (BOOL)compareString:(NSString *)original compare:(NSString *)compare {
+    if (original == nil) {
+        return compare == nil;
+    } else {
+        return compare != nil && [original isEqualToString:compare];
     }
 }
-+(BOOL)isEmpty:(NSString *)str{
-    return str==nil||str.length==0;
+
++ (BOOL)isEmpty:(NSString *)str {
+    return str == nil || str.length == 0;
 }
 
 + (NSData *)formatMessageForSigning:(NSString *)message; {

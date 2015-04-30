@@ -23,7 +23,8 @@
 
 @interface BTKeyParameter : NSObject
 
-+(BIGNUM *)maxN;
-+(BIGNUM *)minN;
++ (BIGNUM *)maxN;
+
++ (BIGNUM *)minN;
 
 @end

@@ -23,68 +23,88 @@
 
 @interface BTAddress : NSObject
 
-@property (nonatomic, copy, readonly) NSString *encryptPrivKey;
-@property (nonatomic, copy) NSString *encryptPrivKeyForCreate;
-@property (nonatomic, copy) NSData *pubKey;
-@property (nonatomic, readwrite) BOOL isSyncComplete;
-@property (nonatomic, readonly) NSString *address;
-@property (nonatomic, readonly) NSData *scriptPubKey;
+@property(nonatomic, copy, readonly) NSString *encryptPrivKey;
+@property(nonatomic, copy) NSString *encryptPrivKeyForCreate;
+@property(nonatomic, copy) NSData *pubKey;
+@property(nonatomic, readwrite) BOOL isSyncComplete;
+@property(nonatomic, readonly) NSString *address;
+@property(nonatomic, readonly) NSData *scriptPubKey;
 @property bool hasPrivKey;
 
-@property (nonatomic, readonly) uint64_t balance;
-@property (nonatomic, readonly) NSArray *unspentOuts;
+@property(nonatomic, readonly) uint64_t balance;
+@property(nonatomic, readonly) NSArray *unspentOuts;
 @property long long sortTime;
 @property BOOL isFromXRandom;
 @property BOOL isTrashed;
-@property (nonatomic, readonly) BOOL isHDM;
-@property (nonatomic, strong) NSString * alias;
+@property(nonatomic, readonly) BOOL isHDM;
+@property(nonatomic, readonly) BOOL isHDAccount;
+@property(nonatomic, strong) NSString *alias;
 
-@property (nonatomic, readonly) uint32_t txCount;
-@property (nonatomic, strong, readonly) BTTx *recentlyTx;
+@property(nonatomic, readonly) uint32_t txCount;
+@property(nonatomic, strong, readonly) BTTx *recentlyTx;
 
 - (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase;
+
 - (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom;
+
 - (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom;
-- (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey;
+
+- (instancetype)initWithWithPubKey:(NSString *)pubKey encryptPrivKey:(NSString *)encryptPrivKey;
 
 #pragma mark - manage tx
+
 - (BOOL)initTxs:(NSArray *)txs;
+
 - (void)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
+
 - (void)removeTx:(NSData *)txHash;
+
 - (void)setBlockHeight:(u_int32_t)height forTxHashes:(NSArray *)txHashes;
 
 #pragma mark - update status
+
 - (void)updateCache;
+
 - (void)updateSyncComplete;
 
 #pragma mark - send tx
+
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error;
-- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error;
+
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error;
 
 - (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase;
+
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase;
 
 - (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase;
 
 #pragma mark - query tx
-- (NSArray *)txs:(int) page;
+
+- (NSArray *)txs:(int)page;
 
 - (uint64_t)amountReceivedFromTransaction:(BTTx *)transaction;
+
 - (uint64_t)amountSentByTransaction:(BTTx *)transaction;
+
 - (uint64_t)feeForTransaction:(BTTx *)transaction;
+
 - (NSString *)addressForTransaction:(BTTx *)transaction;
+
 - (uint32_t)blockHeightUntilFree:(BTTx *)transaction;
 
 - (NSArray *)getRecentlyTxsWithConfirmationCntLessThan:(int)confirmationCnt andLimit:(int)limit;
 
 #pragma mark - r check
+
 - (void)completeInSignature:(NSArray *)ins;
+
 - (uint32_t)needCompleteInSignature;
-- (BOOL)checkRValues;
-- (BOOL)checkRValuesForTx:(BTTx *)tx;
 
 #pragma  mark - alias
--(void)updateAlias:(NSString *) alias;
--(void)removeAlias;
+
+- (void)updateAlias:(NSString *)alias;
+
+- (void)removeAlias;
 
 @end

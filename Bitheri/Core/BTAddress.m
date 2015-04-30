@@ -23,10 +23,11 @@
 #import "BTIn.h"
 #import "BTScript.h"
 #import "BTAddressProvider.h"
+#import "BTHDAccount.h"
 
 NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
-    BTTx *tx1 = (BTTx *)obj1;
-    BTTx *tx2 = (BTTx *)obj2;
+    BTTx *tx1 = (BTTx *) obj1;
+    BTTx *tx2 = (BTTx *) obj2;
     if ([obj1 blockNo] > [obj2 blockNo]) return NSOrderedAscending;
     if ([obj1 blockNo] < [obj2 blockNo]) return NSOrderedDescending;
     NSMutableSet *inputHashSet1 = [NSMutableSet new];
@@ -61,27 +62,27 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _address = key.address;
     _pubKey = key.publicKey;
     _isSyncComplete = NO;
-    _isFromXRandom=isXRandom;
+    _isFromXRandom = isXRandom;
     _txCount = 0;
     _recentlyTx = nil;
     return self;
 }
 
-- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey  isXRandom:(BOOL) isXRandom {
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = hasPrivKey;
     _encryptPrivKeyForCreate = encryptPrivKey;
     _address = address;
     _pubKey = pubKey;
-    _isFromXRandom=isXRandom;
+    _isFromXRandom = isXRandom;
     _isSyncComplete = NO;
     [self updateCache];
 
     return self;
 }
 
-- (instancetype)initWithWithPubKey:(NSString *) pubKey encryptPrivKey:(NSString *)encryptPrivKey; {
+- (instancetype)initWithWithPubKey:(NSString *)pubKey encryptPrivKey:(NSString *)encryptPrivKey; {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = encryptPrivKey != nil;
@@ -121,11 +122,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 }
 
--(BOOL)isHDM{
+- (BOOL)isHDM {
     return NO;
 }
 
 #pragma mark - manage tx
+
 - (BOOL)initTxs:(NSArray *)txs {
     NSMutableArray *txItemList = [NSMutableArray new];
     for (BTTx *tx  in txs) {
@@ -187,7 +189,8 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 
 #pragma mark - update status
-- (void)updateCache;{
+
+- (void)updateCache; {
     [self updateBalance];
     _txCount = [[BTTxProvider instance] txCount:_address];
     [self updateRecentlyTx];
@@ -247,7 +250,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return balance;
 }
 
-- (void)updateRecentlyTx;{
+- (void)updateRecentlyTx; {
     NSArray *txs = [self getRecentlyTxsWithConfirmationCntLessThan:6 andLimit:1];
     if (txs != nil && [txs count] > 0) {
         _recentlyTx = txs[0];
@@ -261,17 +264,18 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [[BTTxProvider instance] getRecentlyTxsByAddress:self.address andGreaterThanBlockNo:blockNo andLimit:limit];
 }
 
-- (void)updateSyncComplete;{
+- (void)updateSyncComplete; {
     [[BTAddressProvider instance] updateSyncComplete:self];
 }
 
 
 #pragma mark - send tx
+
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andError:(NSError **)error {
     return [self txForAmounts:amounts andAddress:addresses andChangeAddress:self.address andError:error];
 }
 
-- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString*)changeAddress andError:(NSError **)error{
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error {
     BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self.address andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
     return tx;
 }
@@ -297,18 +301,19 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return result;
 }
 
-- (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase;{
+- (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase; {
     BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
     return [key signMessage:message];
 }
 
 
 #pragma mark - query tx
-- (NSArray *)txs:(int) page{
+
+- (NSArray *)txs:(int)page {
     return [self sortTxs:[[BTTxProvider instance] getTxAndDetailByAddress:self.address andPage:page]];
 }
 
-- (NSArray *)sortTxs:(NSArray *)txs;{
+- (NSArray *)sortTxs:(NSArray *)txs; {
     NSMutableArray *result = [NSMutableArray arrayWithArray:txs];
     [result sortUsingComparator:txComparator];
     return result;
@@ -394,6 +399,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 
 #pragma mark - r check
+
 - (void)completeInSignature:(NSArray *)ins; {
     [[BTTxProvider instance] completeInSignatureWithIns:ins];
 }
@@ -402,48 +408,8 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [[BTTxProvider instance] needCompleteInSignature:self.address];
 }
 
-- (BOOL)checkRValues; {
-    NSMutableSet *rs = [NSMutableSet set];
-    for (BTIn *in in [[BTTxProvider instance] getRelatedIn:self.address]) {
-        if (in.inSignature != nil) {
-            BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
-            if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
-                for (NSData *sig in [script getSigs]) {
-                    NSData *r = [BTKey getRFromSignature:sig];
-                    if ([rs containsObject:r]) {
-                        return NO;
-                    }
-                    [rs addObject:r];
-                }
-            }
-        }
-    }
-    return YES;
-}
-
-- (BOOL)checkRValuesForTx:(BTTx *) tx; {
-    NSMutableSet *rs = [NSMutableSet set];
-    for (BTIn *in in [[BTTxProvider instance] getRelatedIn:self.address]) {
-        if (in.inSignature != nil) {
-            BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
-            if (script != nil && [[script getFromAddress] isEqualToString:self.address]) {
-                for (NSData *sig in [script getSigs]) {
-                    NSData *r = [BTKey getRFromSignature:sig];
-                    [rs addObject:r];
-                }
-            }
-        }
-    }
-    for (BTIn *in in tx.ins) {
-        BTScript *script = [[BTScript alloc] initWithProgram:in.inSignature];
-        for (NSData *sig in [script getSigs]) {
-            NSData *r = [BTKey getRFromSignature:sig];
-            if ([rs containsObject:r])
-                return NO;
-            [rs addObject:r];
-        }
-    }
-    return YES;
+- (BOOL)isHDAccount {
+    return [self isKindOfClass:[BTHDAccount class]];
 }
 
 - (BOOL)isEqual:(id)object {
@@ -457,14 +423,14 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 #pragma  mark - alias
 
--(void)updateAlias:(NSString *)alias {
-    _alias=alias;
+- (void)updateAlias:(NSString *)alias {
+    _alias = alias;
     [[BTAddressProvider instance] updateAliasWithAddress:self.address andAlias:self.alias];
 
 }
 
--(void)removeAlias {
-    _alias= nil;
+- (void)removeAlias {
+    _alias = nil;
     [[BTAddressProvider instance] updateAliasWithAddress:self.address andAlias:self.alias];
 }
 @end

@@ -30,7 +30,7 @@
     return self;
 }
 
-- (instancetype)initWithHDMBid:(NSString *)address andEncryptBitherPassword:(NSString *)encryptBitherPassword;{
+- (instancetype)initWithHDMBid:(NSString *)address andEncryptBitherPassword:(NSString *)encryptBitherPassword; {
     if (!(self = [super init])) return nil;
 
     self.address = address;

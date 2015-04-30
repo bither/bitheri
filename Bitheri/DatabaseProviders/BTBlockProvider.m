@@ -21,7 +21,7 @@
 #import "NSString+Base58.h"
 #import "BTSettings.h"
 
-static BTBlockProvider *provider;
+static BTBlockProvider *blockProvider;
 
 @implementation BTBlockProvider {
 
@@ -29,11 +29,11 @@ static BTBlockProvider *provider;
 
 + (instancetype)instance; {
     @synchronized (self) {
-        if (provider == nil) {
-            provider = [[self alloc] init];
+        if (blockProvider == nil) {
+            blockProvider = [[self alloc] init];
         }
     }
-    return provider;
+    return blockProvider;
 }
 
 - (NSMutableArray *)getAllBlocks; {
@@ -48,20 +48,21 @@ static BTBlockProvider *provider;
     }];
     return blocks;
 }
-- (NSArray *)getBlocksWithLimit:(NSInteger) limit {
-   __block NSMutableArray *blocks = [NSMutableArray new];
+
+- (NSArray *)getBlocksWithLimit:(NSInteger)limit {
+    __block NSMutableArray *blocks = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-       NSString *sql = [NSString stringWithFormat: @"select * from blocks where is_main=? order by block_no desc limit %ld",(long)limit ];
+        NSString *sql = [NSString stringWithFormat:@"select * from blocks where is_main=? order by block_no desc limit %ld", (long) limit];
         FMResultSet *rs = [db executeQuery:sql, @1];
         while ([rs next]) {
-            [blocks addObject:[self format:rs] ];
+            [blocks addObject:[self format:rs]];
         }
         [rs close];
     }];
     return blocks;
 }
 
-- (NSMutableArray *)getBlocksFrom:(uint)blockNo;{
+- (NSMutableArray *)getBlocksFrom:(uint)blockNo; {
     __block NSMutableArray *blocks = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from blocks where block_no>? order by block_no desc";
@@ -126,7 +127,7 @@ static BTBlockProvider *provider;
     return blockItem;
 }
 
-- (BTBlock *)getOrphanBlockByPrevHash:(NSData *)prevHash;{
+- (BTBlock *)getOrphanBlockByPrevHash:(NSData *)prevHash; {
     __block BTBlock *blockItem = nil;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from blocks where block_prev=? and is_main=?";
@@ -139,7 +140,7 @@ static BTBlockProvider *provider;
     return blockItem;
 }
 
-- (BTBlock *)getMainChainBlock:(NSData *)blockHash;{
+- (BTBlock *)getMainChainBlock:(NSData *)blockHash; {
     __block BTBlock *blockItem = nil;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from blocks where block_hash=? and is_main=?";
@@ -222,7 +223,7 @@ static BTBlockProvider *provider;
     }];
 }
 
-- (void)updateBlock:(NSData *)blockHash withIsMain:(BOOL)isMain;{
+- (void)updateBlock:(NSData *)blockHash withIsMain:(BOOL)isMain; {
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update blocks set is_main=? where block_hash=?";
         [db executeUpdate:sql, @(isMain), [NSString base58WithData:blockHash]];
@@ -238,14 +239,14 @@ static BTBlockProvider *provider;
             , @(block.blockTime), [NSString base58WithData:block.blockPrev], @(block.isMain)];
 }
 
-- (void)removeBlock:(NSData *)blockHash;{
+- (void)removeBlock:(NSData *)blockHash; {
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"delete from blocks where block_hash=?";
         [db executeUpdate:sql, [NSString base58WithData:blockHash]];
     }];
 }
 
-- (void)cleanOldBlock;{
+- (void)cleanOldBlock; {
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(0) cnt from blocks";
         FMResultSet *rs = [db executeQuery:sql];

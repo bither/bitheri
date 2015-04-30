@@ -138,6 +138,14 @@
 		DADE542019334C8B00F5E4DD /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE541F19334C8B00F5E4DD /* CoreGraphics.framework */; };
 		DAFA70B81A7138E200130717 /* BIP39EnglishWords.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */; };
 		DAFA70BA1A71392E00130717 /* BIP39EnglishWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */; };
+		DC00C6BF008CEE40148AB07B /* BTHDAccountAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */; };
+		DC00D4D7A771A9FB31B51D94 /* BTHDAccountProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */; };
+		DC01C63E5CF9D73A26C76B5B /* BTTxHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */; };
+		DC01DD5DBAA5C78F9DB95FCB /* BTHDAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */; };
+		DC0605EF620D34198D3675CE /* BTHDAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */; };
+		DC073EE10E489253F4B78085 /* BTHDAccountAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */; };
+		DC0DBD8D12BE90ECCEF6DD20 /* BTTxHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */; };
+		DC0ECB14B2E83351D83C609A /* BTHDAccountProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -304,6 +312,14 @@
 		DADE54131933420300F5E4DD /* BitheriTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BitheriTests.m; sourceTree = "<group>"; };
 		DADE541D19334C8600F5E4DD /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		DADE541F19334C8B00F5E4DD /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountProvider.m; sourceTree = "<group>"; };
+		DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccount.m; sourceTree = "<group>"; };
+		DC083E83A1C24D8FD272ECAD /* BTTxHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTTxHelper.h; sourceTree = "<group>"; };
+		DC09346C00FC6D166E484CD8 /* BTHDAccountProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountProvider.h; sourceTree = "<group>"; };
+		DC0AADED4BF8AC44411A06DF /* BTHDAccountAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountAddress.h; sourceTree = "<group>"; };
+		DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTTxHelper.m; sourceTree = "<group>"; };
+		DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountAddress.m; sourceTree = "<group>"; };
+		DC0FCA2F4F88909B1495A197 /* BTHDAccount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccount.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -493,6 +509,10 @@
 				D61D003069DDF2FC7F735AB0 /* BTPeerProvider.h */,
 				D61D041D48238458B84136C8 /* BTAddressProvider.m */,
 				D61D05E3B90DE13EE2D64501 /* BTAddressProvider.h */,
+				DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */,
+				DC09346C00FC6D166E484CD8 /* BTHDAccountProvider.h */,
+				DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */,
+				DC083E83A1C24D8FD272ECAD /* BTTxHelper.h */,
 			);
 			path = DatabaseProviders;
 			sourceTree = "<group>";
@@ -552,6 +572,10 @@
 				D61D02849C8CF7443614876B /* BTHDMKeychain.h */,
 				0A29B0C41A761C380020BCD7 /* BTHDMKeychainRecover.h */,
 				0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */,
+				DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */,
+				DC0AADED4BF8AC44411A06DF /* BTHDAccountAddress.h */,
+				DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */,
+				DC0FCA2F4F88909B1495A197 /* BTHDAccount.h */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -849,6 +873,10 @@
 				D61D0F1510BE313FA122AE97 /* BTHDMAddress.m in Sources */,
 				D61D0E06C49C62BA68C71A16 /* BTHDMKeychain.m in Sources */,
 				D61D03664AB5C571267EBBC6 /* BTEncryptData.m in Sources */,
+				DC0ECB14B2E83351D83C609A /* BTHDAccountProvider.m in Sources */,
+				DC00C6BF008CEE40148AB07B /* BTHDAccountAddress.m in Sources */,
+				DC0605EF620D34198D3675CE /* BTHDAccount.m in Sources */,
+				DC01C63E5CF9D73A26C76B5B /* BTTxHelper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -923,6 +951,10 @@
 				D61D06C89453041ECC15ED43 /* BTKeyTest.m in Sources */,
 				D61D0FF780726FADBB6D678B /* BTBip38Test.m in Sources */,
 				1BC27BE1564E006216779DD1 /* DiceTest.m in Sources */,
+				DC00D4D7A771A9FB31B51D94 /* BTHDAccountProvider.m in Sources */,
+				DC073EE10E489253F4B78085 /* BTHDAccountAddress.m in Sources */,
+				DC01DD5DBAA5C78F9DB95FCB /* BTHDAccount.m in Sources */,
+				DC0DBD8D12BE90ECCEF6DD20 /* BTTxHelper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

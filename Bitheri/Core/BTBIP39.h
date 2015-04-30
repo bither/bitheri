@@ -43,16 +43,22 @@
 
 @interface BTBIP39 : NSObject
 
-@property (nonatomic) BOOL isUnitTest;
+@property(nonatomic) BOOL isUnitTest;
 
 + (instancetype)sharedInstance;
 
 - (NSString *)normalizeCode:(NSString *)phrase;
-- (NSArray *)toMnemonicArray:(NSData*)data;
--(NSString *)toMnemonicWithArray:(NSArray *)a;
+
+- (NSArray *)toMnemonicArray:(NSData *)data;
+
+- (NSString *)toMnemonicWithArray:(NSArray *)a;
+
 - (NSString *)toMnemonic:(NSData *)data;
+
 - (NSData *)toEntropy:(NSString *)code;
+
 - (BOOL)check:(NSString *)code;
+
 - (NSData *)toSeed:(NSString *)code withPassphrase:(NSString *)passphrase;
 
 - (NSArray *)getWords;

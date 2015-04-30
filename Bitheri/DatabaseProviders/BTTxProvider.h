@@ -31,24 +31,30 @@
 
 - (BOOL)isExist:(NSData *)txHash;
 
-- (BTTx *)getTxDetailByTxHash:(NSData *) txHash;
+- (BTTx *)getTxDetailByTxHash:(NSData *)txHash;
 
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address;
+
 - (NSArray *)getTxAndDetailByAddress:(NSString *)address andPage:(int)page;
 
--(uint64_t)sentFromAddress:(NSData * )txHash address:( NSString *) address;
+- (uint64_t)sentFromAddress:(NSData *)txHash address:(NSString *)address;
 
-- (bool)isAddress:(NSString *) address containsTx:(BTTx *) txItem;
+- (bool)isAddress:(NSString *)address containsTx:(BTTx *)txItem;
+
 - (bool)isTxDoubleSpendWithConfirmedTx:(BTTx *)tx;
+
 - (NSArray *)getInAddresses:(BTTx *)tx;
 
-- (void)confirmTx:(NSArray *)txHashes withBlockNo:(int) blockNo;
+- (void)confirmTx:(NSArray *)txHashes withBlockNo:(int)blockNo;
 
-- (void)unConfirmTxByBlockNo:(int) blockNo;
+- (void)unConfirmTxByBlockNo:(int)blockNo;
 
 - (NSArray *)getUnspendTxWithAddress:(NSString *)address;
+
 - (NSArray *)getUnspendOutWithAddress:(NSString *)address;
+
 - (NSArray *)getUnSpendOutCanSpendWithAddress:(NSString *)address;
+
 - (NSArray *)getUnSpendOutButNotConfirmWithAddress:(NSString *)address;
 
 - (void)remove:(NSData *)txHash;
@@ -58,6 +64,7 @@
 - (void)txSentBySelfHasSaw:(NSData *)txHash;
 
 - (NSArray *)getOuts;
+
 - (NSArray *)getUnSpentOuts;
 
 - (NSArray *)getRelatedIn:(NSString *)address;
@@ -69,14 +76,18 @@
 - (NSDictionary *)getTxDependencies:(BTTx *)txItem;
 
 - (NSArray *)getPublishedTxs;
--(void)clearAllTx;
 
-- (BTOut *)getOutByTxHash:(NSData *) txHash andOutSn:(int) outSn;
+- (void)clearAllTx;
 
-- (void)completeInSignatureWithIns:(NSArray *) ins;
+- (BTOut *)getOutByTxHash:(NSData *)txHash andOutSn:(int)outSn;
+
+- (void)completeInSignatureWithIns:(NSArray *)ins;
+
 - (uint32_t)needCompleteInSignature:(NSString *)address;
 
 - (uint64_t)getConfirmedBalanceWithAddress:(NSString *)address;
+
 - (NSArray *)getUnconfirmedTxWithAddress:(NSString *)address;
+
 - (uint64_t)getTotalReceiveWithAddress:(NSString *)address;
 @end

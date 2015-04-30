@@ -20,22 +20,28 @@
 @interface BTEncryptData : NSObject
 
 - (instancetype)initWithStr:(NSString *)str;
+
 - (instancetype)initWithData:(NSData *)data andPassowrd:(NSString *)password;
+
 - (instancetype)initWithData:(NSData *)data andPassowrd:(NSString *)password andIsXRandom:(BOOL)isXRandom;
+
 - (instancetype)initWithData:(NSData *)data andPassowrd:(NSString *)password andIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom;
 
-@property (nonatomic, readonly) BOOL isXRandom;
-@property (nonatomic, readonly) BOOL isCompressed;
+@property(nonatomic, readonly) BOOL isXRandom;
+@property(nonatomic, readonly) BOOL isCompressed;
 
 - (NSData *)decrypt:(NSString *)password;
 
 - (NSString *)toEncryptedString;
+
 - (NSString *)toEncryptedStringForQRCodeWithIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom;
 
 + (NSString *)encryptedString:(NSString *)encryptedString addIsCompressed:(BOOL)isCompressed andIsXRandom:(BOOL)isXRandom;
+
 + (NSString *)encryptedStringRemoveFlag:(NSString *)encryptedString;
 
 + (NSData *)encryptSecret:(NSData *)secret withPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv;
+
 + (NSData *)decryptFrom:(NSData *)encrypted andPassphrase:(NSString *)passphrase andSalt:(NSData *)salt andIV:(NSData *)iv;
 
 @end

@@ -32,18 +32,18 @@ static NSData *getOutPoint(NSData *txHash, uint32_t n) {
 
 @interface BTIn : NSObject
 
-@property (nonatomic, copy) NSData *txHash;
+@property(nonatomic, copy) NSData *txHash;
 @property uint inSn;
 
-@property (nonatomic, copy) NSData *prevTxHash;
+@property(nonatomic, copy) NSData *prevTxHash;
 @property uint prevOutSn;
-@property (nonatomic, copy) NSData *inSignature;
+@property(nonatomic, copy) NSData *inSignature;
 @property uint inSequence;
 
-@property (nonatomic, weak) BTTx *tx;
-@property (nonatomic, copy) NSData *inScript;
+@property(nonatomic, weak) BTTx *tx;
+@property(nonatomic, copy) NSData *inScript;
 
-@property (nonatomic, readonly) BOOL isCoinBase;
+@property(nonatomic, readonly) BOOL isCoinBase;
 
 - (NSArray *)getP2SHPubKeys;
 

@@ -53,7 +53,7 @@
 #warning testnet build
 #endif
 
-#if ! DEBUG
+#if !DEBUG
 #define NSLog(...)
 #endif
 

@@ -48,30 +48,28 @@
 //#define TARGET_TIMESPAN   (14*24*60*60) // the targeted timespan between difficulty target adjustments
 
 // convert difficulty target format to bignum, as per: https://github.com/bitcoin/bitcoin/blob/master/src/uint256.h#L506
-static void setCompact(BIGNUM *bn, uint32_t compact)
-{
+static void setCompact(BIGNUM *bn, uint32_t compact) {
     uint32_t size = compact >> 24, word = compact & 0x007fffff;
-    
+
     if (size > 3) {
         BN_set_word(bn, word);
-        BN_lshift(bn, bn, (size - 3)*8);
+        BN_lshift(bn, bn, (size - 3) * 8);
     }
-    else BN_set_word(bn, word >> (3 - size)*8);
-    
+    else BN_set_word(bn, word >> (3 - size) * 8);
+
     BN_set_negative(bn, (compact & 0x00800000) != 0);
 }
 
-static uint32_t getCompact(const BIGNUM *bn)
-{
+static uint32_t getCompact(const BIGNUM *bn) {
     uint32_t size = (uint32_t) BN_num_bytes(bn), compact = 0;
     BIGNUM x;
 
     if (size > 3) {
         BN_init(&x);
-        BN_rshift(&x, bn, (size - 3)*8);
+        BN_rshift(&x, bn, (size - 3) * 8);
         compact = BN_get_word(&x);
     }
-    else compact = BN_get_word(bn) << (3 - size)*8;
+    else compact = BN_get_word(bn) << (3 - size) * 8;
 
     if (compact & 0x00800000) { // if sign is already set, divide the mantissa by 256 and increment the exponent
         compact >>= 8;
@@ -111,15 +109,13 @@ static uint32_t getCompact(const BIGNUM *bn)
 @implementation BTBlock
 
 // message can be either a merkleblock or header message
-+ (instancetype)blockWithMessage:(NSData *)message
-{
++ (instancetype)blockWithMessage:(NSData *)message {
     return [[self alloc] initWithMessage:message];
 }
 
-- (instancetype)initWithMessage:(NSData *)message
-{
-    if (! (self = [self init])) return nil;
-    
+- (instancetype)initWithMessage:(NSData *)message {
+    if (!(self = [self init])) return nil;
+
     if (message.length < 80) return nil;
 
     NSUInteger off = 0, l = 0, len = 0;
@@ -139,7 +135,7 @@ static uint32_t getCompact(const BIGNUM *bn)
     off += sizeof(uint32_t);
     _totalTransactions = [message UInt32AtOffset:off];
     off += sizeof(uint32_t);
-    len = (NSUInteger) ([message varIntAtOffset:off length:&l]*CC_SHA256_DIGEST_LENGTH);
+    len = (NSUInteger) ([message varIntAtOffset:off length:&l] * CC_SHA256_DIGEST_LENGTH);
     off += l;
     _hashes = off + len > message.length ? nil : [message subdataWithRange:NSMakeRange(off, len)];
     off += len;
@@ -150,11 +146,10 @@ static uint32_t getCompact(const BIGNUM *bn)
 }
 
 - (instancetype)initWithBlockHash:(NSData *)blockHash version:(uint32_t)version prevBlock:(NSData *)prevBlock
-merkleRoot:(NSData *)merkleRoot timestamp:(NSTimeInterval)timestamp target:(uint32_t)target nonce:(uint32_t)nonce
-totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSData *)flags height:(uint32_t)height
-{
-    if (! (self = [self init])) return nil;
-    
+                       merkleRoot:(NSData *)merkleRoot timestamp:(NSTimeInterval)timestamp target:(uint32_t)target nonce:(uint32_t)nonce
+                totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSData *)flags height:(uint32_t)height {
+    if (!(self = [self init])) return nil;
+
     _blockHash = blockHash;
     _blockVer = version;
     _blockPrev = prevBlock;
@@ -173,25 +168,24 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
 // true if merkle tree and timestamp are valid, and proof-of-work matches the stated difficulty target
 // NOTE: this only checks if the block difficulty matches the difficulty target in the header, it does not check if the
 // target is correct for the block's height in the chain, use verifyDifficultyFromPreviousBlock: for that
-- (BOOL)isValid
-{
+- (BOOL)isValid {
     NSMutableData *d = [NSMutableData data];
     BIGNUM target, maxTarget;
     int hashIdx = 0, flagIdx = 0;
     NSData *merkleRoot =
-        [self _walk:&hashIdx :&flagIdx :0 :^id (NSData *hash, BOOL flag) {
-            return hash;
-        } :^id (id left, id right) {
-            [d setData:left];
-            [d appendData:right ?: left]; // if right branch is missing, duplicate left branch
-            return d.SHA256_2;
-        }];
-    
+            [self _walk:&hashIdx :&flagIdx :0 :^id(NSData *hash, BOOL flag) {
+                return hash;
+            } :^id(id left, id right) {
+                [d setData:left];
+                [d appendData:right ?: left]; // if right branch is missing, duplicate left branch
+                return d.SHA256_2;
+            }];
+
     if (_totalTransactions > 0 && ![merkleRoot isEqual:_blockRoot]) return NO; // merkle root check failed
-    
+
     //TODO: use estimated network time instead of system time (avoids timejacking attacks and misconfigured time)
-    if (_blockTime-NSTimeIntervalSince1970 > [NSDate timeIntervalSinceReferenceDate] + MAX_TIME_DRIFT) return NO; // timestamp too far in future
-    
+    if (_blockTime - NSTimeIntervalSince1970 > [NSDate timeIntervalSinceReferenceDate] + MAX_TIME_DRIFT) return NO; // timestamp too far in future
+
     // check proof-of-work
     BN_init(&target);
     BN_init(&maxTarget);
@@ -201,13 +195,12 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
 
     BIGNUM hash;
     BN_init(&hash);
-    BN_bin2bn(_blockHash.reverse.bytes, (int)_blockHash.length, &hash);
+    BN_bin2bn(_blockHash.reverse.bytes, (int) _blockHash.length, &hash);
     return BN_cmp(&hash, &target) <= 0; // block not as difficult as target (smaller values are more difficult)
 
 }
 
-- (NSData *)toData
-{
+- (NSData *)toData {
     NSMutableData *d = [NSMutableData data];
 
     [d appendUInt32:_blockVer];
@@ -217,35 +210,33 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     [d appendUInt32:_blockBits];
     [d appendUInt32:_blockNonce];
     [d appendUInt32:_totalTransactions];
-    [d appendVarInt:_hashes.length/CC_SHA256_DIGEST_LENGTH];
+    [d appendVarInt:_hashes.length / CC_SHA256_DIGEST_LENGTH];
     [d appendData:_hashes];
     [d appendVarInt:_flags.length];
     [d appendData:_flags];
-    
+
     return d;
 }
 
 // true if the given tx hash is included in the block
-- (BOOL)containsTxHash:(NSData *)txHash
-{
-    for (NSUInteger i = 0; i < _hashes.length/CC_SHA256_DIGEST_LENGTH; i += CC_SHA256_DIGEST_LENGTH) {
-        if (! [txHash isEqual:[_hashes hashAtOffset:i]]) continue;
+- (BOOL)containsTxHash:(NSData *)txHash {
+    for (NSUInteger i = 0; i < _hashes.length / CC_SHA256_DIGEST_LENGTH; i += CC_SHA256_DIGEST_LENGTH) {
+        if (![txHash isEqual:[_hashes hashAtOffset:i]]) continue;
         return YES;
     }
-    
+
     return NO;
 }
 
 // returns an array of the matched tx hashes
-- (NSArray *)txHashes
-{
+- (NSArray *)txHashes {
     int hashIdx = 0, flagIdx = 0;
     NSArray *txHashes =
-        [self _walk:&hashIdx :&flagIdx :0 :^id (NSData *hash, BOOL flag) {
-            return (flag && hash) ? @[hash] : @[];
-        } :^id (id left, id right) {
-            return [left arrayByAddingObjectsFromArray:right];
-        }];
+            [self _walk:&hashIdx :&flagIdx :0 :^id(NSData *hash, BOOL flag) {
+                return (flag && hash) ? @[hash] : @[];
+            } :^id(id left, id right) {
+                return [left arrayByAddingObjectsFromArray:right];
+            }];
 
     return txHashes;
 }
@@ -260,9 +251,8 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
 // targeted time between transitions (14*24*60*60 seconds). If the new difficulty is more than 4x or less than 1/4 of
 // the previous difficulty, the change is limited to either 4x or 1/4. There is also a minimum difficulty value
 // intuitively named MAX_PROOF_OF_WORK... since larger values are less difficult.
-- (BOOL)verifyDifficultyFromPreviousBlock:(BTBlock *)previous andTransitionTime:(NSTimeInterval)time
-{
-    if (! [_blockPrev isEqual:previous.blockHash] || _blockNo != previous.blockNo + 1) return NO;
+- (BOOL)verifyDifficultyFromPreviousBlock:(BTBlock *)previous andTransitionTime:(NSTimeInterval)time {
+    if (![_blockPrev isEqual:previous.blockHash] || _blockNo != previous.blockNo + 1) return NO;
     if ((_blockNo % BLOCK_DIFFICULTY_INTERVAL) == 0 && time == 0) return NO;
 
 #if BITCOIN_TESTNET
@@ -272,13 +262,13 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
 
     if ((_blockNo % BLOCK_DIFFICULTY_INTERVAL) != 0) return _blockBits == previous.blockBits;
 
-    int32_t timespan = (int32_t)((int64_t)previous.blockTime - (int64_t)time);
+    int32_t timespan = (int32_t) ((int64_t) previous.blockTime - (int64_t) time);
     BIGNUM target, maxTarget, span, targetSpan, bn;
     BN_CTX *ctx = BN_CTX_new();
-    
+
     // limit difficulty transition to -75% or +400%
-    if (timespan < TARGET_TIMESPAN/4) timespan = TARGET_TIMESPAN/4;
-    if (timespan > TARGET_TIMESPAN*4) timespan = TARGET_TIMESPAN*4;
+    if (timespan < TARGET_TIMESPAN / 4) timespan = TARGET_TIMESPAN / 4;
+    if (timespan > TARGET_TIMESPAN * 4) timespan = TARGET_TIMESPAN * 4;
 
     BN_CTX_start(ctx);
     BN_init(&target);
@@ -295,37 +285,35 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
     if (BN_cmp(&target, &maxTarget) > 0) BN_copy(&target, &maxTarget); // limit to MAX_PROOF_OF_WORK
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
-    
+
     return _blockBits == getCompact(&target);
 }
 
 // recursively walks the merkle tree in depth first order, calling leaf(hash, flag) for each stored hash, and
 // branch(left, right) with the result from each branch
-- (id)_walk:(int *)hashIdx :(int *)flagIdx :(int)depth :(id (^)(NSData *, BOOL))leaf :(id (^)(id, id))branch
-{
-    if ((*flagIdx)/8 >= _flags.length || (*hashIdx + 1)*CC_SHA256_DIGEST_LENGTH > _hashes.length) return leaf(nil, NO);
-    
-    BOOL flag = (BOOL) (((const uint8_t *)_flags.bytes)[*flagIdx/8] & (1 << (*flagIdx % 8)));
-    
+- (id)_walk:(int *)hashIdx :(int *)flagIdx :(int)depth :(id (^)(NSData *, BOOL))leaf :(id (^)(id, id))branch {
+    if ((*flagIdx) / 8 >= _flags.length || (*hashIdx + 1) * CC_SHA256_DIGEST_LENGTH > _hashes.length) return leaf(nil, NO);
+
+    BOOL flag = (BOOL) (((const uint8_t *) _flags.bytes)[*flagIdx / 8] & (1 << (*flagIdx % 8)));
+
     (*flagIdx)++;
-    
-    if (! flag || depth == ceil(log2(_totalTransactions))) {
+
+    if (!flag || depth == ceil(log2(_totalTransactions))) {
         NSData *hash = [_hashes hashAtOffset:(NSUInteger) ((*hashIdx) * CC_SHA256_DIGEST_LENGTH)];
-        
+
         (*hashIdx)++;
         return leaf(hash, flag);
     }
-    
+
     id left = [self _walk:hashIdx :flagIdx :depth + 1 :leaf :branch];
     id right = [self _walk:hashIdx :flagIdx :depth + 1 :leaf :branch];
-    
+
     return branch(left, right);
 }
 
-- (NSUInteger)hash
-{
+- (NSUInteger)hash {
     if (_blockHash.length < sizeof(NSUInteger)) return [super hash];
-    return *(const NSUInteger *)_blockHash.bytes;
+    return *(const NSUInteger *) _blockHash.bytes;
 }
 
 - (BOOL)isEqual:(id)object {
@@ -388,10 +376,10 @@ totalTransactions:(uint32_t)totalTransactions hashes:(NSData *)hashes flags:(NSD
 //    return self;
 //}
 
-- initWithBlockNo:(uint32_t) blockNo blockHash:(NSData *)blockHash blockRoot:(NSData *)blockRoot blockVer:(uint32_t)blockVer
+- initWithBlockNo:(uint32_t)blockNo blockHash:(NSData *)blockHash blockRoot:(NSData *)blockRoot blockVer:(uint32_t)blockVer
         blockBits:(uint32_t)blockBits blockNonce:(uint32_t)blockNonce blockTime:(uint32_t)blockTime
-        blockPrev:(NSData *)blockPrev isMain:(BOOL)isMain;{
-    if (! (self = [self init])) return nil;
+        blockPrev:(NSData *)blockPrev isMain:(BOOL)isMain; {
+    if (!(self = [self init])) return nil;
 
     _blockNo = blockNo;
     _blockHash = blockHash;

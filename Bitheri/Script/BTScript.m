@@ -194,7 +194,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     long long numKeys = [BTScript decodeFromOpN:(uint8_t) m.opCode];
     if (numKeys < 1 || self.chunks.count != 3 + numKeys) return NO;
     for (int i = 1; i < self.chunks.count - 2; i++) {
-        if ([((BTScriptChunk *)self.chunks[i]) isOpCode]) return NO;
+        if ([((BTScriptChunk *) self.chunks[i]) isOpCode]) return NO;
     }
     // First chunk must be an OP_N opcode too.
     if ([BTScript decodeFromOpN:(uint8_t) ((BTScriptChunk *) self.chunks[0]).opCode] < 1) return NO;
@@ -203,13 +203,13 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (BOOL)isSendFromMultiSig; {
-    BOOL result = ((BTScriptChunk *)self.chunks.firstObject).opCode == OP_0;
+    BOOL result = ((BTScriptChunk *) self.chunks.firstObject).opCode == OP_0;
     for (NSUInteger i = 1; i < self.chunks.count; i++) {
         BTScriptChunk *chunk = self.chunks[i];
         result &= (chunk.data != nil && chunk.data.length > 2);
     }
     if (result) {
-        BTScript *multiSigRedeem = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.lastObject).data];
+        BTScript *multiSigRedeem = [[BTScript alloc] initWithProgram:((BTScriptChunk *) self.chunks.lastObject).data];
         result &= multiSigRedeem != nil;
         if (result) {
             result &= [multiSigRedeem isMultiSigRedeem];
@@ -219,13 +219,13 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (BOOL)isMultiSigRedeem; {
-    BOOL result = OP_1 <= ((BTScriptChunk *)self.chunks.firstObject).opCode <= OP_16;
+    BOOL result = OP_1 <= ((BTScriptChunk *) self.chunks.firstObject).opCode <= OP_16;
     for (NSUInteger i = 1; i < self.chunks.count - 2; i++) {
         BTScriptChunk *chunk = self.chunks[i];
         result &= (chunk.data != nil && chunk.data.length > 2);
     }
-    result &= OP_1 <= ((BTScriptChunk *)self.chunks[self.chunks.count - 2]).opCode <= OP_16;
-    result &= ((BTScriptChunk *)self.chunks[self.chunks.count - 1]).opCode == OP_CHECKMULTISIG;
+    result &= OP_1 <= ((BTScriptChunk *) self.chunks[self.chunks.count - 2]).opCode <= OP_16;
+    result &= ((BTScriptChunk *) self.chunks[self.chunks.count - 1]).opCode == OP_CHECKMULTISIG;
     return result;
 }
 
@@ -261,7 +261,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             && ((BTScriptChunk *) self.chunks[0]).data.length > 2
             && ((BTScriptChunk *) self.chunks[1]).data.length > 2) {
         return ((BTScriptChunk *) self.chunks[0]).data;
-    }else {
+    } else {
         return nil;
     }
 }
@@ -277,14 +277,14 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             && ((BTScriptChunk *) self.chunks[1]).data != nil
             && ((BTScriptChunk *) self.chunks[1]).data.length > 2) {
         [result addObject:((BTScriptChunk *) self.chunks[0]).data];
-    } else if (self.chunks.count >= 3 && ((BTScriptChunk *)self.chunks[0]).opCode == OP_0) {
+    } else if (self.chunks.count >= 3 && ((BTScriptChunk *) self.chunks[0]).opCode == OP_0) {
         BOOL isPay2SHScript = YES;
         for (NSUInteger i = 1; i < self.chunks.count; i++) {
             isPay2SHScript &= (((BTScriptChunk *) self.chunks[i]).data != nil && ((BTScriptChunk *) self.chunks[i]).data.length > 2);
         }
         if (isPay2SHScript) {
             for (NSUInteger i = 1; i < self.chunks.count - 1; i++) {
-                BTScriptChunk *chunk = (BTScriptChunk *)self.chunks[i];
+                BTScriptChunk *chunk = (BTScriptChunk *) self.chunks[i];
                 if ([chunk isPushData] && chunk.data != nil
                         && chunk.data.length > 0
                         && [chunk.data UInt8AtOffset:0] == 48) {
@@ -298,13 +298,13 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
 - (NSString *)getFromAddress; {
     if (self.chunks.count == 2
-            && ((BTScriptChunk *)self.chunks[0]).data != nil && ((BTScriptChunk *)self.chunks[0]).data.length > 2
-            && ((BTScriptChunk *)self.chunks[1]).data != nil && ((BTScriptChunk *)self.chunks[1]).data.length > 2) {
+            && ((BTScriptChunk *) self.chunks[0]).data != nil && ((BTScriptChunk *) self.chunks[0]).data.length > 2
+            && ((BTScriptChunk *) self.chunks[1]).data != nil && ((BTScriptChunk *) self.chunks[1]).data.length > 2) {
         return [self addressFromHash:[((BTScriptChunk *) self.chunks[1]).data hash160]];
-    } else if (self.chunks.count >= 3 && ((BTScriptChunk *)self.chunks[0]).opCode == OP_0) {
+    } else if (self.chunks.count >= 3 && ((BTScriptChunk *) self.chunks[0]).opCode == OP_0) {
         BOOL isP2SHScript = YES;
         for (NSUInteger i = 1; i < self.chunks.count; i++) {
-            isP2SHScript &= ((BTScriptChunk *)self.chunks[i]).data != nil && ((BTScriptChunk *)self.chunks[i]).data.length > 2;
+            isP2SHScript &= ((BTScriptChunk *) self.chunks[i]).data != nil && ((BTScriptChunk *) self.chunks[i]).data.length > 2;
         }
         if (isP2SHScript) {
             return [self p2shAddressFromHash:[((BTScriptChunk *) self.chunks[self.chunks.count - 1]).data hash160]];
@@ -410,13 +410,13 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     return YES;
 }
 
-- (NSArray *)getP2SHPubKeys;{
+- (NSArray *)getP2SHPubKeys; {
     if (![self isSendFromMultiSig]) {
         return nil;
     }
-    BTScript *scriptPubKey = [[BTScript alloc] initWithProgram:((BTScriptChunk *)self.chunks.lastObject).data];
-    int pubKeyCount = ((BTScriptChunk *)scriptPubKey.chunks[scriptPubKey.chunks.count - 2]).opCode - 80;
-    int sigCount = ((BTScriptChunk *)scriptPubKey.chunks[0]).opCode - 80;
+    BTScript *scriptPubKey = [[BTScript alloc] initWithProgram:((BTScriptChunk *) self.chunks.lastObject).data];
+    int pubKeyCount = ((BTScriptChunk *) scriptPubKey.chunks[scriptPubKey.chunks.count - 2]).opCode - 80;
+    int sigCount = ((BTScriptChunk *) scriptPubKey.chunks[0]).opCode - 80;
     if (pubKeyCount < 0 || pubKeyCount > 20) {
         DDLogWarn(@"[Script Error] OP_CHECKMULTISIG(VERIFY) with pubkey count out of range");
         return nil;
@@ -434,7 +434,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
     NSMutableArray *sigs = [NSMutableArray new];
     for (NSUInteger i = 1; i < sigCount + 1; i++) {
-        [sigs addObject:((BTScriptChunk *)self.chunks[i]).data];
+        [sigs addObject:((BTScriptChunk *) self.chunks[i]).data];
     }
 
     NSMutableArray *result = [NSMutableArray new];

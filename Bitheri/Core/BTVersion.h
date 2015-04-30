@@ -19,7 +19,8 @@
 
 @interface BTVersion : NSObject
 
-@property (nonatomic, copy, readonly) NSString *version;
+@property(nonatomic, copy, readonly) NSString *version;
+
 + (instancetype)instance;
 
 @end

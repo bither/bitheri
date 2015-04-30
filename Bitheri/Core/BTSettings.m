@@ -23,6 +23,7 @@
 #define APP_MODE @"app_mode"
 
 static BTSettings *settings;
+
 @implementation BTSettings {
 
 }
@@ -47,38 +48,39 @@ static BTSettings *settings;
     BTCompressingLogFileManager *logFileManager = [[BTCompressingLogFileManager alloc] init];
     DDFileLogger *fileLogger = [[DDFileLogger alloc] initWithLogFileManager:logFileManager];
     fileLogger.maximumFileSize = 0;
-    fileLogger.rollingFrequency =  60 * 60 * 24; // 24 hour rolling
+    fileLogger.rollingFrequency = 60 * 60 * 24; // 24 hour rolling
     fileLogger.logFileManager.maximumNumberOfLogFiles = 7;
     [DDLog addLogger:fileLogger];
 
     [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor blackColor] backgroundColor:nil forFlag:LOG_FLAG_VERBOSE];
-    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:104/255.0 green:130/255.0 blue:228/255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_INFO];
-    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:111/255.0 green:188/255.0 blue:80/255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_DEBUG];
-    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:241/255.0 green:201/255.0 blue:9/255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_WARN];
-    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:223/255.0 green:108/255.0 blue:108/255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_ERROR];
+    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:104 / 255.0 green:130 / 255.0 blue:228 / 255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_INFO];
+    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:111 / 255.0 green:188 / 255.0 blue:80 / 255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_DEBUG];
+    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:241 / 255.0 green:201 / 255.0 blue:9 / 255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_WARN];
+    [[DDTTYLogger sharedInstance] setForegroundColor:[UIColor colorWithRed:223 / 255.0 green:108 / 255.0 blue:108 / 255.0 alpha:1.0] backgroundColor:nil forFlag:LOG_FLAG_ERROR];
     [[DDTTYLogger sharedInstance] setColorsEnabled:YES];
 
     return self;
 }
 
 
--(BOOL)needChooseMode{
-    return [[NSUserDefaults standardUserDefaults] objectForKey:APP_MODE]==nil;
+- (BOOL)needChooseMode {
+    return [[NSUserDefaults standardUserDefaults] objectForKey:APP_MODE] == nil;
 }
 
--(AppMode) getAppMode{
-    if ([[NSUserDefaults standardUserDefaults] objectForKey:APP_MODE]==nil) {
+- (AppMode)getAppMode {
+    if ([[NSUserDefaults standardUserDefaults] objectForKey:APP_MODE] == nil) {
         return NoChoose;
     }
     return (AppMode) [[NSUserDefaults standardUserDefaults] integerForKey:APP_MODE];
 }
--(void)setAppMode:(AppMode)appMode {
-    NSUserDefaults * userDefaults=  [NSUserDefaults standardUserDefaults];
+
+- (void)setAppMode:(AppMode)appMode {
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setInteger:appMode forKey:APP_MODE];
     [userDefaults synchronize];
 }
 
-- (void)openBitheriConsole;{
+- (void)openBitheriConsole; {
     [DDLog addLogger:[DDTTYLogger sharedInstance]];
 }
 

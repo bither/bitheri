@@ -40,29 +40,33 @@
 #import "BTBlockChain.h"
 #import "BTPeer.h"
 
-@interface BTPeerManager : NSObject<BTPeerDelegate>
+@interface BTPeerManager : NSObject <BTPeerDelegate>
 
-@property (nonatomic, readonly) BOOL connected;
-@property (nonatomic, readonly) uint32_t lastBlockHeight;
-@property (nonatomic, readonly) double syncProgress;
-@property (nonatomic, strong) BTBlockChain * blockChain;
-@property (nonatomic, strong) BTPeer *downloadPeer;
+@property(nonatomic, readonly) BOOL connected;
+@property(nonatomic, readonly) uint32_t lastBlockHeight;
+@property(nonatomic, readonly) double syncProgress;
+@property(nonatomic, strong) BTBlockChain *blockChain;
+@property(nonatomic, strong) BTPeer *downloadPeer;
 @property BOOL synchronizing;
 @property BOOL running;
 
-@property (readonly) BOOL doneSyncFromSPV;
+@property(readonly) BOOL doneSyncFromSPV;
 
 + (instancetype)instance;
--(void)initAddress;
+
+- (void)initAddress;
 
 - (void)start;
+
 - (void)stop;
+
 - (void)clearPeerAndRestart;
+
 - (void)publishTransaction:(BTTx *)transaction completion:(void (^)(NSError *error))completion;
 
 // transaction is considered verified when all peers have relayed it
 - (BOOL)transactionIsVerified:(NSData *)txHash;
 
-@property (nonatomic, strong) NSMutableSet *connectedPeers;
+@property(nonatomic, strong) NSMutableSet *connectedPeers;
 
 @end

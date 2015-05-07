@@ -140,6 +140,9 @@
 // notification
 #define BitherBalanceChangedNotification @"BitherBalanceChangedNotification"
 
+//address
+#define VANITY_LEN_NO_EXSITS  -1
+
 #define BTPeerManagerSyncStartedNotification  @"BTPeerManagerSyncStartedNotification"
 #define BTPeerManagerSyncFinishedNotification @"BTPeerManagerSyncFinishedNotification"
 #define BTPeerManagerSyncFromSPVFinishedNotification @"BTPeerManagerSyncFromSPVFinishedNotification"

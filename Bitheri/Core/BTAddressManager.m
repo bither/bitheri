@@ -90,7 +90,7 @@
     }];
     [self initHDMKeychain];
     [self initHDAccount];
-    [self initAlias];
+    [self initAliasAndVanity];
     self.isReady = YES;
     [tc signal];
     [tc unlock];
@@ -114,35 +114,51 @@
     }
 }
 
-- (void)initAlias {
-    NSDictionary *dictionary = [[BTAddressProvider instance] getAliases];
+- (void)initAliasAndVanity {
+    NSDictionary *aliases = [[BTAddressProvider instance] getAliases];
+    NSDictionary *vanityAddresses=[[BTAddressProvider instance] getVanityAddresses];
+    if(aliases.count==0&&vanityAddresses.count==0){
+        return;
+    }
     if (_privKeyAddresses && _privKeyAddresses.count > 0) {
         for (BTAddress *address in _privKeyAddresses) {
-            if ([[dictionary allKeys] containsObject:address.address]) {
-                address.alias = [dictionary objectForKey:address.address];
+            NSString * addressStr=address.address;
+            if ([[aliases allKeys] containsObject:addressStr]) {
+                address.alias = [aliases objectForKey:addressStr];
+            }
+            if([[vanityAddresses allKeys] containsObject:addressStr]){
+                address.vanityLen=[[vanityAddresses objectForKey:addressStr] integerValue];
             }
         }
     }
     if (_watchOnlyAddresses && _watchOnlyAddresses.count > 0) {
         for (BTAddress *address in _watchOnlyAddresses) {
-            if ([[dictionary allKeys] containsObject:address.address]) {
-                address.alias = [dictionary objectForKey:address.address];
+            NSString * addressStr=address.address;
+            if ([[aliases allKeys] containsObject:addressStr]) {
+                address.alias = [aliases objectForKey:addressStr];
+            }
+            if ([[vanityAddresses allKeys] containsObject:addressStr]){
+                address.vanityLen=[[vanityAddresses objectForKey:addressStr] integerValue];
             }
         }
     }
 
     if (_trashAddresses && _trashAddresses.count > 0) {
         for (BTAddress *address in _trashAddresses) {
-            if ([[dictionary allKeys] containsObject:address.address]) {
-                address.alias = [dictionary objectForKey:address.address];
+            NSString * addressStr=address.address;
+            if ([[aliases allKeys] containsObject:addressStr]) {
+                address.alias = [aliases objectForKey:addressStr];
+            }
+            if ([[vanityAddresses allKeys] containsObject:addressStr]){
+                address.vanityLen=[[vanityAddresses objectForKey:addressStr] integerValue];
             }
         }
     }
 
     if (_hdmKeychain && _hdmKeychain.allCompletedAddresses.count > 0) {
         for (BTAddress *address in _hdmKeychain.allCompletedAddresses) {
-            if ([[dictionary allKeys] containsObject:address.address]) {
-                address.alias = [dictionary objectForKey:address.address];
+            if ([[aliases allKeys] containsObject:address.address]) {
+                address.alias = [aliases objectForKey:address.address];
             }
         }
     }

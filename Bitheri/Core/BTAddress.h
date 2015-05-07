@@ -39,6 +39,7 @@
 @property(nonatomic, readonly) BOOL isHDM;
 @property(nonatomic, readonly) BOOL isHDAccount;
 @property(nonatomic, strong) NSString *alias;
+@property(nonatomic, readwrite) int vanityLen;
 
 @property(nonatomic, readonly) uint32_t txCount;
 @property(nonatomic, strong, readonly) BTTx *recentlyTx;
@@ -106,5 +107,13 @@
 - (void)updateAlias:(NSString *)alias;
 
 - (void)removeAlias;
+
+#pragma  mark- vanity address
+
+- (void)updateVanityLen:(int)len;
+
+- (void)removeVanity;
+
+- (BOOL)exsitsVanityLen;
 
 @end

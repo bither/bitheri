@@ -433,4 +433,23 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _alias = nil;
     [[BTAddressProvider instance] updateAliasWithAddress:self.address andAlias:self.alias];
 }
+
+#pragma  mark- vanity address
+
+- (void)updateVanityLen:(int)len {
+    _vanityLen = len;
+    [[BTAddressProvider instance] updateVanityAddress:self.address andLen:_vanityLen];
+}
+
+- (void)removeVanity {
+    _vanityLen = VANITY_LEN_NO_EXSITS;
+    [[BTAddressProvider instance] updateVanityAddress:self.address andLen:VANITY_LEN_NO_EXSITS];
+
+}
+
+- (BOOL)exsitsVanityLen {
+    return _vanityLen != VANITY_LEN_NO_EXSITS;
+
+}
+
 @end

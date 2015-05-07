@@ -105,6 +105,10 @@
 
 - (void)updateAliasWithAddress:(NSString *)address andAlias:(NSString *)alias;
 
+-(int) getVanityLen:(NSString *)address;
+-(NSDictionary *)getVanityAddresses;
+-(void)updateVanityAddress:(NSString *)address andLen:(int)len;
+
 #pragma mark - hd account
 
 - (int)addHDAccount:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed

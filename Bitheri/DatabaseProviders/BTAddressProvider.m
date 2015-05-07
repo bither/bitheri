@@ -741,6 +741,48 @@ static BTAddressProvider *addressProvider;
     }];
 }
 
+
+- (int)getVanityLen:(NSString *)address {
+
+    __block int vanityLen = VANITY_LEN_NO_EXSITS;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select vanity_len from vanity_address where address=?";
+        FMResultSet *rs = [db executeQuery:sql, address];
+        if ([rs next]) {
+            vanityLen = [rs intForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return vanityLen;
+
+}
+
+- (NSDictionary *)getVanityAddresses {
+    __block NSMutableDictionary *vanityAddress = [NSMutableDictionary dictionary];
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select address,vanity_len from vanity_address";
+        FMResultSet *rs = [db executeQuery:sql];
+        while ([rs next]) {
+            vanityAddress[[rs stringForColumnIndex:0]] = @([rs intForColumnIndex:1]);
+        }
+        [rs close];
+    }];
+    return vanityAddress;
+
+}
+
+- (void)updateVanityAddress:(NSString *)address andLen:(int)len {
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        if (len == VANITY_LEN_NO_EXSITS) {
+            [db executeUpdate:@"delete from vanity_address where address=?", address];
+        } else {
+            [db executeUpdate:@"insert or replace into vanity_address(address,vanity_len) values(?,?)"
+                    , address, @(len)];
+        }
+    }];
+}
+
+
 - (BTAddress *)formatAddress:(FMResultSet *)rs; {
     NSString *address = [rs stringForColumn:@"address"];
     BOOL hasPrivKey = [rs boolForColumn:@"has_priv_key"];

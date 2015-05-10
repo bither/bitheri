@@ -69,4 +69,6 @@
 
 @property(nonatomic, strong) NSMutableSet *connectedPeers;
 
+- (int)waitingTaskCount;
+
 @end

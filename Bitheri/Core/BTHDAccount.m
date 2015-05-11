@@ -182,8 +182,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 
     DDLogInfo(@"HD on new tx issued ex %d, issued in %d", maxExternal, maxInternal);
+    BOOL paymentAddressChanged = NO;
     if (maxExternal >= 0 && maxExternal > self.issuedExternalIndex) {
         [self updateIssuedExternalIndex:maxExternal];
+        paymentAddressChanged = YES;
     }
     if (maxInternal >= 0 && maxInternal > self.issuedInternalIndex) {
         [self updateIssuedInternalIndex:maxInternal];
@@ -192,6 +194,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self supplyEnoughKeys:YES];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification object:@[kHDAccountPlaceHolder, @([self getDeltaBalance]), tx, @(txNotificationType)]];
+    if (paymentAddressChanged) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:self.address];
+    }
 }
 
 

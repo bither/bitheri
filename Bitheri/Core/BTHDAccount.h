@@ -23,6 +23,7 @@
 #import "BTEncryptData.h"
 
 
+#define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"
 #define kHDAccountPlaceHolder @"HDAccount"
 
 @interface BTHDAccount : BTAddress

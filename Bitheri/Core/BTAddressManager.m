@@ -478,6 +478,7 @@
 
 - (void)setHdAccount:(BTHDAccount *)hdAccount {
     _hdAccount = hdAccount;
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccount.address];
 }
 
 - (void)blockChainChanged; {

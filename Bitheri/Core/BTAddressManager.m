@@ -116,41 +116,41 @@
 
 - (void)initAliasAndVanity {
     NSDictionary *aliases = [[BTAddressProvider instance] getAliases];
-    NSDictionary *vanityAddresses=[[BTAddressProvider instance] getVanityAddresses];
-    if(aliases.count==0&&vanityAddresses.count==0){
+    NSDictionary *vanityAddresses = [[BTAddressProvider instance] getVanityAddresses];
+    if (aliases.count == 0 && vanityAddresses.count == 0) {
         return;
     }
     if (_privKeyAddresses && _privKeyAddresses.count > 0) {
         for (BTAddress *address in _privKeyAddresses) {
-            NSString * addressStr=address.address;
+            NSString *addressStr = address.address;
             if ([[aliases allKeys] containsObject:addressStr]) {
                 address.alias = [aliases objectForKey:addressStr];
             }
-            if([[vanityAddresses allKeys] containsObject:addressStr]){
-                address.vanityLen=[[vanityAddresses objectForKey:addressStr] integerValue];
+            if ([[vanityAddresses allKeys] containsObject:addressStr]) {
+                address.vanityLen = [[vanityAddresses objectForKey:addressStr] integerValue];
             }
         }
     }
     if (_watchOnlyAddresses && _watchOnlyAddresses.count > 0) {
         for (BTAddress *address in _watchOnlyAddresses) {
-            NSString * addressStr=address.address;
+            NSString *addressStr = address.address;
             if ([[aliases allKeys] containsObject:addressStr]) {
                 address.alias = [aliases objectForKey:addressStr];
             }
-            if ([[vanityAddresses allKeys] containsObject:addressStr]){
-                address.vanityLen=[[vanityAddresses objectForKey:addressStr] integerValue];
+            if ([[vanityAddresses allKeys] containsObject:addressStr]) {
+                address.vanityLen = [[vanityAddresses objectForKey:addressStr] integerValue];
             }
         }
     }
 
     if (_trashAddresses && _trashAddresses.count > 0) {
         for (BTAddress *address in _trashAddresses) {
-            NSString * addressStr=address.address;
+            NSString *addressStr = address.address;
             if ([[aliases allKeys] containsObject:addressStr]) {
                 address.alias = [aliases objectForKey:addressStr];
             }
-            if ([[vanityAddresses allKeys] containsObject:addressStr]){
-                address.vanityLen=[[vanityAddresses objectForKey:addressStr] integerValue];
+            if ([[vanityAddresses allKeys] containsObject:addressStr]) {
+                address.vanityLen = [[vanityAddresses objectForKey:addressStr] integerValue];
             }
         }
     }
@@ -478,7 +478,7 @@
 
 - (void)setHdAccount:(BTHDAccount *)hdAccount {
     _hdAccount = hdAccount;
-    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccount.address];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccount.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
 }
 
 - (void)blockChainChanged; {

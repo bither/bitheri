@@ -22,7 +22,7 @@
 #import "BTBloomFilter.h"
 #import "BTEncryptData.h"
 
-
+#define kHDAccountPaymentAddressChangedNotificationFirstAdding @"FirstAdding"
 #define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"
 #define kHDAccountPlaceHolder @"HDAccount"
 

@@ -53,7 +53,7 @@
 
 #define GET_BLOCK_DATA_PIECE_SIZE (5)
 #define MAX_PEER_MANAGER_WAITING_TASK_COUNT (0)
-#define PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL (100)
+#define PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL (0.1)
 
 
 typedef enum {
@@ -1098,7 +1098,7 @@ typedef enum {
     if (self.currentBlockHashes.count == 0) {
         BOOL waitingLogged = NO;
         while ([[BTPeerManager instance] waitingTaskCount] > MAX_PEER_MANAGER_WAITING_TASK_COUNT) {
-            if (waitingLogged) {
+            if (!waitingLogged) {
                 DDLogDebug(@"%@:%u waiting for PeerManager task count %d", self.host, self.peerPort, [[BTPeerManager instance] waitingTaskCount]);
                 waitingLogged = YES;
             }

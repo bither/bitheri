@@ -346,9 +346,6 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
                    afterDelay:PROTOCOL_TIMEOUT - (now - self.lastRelayTime)];
     } else {
         DDLogDebug(@"%@:%d chain sync timed out", self.downloadPeer.host, self.downloadPeer.peerPort);
-        self.synchronizing = NO;
-        self.syncStartHeight = 0;
-        [self sendSyncProgressNotification];
 //        [self.peers removeObject:self.downloadPeer];
         [self.downloadPeer disconnectPeer];
     }

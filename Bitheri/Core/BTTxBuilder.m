@@ -185,7 +185,15 @@
         [tx addOutputAddress:addresses[i] amount:amount];
 //        [tx addOutputScript:script amount:amount];
     }
-    return tx;
+    BOOL isOutScriptValid = YES;
+    for (BTOut *out in tx.outs) {
+        isOutScriptValid &= out.outScript.length > 0;
+    }
+    if (isOutScriptValid) {
+        return tx;
+    } else {
+        return nil;
+    }
 }
 
 + (size_t)estimationTxSizeWithInCount:(NSUInteger)inCount andOutCount:(NSUInteger)outCount; {

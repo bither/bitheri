@@ -99,6 +99,9 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _q = [[NSOperationQueue alloc] init];
     _q.name = @"net.bither.peermanager";
     _q.maxConcurrentOperationCount = 1;
+    if([_q respondsToSelector:@selector(setQualityOfService:)]){
+        _q.qualityOfService = NSQualityOfServiceUserInitiated;
+    }
     _txRelays = [NSMutableDictionary dictionary];
     _publishedTx = [NSMutableDictionary dictionary];
     _publishedCallback = [NSMutableDictionary dictionary];

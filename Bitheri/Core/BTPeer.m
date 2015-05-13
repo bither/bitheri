@@ -54,6 +54,7 @@
 #define GET_BLOCK_DATA_PIECE_SIZE (5)
 #define MAX_PEER_MANAGER_WAITING_TASK_COUNT (0)
 #define PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL (0.1)
+#define BLOOMFILTER_UPDATE_BLOCK_INTERVAL (100)
 
 
 typedef enum {
@@ -422,8 +423,9 @@ typedef enum {
 
     [self.requestedBlockHashes addObjectsFromArray:blockHashes];
 
-    if (self.filterBlockCount + blockHashes.count > BLOCK_DIFFICULTY_INTERVAL) {
+    if (self.filterBlockCount + blockHashes.count > BLOOMFILTER_UPDATE_BLOCK_INTERVAL) {
         DDLogDebug(@"%@:%d rebuilding bloom filter after %d blocks", self.host, self.peerPort, self.filterBlockCount);
+        [self.delegate requestBloomFilterRecalculate];
         [self sendFilterLoadMessage:[self.delegate peerBloomFilter:self]];
     }
 

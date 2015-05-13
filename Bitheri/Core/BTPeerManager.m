@@ -156,6 +156,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     return [userDefaults boolForKey:BITHERI_DONE_SYNC_FROM_SPV];
 }
 
+- (void)requestBloomFilterRecalculate {
+    _bloomFilter = nil;
+}
+
 - (BTBloomFilter *)bloomFilter {
     if (_bloomFilter) return _bloomFilter;
 

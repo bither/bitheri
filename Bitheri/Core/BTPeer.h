@@ -61,6 +61,8 @@
 
 - (BTTx *)peer:(BTPeer *)peer requestedTransaction:(NSData *)txHash;
 
+- (void)requestBloomFilterRecalculate;
+
 - (NSData *)peerBloomFilter:(BTPeer *)peer;
 
 @end

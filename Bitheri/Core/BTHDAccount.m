@@ -626,6 +626,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)updateIssuedIndex:(PathType)pathType index:(int)index {
-    [[BTHDAccountProvider instance] updateIssuedIndex:pathType index:index];
+    if (pathType == EXTERNAL_ROOT_PATH) {
+        [self updateIssuedExternalIndex:index];
+    } else if (pathType == INTERNAL_ROOT_PATH) {
+        [self updateIssuedInternalIndex:index];
+    }
 }
 @end

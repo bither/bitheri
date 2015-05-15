@@ -45,6 +45,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return NSOrderedSame;
 };
 
+@interface BTAddress() {
+
+}
+
+@property(nonatomic, copy, readonly) NSString *encryptPrivKey;
+
+@end
 
 @implementation BTAddress {
     NSString *_address;

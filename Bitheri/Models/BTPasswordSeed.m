@@ -61,8 +61,7 @@
     if (!(self = [super init])) return nil;
 
     _address = btAddress.address;
-    _keyStr = [BTEncryptData encryptedString:btAddress.encryptPrivKey
-                             addIsCompressed:btAddress.pubKey.length < 65 andIsXRandom:btAddress.isFromXRandom];
+    _keyStr = btAddress.fullEncryptPrivKey;
 
     return self;
 }

@@ -680,7 +680,7 @@ static BTAddressProvider *addressProvider;
 - (void)updatePrivateKey:(BTAddress *)address; {
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update addresses set encrypt_private_key=? where address=?";
-        [db executeUpdate:sql, address.encryptPrivKey, address.address];
+        [db executeUpdate:sql, address.fullEncryptPrivKey, address.address];
     }];
 }
 

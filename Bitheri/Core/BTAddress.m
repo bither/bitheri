@@ -122,6 +122,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 }
 
+- (NSString *)fullEncryptPrivKey {
+    return [BTEncryptData encryptedString:self.encryptPrivKey addIsCompressed:self.pubKey.length == 33 andIsXRandom:self.isFromXRandom];
+}
+
 - (BOOL)isHDM {
     return NO;
 }

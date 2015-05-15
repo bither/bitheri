@@ -49,12 +49,14 @@ static BTAddressProvider *addressProvider;
 
     __block BTPasswordSeed *passwordSeed = nil;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select address,encrypt_private_key from addresses where encrypt_private_key is not null";
+        NSString *sql = @"select address,encrypt_private_key,pub_key,is_xrandom from addresses where encrypt_private_key is not null";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
             NSString *address = [rs stringForColumnIndex:0];
             NSString *encryptPrivKey = [rs stringForColumnIndex:1];
-            addressesPrivKeyDict[address] = encryptPrivKey;
+            NSData *pub_key = [[rs stringForColumnIndex:2] base58ToData];
+            BOOL isXRandom = [rs boolForColumnIndex:3];
+            addressesPrivKeyDict[address] = [BTEncryptData encryptedString:encryptPrivKey addIsCompressed:pub_key.length == 33 andIsXRandom:isXRandom];
         }
         [rs close];
 
@@ -103,7 +105,7 @@ static BTAddressProvider *addressProvider;
 
     NSArray *keys = [addressesPrivKeyDict allKeys];
     for (NSString *key in keys) {
-        addressesPrivKeyDict[key] = [self changePwdWithEncryptStr:addressesPrivKeyDict[key]
+        addressesPrivKeyDict[key] = [self changePwdKeepFlagWithEncryptStr:addressesPrivKeyDict[key]
                                                    andOldPassword:oldPassword andNewPassword:newPassword];
     }
     if (hdmEncryptPassword != nil) {
@@ -178,6 +180,11 @@ static BTAddressProvider *addressProvider;
     }];
 
     return success;
+}
+
+- (NSString *)changePwdKeepFlagWithEncryptStr:(NSString *)encryptStr andOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword; {
+    BTEncryptData *encryptedData = [[BTEncryptData alloc] initWithStr:encryptStr];
+    return [[[BTEncryptData alloc] initWithData:[encryptedData decrypt:oldPassword] andPassowrd:newPassword] toEncryptedStringForQRCodeWithIsCompressed:encryptedData.isCompressed andIsXRandom:encryptedData.isXRandom];
 }
 
 - (NSString *)changePwdWithEncryptStr:(NSString *)encryptStr andOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword; {

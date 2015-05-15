@@ -293,12 +293,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 // sign any inputs in the given transaction that can be signed using private keys from the wallet
 - (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase; {
-    [transaction signWithPrivateKeys:@[[BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase].privateKey]];
+    [transaction signWithPrivateKeys:@[[BTKey keyWithBitcoinj:self.fullEncryptPrivKey andPassphrase:passphrase].privateKey]];
     return [transaction isSigned];
 }
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase; {
-    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
+    BTKey *key = [BTKey keyWithBitcoinj:self.fullEncryptPrivKey andPassphrase:passphrase];
     NSMutableArray *result = [NSMutableArray new];
     for (NSData *hash in unsignedInHashes) {
         NSMutableData *sig = [NSMutableData data];
@@ -313,7 +313,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase; {
-    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
+    BTKey *key = [BTKey keyWithBitcoinj:self.fullEncryptPrivKey andPassphrase:passphrase];
     return [key signMessage:message];
 }
 

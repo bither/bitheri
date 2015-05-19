@@ -137,6 +137,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return NO;
 }
 
+- (BOOL)isCompressed {
+    return self.pubKey.length == 33;
+}
+
 #pragma mark - manage tx
 
 - (BOOL)initTxs:(NSArray *)txs {

@@ -219,12 +219,12 @@
     BTScript *multiSigRedeemScript = [BTScriptBuilder createMultiSigRedeemWithThreshold:2 andPubKeys:@[pubKey1, pubKey2, pubKey3]];
     BTScript *multiSigScript = [BTScriptBuilder createP2SHOutputScriptWithMultiSigRedeem:multiSigRedeemScript];
 
-    XCTAssertEqual([multiSigScript getSizeRequiredToSpendWithRedeemScript:multiSigRedeemScript], 255);
+    XCTAssertEqual([multiSigScript getSizeRequiredToSpendWithRedeemScript:multiSigRedeemScript andIsCompressed:YES], 255);
     
     NSMutableData *scriptData = [NSMutableData new];
     [scriptData appendScriptPubKeyForHash:[pubKey1 hash160]];
     BTScript *pubKeyScript = [[BTScript alloc] initWithProgram:scriptData];
-    XCTAssertEqual([pubKeyScript getSizeRequiredToSpendWithRedeemScript:nil], 108);
+    XCTAssertEqual([pubKeyScript getSizeRequiredToSpendWithRedeemScript:nil andIsCompressed:YES], 108);
 }
 
 @end

@@ -460,20 +460,26 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     return result;
 }
 
-- (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript; {
+- (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript andIsCompressed:(BOOL)isCompressed; {
     if ([self isSentToP2SH]) {
         BTScriptChunk *chunk = redeemScript.chunks[0];
         int n = (int) [BTScript decodeFromOpN:(uint8_t) chunk.opCode];
         return n * SIG_SIZE + redeemScript.program.length;
     } else if ([self isSentToOldMultiSig]) {
         BTScriptChunk *chunk = self.chunks[0];
-        int n = (int) [BTScript decodeFromOpN:(uint8_t) chunk.opCode];
+        uint n = (uint) [BTScript decodeFromOpN:(uint8_t) chunk.opCode];
         return n * SIG_SIZE + 1;
     } else if ([self isSentToRawPubKey]) {
         return SIG_SIZE;
     } else if ([self isSentToAddress]) {
-        int compressedPubKeySize = 33;
-        return SIG_SIZE + compressedPubKeySize;
+        uint compressedPubKeySize = 33;
+        uint uncompressPubKeySize = 65;
+        if (isCompressed) {
+            return SIG_SIZE + compressedPubKeySize;
+        } else {
+            return SIG_SIZE + uncompressPubKeySize;
+        }
+
     }
     return 1000;
 }

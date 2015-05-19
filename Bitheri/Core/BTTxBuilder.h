@@ -18,14 +18,15 @@
 
 
 @class BTTx;
+@class BTAddress;
 
 @interface BTTxBuilder : NSObject
 + (instancetype)instance;
 
-- (BTTx *)buildTxForAddress:(NSString *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
                  andAddress:(NSArray *)addresses andError:(NSError **)error;
 
-- (BTTx *)buildTxForAddress:(NSString *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
                  andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error;
 
 - (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error;
@@ -34,7 +35,7 @@
 @protocol BTTxBuilderProtocol
 
 @required
-- (BTTx *)buildTxForAddress:(NSString *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress;
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress;
 
 - (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andTx:(BTTx *)tx;
 @end

@@ -50,7 +50,7 @@ const static int SIG_SIZE = 75;
 
 - (NSArray *)getP2SHPubKeys;
 
-- (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript;
+- (uint)getSizeRequiredToSpendWithRedeemScript:(BTScript *)redeemScript andIsCompressed:(BOOL)isCompressed;
 
 #pragma mark - standard script
 

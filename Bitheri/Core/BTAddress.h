@@ -44,6 +44,8 @@
 @property(nonatomic, readonly) uint32_t txCount;
 @property(nonatomic, strong, readonly) BTTx *recentlyTx;
 
+@property(nonatomic, readonly) BOOL isCompressed;
+
 - (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase;
 
 - (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom;

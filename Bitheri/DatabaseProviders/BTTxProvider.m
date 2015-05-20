@@ -362,7 +362,7 @@ static BTTxProvider *txProvider;
 
         // insert outs and get the out\'s addresses
         for (BTOut *outItem in txItem.outs) {
-            sql = @"insert or ignore into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
+            sql = @"insert or replace into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
             success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                     , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                     , @(outItem.outValue), @(outItem.outStatus)
@@ -442,7 +442,7 @@ static BTTxProvider *txProvider;
 
             // insert outs and get the out\'s addresses
             for (BTOut *outItem in txItem.outs) {
-                sql = @"insert or ignore into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
+                sql = @"insert or replace into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
                 success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                         , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                         , @(outItem.outValue), @(outItem.outStatus)

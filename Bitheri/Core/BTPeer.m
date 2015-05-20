@@ -51,6 +51,12 @@
 #import "BTAddressManager.h"
 #import "BTIn.h"
 
+#define GET_BLOCK_DATA_PIECE_SIZE (5)
+#define MAX_PEER_MANAGER_WAITING_TASK_COUNT (0)
+#define PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL (0.1)
+#define BLOOMFILTER_UPDATE_BLOCK_INTERVAL (100)
+
+
 typedef enum {
     error = 0,
     tx,
@@ -81,6 +87,7 @@ typedef enum {
 @property(nonatomic, strong) NSMutableOrderedSet *currentBlockHashes, *currentTxHashes, *knownTxHashes;
 @property(nonatomic, strong) NSMutableArray *syncBlocks;
 @property(nonatomic, strong) NSMutableArray *syncBlockHashes;
+@property(nonatomic, strong) NSMutableArray *invBlockHashes;
 @property(nonatomic, strong) NSCountedSet *requestedBlockHashes;
 @property(nonatomic, assign) uint32_t filterBlockCount;
 @property(nonatomic, strong) NSRunLoop *runLoop;
@@ -151,6 +158,7 @@ typedef enum {
     self.currentBlockHashes = [NSMutableOrderedSet orderedSet];
     self.requestedBlockHashes = [NSCountedSet set];
     self.needToRequestDependencyDict = [NSMutableDictionary new];
+    self.invBlockHashes = [NSMutableArray new];
     _synchronising = NO;
 
     NSString *label = [NSString stringWithFormat:@"net.bither.peer.%@:%d", self.host, self.peerPort];
@@ -415,8 +423,9 @@ typedef enum {
 
     [self.requestedBlockHashes addObjectsFromArray:blockHashes];
 
-    if (self.filterBlockCount + blockHashes.count > BLOCK_DIFFICULTY_INTERVAL) {
+    if (self.filterBlockCount + blockHashes.count > BLOOMFILTER_UPDATE_BLOCK_INTERVAL) {
         DDLogDebug(@"%@:%d rebuilding bloom filter after %d blocks", self.host, self.peerPort, self.filterBlockCount);
+        [self.delegate requestBloomFilterRecalculate];
         [self sendFilterLoadMessage:[self.delegate peerBloomFilter:self]];
     }
 
@@ -617,6 +626,8 @@ typedef enum {
 
     DDLogDebug(@"%@:%u got inv with %u items %u tx %u block", self.host, self.peerPort, (int) count, (int) txHashes.count, (int) blockHashes.count);
 
+    [blockHashes removeObjectsInArray:self.invBlockHashes];
+
     if (txHashes.count > 10000) { // this was happening on testnet, some sort of DOS/spam attack?
         DDLogDebug(@"%@:%u too many transactions, disconnecting", self.host, self.peerPort);
         [self error:@"too many transactions"];
@@ -625,33 +636,47 @@ typedef enum {
     }
     // to improve chain download performance, if we received 500 block hashes, we request the next 500 block hashes
     // immediately before sending the getdata request
-    if (blockHashes.count >= 500) {
-        [self sendGetBlocksMessageWithLocators:@[blockHashes.lastObject, blockHashes.firstObject] andHashStop:nil];
-    }
+//    if (blockHashes.count >= 500) {
+//        [self sendGetBlocksMessageWithLocators:@[blockHashes.lastObject, blockHashes.firstObject] andHashStop:nil];
+//    }
+
+    [self.invBlockHashes addObjectsFromArray:blockHashes.array];
 
     [txHashes minusOrderedSet:self.knownTxHashes];
     [self.knownTxHashes unionOrderedSet:txHashes];
 
-    if (txHashes.count + blockHashes.count > 0) {
-        if ([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]) {
-            [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:blockHashes.array];
-            // Each merkle block the remote peer sends us is followed by a set of tx messages for that block. We send a ping
-            // to get a pong reply after the block and all its tx are sent, indicating that there are no more tx messages
-            if (blockHashes.count == 1) [self sendPingMessage];
-        } else {
-            [self sendGetDataMessageWithTxHashes:txHashes.array andBlockHashes:nil];
-        }
+    [self sendGetBlocksDataNextPieceWith:txHashes.array];
+
+    if (([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]) && blockHashes.count == 1) {
+        [self sendPingMessage];
     }
 
-    if (blockHashes.count > 0) { // remember blockHashes in case we need to refetch them with an updated bloom filter
-        [self.currentBlockHashes unionOrderedSet:blockHashes];
+    if (blockHashes.count > 0) {
+        [self increaseBlockNo:blockHashes.count];
+    }
+}
+
+- (void)sendGetBlocksDataNextPiece;{
+    [self sendGetBlocksDataNextPieceWith:[NSArray new]];
+}
+
+- (void)sendGetBlocksDataNextPieceWith:(NSArray *)txHashes;{
+    NSArray *blockHashesPiece = [self.invBlockHashes subarrayWithRange:NSMakeRange(0, MIN(GET_BLOCK_DATA_PIECE_SIZE, [self.invBlockHashes count]))];
+    [self.invBlockHashes removeObjectsInArray:blockHashesPiece];
+
+    if ([BTPeerManager instance].downloadPeer == nil || [self isEqual:[BTPeerManager instance].downloadPeer]) {
+        [self sendGetDataMessageWithTxHashes:txHashes andBlockHashes:blockHashesPiece];
+    } else if ([txHashes count] > 0) {
+        [self sendGetDataMessageWithTxHashes:txHashes andBlockHashes:[NSArray new]];
+    }
+    if (blockHashesPiece.count > 0) {
+        [self.currentBlockHashes addObjectsFromArray:blockHashesPiece];
         if (self.currentBlockHashes.count > MAX_GETDATA_HASHES) {
             [self.currentBlockHashes
                     removeObjectsInRange:NSMakeRange(0, self.currentBlockHashes.count - MAX_GETDATA_HASHES / 2)];
         }
         if (self.synchronising)
-            [self.syncBlockHashes addObjectsFromArray:[blockHashes array]];
-        [self increaseBlockNo:blockHashes.count];
+            [self.syncBlockHashes addObjectsFromArray:blockHashesPiece];
     }
 }
 
@@ -1073,7 +1098,19 @@ typedef enum {
         }
     }
     if (self.currentBlockHashes.count == 0) {
-        [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil];
+        BOOL waitingLogged = NO;
+        while ([[BTPeerManager instance] waitingTaskCount] > MAX_PEER_MANAGER_WAITING_TASK_COUNT) {
+            if (!waitingLogged) {
+                DDLogDebug(@"%@:%u waiting for PeerManager task count %d", self.host, self.peerPort, [[BTPeerManager instance] waitingTaskCount]);
+                waitingLogged = YES;
+            }
+            [NSThread sleepForTimeInterval:PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL];
+        }
+        if (self.invBlockHashes.count > 0) {
+            [self sendGetBlocksDataNextPiece];
+        } else {
+            [self sendGetBlocksMessageWithLocators:@[block.blockHash, [BTBlockChain instance].blockLocatorArray.firstObject] andHashStop:nil];
+        }
     }
 }
 

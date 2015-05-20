@@ -45,6 +45,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return NSOrderedSame;
 };
 
+@interface BTAddress() {
+
+}
+
+@property(nonatomic, copy, readonly) NSString *encryptPrivKey;
+
+@end
 
 @implementation BTAddress {
     NSString *_address;
@@ -122,8 +129,16 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 }
 
+- (NSString *)fullEncryptPrivKey {
+    return [BTEncryptData encryptedString:self.encryptPrivKey addIsCompressed:self.pubKey.length == 33 andIsXRandom:self.isFromXRandom];
+}
+
 - (BOOL)isHDM {
     return NO;
+}
+
+- (BOOL)isCompressed {
+    return self.pubKey.length == 33;
 }
 
 #pragma mark - manage tx
@@ -276,18 +291,18 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error {
-    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self.address andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
+    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
     return tx;
 }
 
 // sign any inputs in the given transaction that can be signed using private keys from the wallet
 - (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase; {
-    [transaction signWithPrivateKeys:@[[BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase].privateKey]];
+    [transaction signWithPrivateKeys:@[[BTKey keyWithBitcoinj:self.fullEncryptPrivKey andPassphrase:passphrase].privateKey]];
     return [transaction isSigned];
 }
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase; {
-    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
+    BTKey *key = [BTKey keyWithBitcoinj:self.fullEncryptPrivKey andPassphrase:passphrase];
     NSMutableArray *result = [NSMutableArray new];
     for (NSData *hash in unsignedInHashes) {
         NSMutableData *sig = [NSMutableData data];
@@ -302,7 +317,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSString *)signMessage:(NSString *)message withPassphrase:(NSString *)passphrase; {
-    BTKey *key = [BTKey keyWithBitcoinj:self.encryptPrivKey andPassphrase:passphrase];
+    BTKey *key = [BTKey keyWithBitcoinj:self.fullEncryptPrivKey andPassphrase:passphrase];
     return [key signMessage:message];
 }
 
@@ -433,4 +448,23 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _alias = nil;
     [[BTAddressProvider instance] updateAliasWithAddress:self.address andAlias:self.alias];
 }
+
+#pragma  mark- vanity address
+
+- (void)updateVanityLen:(int)len {
+    _vanityLen = len;
+    [[BTAddressProvider instance] updateVanityAddress:self.address andLen:_vanityLen];
+}
+
+- (void)removeVanity {
+    _vanityLen = VANITY_LEN_NO_EXSITS;
+    [[BTAddressProvider instance] updateVanityAddress:self.address andLen:VANITY_LEN_NO_EXSITS];
+
+}
+
+- (BOOL)exsitsVanityLen {
+    return _vanityLen != VANITY_LEN_NO_EXSITS;
+
+}
+
 @end

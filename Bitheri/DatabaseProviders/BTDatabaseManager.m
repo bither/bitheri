@@ -24,7 +24,7 @@ const int CURRENT_TX_DB_VERSION = 2;
 
 NSString *const ADDRESS_DB_VERSION = @"address_db_version";
 NSString *const ADDRESS_DB_NAME = @"address.sqlite";
-const int CURRENT_ADDRESS_DB_VERSION = 3;
+const int CURRENT_ADDRESS_DB_VERSION = 4;
 
 static BOOL canOpenTxDb;
 static BOOL canOpenAddressDb;
@@ -55,6 +55,7 @@ static BOOL canOpenAddressDb;
 @property(nonatomic, readonly) NSString *hdmBidSql;
 @property(nonatomic, readonly) NSString *aliasesSql;
 @property(nonatomic, readonly) NSString *hdAccountSql;
+@property(nonatomic, readonly) NSString *vanityAddressSql;
 
 
 @property(nonatomic, strong) FMDatabaseQueue *txQueue;
@@ -181,6 +182,10 @@ static BTDatabaseManager *databaseProvide;
             ", external_pub text not null"
             ", internal_pub text not null"
             ", is_xrandom integer not null);";
+    _vanityAddressSql=@"create table if not exists vanity_address "
+            "(address text not null primary key"
+            " , vanity_len integer );";
+
     return self;
 }
 
@@ -215,7 +220,7 @@ static BTDatabaseManager *databaseProvide;
                             [self setTxDbVersion];
                         }
                         break;
-                    case 1://upgrade 1->2
+                    case 1://upgrade v1.3.2->new version
                         success &= [self txV1ToV2:db];
                         if (success){
                             [self setTxDbVersion];
@@ -262,13 +267,16 @@ static BTDatabaseManager *databaseProvide;
                         }
 
                         break;
-                    case 1://upgrade 1->2
+                    case 1://upgrade v1.3.1->v1.3.2
                         success &=[self addressV1ToV2:db];
-                    case 2://upgrade 2->3
+                    case 2://upgrade v1.3.2->v1..3.4
                         success &= [self addressV2ToV3:db];
+                    case 3://upgrade v1.3.4->1.3.5
+                        success &=[self addressV3tOv4:db];
                         if (success) {
                             [self setAddressDbVersion];
                         }
+
                     default:
                         break;
                 }
@@ -320,6 +328,7 @@ static BTDatabaseManager *databaseProvide;
         [db executeUpdate:self.hdmBidSql];
         [db executeUpdate:self.aliasesSql];
         [db executeUpdate:self.hdAccountSql];
+        [db executeUpdate:self.vanityAddressSql];
         [db commit];
         return YES;
     } else {
@@ -346,6 +355,16 @@ static BTDatabaseManager *databaseProvide;
         [db commit];
         return YES;
     } else {
+        return NO;
+    }
+}
+-(BOOL)addressV3tOv4:(FMDatabase *)db{
+    if([db open]){
+        [db beginTransaction];
+        [db executeUpdate:self.vanityAddressSql];
+        [db commit];
+        return YES;
+    } else{
         return NO;
     }
 }

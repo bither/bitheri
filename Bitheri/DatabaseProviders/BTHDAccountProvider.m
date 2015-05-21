@@ -18,7 +18,6 @@
 
 
 #import "BTHDAccountProvider.h"
-#import "BTDatabaseManager.h"
 #import "BTTx.h"
 #import "BTOut.h"
 #import "BTIn.h"
@@ -327,7 +326,7 @@ static BTHDAccountProvider *accountProvider;
         [rs close];
 
         sql = [NSString stringWithFormat:
-                @"select b.tx_hash,b.out_sn,b.out_value,b.out_address "
+                @"select b.* "
                         " from  outs b, txs c "
                         " where c.tx_hash in %@ and b.tx_hash=c.tx_hash and c.block_no is null  "
                         " order by b.tx_hash,b.out_sn", IN_QUERY_TX_HDACCOUNT];
@@ -455,7 +454,7 @@ static BTHDAccountProvider *accountProvider;
     NSMutableArray *temp = [NSMutableArray new];
 
     NSMutableSet *set = [NSMutableSet new];
-    if (addressList.count==0){
+    if (addressList.count == 0) {
         return set;
     }
     for (NSString *address in addressList) {
@@ -484,6 +483,39 @@ static BTHDAccountProvider *accountProvider;
     }];
     return set;
 
+}
+
+- (int)getUnspendOutCountByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType {
+    __block int result = 0;
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select count(tx_hash) cnt from outs where out_address in "
+                "(select address from hd_account_addresses where path_type =? and out_status=?) "
+                "and hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(unspent), @(hdAccountId)];
+        if ([rs next]) {
+            int columnIndex = [rs columnIndexForName:@"cnt"];
+            if (columnIndex != -1) {
+                result = [rs intForColumnIndex:columnIndex];
+            }
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (NSArray *)getUnspendOutByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType {
+    NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select * from outs where out_address in "
+                "(select address from hd_account_addresses where path_type =? and out_status=?) "
+                "and hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(unspent), @(hdAccountId)];
+        while ([rs next]) {
+            [result addObject:[BTTxHelper formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
 }
 
 - (void)addHDAccountAddress:(FMDatabase *)db hdAccountAddress:(BTHDAccountAddress *)address {

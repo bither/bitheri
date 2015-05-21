@@ -72,4 +72,8 @@
 
 - (NSSet *)getBelongAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList;
 
+- (int)getUnspendOutCountByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType;
+
+- (NSArray *)getUnspendOutByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType;
+
 @end

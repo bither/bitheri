@@ -46,13 +46,13 @@
 
 @property(nonatomic, readonly) BOOL isCompressed;
 
-- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase;
+- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isSyncComplete:(BOOL)isSyncComplete;
 
-- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom;
+- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom;
 
-- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom;
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom;
 
-- (instancetype)initWithWithPubKey:(NSString *)pubKey encryptPrivKey:(NSString *)encryptPrivKey;
+- (instancetype)initWithWithPubKey:(NSString *)pubKey encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete;
 
 #pragma mark - manage tx
 

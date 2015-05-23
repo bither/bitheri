@@ -106,7 +106,7 @@ static BTAddressProvider *addressProvider;
     NSArray *keys = [addressesPrivKeyDict allKeys];
     for (NSString *key in keys) {
         addressesPrivKeyDict[key] = [self changePwdKeepFlagWithEncryptStr:addressesPrivKeyDict[key]
-                                                   andOldPassword:oldPassword andNewPassword:newPassword];
+                                                           andOldPassword:oldPassword andNewPassword:newPassword];
     }
     if (hdmEncryptPassword != nil) {
         hdmEncryptPassword = [self changePwdWithEncryptStr:hdmEncryptPassword
@@ -798,9 +798,8 @@ static BTAddressProvider *addressProvider;
     BOOL isTrashed = [rs boolForColumn:@"is_trash"];
     BOOL isSyncComplete = [rs boolForColumn:@"is_synced"];
     long long int sortTime = [rs longLongIntForColumn:@"sort_time"];
-    BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address encryptPrivKey:nil pubKey:pubKey hasPrivKey:hasPrivKey isXRandom:isFromXRandom];
+    BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address encryptPrivKey:nil pubKey:pubKey hasPrivKey:hasPrivKey isSyncComplete:isSyncComplete isXRandom:isFromXRandom];
     btAddress.isTrashed = isTrashed;
-    btAddress.isSyncComplete = isSyncComplete;
     btAddress.sortTime = sortTime;
     return btAddress;
 }

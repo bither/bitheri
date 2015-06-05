@@ -21,7 +21,6 @@
 #import "BTBlockChain.h"
 #import "BTTxBuilder.h"
 #import "BTIn.h"
-#import "BTScript.h"
 #import "BTAddressProvider.h"
 #import "BTHDAccount.h"
 
@@ -45,7 +44,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return NSOrderedSame;
 };
 
-@interface BTAddress() {
+@interface BTAddress () {
 
 }
 
@@ -57,25 +56,25 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *_address;
 }
 
-- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase {
+- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isSyncComplete:(BOOL)isSyncComplete {
     BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:passphrase];
-    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey isXRandom:key.isFromXRandom] : nil;
+    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey isSyncComplete:isSyncComplete isXRandom:key.isFromXRandom] : nil;
 }
 
-- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isXRandom:(BOOL)isXRandom {
+- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom {
     if (!(self = [super init])) return nil;
     _hasPrivKey = encryptPrivKey != nil;
     _encryptPrivKeyForCreate = encryptPrivKey;
     _address = key.address;
     _pubKey = key.publicKey;
-    _isSyncComplete = NO;
+    _isSyncComplete = isSyncComplete;
     _isFromXRandom = isXRandom;
     _txCount = 0;
     _recentlyTx = nil;
     return self;
 }
 
-- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isXRandom:(BOOL)isXRandom {
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = hasPrivKey;
@@ -83,13 +82,13 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _address = address;
     _pubKey = pubKey;
     _isFromXRandom = isXRandom;
-    _isSyncComplete = NO;
+    _isSyncComplete = isSyncComplete;
     [self updateCache];
 
     return self;
 }
 
-- (instancetype)initWithWithPubKey:(NSString *)pubKey encryptPrivKey:(NSString *)encryptPrivKey; {
+- (instancetype)initWithWithPubKey:(NSString *)pubKey encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = encryptPrivKey != nil;
@@ -97,7 +96,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _pubKey = [pubKey hexToData];
     _address = [NSString addressWithPubKey:_pubKey];
     _isFromXRandom = [BTKey isXRandom:encryptPrivKey];
-    _isSyncComplete = NO;
+    _isSyncComplete = isSyncComplete;
     [self updateCache];
 
     return self;

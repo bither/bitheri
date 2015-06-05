@@ -90,7 +90,7 @@
             }
             for (BTHDMPubs *p in pubs) {
                 if (p.isCompleted) {
-                    BTHDMAddress *a = [[BTHDMAddress alloc] initWithPubs:p andKeychain:self];
+                    BTHDMAddress *a = [[BTHDMAddress alloc] initWithPubs:p andKeychain:self syncCompleted:NO];
                     [as addObject:a];
                 } else {
                     [uncompPubs addObject:p];
@@ -176,7 +176,7 @@
     fetchBlock(password, pubs);
     for (BTHDMPubs *p in pubs) {
         if (p.isCompleted) {
-            [as addObject:[[BTHDMAddress alloc] initWithPubs:p andKeychain:self]];
+            [as addObject:[[BTHDMAddress alloc] initWithPubs:p andKeychain:self syncCompleted:YES]];
         } else if (p.remote) {
             [[BTAddressProvider instance] setHDMPubsRemoteWithHDSeedId:self.hdSeedId andIndex:p.index andPubKeyRemote:p.remote];
         }

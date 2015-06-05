@@ -17,7 +17,6 @@
 //  limitations under the License.
 
 #import "BTTxProvider.h"
-#import "BTOut.h"
 #import "BTIn.h"
 #import "BTTxHelper.h"
 #import "BTHDAccountProvider.h"
@@ -1016,7 +1015,7 @@ static BTTxProvider *txProvider;
         }
         [rs close];
 
-        sql = @"select b.tx_hash,b.out_sn,b.out_value,b.out_address "
+        sql = @"select b.* "
                 " from addresses_txs a, outs b, txs c "
                 " where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.block_no is null and a.address=? "
                 " order by b.tx_hash,b.out_sn";

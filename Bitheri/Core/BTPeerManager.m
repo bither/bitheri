@@ -166,7 +166,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     self.filterUpdateHeight = self.lastBlockHeight;
     self.filterFpRate = BLOOM_DEFAULT_FALSEPOSITIVE_RATE;
 
-    if (self.lastBlockHeight + BLOCK_DIFFICULTY_INTERVAL < self.downloadPeer.versionLastBlock) {
+    if (self.lastBlockHeight + 500 < self.downloadPeer.versionLastBlock) {
         self.filterFpRate = BLOOM_REDUCED_FALSEPOSITIVE_RATE; // lower false positive rate during chain sync
     }
     else if (self.lastBlockHeight < self.downloadPeer.versionLastBlock) { // partially lower fp rate if we're nearly synced

@@ -35,26 +35,28 @@
 
 + (BTIn *)formatIn:(FMResultSet *)rs {
     BTIn *inItem = [BTIn new];
-    if ([rs columnIndexForName:@"tx_hash"] >= 0) {
+    NSArray *keys = [[rs columnNameToIndexMap] allKeys];
+    if ([keys containsObject:@"tx_hash"]) {
         inItem.txHash = [[rs stringForColumn:@"tx_hash"] base58ToData];
     }
-    if ([rs columnIndexForName:@"in_sn"] >= 0) {
+    if ([keys containsObject:@"in_sn"]) {
         inItem.inSn = (uint) [rs intForColumn:@"in_sn"];
     }
-    if ([rs columnIndexForName:@"prev_tx_hash"] >= 0) {
+    if ([keys containsObject:@"prev_tx_hash"]) {
         inItem.prevTxHash = [[rs stringForColumn:@"prev_tx_hash"] base58ToData];
     }
-    if ([rs columnIndexForName:@"prev_out_sn"] >= 0) {
+    if ([keys containsObject:@"prev_out_sn"]) {
         inItem.prevOutSn = (uint) [rs intForColumn:@"prev_out_sn"];
     }
-    if ([rs columnIndexForName:@"in_signature"] >= 0) {
+    if ([keys containsObject:@"in_signature"]) {
         if ([rs columnIsNull:@"in_signature"]) {
             inItem.inSignature = (id) [NSNull null];
         } else {
             inItem.inSignature = [[rs stringForColumn:@"in_signature"] base58ToData];
         }
     }
-    if ([rs columnIndexForName:@"in_sequence"] >= 0) {
+
+    if ([keys containsObject:@"in_sequence"]) {
         inItem.inSequence = (uint) [rs intForColumn:@"in_sequence"];
     }
     return inItem;
@@ -62,22 +64,23 @@
 
 + (BTOut *)formatOut:(FMResultSet *)rs {
     BTOut *outItem = [BTOut new];
-    if ([rs columnIndexForName:@"tx_hash"] >= 0) {
+    NSArray *keys = [[rs columnNameToIndexMap] allKeys];
+    if ([keys containsObject:@"tx_hash"]) {
         outItem.txHash = [[rs stringForColumn:@"tx_hash"] base58ToData];
     }
-    if ([rs columnIndexForName:@"out_sn"] >= 0) {
+    if ([keys containsObject:@"out_sn"]) {
         outItem.outSn = (uint) [rs intForColumn:@"out_sn"];
     }
-    if ([rs columnIndexForName:@"out_script"] >= 0) {
+    if ([keys containsObject:@"out_script"]) {
         outItem.outScript = [[rs stringForColumn:@"out_script"] base58ToData];
     }
-    if ([rs columnIndexForName:@"out_value"] >= 0) {
+    if ([keys containsObject:@"out_value"]) {
         outItem.outValue = [rs unsignedLongLongIntForColumn:@"out_value"];
     }
-    if ([rs columnIndexForName:@"out_status"] >= 0) {
+    if ([keys containsObject:@"out_status"]) {
         outItem.outStatus = [rs intForColumn:@"out_status"];
     }
-    if ([rs columnIndexForName:@"out_address"] >= 0) {
+    if ([keys containsObject:@"out_address"]) {
         if ([rs columnIsNull:@"out_address"]) {
             outItem.outAddress = nil;
         } else {

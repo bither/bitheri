@@ -208,13 +208,12 @@ static BTBlockProvider *blockProvider;
 
 - (void)addBlocks:(NSArray *)blocks; {
     NSMutableArray *addBlocks = [NSMutableArray array];
-    NSArray *allBlocks = [self getAllBlocks];
-    for (BTBlock *blockItem in blocks) {
-        if (![allBlocks containsObject:blockItem]) {
-            [addBlocks addObject:blockItem];
-        }
-    }
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        for (BTBlock *blockItem in blocks) {
+            if (![self blockExists:blockItem.blockHash db:db]) {
+                [addBlocks addObject:blockItem];
+            }
+        }
         [db beginTransaction];
         for (BTBlock *block in addBlocks) {
             [self addBlock:block db:db];

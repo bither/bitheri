@@ -22,18 +22,17 @@
 
 #define APP_MODE @"app_mode"
 
-static BTSettings *settings;
-
 @implementation BTSettings {
 
 }
 
 + (instancetype)instance {
-    @synchronized (self) {
-        if (settings == nil) {
-            settings = [[self alloc] init];
-        }
-    }
+    static BTSettings *settings = nil;
+    static dispatch_once_t one;
+
+    dispatch_once(&one, ^{
+        settings = [[BTSettings alloc] init];
+    });
     return settings;
 }
 

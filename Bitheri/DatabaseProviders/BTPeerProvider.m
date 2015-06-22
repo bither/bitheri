@@ -19,18 +19,17 @@
 #import "BTPeerProvider.h"
 #import "BTDatabaseManager.h"
 
-static BTPeerProvider *peerProvider;
-
 @implementation BTPeerProvider {
 
 }
 
 + (instancetype)instance; {
-    @synchronized (self) {
-        if (peerProvider == nil) {
-            peerProvider = [[self alloc] init];
-        }
-    }
+    static BTPeerProvider *peerProvider;
+    static dispatch_once_t once;
+
+    dispatch_once(&once, ^{
+        peerProvider = [[BTPeerProvider alloc] init];
+    });
     return peerProvider;
 }
 

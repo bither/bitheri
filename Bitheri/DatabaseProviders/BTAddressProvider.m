@@ -20,18 +20,17 @@
 #import "BTEncryptData.h"
 #import "BTQRCodeUtil.h"
 
-static BTAddressProvider *addressProvider;
-
 @implementation BTAddressProvider {
 
 }
 
 + (instancetype)instance; {
-    @synchronized (self) {
-        if (addressProvider == nil) {
-            addressProvider = [[self alloc] init];
-        }
-    }
+    static BTAddressProvider *addressProvider = nil;
+    static dispatch_once_t once;
+
+    dispatch_once(&once, ^{
+        addressProvider = [[BTAddressProvider alloc] init];
+    });
     return addressProvider;
 }
 

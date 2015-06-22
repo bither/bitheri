@@ -62,18 +62,17 @@ static BOOL canOpenAddressDb;
 @property(nonatomic, strong) FMDatabaseQueue *addressQueue;
 @end
 
-static BTDatabaseManager *databaseProvide;
-
 @implementation BTDatabaseManager : NSObject
 
 + (instancetype)instance {
-    @synchronized (self) {
-        if (databaseProvide == nil) {
-            databaseProvide = [[self alloc] init];
-            [databaseProvide initDatabase];
-        }
-    }
-    return databaseProvide;
+    static BTDatabaseManager *databaseManager = nil;
+    static dispatch_once_t once;
+
+    dispatch_once(&once, ^{
+        databaseManager = [[BTDatabaseManager alloc] init];
+        [databaseManager initDatabase];
+    });
+    return databaseManager;
 }
 //init 1.0.1
 - (instancetype)init {

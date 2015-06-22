@@ -22,8 +22,6 @@
 #import "BTSettings.h"
 #import "BTPeer.h"
 
-static BTBlockChain *blockChain;
-
 @interface BTBlockChain ()
 
 @property(nonatomic, strong) BTBlock *lastOrphan;
@@ -33,11 +31,12 @@ static BTBlockChain *blockChain;
 @implementation BTBlockChain
 
 + (instancetype)instance {
-    @synchronized (self) {
-        if (blockChain == nil) {
-            blockChain = [[self alloc] init];
-        }
-    }
+    static BTBlockChain *blockChain = nil;
+    static dispatch_once_t once;
+
+    dispatch_once(&once, ^{
+        blockChain = [[BTBlockChain alloc] init];
+    });
     return blockChain;
 }
 

@@ -22,20 +22,17 @@
 #import "BTHDAccountProvider.h"
 #import "BTAddressManager.h"
 
-
-static BTTxProvider *txProvider;
-
 @implementation BTTxProvider {
 
 }
 
-
 + (instancetype)instance; {
-    @synchronized (self) {
-        if (txProvider == nil) {
-            txProvider = [[self alloc] init];
-        }
-    }
+    static BTTxProvider *txProvider = nil;
+    static dispatch_once_t one;
+
+    dispatch_once(&one, ^{
+        txProvider = [[BTTxProvider alloc] init];
+    });
     return txProvider;
 }
 

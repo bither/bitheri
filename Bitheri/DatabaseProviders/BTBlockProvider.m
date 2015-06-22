@@ -21,18 +21,17 @@
 #import "NSString+Base58.h"
 #import "BTSettings.h"
 
-static BTBlockProvider *blockProvider;
-
 @implementation BTBlockProvider {
 
 }
 
 + (instancetype)instance; {
-    @synchronized (self) {
-        if (blockProvider == nil) {
-            blockProvider = [[self alloc] init];
-        }
-    }
+    static BTBlockProvider *blockProvider = nil;
+    static dispatch_once_t once;
+
+    dispatch_once(&once, ^{
+        blockProvider = [[BTBlockProvider alloc] init];
+    });
     return blockProvider;
 }
 

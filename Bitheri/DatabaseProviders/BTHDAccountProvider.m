@@ -193,7 +193,7 @@
         }
         [rs close];
     }];
-    return nil;
+    return result;
 }
 
 @end

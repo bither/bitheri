@@ -157,9 +157,16 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     [self wipeHDSeed];
     [self wipeMnemonicSeed];
+    self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXRandom:encryptedMnemonicSeed.isXRandom encryptSeedOfPS:encryptedSeedOfPasswordSeed.toEncryptedString addressOfPS:address externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
+    for (BTHDAccountAddress *each in externalAddresses) {
+        each.hdAccountId = _hdAccountId;
+    }
+    for (BTHDAccountAddress *each in internalAddresses) {
+        each.hdAccountId = _hdAccountId;
+    }
     [[BTHDAccountAddressProvider instance] addAddress:externalAddresses];
     [[BTHDAccountAddressProvider instance] addAddress:internalAddresses];
-    self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXRandom:encryptedMnemonicSeed.isXRandom encryptSeedOfPS:encryptedSeedOfPasswordSeed.toEncryptedString addressOfPS:address externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
+
     [internalKey wipe];
     [externalKey wipe];
 }

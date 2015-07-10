@@ -49,7 +49,7 @@
 
 - (int)getUnSyncedAddressCount:(int)hdAccountId;
 
-- (void)updateSyncedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;
+- (void)updateSyncedByHDAccountId:(int)hdAccountId pathType:(PathType)pathType index:(int)index;
 
 - (NSArray *)getSigningAddressesByHDAccountId:(int)hdAccountId fromInputs:(NSArray *)inList;
 

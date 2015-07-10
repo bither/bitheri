@@ -23,7 +23,7 @@
 #import "BTIn.h"
 #import "BTTxHelper.h"
 
-
+#define HD_ACCOUNT_ID @"hd_account_id"
 #define PATH_TYPE @"path_type"
 #define ADDRESS_INDEX @"address_index"
 #define IS_ISSUED @"is_issued"
@@ -226,7 +226,7 @@
 }
 
 
-- (void)updateSyncedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;{
+- (void)updateSyncedByHDAccountId:(int)hdAccountId pathType:(PathType)pathType index:(int)index;{
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update hd_account_addresses set is_synced=? where path_type=? and address_index>? and hd_account_id=? ";
         [db executeUpdate:sql, @(YES), @(pathType), @(index), @(hdAccountId)];
@@ -581,10 +581,10 @@
 }
 
 - (void)addHDAccountAddress:(FMDatabase *)db hdAccountAddress:(BTHDAccountAddress *)address {
-    NSString *sql = @"insert into hd_account_addresses(path_type,address_index"
+    NSString *sql = @"insert into hd_account_addresses(hd_accountId,path_type,address_index"
             ",is_issued,address,pub,is_synced) "
-            " values(?,?,?,?,?,?)";
-    [db executeUpdate:sql, @(address.pathType), @(address.index), @(address.isIssued), address.address
+            " values(?,?,?,?,?,?,?)";
+    [db executeUpdate:sql, @(address.hdAccountId), @(address.pathType), @(address.index), @(address.isIssued), address.address
             , [NSString base58WithData:address.pub], @(address.isSyncedComplete)];
 
 }
@@ -592,7 +592,12 @@
 
 - (BTHDAccountAddress *)formatAddress:(FMResultSet *)rs {
     BTHDAccountAddress *address = [[BTHDAccountAddress alloc] init];
-    int columnIndex = [rs columnIndexForName:PATH_TYPE];
+    int columnIndex = [rs columnIndexForName:HD_ACCOUNT_ID];
+    if (columnIndex >= 0) {
+        int hdAccountId = [rs intForColumnIndex:columnIndex];
+        address.hdAccountId = hdAccountId;
+    }
+    columnIndex = [rs columnIndexForName:PATH_TYPE];
     if (columnIndex >= 0) {
         int type = [rs intForColumnIndex:columnIndex];
         address.pathType = [BTHDAccountAddress getPathType:type];

@@ -292,7 +292,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSUInteger firstIndex = self.allGeneratedInternalAddressCount;
     NSMutableArray *as = [[NSMutableArray alloc] initWithCapacity:count];
     for (NSUInteger i = firstIndex; i < firstIndex + count; i++) {
-        [as addObject:[[BTHDAccountAddress alloc] initWithPub:[root deriveSoftened:i].pubKey path:INTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete]];
+        BTHDAccountAddress *address = [[BTHDAccountAddress alloc] initWithPub:[root deriveSoftened:i].pubKey path:INTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
+        address.hdAccountId = self.hdAccountId;
+        [as addObject:address];
     }
     [[BTHDAccountAddressProvider instance] addAddress:as];
     DDLogInfo(@"HD supplied %d internal addresses", as.count);
@@ -303,7 +305,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSUInteger firstIndex = self.allGeneratedExternalAddressCount;
     NSMutableArray *as = [[NSMutableArray alloc] initWithCapacity:count];
     for (NSUInteger i = firstIndex; i < firstIndex + count; i++) {
-        [as addObject:[[BTHDAccountAddress alloc] initWithPub:[root deriveSoftened:i].pubKey path:EXTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete]];
+        BTHDAccountAddress *address = [[BTHDAccountAddress alloc] initWithPub:[root deriveSoftened:i].pubKey path:EXTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
+        address.hdAccountId = self.hdAccountId;
+        [as addObject:address];
     }
     [[BTHDAccountAddressProvider instance] addAddress:as];
     DDLogInfo(@"HD supplied %d external addresses", as.count);

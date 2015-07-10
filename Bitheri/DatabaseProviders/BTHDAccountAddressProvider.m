@@ -593,7 +593,7 @@
 }
 
 - (void)addHDAccountAddress:(FMDatabase *)db hdAccountAddress:(BTHDAccountAddress *)address {
-    NSString *sql = @"insert into hd_account_addresses(hd_accountId,path_type,address_index"
+    NSString *sql = @"insert into hd_account_addresses(hd_account_id,path_type,address_index"
             ",is_issued,address,pub,is_synced) "
             " values(?,?,?,?,?,?,?)";
     [db executeUpdate:sql, @(address.hdAccountId), @(address.pathType), @(address.index), @(address.isIssued), address.address

@@ -20,11 +20,11 @@
 
 NSString *const TX_DB_VERSION = @"db_version";
 NSString *const TX_DB_NAME = @"bitheri.sqlite";
-const int CURRENT_TX_DB_VERSION = 2;
+const int CURRENT_TX_DB_VERSION = 3;
 
 NSString *const ADDRESS_DB_VERSION = @"address_db_version";
 NSString *const ADDRESS_DB_NAME = @"address.sqlite";
-const int CURRENT_ADDRESS_DB_VERSION = 4;
+const int CURRENT_ADDRESS_DB_VERSION = 5;
 
 static BOOL canOpenTxDb;
 static BOOL canOpenAddressDb;
@@ -45,7 +45,9 @@ static BOOL canOpenAddressDb;
 @property(nonatomic, readonly) NSString *indexOutsOutAddressSql;
 @property(nonatomic, readonly) NSString *peersSql;
 @property(nonatomic, readonly) NSString *hdAccountAddress;
-@property(nonatomic, readonly) NSString * indexHDAccountAddress;
+@property(nonatomic, readonly) NSString *indexHDAccountAddress;
+@property(nonatomic, readonly) NSString *monitorHDAccountAddress;
+@property(nonatomic, readonly) NSString *indexMonitorHDAccountAddress;
 
 #pragma mark - address db
 @property(nonatomic, readonly) NSString *passwordSeedSql;
@@ -56,6 +58,7 @@ static BOOL canOpenAddressDb;
 @property(nonatomic, readonly) NSString *aliasesSql;
 @property(nonatomic, readonly) NSString *hdAccountSql;
 @property(nonatomic, readonly) NSString *vanityAddressSql;
+@property(nonatomic, readonly) NSString *coldHDAccountSql;
 
 
 @property(nonatomic, strong) FMDatabaseQueue *txQueue;
@@ -139,6 +142,17 @@ static BOOL canOpenAddressDb;
             ", primary key (address));";
     _indexHDAccountAddress=@"create index idx_hd_address_address on hd_account_addresses (address);";
 
+    _monitorHDAccountAddress = @"create table if not exists monitor_hd_account_addresses"
+            "(hd_account_id integer"
+            ",path_type integer not null"
+            ", address_index integer not null"
+            ", is_issued integer not null"
+            ", address text not null"
+            ", pub text not null"
+            ", is_synced integer not null"
+            ", primary key (address));";
+    _indexMonitorHDAccountAddress = @"create index idx_monitor_hd_address_address on monitor_hd_account_addresses (address);";
+
 #pragma mark - address db
 
     _passwordSeedSql = @"create table if not exists password_seed "
@@ -184,6 +198,14 @@ static BOOL canOpenAddressDb;
     _vanityAddressSql=@"create table if not exists vanity_address "
             "(address text not null primary key"
             " , vanity_len integer );";
+    _coldHDAccountSql = @"create table if not exists cold_hd_account "
+            "( hd_account_id integer not null primary key autoincrement"
+            ", encrypt_seed text "
+            ", encrypt_mnemonic_seed text"
+            ", hd_address text "
+            ", external_pub text not null"
+            ", internal_pub text not null"
+            ", is_xrandom integer not null);";
 
     return self;
 }
@@ -221,6 +243,8 @@ static BOOL canOpenAddressDb;
                         break;
                     case 1://upgrade v1.3.2->new version
                         success &= [self txV1ToV2:db];
+                    case 2://upgrade v1.3.5->1.3.6
+                        success &= [self txV2ToV3:db];
                         if (success){
                             [self setTxDbVersion];
                         }
@@ -267,11 +291,13 @@ static BOOL canOpenAddressDb;
 
                         break;
                     case 1://upgrade v1.3.1->v1.3.2
-                        success &=[self addressV1ToV2:db];
+                        success &= [self addressV1ToV2:db];
                     case 2://upgrade v1.3.2->v1..3.4
                         success &= [self addressV2ToV3:db];
                     case 3://upgrade v1.3.4->1.3.5
-                        success &=[self addressV3tOv4:db];
+                        success &= [self addressV3tOv4:db];
+                    case 4://upgrade v1.3.5->1.3.6
+                        success &= [self addressV4Tov5:db];
                         if (success) {
                             [self setAddressDbVersion];
                         }
@@ -310,6 +336,8 @@ static BOOL canOpenAddressDb;
         [db executeUpdate:self.peersSql];
         [db executeUpdate:self.hdAccountAddress];
         [db executeUpdate:self.indexHDAccountAddress];
+        [db executeUpdate:self.monitorHDAccountAddress];
+        [db executeUpdate:self.indexMonitorHDAccountAddress];
         [db commit];
         return YES;
     } else {
@@ -328,6 +356,7 @@ static BOOL canOpenAddressDb;
         [db executeUpdate:self.aliasesSql];
         [db executeUpdate:self.hdAccountSql];
         [db executeUpdate:self.vanityAddressSql];
+        [db executeUpdate:self.coldHDAccountSql];
         [db commit];
         return YES;
     } else {
@@ -367,6 +396,17 @@ static BOOL canOpenAddressDb;
         return NO;
     }
 }
+// v1.3.6
+-(BOOL)addressV4Tov5:(FMDatabase *)db{
+    if([db open]){
+        [db beginTransaction];
+        [db executeUpdate:self.coldHDAccountSql];
+        [db commit];
+        return YES;
+    } else{
+        return NO;
+    }
+}
 //v1.3.2
 - (BOOL)txV1ToV2:(FMDatabase *)db {
     if ([db open]) {
@@ -374,6 +414,18 @@ static BOOL canOpenAddressDb;
         [db executeUpdate:self.hdAccountAddress];
         [db executeUpdate:self.indexHDAccountAddress];
         [db executeUpdate:@"alter table outs add column hd_account_id integer;"];
+        [db commit];
+        return YES;
+    } else {
+        return NO;
+    }
+}
+// v1.3.6
+- (BOOL)txV2ToV3:(FMDatabase *)db {
+    if ([db open]) {
+        [db beginTransaction];
+        [db executeUpdate:self.monitorHDAccountAddress];
+        [db executeUpdate:self.indexMonitorHDAccountAddress];
         [db commit];
         return YES;
     } else {

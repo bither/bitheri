@@ -30,7 +30,7 @@
 #import "BTTxProvider.h"
 #import "BTScriptBuilder.h"
 #import "BTHDAccount.h"
-#import "BTHDAccountProvider.h"
+#import "BTHDAccountAddressProvider.h"
 #import "BTUtils.h"
 
 @implementation BTTx
@@ -757,7 +757,7 @@
             receive += out.outValue;
         }
     }
-    int64_t sent = [[BTHDAccountProvider instance] sentFromAccount:[account getHDAccountId] txHash:self.txHash];
+    int64_t sent = [[BTHDAccountAddressProvider instance] sentFromAccount:[account getHDAccountId] txHash:self.txHash];
     return receive - sent;
 }
 

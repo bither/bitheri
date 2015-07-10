@@ -17,6 +17,7 @@
 		AC9BC60919D15B08003B88B5 /* BTQRCodeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */; };
 		AC9BC60A19D15B08003B88B5 /* BTUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60819D15B08003B88B5 /* BTUtils.m */; };
 		D61D0050BF2C7433CAE22D0E /* BTTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01CB510F3BD1C6350C3F /* BTTestHelper.m */; };
+		D61D00BA4D46241DE09D31AD /* BTHDAccountProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01512D206926CB5971FF /* BTHDAccountProvider.m */; };
 		D61D00D6B790A6D4DF2CC0E9 /* NSData+Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D08B05802C171ED50DD0E /* NSData+Hash.m */; };
 		D61D00DA49A7F3F790D6D71D /* BTScriptChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D059FF8F45BEECE09DF93 /* BTScriptChunk.m */; };
 		D61D0108201D2ACD9F8EEAC9 /* BTEncryptedDataTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D03D5ED8F73C7C3D539DE /* BTEncryptedDataTest.m */; };
@@ -81,6 +82,7 @@
 		D61D0E402538E17CD28FCC38 /* BTVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D072F87B87405F7F0B7A9 /* BTVersion.m */; };
 		D61D0E96F9382CD65D87B06F /* BTAddressTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D00CBB6E0D8F1874535E2 /* BTAddressTest.m */; };
 		D61D0EB26908C3DADA6A764B /* BTBIP39.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0C3F23CCF60D90D4D08F /* BTBIP39.m */; };
+		D61D0EB6432F204B3CAE3F5F /* BTHDAccountProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01512D206926CB5971FF /* BTHDAccountProvider.m */; };
 		D61D0F1510BE313FA122AE97 /* BTHDMAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D04A175B7D5F141E394DA /* BTHDMAddress.m */; };
 		D61D0F3AA81161C20F392306 /* BTAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0BBC5E22642563C4398F /* BTAddress.m */; };
 		D61D0F5905AFC504FAD98EA7 /* BTPeer.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D0F1E91ADEA20CF46B838 /* BTPeer.m */; };
@@ -136,16 +138,17 @@
 		DADE54121933420300F5E4DD /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DADE54101933420300F5E4DD /* InfoPlist.strings */; };
 		DADE54141933420300F5E4DD /* BitheriTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DADE54131933420300F5E4DD /* BitheriTests.m */; };
 		DADE542019334C8B00F5E4DD /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DADE541F19334C8B00F5E4DD /* CoreGraphics.framework */; };
+		DAE212F41B43AC1E00EBB760 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DA1543B8196FDB89007F629E /* libz.dylib */; };
 		DAFA70B81A7138E200130717 /* BIP39EnglishWords.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */; };
 		DAFA70BA1A71392E00130717 /* BIP39EnglishWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */; };
 		DC00C6BF008CEE40148AB07B /* BTHDAccountAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */; };
-		DC00D4D7A771A9FB31B51D94 /* BTHDAccountProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */; };
+		DC00D4D7A771A9FB31B51D94 /* BTHDAccountAddressProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC001BACAA54C62C76AAB85C /* BTHDAccountAddressProvider.m */; };
 		DC01C63E5CF9D73A26C76B5B /* BTTxHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */; };
 		DC01DD5DBAA5C78F9DB95FCB /* BTHDAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */; };
 		DC0605EF620D34198D3675CE /* BTHDAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */; };
 		DC073EE10E489253F4B78085 /* BTHDAccountAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */; };
 		DC0DBD8D12BE90ECCEF6DD20 /* BTTxHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */; };
-		DC0ECB14B2E83351D83C609A /* BTHDAccountProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */; };
+		DC0ECB14B2E83351D83C609A /* BTHDAccountAddressProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = DC001BACAA54C62C76AAB85C /* BTHDAccountAddressProvider.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -188,6 +191,7 @@
 		D61D00B09F644732354D570E /* BTCompressingLogFileManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTCompressingLogFileManager.h; sourceTree = "<group>"; };
 		D61D00CBB6E0D8F1874535E2 /* BTAddressTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTAddressTest.m; sourceTree = "<group>"; };
 		D61D010D3A723E51A5306A15 /* BTSendTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTSendTest.m; sourceTree = "<group>"; };
+		D61D01512D206926CB5971FF /* BTHDAccountProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountProvider.m; sourceTree = "<group>"; };
 		D61D015C0C2353B7CEC8A469 /* BTBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBlock.h; sourceTree = "<group>"; };
 		D61D015C8A7EC662AA9AE7D2 /* BTPeerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTPeerTest.m; sourceTree = "<group>"; };
 		D61D01927FA94CD5A414DA09 /* BTScriptBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTScriptBuilder.h; sourceTree = "<group>"; };
@@ -258,6 +262,7 @@
 		D61D0A53456E024C047459AD /* copy.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = copy.sh; sourceTree = "<group>"; };
 		D61D0AF4412BF48A619BCCEF /* 1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR.tx */ = {isa = PBXFileReference; lastKnownFileType = file.tx; path = 1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR.tx; sourceTree = "<group>"; };
 		D61D0B120A111EE05FFACBA3 /* BTHDMAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDMAddress.h; sourceTree = "<group>"; };
+		D61D0B21FEE07424977746DE /* BTHDAccountProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountProvider.h; sourceTree = "<group>"; };
 		D61D0B24F7188664C434DD0B /* BTBlockTestData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBlockTestData.h; sourceTree = "<group>"; };
 		D61D0B6A8B753DA1D30565E3 /* BTBlockChainTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBlockChainTest.m; sourceTree = "<group>"; };
 		D61D0BA1B218CB178D277C72 /* BTScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTScript.h; sourceTree = "<group>"; };
@@ -312,10 +317,10 @@
 		DADE54131933420300F5E4DD /* BitheriTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BitheriTests.m; sourceTree = "<group>"; };
 		DADE541D19334C8600F5E4DD /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		DADE541F19334C8B00F5E4DD /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountProvider.m; sourceTree = "<group>"; };
+		DC001BACAA54C62C76AAB85C /* BTHDAccountAddressProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountAddressProvider.m; sourceTree = "<group>"; };
 		DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccount.m; sourceTree = "<group>"; };
 		DC083E83A1C24D8FD272ECAD /* BTTxHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTTxHelper.h; sourceTree = "<group>"; };
-		DC09346C00FC6D166E484CD8 /* BTHDAccountProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountProvider.h; sourceTree = "<group>"; };
+		DC09346C00FC6D166E484CD8 /* BTHDAccountAddressProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountAddressProvider.h; sourceTree = "<group>"; };
 		DC0AADED4BF8AC44411A06DF /* BTHDAccountAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountAddress.h; sourceTree = "<group>"; };
 		DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTTxHelper.m; sourceTree = "<group>"; };
 		DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountAddress.m; sourceTree = "<group>"; };
@@ -327,6 +332,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DAE212F41B43AC1E00EBB760 /* libz.dylib in Frameworks */,
 				DADE542019334C8B00F5E4DD /* CoreGraphics.framework in Frameworks */,
 				DADE53F81933420300F5E4DD /* Foundation.framework in Frameworks */,
 				983833E3E62E487BB1A66946 /* libPods.a in Frameworks */,
@@ -509,10 +515,12 @@
 				D61D003069DDF2FC7F735AB0 /* BTPeerProvider.h */,
 				D61D041D48238458B84136C8 /* BTAddressProvider.m */,
 				D61D05E3B90DE13EE2D64501 /* BTAddressProvider.h */,
-				DC001BACAA54C62C76AAB85C /* BTHDAccountProvider.m */,
-				DC09346C00FC6D166E484CD8 /* BTHDAccountProvider.h */,
+				DC001BACAA54C62C76AAB85C /* BTHDAccountAddressProvider.m */,
+				DC09346C00FC6D166E484CD8 /* BTHDAccountAddressProvider.h */,
 				DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */,
 				DC083E83A1C24D8FD272ECAD /* BTTxHelper.h */,
+				D61D01512D206926CB5971FF /* BTHDAccountProvider.m */,
+				D61D0B21FEE07424977746DE /* BTHDAccountProvider.h */,
 			);
 			path = DatabaseProviders;
 			sourceTree = "<group>";
@@ -873,10 +881,11 @@
 				D61D0F1510BE313FA122AE97 /* BTHDMAddress.m in Sources */,
 				D61D0E06C49C62BA68C71A16 /* BTHDMKeychain.m in Sources */,
 				D61D03664AB5C571267EBBC6 /* BTEncryptData.m in Sources */,
-				DC0ECB14B2E83351D83C609A /* BTHDAccountProvider.m in Sources */,
+				DC0ECB14B2E83351D83C609A /* BTHDAccountAddressProvider.m in Sources */,
 				DC00C6BF008CEE40148AB07B /* BTHDAccountAddress.m in Sources */,
 				DC0605EF620D34198D3675CE /* BTHDAccount.m in Sources */,
 				DC01C63E5CF9D73A26C76B5B /* BTTxHelper.m in Sources */,
+				D61D0EB6432F204B3CAE3F5F /* BTHDAccountProvider.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -951,10 +960,11 @@
 				D61D06C89453041ECC15ED43 /* BTKeyTest.m in Sources */,
 				D61D0FF780726FADBB6D678B /* BTBip38Test.m in Sources */,
 				1BC27BE1564E006216779DD1 /* DiceTest.m in Sources */,
-				DC00D4D7A771A9FB31B51D94 /* BTHDAccountProvider.m in Sources */,
+				DC00D4D7A771A9FB31B51D94 /* BTHDAccountAddressProvider.m in Sources */,
 				DC073EE10E489253F4B78085 /* BTHDAccountAddress.m in Sources */,
 				DC01DD5DBAA5C78F9DB95FCB /* BTHDAccount.m in Sources */,
 				DC0DBD8D12BE90ECCEF6DD20 /* BTTxHelper.m in Sources */,
+				D61D00BA4D46241DE09D31AD /* BTHDAccountProvider.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1047,6 +1057,7 @@
 				DSTROOT = /tmp/Bitheri.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Bitheri/Bitheri-Prefix.pch";
+				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1060,6 +1071,7 @@
 				DSTROOT = /tmp/Bitheri.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Bitheri/Bitheri-Prefix.pch";
+				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

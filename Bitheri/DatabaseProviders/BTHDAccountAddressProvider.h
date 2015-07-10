@@ -28,11 +28,11 @@
 
 - (void)addAddress:(NSArray *)array;
 
-- (int)getIssuedIndexByHDAccountId:(int)hdAccountId index:(PathType)path;
+- (int)getIssuedIndexByHDAccountId:(int)hdAccountId pathType:(PathType)path;
 
 - (int)getGeneratedAddressCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
-- (void)updateIssuedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;
+- (void)updateIssuedByHDAccountId:(int)hdAccountId pathType:(PathType)pathType index:(int)index;
 
 - (NSString *)getExternalAddress:(int)hdAccountId;
 

@@ -528,7 +528,7 @@
         NSMutableArray *outList = [NSMutableArray new];
         NSMutableArray *hdAddresses = [NSMutableArray new];
         if (self.hasHDAccount) {
-            [hdAddresses addObjectsFromArray:[self.hdAccount getBelongAccountAddressesFromAdresses:tx.getOutAddressList].allObjects];
+            [hdAddresses addObjectsFromArray:[self.hdAccount getBelongAccountAddressesFromAddresses:tx.getOutAddressList].allObjects];
         }
         for (BTOut *out in tx.outs) {
             NSString *outAddress = out.outAddress;

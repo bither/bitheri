@@ -58,7 +58,7 @@
 
 }
 
-- (int)getIssuedIndexByHDAccountId:(int)hdAccountId index:(PathType)path; {
+- (int)getIssuedIndexByHDAccountId:(int)hdAccountId pathType:(PathType)path; {
     __block int issuedIndex = -1;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select ifnull(max(address_index),-1) address_index from hd_account_addresses where path_type=? and is_issued=? and hd_account_id=? ";
@@ -86,7 +86,7 @@
     return count;
 }
 
-- (void)updateIssuedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;{
+- (void)updateIssuedByHDAccountId:(int)hdAccountId pathType:(PathType)pathType index:(int)index;{
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update hd_account_addresses set is_issued=? where path_type=? and address_index<=? and hd_account_id=?";
         [db executeUpdate:sql, @(YES), @(pathType), @(index), @(hdAccountId)];

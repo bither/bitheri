@@ -36,7 +36,7 @@
 
 - (instancetype)initWithSeedId:(int)seedId;
 
-- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addresses;
+- (NSSet *)getBelongAccountAddressesFromAddresses:(NSArray *)addresses;
 
 - (NSString *)getQRCodeFullEncryptPrivKey;
 

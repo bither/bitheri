@@ -751,7 +751,7 @@
 
 - (int64_t)deltaAmountFromHDAccount:(BTHDAccount *)account {
     int64_t receive = 0;
-    NSSet *set = [account getBelongAccountAddressesFromAdresses:[self getOutAddressList]];
+    NSSet *set = [account getBelongAccountAddressesFromAddresses:[self getOutAddressList]];
     for (BTOut *out in [self outs]) {
         if ([set containsObject:out.outAddress]) {
             receive += out.outValue;

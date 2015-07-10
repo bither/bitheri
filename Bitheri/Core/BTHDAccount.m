@@ -265,7 +265,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSArray *)getSigningAddressesForInputs:(NSArray *)inputs {
-    return [[BTHDAccountAddressProvider instance] getSigningAddressesForInputs:inputs];
+    return [[BTHDAccountAddressProvider instance] getSigningAddressesByHDAccountId:self.hdAccountId fromInputs:inputs];
 }
 
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete {
@@ -303,11 +303,11 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSString *)address {
-    return [[BTHDAccountAddressProvider instance] externalAddress];
+    return [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId];
 }
 
 - (void)updateBalance {
-    _balance = [[BTHDAccountAddressProvider instance] getHDAccountConfirmedBanlance:self.hdAccountId] + [self calculateUnconfirmedBalance];
+    _balance = [[BTHDAccountAddressProvider instance] getHDAccountConfirmedBalance:self.hdAccountId] + [self calculateUnconfirmedBalance];
 }
 
 - (uint64_t)calculateUnconfirmedBalance {
@@ -315,7 +315,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSMutableOrderedSet *utxos = [NSMutableOrderedSet orderedSet];
     NSMutableSet *spentOutputs = [NSMutableSet set], *invalidTx = [NSMutableSet set];
 
-    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTHDAccountAddressProvider instance] getHDAccountUnconfirmedTx]];
+    NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTHDAccountAddressProvider instance] getHDAccountUnconfirmedTx:self.hdAccountId]];
     [txs sortUsingComparator:hdTxComparator];
 
     for (BTTx *tx in [txs reverseObjectEnumerator]) {
@@ -338,7 +338,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
         [spentOutputs unionSet:spent]; // add inputs to spent output set
 
-        NSSet *addressSet = [self getBelongAccountAddressesFromAdresses:[tx getOutAddressList]];
+        NSSet *addressSet = [self getBelongAccountAddressesFromAddresses:[tx getOutAddressList]];
         for (BTOut *out in tx.outs) { // add outputs to UTXO set
             if ([addressSet containsObject:out.outAddress]) {
                 [utxos addObject:getOutPoint(tx.txHash, out.outSn)];
@@ -446,7 +446,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter {
-    NSArray *pubs = [[BTHDAccountAddressProvider instance] getPubs:EXTERNAL_ROOT_PATH];
+    NSArray *pubs = [[BTHDAccountAddressProvider instance] getPubsByHDAccountId:self.hdAccountId pathType:EXTERNAL_ROOT_PATH];
     for (NSData *pub in pubs) {
         [filter insertData:pub];
         [filter insertData:[[BTKey alloc] initWithPublicKey:pub].address.addressToHash160];
@@ -458,31 +458,31 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSInteger)issuedInternalIndex {
-    return [[BTHDAccountAddressProvider instance] issuedIndex:INTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getIssuedIndexByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
 }
 
 - (NSInteger)issuedExternalIndex {
-    return [[BTHDAccountAddressProvider instance] issuedIndex:EXTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getIssuedIndexByHDAccountId:self.hdAccountId pathType:EXTERNAL_ROOT_PATH];
 }
 
 - (NSUInteger)allGeneratedInternalAddressCount {
-    return [[BTHDAccountAddressProvider instance] allGeneratedAddressCount:INTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getGeneratedAddressCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
 }
 
 - (NSUInteger)allGeneratedExternalAddressCount {
-    return [[BTHDAccountAddressProvider instance] allGeneratedAddressCount:EXTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getGeneratedAddressCountByHDAccountId:self.hdAccountId pathType:EXTERNAL_ROOT_PATH];
 }
 
 - (BTHDAccountAddress *)addressForPath:(PathType)path atIndex:(NSUInteger)index {
-    return [[BTHDAccountAddressProvider instance] addressForPath:path index:index];
+    return [[BTHDAccountAddressProvider instance] getAddressByHDAccountId:self.hdAccountId path:path index:index];
 }
 
 - (void)updateIssuedInternalIndex:(int)index {
-    [[BTHDAccountAddressProvider instance] updateIssuedIndex:INTERNAL_ROOT_PATH index:index];
+    [[BTHDAccountAddressProvider instance] updateIssuedByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH index:index];
 }
 
 - (void)updateIssuedExternalIndex:(int)index {
-    [[BTHDAccountAddressProvider instance] updateIssuedIndex:EXTERNAL_ROOT_PATH index:index];
+    [[BTHDAccountAddressProvider instance] updateIssuedByHDAccountId:self.hdAccountId pathType:EXTERNAL_ROOT_PATH index:index];
 }
 
 - (NSString *)getNewChangeAddress {
@@ -490,20 +490,20 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)updateSyncComplete:(BTHDAccountAddress *)address {
-    [[BTHDAccountAddressProvider instance] updateSyncdComplete:address];
+    [[BTHDAccountAddressProvider instance] updateSyncedCompleteByHDAccountId:self.hdAccountId address:address];
 }
 
 - (BOOL)isSyncComplete {
-    int unsyncedAddressCount = [BTHDAccountAddressProvider instance].unSyncedAddressCount;
+    int unsyncedAddressCount = [[BTHDAccountAddressProvider instance] getUnSyncedAddressCount:self.hdAccountId];
     return unsyncedAddressCount == 0;
 }
 
 - (uint32_t)txCount {
-    return [[BTHDAccountAddressProvider instance] hdAccountTxCount];
+    return [[BTHDAccountAddressProvider instance] getHDAccountTxCount:self.hdAccountId];
 }
 
 - (BTTx *)recentlyTx {
-    NSArray *txs = [[BTHDAccountAddressProvider instance] getRecentlyTxsByAccount:[BTBlockChain instance].lastBlock.blockNo - 6 + 1 limit:1];
+    NSArray *txs = [[BTHDAccountAddressProvider instance] getRecentlyTxsByHDAccount:self.hdAccountId blockNo:[BTBlockChain instance].lastBlock.blockNo - 6 + 1 limit:1];
     if (txs && txs.count > 0) {
         return txs[0];
     }
@@ -525,7 +525,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (NSArray *)getRelatedAddressesForTx:(BTTx *)tx {
     NSMutableArray *outAddressList = [tx getOutAddressList];
     NSMutableArray *hdAccountAddressList = [NSMutableArray new];
-    NSArray *belongAccountOfOutList = [[BTHDAccountAddressProvider instance] belongAccount:outAddressList];
+    NSArray *belongAccountOfOutList = [[BTHDAccountAddressProvider instance] getBelongHDAccount:self.hdAccountId fromAddresses:outAddressList];
     if (belongAccountOfOutList && belongAccountOfOutList.count > 0) {
         [hdAccountAddressList addObjectsFromArray:belongAccountOfOutList];
     }
@@ -542,13 +542,13 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [self getRelatedAddressesForTx:tx].count > 0;
 }
 
-- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addresses {
-    return [[BTHDAccountAddressProvider instance] getBelongAccountAddressesFromAdresses:addresses];
+- (NSSet *)getBelongAccountAddressesFromAddresses:(NSArray *)addresses {
+    return [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromAddresses:addresses];
 }
 
 - (NSArray *)getAddressFromIn:(BTTx *)tx {
     NSArray *addresses = [tx getInAddresses];
-    return [[BTHDAccountAddressProvider instance] belongAccount:addresses];
+    return [[BTHDAccountAddressProvider instance] getBelongHDAccount:self.hdAccountId fromAddresses:addresses];
 }
 
 - (BOOL)isSendFromMe:(BTTx *)tx {

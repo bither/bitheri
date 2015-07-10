@@ -15,65 +15,34 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-
 #import <Foundation/Foundation.h>
-#import "BTHDAccountAddress.h"
-#import "BTDatabaseManager.h"
-
 
 @interface BTHDAccountProvider : NSObject
 
 + (instancetype)instance;
 
-- (void)addAddress:(NSArray *)array;
+- (int)addHDAccountWithEncryptedMnemonicSeed:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
+                                firstAddress:(NSString *)firstAddress isXRandom:(BOOL)isXRandom
+                             encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPS
+                                 externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;
 
-- (int)issuedIndex:(PathType)path;
+- (int)addMonitoredHDAccount:(NSString *)firstAddress isXRandom:(int)isXRandom externalPub:(NSData *)externalPub
+                 internalPub:(NSData *)internalPub;
 
-- (int)allGeneratedAddressCount:(PathType)pathType;
+- (BOOL)hasMnemonicSeed:(int)hdAccountId;
 
-- (void)updateIssuedIndex:(PathType)pathType index:(int)index;
+- (NSString *)getHDFirstAddress:(int)hdAccountId;
 
-- (NSString *)externalAddress;
+- (NSData *)getExternalPub:(int)hdAccountId;
 
-- (BTHDAccountAddress *)addressForPath:(PathType)type index:(int)index;
+- (NSData *)getInternalPub:(int)hdAccountId;
 
-- (NSArray *)getPubs:(PathType)pathType;
+- (NSString *)getHDAccountEncryptSeed:(int)hdAccountId;
 
-- (NSArray *)belongAccount:(NSArray *)addresses;
+- (NSString *)getHDAccountEncryptMnemonicSeed:(int)hdAccountId;
 
-- (void)updateSyncdComplete:(BTHDAccountAddress *)address;
+- (BOOL)hdAccountIsXRandom:(int)hdAccountId;
 
-- (void)setSyncdNotComplete;
-
-- (int)unSyncedAddressCount;
-
-- (int)unSyncedCountOfPath:(PathType)pathType;
-
-- (void)updateSyncdForIndex:(PathType)pathType index:(int)index;
-
-- (NSArray *)getSigningAddressesForInputs:(NSArray *)inList;
-
-- (int)hdAccountTxCount;
-
-- (uint64_t)getHDAccountConfirmedBanlance:(int)hdAccountId;
-
-- (NSArray *)getHDAccountUnconfirmedTx;
-
-- (uint64_t)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash;
-
-- (NSArray *)getTxAndDetailByHDAccount:(int)page;
-
-- (NSArray *)getUnspendOutByHDAccount:(int)hdAccountId;
-
-- (NSArray *)getRecentlyTxsByAccount:(int)greateThanBlockNo limit:(int)limit;
-
-- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList;
-
-- (NSSet *)getBelongAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList;
-
-- (int)getUnspendOutCountByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType;
-
-- (NSArray *)getUnspendOutByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType;
+- (NSArray *)getHDAccountSeeds;
 
 @end

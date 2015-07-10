@@ -19,7 +19,7 @@
 #import "BTTxProvider.h"
 #import "BTIn.h"
 #import "BTTxHelper.h"
-#import "BTHDAccountProvider.h"
+#import "BTHDAccountAddressProvider.h"
 #import "BTAddressManager.h"
 
 @implementation BTTxProvider {
@@ -314,7 +314,7 @@
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // insert tx record
         [db beginTransaction];
-        NSSet *addressSet = [[BTHDAccountProvider instance] getBelongAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
+        NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
         for (BTOut *out in txItem.outs) {
             if ([addressSet containsObject:out.outAddress]) {
                 out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
@@ -394,7 +394,7 @@
         // insert tx record
         [db beginTransaction];
         for (BTTx *txItem in txs) {
-            NSSet *addressSet = [[BTHDAccountProvider instance] getBelongAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
+            NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
             for (BTOut *out in txItem.outs) {
                 if ([addressSet containsObject:out.outAddress]) {
                     out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];

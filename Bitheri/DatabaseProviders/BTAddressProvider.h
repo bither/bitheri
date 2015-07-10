@@ -21,6 +21,7 @@
 #import "BTHDMKeychain.h"
 #import "BTAddress.h"
 #import "BTPasswordSeed.h"
+#import "BTDatabaseManager.h"
 
 @interface BTAddressProvider : NSObject
 
@@ -34,6 +35,8 @@
 
 - (BOOL)hasPasswordSeed;
 
++ (BOOL)addPasswordSeedWithPasswordSeed:(BTPasswordSeed *)passwordSeed andDB:(FMDatabase *)db;
+
 #pragma mark - hdm
 
 - (NSArray *)getHDSeedIds;
@@ -42,8 +45,8 @@
 
 - (NSString *)getEncryptHDSeed:(int)hdSeedId;
 
-//- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptHDSeed:(NSString *)encryptHDSeed;
-//- (void)updateHDSeedWithHDSeedId:(int)hdSeedId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
+//- (void)updateHDSeedWithHDSeedId:(int)hdAccountId andEncryptHDSeed:(NSString *)encryptHDSeed;
+//- (void)updateHDSeedWithHDSeedId:(int)hdAccountId andEncryptSeed:(NSString *)encryptSeed andEncryptHDSeed:(NSString *)encryptHDSeed;
 - (BOOL)isHDSeedFromXRandom:(int)hdSeedId;
 
 - (NSString *)getHDMFirstAddress:(int)hdSeedId;
@@ -111,23 +114,23 @@
 
 #pragma mark - hd account
 
-- (int)addHDAccount:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
-       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPs
-        externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;
-
-- (NSData *)getExternalPub:(int)hdSeedid;
-
-- (NSData *)getInternalPub:(int)hdSeedid;
-
-- (NSString *)getHDAccountEncryptSeed:(int)hdSeedId;
-
-- (NSString *)getHDAccountEncryptMnmonicSeed:(int)hdSeedId;
-
-- (NSArray *)getHDAccountSeeds;
-
-- (NSString *)getHDAccountFristAddress:(int)seedId;
-
-- (BOOL)hdAccountIsXRandom:(int)seedId;
+//- (int)addHDAccount:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
+//       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPs
+//        externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;
+//
+//- (NSData *)getExternalPub:(int)hdSeedid;
+//
+//- (NSData *)getInternalPub:(int)hdSeedid;
+//
+//- (NSString *)getHDAccountEncryptSeed:(int)hdAccountId;
+//
+//- (NSString *)getHDAccountEncryptMnmonicSeed:(int)hdAccountId;
+//
+//- (NSArray *)getHDAccountSeeds;
+//
+//- (NSString *)getHDAccountFristAddress:(int)seedId;
+//
+//- (BOOL)hdAccountIsXRandom:(int)seedId;
 
 
 @end

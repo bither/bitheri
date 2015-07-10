@@ -22,6 +22,7 @@
 #import "BTIn.h"
 #import "BTQRCodeUtil.h"
 #import "BTAddressProvider.h"
+#import "BTHDAccountProvider.h"
 
 @interface BTAddressManager () <BTHDMAddressChangeDelegate> {
     BTHDMKeychain *_hdmKeychain;
@@ -101,7 +102,7 @@
 }
 
 - (void)initHDAccount {
-    NSArray *seeds = [[BTAddressProvider instance] getHDAccountSeeds];
+    NSArray *seeds = [[BTHDAccountProvider instance] getHDAccountSeeds];
     if (seeds && seeds.count > 0) {
         _hdAccount = [[BTHDAccount alloc] initWithSeedId:((NSNumber *) seeds[0]).intValue];
     }

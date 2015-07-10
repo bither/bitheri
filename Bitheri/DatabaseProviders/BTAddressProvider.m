@@ -16,7 +16,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #import "BTAddressProvider.h"
-#import "BTDatabaseManager.h"
 #import "BTEncryptData.h"
 #import "BTQRCodeUtil.h"
 
@@ -219,7 +218,7 @@
     return hasPasswordSeed;
 }
 
-- (BOOL)addPasswordSeedWithPasswordSeed:(BTPasswordSeed *)passwordSeed andDB:(FMDatabase *)db {
++ (BOOL)addPasswordSeedWithPasswordSeed:(BTPasswordSeed *)passwordSeed andDB:(FMDatabase *)db {
     NSString *sql = @"select ifnull(count(0),0) from password_seed";
     FMResultSet *rs = [db executeQuery:sql];
     BOOL isExist = YES;
@@ -346,7 +345,7 @@
         [db beginTransaction];
         BOOL success = [db executeUpdate:sql, encryptMnemonicSeed, encryptHDSeed, firstAddress, (isXRandom ? @1 : @0)];
         if (addressOfPs != nil) {
-            success &= [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPs andEncryptStr:encryptMnemonicSeed] andDB:db];
+            success &= [BTAddressProvider addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPs andEncryptStr:encryptMnemonicSeed] andDB:db];
         }
         sql = @"select hd_seed_id from hd_seeds order by hd_seed_id desc limit 1";
         FMResultSet *rs = [db executeQuery:sql, @(hdSeedId)];
@@ -393,7 +392,7 @@
             sql = @"insert into hdm_bid(hdm_bid,encrypt_bither_password) values(?,?)";
             [db beginTransaction];
             success &= [db executeUpdate:sql, hdmBid.address, hdmBid.encryptedBitherPassword];
-            success &= [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPS
+            success &= [BTAddressProvider addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPS
                                                                                        andEncryptStr:hdmBid.encryptedBitherPassword]
                                                        andDB:db];
             if (success) {
@@ -626,7 +625,7 @@
             NSString *str = [BTEncryptData encryptedString:address.encryptPrivKeyForCreate
                                            addIsCompressed:address.pubKey.length < 65
                                               andIsXRandom:address.isFromXRandom];
-            success &= [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:address.address andEncryptStr:str] andDB:db];
+            success &= [BTAddressProvider addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:address.address andEncryptStr:str] andDB:db];
         }
         if (success) {
             [db commit];
@@ -650,7 +649,7 @@
                     , @(address.isSyncComplete), @(address.sortTime)];
         }
         if (passwordSeed != nil) {
-            success &= [self addPasswordSeedWithPasswordSeed:passwordSeed andDB:db];
+            success &= [BTAddressProvider addPasswordSeedWithPasswordSeed:passwordSeed andDB:db];
         }
 
         if (success) {
@@ -806,7 +805,7 @@
 #pragma mark - hd account
 
 - (int)addHDAccount:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
-       firstAddress:(NSString *)firstAddress isXrandom:(BOOL)isXrandom encryptSeedOfPS:(NSString *)encryptSeedOfPs
+       firstAddress:(NSString *)firstAddress isXRandom:(BOOL)isXRandom encryptSeedOfPS:(NSString *)encryptSeedOfPs
         addressOfPS:(NSString *)addressOfPs
         externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub {
     __block int hdAccountId = 0;
@@ -817,9 +816,9 @@
                 " values(?,?,?,?,?,?)";
         BOOL success = [db executeUpdate:sql, encryptedMnemonicSeed, encryptSeed, firstAddress
                 , [NSString base58WithData:externalPub], [NSString base58WithData:internalPub]
-                , @(isXrandom)];
+                , @(isXRandom)];
         if (addressOfPs != nil) {
-            success &= [self addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPs andEncryptStr:encryptSeedOfPs] andDB:db];
+            success &= [BTAddressProvider addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:addressOfPs andEncryptStr:encryptSeedOfPs] andDB:db];
         }
         sql = @"select hd_account_id from hd_account order by hd_account_id desc limit 1";
         FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];

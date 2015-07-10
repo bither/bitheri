@@ -18,4 +18,31 @@
 #import <Foundation/Foundation.h>
 
 @interface BTHDAccountProvider : NSObject
+
++ (instancetype)instance;
+
+- (int)addHDAccountWithEncryptedMnemonicSeed:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
+                                firstAddress:(NSString *)firstAddress isXRandom:(BOOL)isXRandom
+                             encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPS
+                                 externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;
+
+- (int)addMonitoredHDAccount:(NSString *)firstAddress isXRandom:(int)isXRandom externalPub:(NSData *)externalPub
+                 internalPub:(NSData *)internalPub;
+
+- (BOOL)hasMnemonicSeed:(int)hdAccountId;
+
+- (NSString *)getHDFirstAddress:(int)hdAccountId;
+
+- (NSData *)getExternalPub:(int)hdAccountId;
+
+- (NSData *)getInternalPub:(int)hdAccountId;
+
+- (NSString *)getHDAccountEncryptSeed:(int)hdAccountId;
+
+- (NSString *)getHDAccountEncryptMnemonicSeed:(int)hdAccountId;
+
+- (BOOL)hdAccountIsXRandom:(int)hdAccountId;
+
+- (NSArray *)getHDAccountSeeds;
+
 @end

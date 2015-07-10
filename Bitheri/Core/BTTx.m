@@ -757,7 +757,7 @@
             receive += out.outValue;
         }
     }
-    int64_t sent = [[BTHDAccountAddressProvider instance] sentFromAccount:[account getHDAccountId] txHash:self.txHash];
+    int64_t sent = [[BTHDAccountAddressProvider instance] getAmountSentFromHDAccount:[account getHDAccountId] txHash:self.txHash];
     return receive - sent;
 }
 

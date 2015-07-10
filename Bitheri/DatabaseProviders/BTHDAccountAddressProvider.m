@@ -31,7 +31,7 @@
 #define PUB @"pub"
 #define IS_SYNCED @"is_synced"
 
-#define IN_QUERY_TX_HDACCOUNT  @" (select  distinct txs.tx_hash from addresses_txs txs ,hd_account_addresses hd where txs.address=hd.address)"
+//#define IN_QUERY_TX_HDACCOUNT  @" (select  distinct txs.tx_hash from addresses_txs txs ,hd_account_addresses hd where txs.address=hd.address)"
 
 @implementation BTHDAccountAddressProvider {
 
@@ -58,11 +58,11 @@
 
 }
 
-- (int)issuedIndex:(PathType)path {
+- (int)getIssuedIndexByHDAccountId:(int)hdAccountId index:(PathType)path; {
     __block int issuedIndex = -1;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select ifnull(max(address_index),-1) address_index from hd_account_addresses where path_type=? and is_issued=? ";
-        FMResultSet *resultSet = [db executeQuery:sql, @(path), @(YES)];
+        NSString *sql = @"select ifnull(max(address_index),-1) address_index from hd_account_addresses where path_type=? and is_issued=? and hd_account_id=? ";
+        FMResultSet *resultSet = [db executeQuery:sql, @(path), @(YES), @(hdAccountId)];
         if ([resultSet next]) {
             issuedIndex = [resultSet intForColumnIndex:0];
         }
@@ -72,11 +72,11 @@
     return issuedIndex;
 }
 
-- (int)allGeneratedAddressCount:(PathType)pathType {
+- (int)getGeneratedAddressCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;{
     __block int count = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select ifnull(count(address),0) count  from hd_account_addresses where path_type=?  ";
-        FMResultSet *resultSet = [db executeQuery:sql, @(pathType)];
+        NSString *sql = @"select ifnull(count(address),0) count  from hd_account_addresses where path_type=? and hd_account_id=? ";
+        FMResultSet *resultSet = [db executeQuery:sql, @(pathType), @(hdAccountId)];
         if ([resultSet next]) {
             count = [resultSet intForColumnIndex:0];
         }
@@ -86,20 +86,19 @@
     return count;
 }
 
-- (void)updateIssuedIndex:(PathType)pathType index:(int)index {
+- (void)updateIssuedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;{
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"update hd_account_addresses set is_issued=? where path_type=? and address_index<=? ";
-        [db executeUpdate:sql, @(YES), @(pathType), @(index)];
-
+        NSString *sql = @"update hd_account_addresses set is_issued=? where path_type=? and address_index<=? and hd_account_id=?";
+        [db executeUpdate:sql, @(YES), @(pathType), @(index), @(hdAccountId)];
     }];
 }
 
-- (NSString *)externalAddress {
+- (NSString *)getExternalAddress:(int)hdAccountId; {
     __block NSString *address;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select address from hd_account_addresses"
-                " where path_type=? and is_issued=? order by address_index asc limit 1  ";
-        FMResultSet *resultSet = [db executeQuery:sql, @(EXTERNAL_ROOT_PATH), @(NO)];
+                " where path_type=? and is_issued=? and hd_account_id=? order by address_index asc limit 1  ";
+        FMResultSet *resultSet = [db executeQuery:sql, @(EXTERNAL_ROOT_PATH), @(NO), @(hdAccountId)];
         if ([resultSet next]) {
             address = [resultSet stringForColumnIndex:0];
         }
@@ -109,12 +108,12 @@
     return address;
 }
 
-- (BTHDAccountAddress *)addressForPath:(PathType)type index:(int)index {
+- (BTHDAccountAddress *)getAddressByHDAccountId:(int)hdAccountId path:(PathType)type index:(int)index;{
     __block BTHDAccountAddress *address;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select address,pub,path_type,address_index,is_issued,is_synced "
-                " from hd_account_addresses where path_type=? and address_index=? ";
-        FMResultSet *rs = [db executeQuery:sql, @(type), @(index)];
+                " from hd_account_addresses where path_type=? and address_index=? and hd_account_id=? ";
+        FMResultSet *rs = [db executeQuery:sql, @(type), @(index), @(hdAccountId)];
         if ([rs next]) {
             address = [self formatAddress:rs];
         }
@@ -124,11 +123,11 @@
     return address;
 }
 
-- (NSArray *)getPubs:(PathType)pathType {
+- (NSArray *)getPubsByHDAccountId:(int)hdAccountId pathType:(PathType)pathType; {
     __block NSMutableArray *array = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select pub from hd_account_addresses where path_type=? ";
-        FMResultSet *rs = [db executeQuery:sql, @(pathType)];
+        NSString *sql = @"select pub from hd_account_addresses where path_type=? and hd_account_id=? ";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(hdAccountId)];
         while ([rs next]) {
             int columnIndex = [rs columnIndexForName:@"pub"];
 
@@ -141,12 +140,29 @@
         }
         [rs close];
     }];
-
     return array;
 }
 
-- (NSArray *)belongAccount:(NSArray *)addresses {
+- (NSArray *)getBelongHDAccount:(int)hdAccountId fromAddresses:(NSArray *)addresses; {
+    __block NSMutableArray *mutableArray = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSMutableArray *temp = [NSMutableArray new];
+        for (NSString *str in addresses) {
+            [temp addObject:[NSString stringWithFormat:@"'%@'", str]];
+        }
+        NSString *sql = @"select address,pub,path_type,address_index,is_issued,is_synced "
+                "from hd_account_addresses  where address in (%@) and hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]], @(hdAccountId)];
+        while ([rs next]) {
+            [mutableArray addObject:[self formatAddress:rs]];
+        }
+        [rs close];
+    }];
 
+    return mutableArray;
+}
+
+- (NSArray *)getBelongHDAccountFrom:(NSArray *)addresses; {
     __block NSMutableArray *mutableArray = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableArray *temp = [NSMutableArray new];
@@ -166,27 +182,26 @@
     return mutableArray;
 }
 
-- (void)updateSyncdComplete:(BTHDAccountAddress *)address {
+- (void)updateSyncedCompleteByHDAccountId:(int)hdAccountId address:(BTHDAccountAddress *)address; {
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"update hd_account_addresses set is_synced=? where address=? ";
-        [db executeUpdate:sql, @(address.isSyncedComplete), address.address];
+        NSString *sql = @"update hd_account_addresses set is_synced=? where address=? and hd_account_id=? ";
+        [db executeUpdate:sql, @(address.isSyncedComplete), address.address, @(hdAccountId)];
 
     }];
 }
 
-- (void)setSyncdNotComplete {
+- (void)setSyncedAllNotComplete; {
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"update hd_account_addresses set is_synced=? ";
         [db executeUpdate:sql, @(NO)];
-
     }];
 }
 
-- (int)unSyncedAddressCount {
+- (int)getUnSyncedAddressCount:(int)hdAccountId; {
     __block int count = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select count(address) cnt from hd_account_addresses where is_synced=? ";
-        FMResultSet *resultSet = [db executeQuery:sql, @(NO)];
+        NSString *sql = @"select count(address) cnt from hd_account_addresses where is_synced=? and hd_account_id=? ";
+        FMResultSet *resultSet = [db executeQuery:sql, @(NO), @(hdAccountId)];
         if ([resultSet next]) {
             count = [resultSet intForColumnIndex:0];
         }
@@ -211,25 +226,24 @@
 }
 
 
-- (void)updateSyncdForIndex:(PathType)pathType index:(int)index {
+- (void)updateSyncedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;{
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"update hd_account_addresses set is_synced=? where path_type=? and address_index>? ";
-        [db executeUpdate:sql, @(YES), @(pathType), @(index)];
-
+        NSString *sql = @"update hd_account_addresses set is_synced=? where path_type=? and address_index>? and hd_account_id=? ";
+        [db executeUpdate:sql, @(YES), @(pathType), @(index), @(hdAccountId)];
     }];
 }
 
-- (NSArray *)getSigningAddressesForInputs:(NSArray *)inList {
+- (NSArray *)getSigningAddressesByHDAccountId:(int)hdAccountId fromInputs:(NSArray *)inList; {
 
     __block NSMutableArray *array = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.address,a.path_type,a.address_index,a.is_synced"
                 " from hd_account_addresses a ,outs b"
                 " where a.address=b.out_address"
-                " and b.tx_hash=? and b.out_sn=? ";
+                " and b.tx_hash=? and b.out_sn=? and a.hd_account_id=?";
 
         for (BTIn *btIn in  inList) {
-            FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:btIn.prevTxHash], @(btIn.prevOutSn)];
+            FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:btIn.prevTxHash], @(btIn.prevOutSn), @(hdAccountId)];
             while ([rs next]) {
                 [array addObject:[self formatAddress:rs]];
 
@@ -241,11 +255,11 @@
     return array;
 }
 
-- (int)hdAccountTxCount {
+- (int)getHDAccountTxCount:(int)hdAccountId; {
     __block int count = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select count( distinct a.tx_hash) cnt from addresses_txs a ,hd_account_addresses b where a.address=b.address  ";
-        FMResultSet *resultSet = [db executeQuery:sql];
+        NSString *sql = @"select count( distinct a.tx_hash) cnt from addresses_txs a ,hd_account_addresses b where a.address=b.address and b.hd_account_id=? ";
+        FMResultSet *resultSet = [db executeQuery:sql, @(hdAccountId)];
         if ([resultSet next]) {
             count = [resultSet intForColumnIndex:0];
         }
@@ -256,23 +270,22 @@
 }
 
 
-- (uint64_t)getHDAccountConfirmedBanlance:(int)hdAccountId {
+- (uint64_t)getHDAccountConfirmedBalance:(int)hdAccountId; {
 
-    __block long long banlance = 0;
+    __block long long balance = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @" select ifnull(sum(a.out_value),0) sum from outs a,txs b where a.tx_hash=b.tx_hash "
                 "  and a.out_status=? and a.hd_account_id=? and b.block_no is not null";
         FMResultSet *resultSet = [db executeQuery:sql, @(unspent), @(hdAccountId)];
         if ([resultSet next]) {
-            banlance = [resultSet longLongIntForColumnIndex:0];
+            balance = [resultSet longLongIntForColumnIndex:0];
         }
         [resultSet close];
     }];
-
-    return banlance;
+    return (uint64_t) balance;
 }
 
-- (uint64_t)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash {
+- (uint64_t)getAmountSentFromHDAccount:(int)hdAccountId txHash:(NSData *)txHash; {
     __block uint64_t sum = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select  sum(o.out_value) out_value from ins i,outs o where"
@@ -282,7 +295,6 @@
             if ([resultSet columnIndexForName:@"out_value"] >= 0) {
                 sum = (uint64_t) [resultSet longLongIntForColumn:@"out_value"];
             }
-
         }
         [resultSet close];
     }];
@@ -291,15 +303,15 @@
 }
 
 
-- (NSArray *)getHDAccountUnconfirmedTx {
+- (NSArray *)getHDAccountUnconfirmedTx:(int)hdAccountId; {
     __block NSMutableArray *txList = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableDictionary *txDict = [NSMutableDictionary new];
-        NSString *sql = [NSString stringWithFormat:
-                @"select * from txs where tx_hash in %@"
-                        " and  block_no is null "
-                        " order by block_no desc", IN_QUERY_TX_HDACCOUNT];
-        FMResultSet *rs = [db executeQuery:sql];
+        NSString *sql = @"select distinct a.* "
+                " from txs a,addresses_txs b,hd_account_addresses c"
+                " where a.tx_hash=b.tx_hash and b.address=c.address and c.hd_account_id=? and a.block_no is null"
+                " order by a.tx_hash";
+        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];
         while ([rs next]) {
             BTTx *tx = [BTTxHelper format:rs];
             tx.ins = [NSMutableArray new];
@@ -309,12 +321,12 @@
         }
         [rs close];
 
-        sql = [NSString stringWithFormat:
-                @"select b.tx_hash,b.in_sn,b.prev_tx_hash,b.prev_out_sn "
-                        " from ins b, txs c "
-                        " where c.tx_hash in %@ and b.tx_hash=c.tx_hash and c.block_no is null  "
-                        " order by b.tx_hash ,b.in_sn", IN_QUERY_TX_HDACCOUNT];
-        rs = [db executeQuery:sql];
+        sql = @"select distinct a.* "
+                " from ins a, txs b,addresses_txs c,hd_account_addresses d"
+                " where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.address=d.address"
+                "   and b.block_no is null and d.hd_account_id=?"
+                " order by a.tx_hash,a.in_sn";
+        rs = [db executeQuery:sql, @(hdAccountId)];
         while ([rs next]) {
             BTIn *in = [BTTxHelper formatIn:rs];
             BTTx *tx = txDict[in.txHash];
@@ -324,12 +336,12 @@
         }
         [rs close];
 
-        sql = [NSString stringWithFormat:
-                @"select b.* "
-                        " from  outs b, txs c "
-                        " where c.tx_hash in %@ and b.tx_hash=c.tx_hash and c.block_no is null  "
-                        " order by b.tx_hash,b.out_sn", IN_QUERY_TX_HDACCOUNT];
-        rs = [db executeQuery:sql];
+        sql = @"select distinct a.* "
+                " from outs a, txs b,addresses_txs c,hd_account_addresses d"
+                " where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.address=d.address"
+                "   and b.block_no is null and d.hd_account_id=?"
+                " order by a.tx_hash,a.out_sn";
+        rs = [db executeQuery:sql, @(hdAccountId)];
         while ([rs next]) {
             BTOut *out = [BTTxHelper formatOut:rs];
             BTTx *tx = txDict[out.txHash];
@@ -342,16 +354,15 @@
     return txList;
 }
 
-
-- (NSArray *)getTxAndDetailByHDAccount:(int)page {
+- (NSArray *)getTxAndDetailByHDAccount:(int)hdAccountId; {
     __block NSMutableArray *txs = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSMutableDictionary *txDict = [NSMutableDictionary new];
-        int start = (page - 1) * TX_PAGE_SIZE;
-        NSString *sql = [NSString stringWithFormat:
-                @" select * from txs where tx_hash in %@ order by"
-                        " ifnull(block_no,4294967295) desc limit ?,? ", IN_QUERY_TX_HDACCOUNT];
-        FMResultSet *rs = [db executeQuery:sql, @(start), @(TX_PAGE_SIZE)];
+        NSString *sql = @"select distinct a.* "
+                " from txs a,addresses_txs b,hd_account_addresses c"
+                " where a.tx_hash=b.tx_hash and b.address=c.address and c.hd_account_id=?"
+                " order by ifnull(block_no,4294967295) desc,a.tx_hash";
+        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];
         NSMutableString *txsStrBuilder = [NSMutableString new];
         while ([rs next]) {
             BTTx *txItem = [BTTxHelper format:rs];
@@ -391,7 +402,57 @@
     return txs;
 }
 
-- (NSArray *)getUnspendOutByHDAccount:(int)hdAccountId {
+- (NSArray *)getTxAndDetailByHDAccount:(int)hdAccountId page:(int)page; {
+    __block NSMutableArray *txs = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSMutableDictionary *txDict = [NSMutableDictionary new];
+        int start = (page - 1) * TX_PAGE_SIZE;
+        NSString *sql = @"select distinct a.* "
+                " from txs a,addresses_txs b,hd_account_addresses c"
+                " where a.tx_hash=b.tx_hash and b.address=c.address and c.hd_account_id=?"
+                " order by ifnull(block_no,4294967295) desc,a.tx_hash"
+                " limit ?,?";
+        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(start), @(TX_PAGE_SIZE)];
+        NSMutableString *txsStrBuilder = [NSMutableString new];
+        while ([rs next]) {
+            BTTx *txItem = [BTTxHelper format:rs];
+            txItem.ins = [NSMutableArray new];
+            txItem.outs = [NSMutableArray new];
+            [txs addObject:txItem];
+            txDict[txItem.txHash] = txItem;
+            [txsStrBuilder appendFormat:@"'%@',", [NSString base58WithData:txItem.txHash]];
+        }
+        [rs close];
+
+        if (txsStrBuilder.length > 1) {
+            NSString *txsStr = [txsStrBuilder substringToIndex:txsStrBuilder.length - 1];
+            sql = [NSString stringWithFormat:@"select b.* from ins b where b.tx_hash in (%@)"
+                                                     " order by b.tx_hash ,b.in_sn", txsStr];
+            rs = [db executeQuery:sql];
+            while ([rs next]) {
+                BTIn *inItem = [BTTxHelper formatIn:rs];
+                BTTx *txItem = txDict[inItem.txHash];
+                [txItem.ins addObject:inItem];
+                inItem.tx = txItem;
+            }
+            [rs close];
+
+            sql = [NSString stringWithFormat:@"select b.* from outs b where b.tx_hash in (%@)"
+                                                     " order by b.tx_hash,b.out_sn", txsStr];
+            rs = [db executeQuery:sql];
+            while ([rs next]) {
+                BTOut *outItem = [BTTxHelper formatOut:rs];
+                BTTx *txItem = txDict[outItem.txHash];
+                [txItem.outs addObject:outItem];
+                outItem.tx = txItem;
+            }
+            [rs close];
+        }
+    }];
+    return txs;
+}
+
+- (NSArray *)getUnspendOutByHDAccount:(int)hdAccountId; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash "
@@ -405,17 +466,19 @@
     return result;
 }
 
-- (NSArray *)getRecentlyTxsByAccount:(int)greateThanBlockNo limit:(int)limit {
+- (NSArray *)getRecentlyTxsByHDAccount:(int)hdAccountId blockNo:(int)greaterThanBlockNo limit:(int)limit; {
     __block NSMutableArray *txs = nil;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         txs = [NSMutableArray new];
         NSMutableDictionary *txDict = [NSMutableDictionary new];
-        NSString *sql = [NSString stringWithFormat:
-                @"select * from txs  where  tx_hash in %@ "
-                        "and ((block_no is null) or (block_no is not null and block_no>?)) "
-                        " order by ifnull(block_no,4294967295) desc, tx_time desc "
-                        " limit ? ", IN_QUERY_TX_HDACCOUNT];
-        FMResultSet *rs = [db executeQuery:sql, @(greateThanBlockNo), @(limit)];
+        NSString *sql = @"select distinct a.* "
+                " from txs a, addresses_txs b, hd_account_addresses c"
+                " where a.tx_hash=b.tx_hash and b.address=c.address "
+                "   and ((a.block_no is null) or (a.block_no is not null and a.block_no>?)) "
+                "   and c.hd_account_id=?"
+                " order by ifnull(a.block_no,4294967295) desc, a.tx_time desc"
+                " limit ?";
+        FMResultSet *rs = [db executeQuery:sql, @(greaterThanBlockNo), @(hdAccountId), @(limit)];
         while ([rs next]) {
             BTTx *txItem = [BTTxHelper format:rs];
             txItem.ins = [NSMutableArray new];
@@ -449,7 +512,7 @@
 }
 
 
-- (NSSet *)getBelongAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList {
+- (NSSet *)getBelongHDAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList {
     NSMutableArray *temp = [NSMutableArray new];
 
     NSMutableSet *set = [NSMutableSet new];
@@ -475,16 +538,16 @@
 
 }
 
-- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList {
+- (NSSet *)getBelongHDAccountAddressesFromAddresses:(NSArray *)addressList; {
     __block NSMutableSet *set = [NSMutableSet new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        set = [self getBelongAccountAddressesFromDb:db addressList:addressList];
+        set = [[self getBelongHDAccountAddressesFromDb:db addressList:addressList] mutableCopy];
     }];
     return set;
 
 }
 
-- (int)getUnspendOutCountByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType {
+- (int)getUnspendOutCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType {
     __block int result = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(tx_hash) cnt from outs where out_address in "
@@ -502,7 +565,7 @@
     return result;
 }
 
-- (NSArray *)getUnspendOutByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType {
+- (NSArray *)getUnspendOutByHDAccountId:(int)hdAccountId pathType:(PathType)pathType {
     NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from outs where out_address in "

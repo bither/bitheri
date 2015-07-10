@@ -28,52 +28,52 @@
 
 - (void)addAddress:(NSArray *)array;
 
-- (int)issuedIndex:(PathType)path;
+- (int)getIssuedIndexByHDAccountId:(int)hdAccountId index:(PathType)path;
 
-- (int)allGeneratedAddressCount:(PathType)pathType;
+- (int)getGeneratedAddressCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
-- (void)updateIssuedIndex:(PathType)pathType index:(int)index;
+- (void)updateIssuedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;
 
-- (NSString *)externalAddress;
+- (NSString *)getExternalAddress:(int)hdAccountId;
 
-- (BTHDAccountAddress *)addressForPath:(PathType)type index:(int)index;
+- (BTHDAccountAddress *)getAddressByHDAccountId:(int)hdAccountId path:(PathType)type index:(int)index;
 
-- (NSArray *)getPubs:(PathType)pathType;
+- (NSArray *)getPubsByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
-- (NSArray *)belongAccount:(NSArray *)addresses;
+- (NSArray *)getBelongHDAccount:(int)hdAccountId fromAddresses:(NSArray *)addresses;
+- (NSArray *)getBelongHDAccountFrom:(NSArray *)addresses;
 
-- (void)updateSyncdComplete:(BTHDAccountAddress *)address;
+- (void)updateSyncedCompleteByHDAccountId:(int)hdAccountId address:(BTHDAccountAddress *)address;
 
-- (void)setSyncdNotComplete;
+- (void)setSyncedAllNotComplete;
 
-- (int)unSyncedAddressCount;
+- (int)getUnSyncedAddressCount:(int)hdAccountId;
 
-- (int)unSyncedCountOfPath:(PathType)pathType;
+- (void)updateSyncedByHDAccountId:(int)hdAccountId index:(PathType)pathType index:(int)index;
 
-- (void)updateSyncdForIndex:(PathType)pathType index:(int)index;
+- (NSArray *)getSigningAddressesByHDAccountId:(int)hdAccountId fromInputs:(NSArray *)inList;
 
-- (NSArray *)getSigningAddressesForInputs:(NSArray *)inList;
+- (int)getHDAccountTxCount:(int)hdAccountId;
 
-- (int)hdAccountTxCount;
+- (uint64_t)getHDAccountConfirmedBalance:(int)hdAccountId;
 
-- (uint64_t)getHDAccountConfirmedBanlance:(int)hdAccountId;
+- (NSArray *)getHDAccountUnconfirmedTx:(int)hdAccountId;
 
-- (NSArray *)getHDAccountUnconfirmedTx;
+- (uint64_t)getAmountSentFromHDAccount:(int)hdAccountId txHash:(NSData *)txHash;
 
-- (uint64_t)sentFromAccount:(int)hdAccountId txHash:(NSData *)txHash;
-
-- (NSArray *)getTxAndDetailByHDAccount:(int)page;
+- (NSArray *)getTxAndDetailByHDAccount:(int)hdAccountId;
+- (NSArray *)getTxAndDetailByHDAccount:(int)hdAccountId page:(int)page;
 
 - (NSArray *)getUnspendOutByHDAccount:(int)hdAccountId;
 
-- (NSArray *)getRecentlyTxsByAccount:(int)greateThanBlockNo limit:(int)limit;
+- (NSArray *)getRecentlyTxsByHDAccount:(int)hdAccountId blockNo:(int)greaterThanBlockNo limit:(int)limit;
 
-- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addressList;
+- (NSSet *)getBelongHDAccountAddressesFromAddresses:(NSArray *)addressList;
 
-- (NSSet *)getBelongAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList;
+- (NSSet *)getBelongHDAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList;
 
-- (int)getUnspendOutCountByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType;
+- (int)getUnspendOutCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
-- (NSArray *)getUnspendOutByHDAccountWithPath:(int)hdAccountId pathType:(PathType)pathType;
+- (NSArray *)getUnspendOutByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
 @end

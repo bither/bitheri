@@ -28,6 +28,7 @@
 #import "BTTxBuilder.h"
 #import "BTUtils.h"
 #import "BTBlockChain.h"
+#import "BTHDAccountProvider.h"
 
 #define kBTHDAccountLookAheadSize (100)
 #define kGenerationInitialProgress (0.02)
@@ -58,7 +59,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 @property NSData *hdSeed;
 @property NSData *mnemonicSeed;
-@property NSUInteger hdSeedId;
+@property int hdAccountId;
 @end
 
 @implementation BTHDAccount
@@ -71,7 +72,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     self = [super init];
     if (self) {
-        self.hdSeedId = -1;
+        self.hdAccountId = -1;
         self.mnemonicSeed = mnemonicSeed;
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
@@ -83,7 +84,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     self = [super init];
     if (self) {
-        self.hdSeedId = -1;
+        self.hdAccountId = -1;
         self.mnemonicSeed = [encryptedMnemonicSeed decrypt:password];
         if (!self.mnemonicSeed) {
             return nil;
@@ -98,15 +99,15 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (instancetype)initWithSeedId:(int)seedId {
     self = [super init];
     if (self) {
-        self.hdSeedId = seedId;
-        _isFromXRandom = [[BTAddressProvider instance] hdAccountIsXRandom:seedId];
+        self.hdAccountId = seedId;
+        _isFromXRandom = [[BTHDAccountProvider instance] hdAccountIsXRandom:seedId];
         [self updateBalance];
     }
     return self;
 }
 
 - (NSInteger)getHDAccountId {
-    return self.hdSeedId;
+    return self.hdAccountId;
 }
 
 - (void)initHDAccountWithMaster:(BTBIP32Key *)master encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
@@ -158,7 +159,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self wipeMnemonicSeed];
     [[BTHDAccountAddressProvider instance] addAddress:externalAddresses];
     [[BTHDAccountAddressProvider instance] addAddress:internalAddresses];
-    self.hdSeedId = [[BTAddressProvider instance] addHDAccount:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXrandom:encryptedMnemonicSeed.isXRandom encryptSeedOfPS:encryptedSeedOfPasswordSeed.toEncryptedString addressOfPS:address externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
+    self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXRandom:encryptedMnemonicSeed.isXRandom encryptSeedOfPS:encryptedSeedOfPasswordSeed.toEncryptedString addressOfPS:address externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
     [internalKey wipe];
     [externalKey wipe];
 }
@@ -205,7 +206,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error {
-    NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdSeedId];
+    NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
     BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:[self getNewChangeAddress] andError:error];
     if (error && !tx) {
         return nil;
@@ -306,7 +307,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)updateBalance {
-    _balance = [[BTHDAccountAddressProvider instance] getHDAccountConfirmedBanlance:self.hdSeedId] + [self calculateUnconfirmedBalance];
+    _balance = [[BTHDAccountAddressProvider instance] getHDAccountConfirmedBanlance:self.hdAccountId] + [self calculateUnconfirmedBalance];
 }
 
 - (uint64_t)calculateUnconfirmedBalance {
@@ -401,7 +402,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)decryptMnemonicSeed:(NSString *)password {
-    if (self.hdSeedId < 0 || !password) {
+    if (self.hdAccountId < 0 || !password) {
         return;
     }
     NSString *encrypted = [self encryptedMnemonicSeed];
@@ -414,11 +415,11 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSString *)encryptedHDSeed {
-    return [[BTAddressProvider instance] getHDAccountEncryptSeed:self.hdSeedId];
+    return [[BTHDAccountProvider instance] getHDAccountEncryptSeed:self.hdAccountId];
 }
 
 - (NSString *)encryptedMnemonicSeed {
-    return [[BTAddressProvider instance] getHDAccountEncryptMnmonicSeed:self.hdSeedId];
+    return [[BTHDAccountProvider instance] getHDAccountEncryptMnemonicSeed:self.hdAccountId];
 }
 
 - (BTBIP32Key *)getChainRootKeyFromAccount:(BTBIP32Key *)account withPathType:(PathType)path {
@@ -441,7 +442,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (NSUInteger)elementCountForBloomFilter {
     return [self allGeneratedExternalAddressCount] * 2 + [[BTHDAccountAddressProvider instance]
-            getUnspendOutCountByHDAccountWithPath:self.hdSeedId pathType:INTERNAL_ROOT_PATH];
+            getUnspendOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
 }
 
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter {
@@ -450,7 +451,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [filter insertData:pub];
         [filter insertData:[[BTKey alloc] initWithPublicKey:pub].address.addressToHash160];
     }
-    NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccountWithPath:self.hdSeedId pathType:INTERNAL_ROOT_PATH];
+    NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
     for (BTOut *out in outs) {
         [filter insertData:getOutPoint(out.txHash, out.outSn)];
     }
@@ -555,15 +556,15 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSData *)getInternalPub {
-    return [[BTAddressProvider instance] getInternalPub:self.hdSeedId];
+    return [[BTHDAccountProvider instance] getInternalPub:self.hdAccountId];
 }
 
 - (NSData *)getExternalPub {
-    return [[BTAddressProvider instance] getExternalPub:self.hdSeedId];
+    return [[BTHDAccountProvider instance] getExternalPub:self.hdAccountId];
 }
 
 - (NSString *)getFirstAddressFromDb {
-    return [[BTAddressProvider instance] getHDAccountFristAddress:self.hdSeedId];
+    return [[BTHDAccountProvider instance] getHDFirstAddress:self.hdAccountId];
 }
 
 - (NSString *)getFullEncryptPrivKey {

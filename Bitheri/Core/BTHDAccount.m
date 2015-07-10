@@ -172,36 +172,38 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)onNewTx:(BTTx *)tx withRelatedAddresses:(NSArray *)relatedAddresses andTxNotificationType:(TxNotificationType)txNotificationType {
-    if (!relatedAddresses || relatedAddresses.count == 0) {
-        return;
-    }
-
-    NSInteger maxInternal = -1, maxExternal = -1;
-    for (BTHDAccountAddress *a in relatedAddresses) {
-        if (a.pathType == EXTERNAL_ROOT_PATH) {
-            if (a.index > maxExternal) {
-                maxExternal = a.index;
-            }
-        } else {
-            if (a.index > maxInternal) {
-                maxInternal = a.index;
-            }
-        }
-    }
-
-    DDLogInfo(@"HD on new tx issued ex %d, issued in %d", maxExternal, maxInternal);
-    BOOL paymentAddressChanged = NO;
-    if (maxExternal >= 0 && maxExternal > self.issuedExternalIndex) {
-        [self updateIssuedExternalIndex:maxExternal];
-        paymentAddressChanged = YES;
-    }
-    if (maxInternal >= 0 && maxInternal > self.issuedInternalIndex) {
-        [self updateIssuedInternalIndex:maxInternal];
-    }
+//    if (!relatedAddresses || relatedAddresses.count == 0) {
+//        return;
+//    }
+//
+//    NSInteger maxInternal = -1, maxExternal = -1;
+//    for (BTHDAccountAddress *a in relatedAddresses) {
+//        if (a.pathType == EXTERNAL_ROOT_PATH) {
+//            if (a.index > maxExternal) {
+//                maxExternal = a.index;
+//            }
+//        } else {
+//            if (a.index > maxInternal) {
+//                maxInternal = a.index;
+//            }
+//        }
+//    }
+//
+//    DDLogInfo(@"HD on new tx issued ex %d, issued in %d", maxExternal, maxInternal);
+//    BOOL paymentAddressChanged = NO;
+//    if (maxExternal >= 0 && maxExternal > self.issuedExternalIndex) {
+//        [self updateIssuedExternalIndex:maxExternal];
+//        paymentAddressChanged = YES;
+//    }
+//    if (maxInternal >= 0 && maxInternal > self.issuedInternalIndex) {
+//        [self updateIssuedInternalIndex:maxInternal];
+//    }
 
     [self supplyEnoughKeys:YES];
 
     [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification object:@[kHDAccountPlaceHolder, @([self getDeltaBalance]), tx, @(txNotificationType)]];
+    // todo: need add paymentAddressChanged logic
+    BOOL paymentAddressChanged = YES;
     if (paymentAddressChanged) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:self.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(NO)}];
     }

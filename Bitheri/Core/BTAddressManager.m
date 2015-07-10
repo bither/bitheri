@@ -23,6 +23,7 @@
 #import "BTQRCodeUtil.h"
 #import "BTAddressProvider.h"
 #import "BTHDAccountProvider.h"
+#import "BTHDAccountAddressProvider.h"
 
 @interface BTAddressManager () <BTHDMAddressChangeDelegate> {
     BTHDMKeychain *_hdmKeychain;
@@ -347,29 +348,38 @@
     }
 
     BOOL isRegister = NO;
-    BTTx *compressedTx = [self compressTx:tx];
+    BTTx *compressedTx;
+    tx = [[BTHDAccountAddressProvider instance] updateOutHDAccountId:tx];
+    if (txNotificationType != txSend) {
+        compressedTx = [self compressTx:tx];
+    } else {
+        compressedTx = tx;
+    }
     NSMutableSet *needNotifyAddressHashSet = [NSMutableSet new];
-    NSMutableSet *needNotifyHDAccountHS = [NSMutableSet new];
+//    NSMutableSet *needNotifyHDAccountHS = [NSMutableSet new];
     NSMutableArray *relatedAddresses = [NSMutableArray new];
-    NSMutableSet *relatedAddressesHS = [NSMutableSet new];
+//    NSMutableSet *relatedAddressesHS = [NSMutableSet new];
+    NSMutableArray *needNotifyHDAccountIdHS = [NSMutableArray new];
 
-    if (self.hasHDAccount) {
-        [relatedAddresses addObjectsFromArray:[self.hdAccount getRelatedAddressesForTx:compressedTx]];
-    }
+//    if (self.hasHDAccount) {
+//        [relatedAddresses addObjectsFromArray:[self.hdAccount getRelatedAddressesForTx:compressedTx]];
+//    }
 
-    for (BTHDAccountAddress *hdAccountAddress in relatedAddresses) {
-        [relatedAddressesHS addObject:hdAccountAddress.address];
-    }
+//    for (BTHDAccountAddress *hdAccountAddress in relatedAddresses) {
+//        [relatedAddressesHS addObject:hdAccountAddress.address];
+//    }
 
     for (BTOut *out in compressedTx.outs) {
         NSString *outAddress = out.outAddress;
         if ([self.addressesSet containsObject:outAddress]) {
             [needNotifyAddressHashSet addObject:outAddress];
         }
-
-        if ([relatedAddressesHS containsObject:outAddress]) {
-            [needNotifyHDAccountHS addObject:outAddress];
+        if (out.hdAccountId > 0) {
+            [needNotifyHDAccountIdHS addObject:@(out.hdAccountId)];
         }
+//        if ([relatedAddressesHS containsObject:outAddress]) {
+//            [needNotifyHDAccountHS addObject:outAddress];
+//        }
     }
 
     BTTx *txInDb = [[BTTxProvider instance] getTxDetailByTxHash:tx.txHash];
@@ -380,8 +390,11 @@
                 [needNotifyAddressHashSet removeObject:outAddress];
             }
 
-            if ([needNotifyHDAccountHS containsObject:outAddress]) {
-                [needNotifyHDAccountHS removeObject:outAddress];
+//            if ([needNotifyHDAccountHS containsObject:outAddress]) {
+//                [needNotifyHDAccountHS removeObject:outAddress];
+//            }
+            if (out.hdAccountId > 0 && [needNotifyHDAccountIdHS containsObject:@(out.hdAccountId)]) {
+                [needNotifyHDAccountIdHS removeObject:@(out.hdAccountId)];
             }
         }
         isRegister = YES;
@@ -392,13 +405,15 @@
                 [needNotifyAddressHashSet addObject:address];
             }
 
-            if ([relatedAddressesHS containsObject:address]) {
-                [needNotifyHDAccountHS addObject:address];
-            }
+//            if ([relatedAddressesHS containsObject:address]) {
+//                [needNotifyHDAccountHS addObject:address];
+//            }
+
         }
-        isRegister = needNotifyAddressHashSet.count > 0 || needNotifyHDAccountHS.count > 0;
+        [needNotifyHDAccountIdHS addObjectsFromArray:[[BTHDAccountAddressProvider instance] getRelatedHDAccountIdListFromAddresses:inAddresses]];
+        isRegister = needNotifyAddressHashSet.count > 0 || needNotifyHDAccountIdHS.count > 0;
     }
-    if (needNotifyAddressHashSet.count > 0 || needNotifyHDAccountHS.count > 0) {
+    if (needNotifyAddressHashSet.count > 0 || needNotifyHDAccountIdHS.count > 0) {
         [[BTTxProvider instance] add:compressedTx];
         DDLogDebug(@"register tx %@", [NSString hexWithHash:compressedTx.txHash]);
     }
@@ -408,15 +423,20 @@
         }
     }
 
-    NSMutableArray *needNotifyHDAddressList = [NSMutableArray new];
-    for (BTHDAccountAddress *a in relatedAddresses) {
-        if ([needNotifyHDAccountHS containsObject:a.address]) {
-            [needNotifyHDAddressList addObject:a];
-        }
-    }
+//    NSMutableArray *needNotifyHDAddressList = [NSMutableArray new];
+//    for (BTHDAccountAddress *a in relatedAddresses) {
+//        if ([needNotifyHDAccountHS containsObject:a.address]) {
+//            [needNotifyHDAddressList addObject:a];
+//        }
+//    }
 
-    if (needNotifyHDAddressList.count > 0) {
-        [self.hdAccount onNewTx:compressedTx withRelatedAddresses:needNotifyHDAddressList andTxNotificationType:txNotificationType];
+//    if (needNotifyHDAddressList.count > 0) {
+//        [self.hdAccount onNewTx:compressedTx withRelatedAddresses:needNotifyHDAddressList andTxNotificationType:txNotificationType];
+//    }
+    for (NSNumber *hdAccountId in needNotifyHDAccountIdHS) {
+        if ([self hasHDAccount] && [self.hdAccount getHDAccountId] == [hdAccountId integerValue]) {
+            [self.hdAccount onNewTx:tx withRelatedAddresses:nil andTxNotificationType:txNotificationType];
+        }
     }
 
     return isRegister;

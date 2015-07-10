@@ -87,6 +87,13 @@
             outItem.outAddress = [rs stringForColumn:@"out_address"];
         }
     }
+    if ([keys containsObject:@"hd_account_id"]) {
+        if ([rs columnIsNull:@"hd_account_id"]) {
+            outItem.hdAccountId = -1;
+        } else {
+            outItem.hdAccountId = [rs intForColumn:@"hd_account_id"];
+        }
+    }
     outItem.coinDepth = 0;
     return outItem;
 }

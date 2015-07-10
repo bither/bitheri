@@ -598,7 +598,61 @@
             " values(?,?,?,?,?,?,?)";
     [db executeUpdate:sql, @(address.hdAccountId), @(address.pathType), @(address.index), @(address.isIssued), address.address
             , [NSString base58WithData:address.pub], @(address.isSyncedComplete)];
+}
 
+- (BTTx *)updateOutHDAccountId:(BTTx *) tx; {
+    NSArray *addressList = [tx getOutAddressList];
+    if ([addressList count] > 0) {
+        NSMutableSet *set = [NSMutableSet new];
+        [set addObjectsFromArray:addressList];
+
+        NSMutableArray *temp = [NSMutableArray new];
+        for (NSString *address in set) {
+            [temp addObject:[NSString stringWithFormat:@"'%@'", address]];
+        }
+
+        NSString *sql = [NSString stringWithFormat:@"select address,hd_account_id from hd_account_addresses where address in (%@)", [temp componentsJoinedByString:@","]];
+        __block BTTx *blockTx = tx;
+        [[BTDatabaseManager instance].getTxDbQueue inDatabase:^(FMDatabase *db) {
+            FMResultSet *rs = [db executeQuery:sql];
+            while ([rs next]) {
+                NSString *address = [rs stringForColumnIndex:0];
+                int hdAccountId = [rs intForColumnIndex:1];
+                for (BTOut *out in [blockTx outs]) {
+                    if ([out.outAddress isEqualToString:address]) {
+                        out.hdAccountId = hdAccountId;
+                    }
+                }
+            }
+            [rs close];
+        }];
+
+    }
+    return tx;
+}
+
+- (NSArray *)getRelatedHDAccountIdListFromAddresses:(NSArray *)addresses; {
+    __block NSMutableArray *hdAccountIdList = [NSMutableArray new];
+    if ([addresses count] > 0) {
+        NSMutableSet *set = [NSMutableSet new];
+        [set addObjectsFromArray:addresses];
+
+        NSMutableArray *temp = [NSMutableArray new];
+        for (NSString *address in set) {
+            [temp addObject:[NSString stringWithFormat:@"'%@'", address]];
+        }
+
+        NSString *sql = [NSString stringWithFormat:@"select distinct hd_account_id from hd_account_addresses where address in (%@) ", [temp componentsJoinedByString:@","]];
+
+        [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+            FMResultSet *rs = [db executeQuery:sql];
+            while ([rs next]) {
+                [hdAccountIdList addObject:@([rs intForColumnIndex:0])];
+            }
+            [rs close];
+        }];
+    }
+    return hdAccountIdList;
 }
 
 

@@ -21,6 +21,8 @@
 #import "BTHDAccountAddress.h"
 #import "BTDatabaseManager.h"
 
+@class BTTx;
+
 
 @interface BTHDAccountAddressProvider : NSObject
 
@@ -76,5 +78,9 @@
 - (int)getUnspendOutCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
 - (NSArray *)getUnspendOutByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
+
+- (BTTx *)updateOutHDAccountId:(BTTx *) tx;
+
+- (NSArray *)getRelatedHDAccountIdListFromAddresses:(NSArray *)addresses;
 
 @end

@@ -48,6 +48,7 @@
 - (void)setSyncedAllNotComplete;
 
 - (int)getUnSyncedAddressCount:(int)hdAccountId;
+- (int)getUnSyncedAddressCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
 - (void)updateSyncedByHDAccountId:(int)hdAccountId pathType:(PathType)pathType index:(int)index;
 

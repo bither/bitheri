@@ -207,7 +207,19 @@
         }
         [resultSet close];
     }];
+    return count;
+}
 
+- (int)getUnSyncedAddressCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType; {
+    __block int count = 0;
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select count(address) cnt from hd_account_addresses where is_synced=? and hd_account_id=? and path_type=? ";
+        FMResultSet *resultSet = [db executeQuery:sql, @(NO), @(hdAccountId), @(pathType)];
+        if ([resultSet next]) {
+            count = [resultSet intForColumnIndex:0];
+        }
+        [resultSet close];
+    }];
     return count;
 }
 

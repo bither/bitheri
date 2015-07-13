@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0A29B0C61A761C380020BCD7 /* BTHDMKeychainRecover.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */; };
 		0A333FAD1A778F9B00F6EFF2 /* BTHDMPubsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A333FAC1A778F9B00F6EFF2 /* BTHDMPubsTest.m */; };
+		1BC274AE1F44DB054B95558C /* BTHDAccountCold.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */; };
 		1BC27BE1564E006216779DD1 /* DiceTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27F81F7C4CFD1E87303CF /* DiceTest.m */; };
 		42796BF619446739002BC454 /* BTBlockChain.m in Sources */ = {isa = PBXBuildFile; fileRef = 42796BF519446739002BC454 /* BTBlockChain.m */; };
 		428DB454194ECA9C00C81A4B /* BTPasswordSeed.m in Sources */ = {isa = PBXBuildFile; fileRef = 428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */; };
@@ -169,6 +170,8 @@
 		0A29B0C41A761C380020BCD7 /* BTHDMKeychainRecover.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDMKeychainRecover.h; sourceTree = "<group>"; };
 		0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDMKeychainRecover.m; sourceTree = "<group>"; };
 		0A333FAC1A778F9B00F6EFF2 /* BTHDMPubsTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDMPubsTest.m; sourceTree = "<group>"; };
+		1BC279F448C571E7950F2A30 /* BTHDAccountCold.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountCold.h; sourceTree = "<group>"; };
+		1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountCold.m; sourceTree = "<group>"; };
 		1BC27F81F7C4CFD1E87303CF /* DiceTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiceTest.m; sourceTree = "<group>"; };
 		215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		42796BF419446739002BC454 /* BTBlockChain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBlockChain.h; sourceTree = "<group>"; };
@@ -584,6 +587,8 @@
 				DC0AADED4BF8AC44411A06DF /* BTHDAccountAddress.h */,
 				DC016E13EE8FEA745E9DA56D /* BTHDAccount.m */,
 				DC0FCA2F4F88909B1495A197 /* BTHDAccount.h */,
+				1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */,
+				1BC279F448C571E7950F2A30 /* BTHDAccountCold.h */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -886,6 +891,7 @@
 				DC0605EF620D34198D3675CE /* BTHDAccount.m in Sources */,
 				DC01C63E5CF9D73A26C76B5B /* BTTxHelper.m in Sources */,
 				D61D0EB6432F204B3CAE3F5F /* BTHDAccountProvider.m in Sources */,
+				1BC274AE1F44DB054B95558C /* BTHDAccountCold.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

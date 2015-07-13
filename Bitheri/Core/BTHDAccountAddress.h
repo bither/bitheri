@@ -24,6 +24,11 @@ typedef enum {
 
 } PathType;
 
+@interface PathTypeIndex : NSObject
+@property PathType pathType;
+@property NSUInteger index;
+@end
+
 @interface BTHDAccountAddress : NSObject
 
 @property (nonatomic, readwrite) int hdAccountId;

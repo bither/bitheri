@@ -512,6 +512,7 @@
     NSMutableDictionary *txDict = [NSMutableDictionary new];
     for (BTTx *tx in txList) {
         txDict[tx.txHash] = tx;
+        [[BTHDAccountAddressProvider instance] updateOutHDAccountId:tx];
     }
     for (BTTx *tx in txList) {
         if (![self isSendFromMe:tx andTxHashDict:txDict andAddress:address] && tx.outs.count > COMPRESS_OUT_NUM) {

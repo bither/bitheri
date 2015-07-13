@@ -314,14 +314,14 @@
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // insert tx record
         [db beginTransaction];
-        NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
-        for (BTOut *out in txItem.outs) {
-            if ([addressSet containsObject:out.outAddress]) {
-                out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
-            } else {
-                out.hdAccountId = -1;
-            }
-        }
+//        NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
+//        for (BTOut *out in txItem.outs) {
+//            if ([addressSet containsObject:out.outAddress]) {
+//                out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
+//            } else {
+//                out.hdAccountId = -1;
+//            }
+//        }
         NSNumber *blockNo = nil;
         if (txItem.blockNo != TX_UNCONFIRMED) {
             blockNo = @(txItem.blockNo);
@@ -359,12 +359,37 @@
         // insert outs and get the out\'s addresses
         for (BTOut *outItem in txItem.outs) {
             sql = @"insert or replace into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
+            NSNumber *hdAccountId = nil;
+            if (outItem.hdAccountId > -1) {
+                hdAccountId = @(outItem.hdAccountId);
+            }
             success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                     , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                     , @(outItem.outValue), @(outItem.outStatus)
-                    , outItem.outAddress, @(outItem.hdAccountId)];
+                    , outItem.outAddress, hdAccountId];
             if (outItem.outAddress != nil) {
                 [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
+            }
+
+
+            if (outItem.hdAccountId > -1) {
+                // update hd account address 's issued
+                FMResultSet *rs = [db executeQuery:@"select hd_account_id,path_type,address_index "
+                                                           " from hd_account_addresses where address=?", outItem.outAddress];
+                int tmpHDAccountId = -1;
+                int tmpPathType = 0;
+                int tmpAddressIndex = 0;
+                if ([rs next]) {
+                    tmpHDAccountId = [rs intForColumnIndex:0];
+                    tmpPathType = [rs intForColumnIndex:1];
+                    tmpAddressIndex = [rs intForColumnIndex:2];
+                }
+                [rs close];
+                if (tmpHDAccountId > 0) {
+                    [db executeUpdate:@"update hd_account_addresses set is_issued=? "
+                                              " where hd_account_id=? and path_type=? and address_index<=?"
+                            , @(1), @(tmpHDAccountId), @(tmpPathType), @(tmpAddressIndex)];
+                }
             }
 
             sql = @"select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
@@ -394,14 +419,14 @@
         // insert tx record
         [db beginTransaction];
         for (BTTx *txItem in txs) {
-            NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
-            for (BTOut *out in txItem.outs) {
-                if ([addressSet containsObject:out.outAddress]) {
-                    out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
-                } else {
-                    out.hdAccountId = -1;
-                }
-            }
+//            NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
+//            for (BTOut *out in txItem.outs) {
+//                if ([addressSet containsObject:out.outAddress]) {
+//                    out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
+//                } else {
+//                    out.hdAccountId = -1;
+//                }
+//            }
             NSNumber *blockNo = nil;
             if (txItem.blockNo != TX_UNCONFIRMED) {
                 blockNo = @(txItem.blockNo);
@@ -439,12 +464,36 @@
             // insert outs and get the out\'s addresses
             for (BTOut *outItem in txItem.outs) {
                 sql = @"insert or replace into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
+                NSNumber *hdAccountId = nil;
+                if (outItem.hdAccountId > -1) {
+                    hdAccountId = @(outItem.hdAccountId);
+                }
                 success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                         , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                         , @(outItem.outValue), @(outItem.outStatus)
-                        , outItem.outAddress, @(outItem.hdAccountId)];
+                        , outItem.outAddress, hdAccountId];
                 if (outItem.outAddress != nil) {
                     [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
+                }
+
+                if (outItem.hdAccountId > -1) {
+                    // update hd account address 's issued
+                    FMResultSet *rs = [db executeQuery:@"select hd_account_id,path_type,address_index "
+                                                  " from hd_account_addresses where address=?", outItem.outAddress];
+                    int tmpHDAccountId = -1;
+                    int tmpPathType = 0;
+                    int tmpAddressIndex = 0;
+                    if ([rs next]) {
+                        tmpHDAccountId = [rs intForColumnIndex:0];
+                        tmpPathType = [rs intForColumnIndex:1];
+                        tmpAddressIndex = [rs intForColumnIndex:2];
+                    }
+                    [rs close];
+                    if (tmpHDAccountId > 0) {
+                        [db executeUpdate:@"update hd_account_addresses set is_issued=? "
+                                                  " where hd_account_id=? and path_type=? and address_index<=?"
+                                , @(1), @(tmpHDAccountId), @(tmpPathType), @(tmpAddressIndex)];
+                    }
                 }
 
                 sql = @"select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";

@@ -21,6 +21,7 @@
 #define XRANDOM_FLAG @"+"
 #define HDM_QR_CODE_FLAG  @"-"
 #define HD_QR_CODE_FLAT @"%"
+#define QR_CODE_SECONDARY_SPLIT (@"$")
 
 typedef enum {
     NORMAL,

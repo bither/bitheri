@@ -20,6 +20,8 @@
 #import "BTUtils.h"
 #import "BTKey.h"
 
+@implementation PathTypeIndex
+@end
 
 @implementation BTHDAccountAddress {
 

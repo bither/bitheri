@@ -21,8 +21,7 @@
 #import "BTSettings.h"
 #import "BTHDMKeychain.h"
 #import "BTHDAccount.h"
-
-@class BTHDAccountCold;
+#import "BTHDAccountCold.h"
 
 #define BTAddressManagerIsReady @"BTAddressManagerIsReady"
 

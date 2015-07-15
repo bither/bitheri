@@ -160,7 +160,7 @@
 - (NSString *)getHDAccountEncryptMnemonicSeed:(int)hdAccountId; {
     __block NSString *result = nil;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select  encrypt_seed from hd_account where hd_account_id=? ";
+        NSString *sql = @"select encrypt_mnemonic_seed from hd_account where hd_account_id=? ";
         FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];
         if ([rs next]) {
             result = [rs stringForColumnIndex:0];

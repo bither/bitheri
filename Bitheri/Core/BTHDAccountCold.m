@@ -59,7 +59,7 @@
         [master wipe];
         [self wipeHDSeed];
         [self wipeMnemonicSeed];
-        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:encryptedMnemonicSeed encryptSeed:encryptedHDSeed firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedMnemonicSeed addressOfPS:address externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended];
+        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:encryptedMnemonicSeed.toEncryptedString encryptSeed:encryptedHDSeed.toEncryptedString firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedMnemonicSeed.toEncryptedString addressOfPS:address externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended];
         [externalKey wipe];
         [internalKey wipe];
     }

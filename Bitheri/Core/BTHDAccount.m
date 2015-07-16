@@ -160,6 +160,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *firstAddress = key.address;
     [key wipe];
     [accountKey wipe];
+    if ([BTHDAccount checkDuplicatedHDAccountWithExternalRoot:externalKey.getPubKeyExtended andInternalRoot:internalKey.getPubKeyExtended]) {
+        @throw [DuplicatedHDAccountException new];
+    }
 
     progress = kGenerationInitialProgress;
     if (callback) {
@@ -700,4 +703,13 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [self updateIssuedInternalIndex:index];
     }
 }
+
++ (BOOL)checkDuplicatedHDAccountWithExternalRoot:(NSData *)ex andInternalRoot:(NSData *)in {
+    //TODO checkDuplicatedHDAccount
+    return NO;
+}
+
+@end
+
+@implementation DuplicatedHDAccountException
 @end

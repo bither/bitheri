@@ -84,3 +84,6 @@
 
 - (NSInteger)getHDAccountId;
 @end
+
+@interface DuplicatedHDAccountException : NSException
+@end

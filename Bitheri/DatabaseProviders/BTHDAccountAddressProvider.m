@@ -111,7 +111,7 @@
 - (BTHDAccountAddress *)getAddressByHDAccountId:(int)hdAccountId path:(PathType)type index:(int)index;{
     __block BTHDAccountAddress *address;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select address,pub,path_type,address_index,is_issued,is_synced "
+        NSString *sql = @"select hd_account_id,address,pub,path_type,address_index,is_issued,is_synced "
                 " from hd_account_addresses where path_type=? and address_index=? and hd_account_id=? ";
         FMResultSet *rs = [db executeQuery:sql, @(type), @(index), @(hdAccountId)];
         if ([rs next]) {
@@ -150,7 +150,7 @@
         for (NSString *str in addresses) {
             [temp addObject:[NSString stringWithFormat:@"'%@'", str]];
         }
-        NSString *sql = @"select address,pub,path_type,address_index,is_issued,is_synced "
+        NSString *sql = @"select hd_account_id,address,pub,path_type,address_index,is_issued,is_synced "
                 "from hd_account_addresses  where address in (%@) and hd_account_id=?";
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]], @(hdAccountId)];
         while ([rs next]) {
@@ -169,7 +169,7 @@
         for (NSString *str in addresses) {
             [temp addObject:[NSString stringWithFormat:@"'%@'", str]];
         }
-        NSString *sql = @"select address,pub,path_type,address_index,is_issued,is_synced "
+        NSString *sql = @"select hd_account_id,address,pub,path_type,address_index,is_issued,is_synced "
                 "from hd_account_addresses  where address in (%@)";
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]]];
         while ([rs next]) {
@@ -249,7 +249,7 @@
 
     __block NSMutableArray *array = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select a.address,a.path_type,a.address_index,a.is_synced"
+        NSString *sql = @"select a.hd_account_id,a.address,a.path_type,a.address_index,a.is_synced"
                 " from hd_account_addresses a ,outs b"
                 " where a.address=b.out_address"
                 " and b.tx_hash=? and b.out_sn=? and a.hd_account_id=?";

@@ -48,8 +48,8 @@
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTEncryptData *encryptedHDSeed = [[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:isFromXRandom];
         BTEncryptData *encryptedMnemonicSeed = [[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:isFromXRandom];
-        BTKey *k = [[BTKey alloc] initWithSecret:self.mnemonicSeed compressed:YES];
-        NSString *address = k.address;
+        NSString *addressOfPs = master.key.address;
+        BTEncryptData *encryptedDataOfPS = [[BTEncryptData alloc] initWithData:master.secret andPassowrd:password andIsXRandom:isFromXRandom];
         BTBIP32Key *accountKey = [self getAccount:master];
         BTBIP32Key *externalKey = [self getChainRootKeyFromAccount:accountKey withPathType:EXTERNAL_ROOT_PATH];
         BTBIP32Key *internalKey = [self getChainRootKeyFromAccount:accountKey withPathType:INTERNAL_ROOT_PATH];
@@ -59,7 +59,7 @@
         [master wipe];
         [self wipeHDSeed];
         [self wipeMnemonicSeed];
-        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:encryptedMnemonicSeed.toEncryptedString encryptSeed:encryptedHDSeed.toEncryptedString firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedMnemonicSeed.toEncryptedString addressOfPS:address externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended];
+        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:encryptedMnemonicSeed.toEncryptedString encryptSeed:encryptedHDSeed.toEncryptedString firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedDataOfPS.toEncryptedString addressOfPS:addressOfPs externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended];
         [externalKey wipe];
         [internalKey wipe];
     }

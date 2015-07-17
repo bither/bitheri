@@ -75,6 +75,8 @@
 
 - (NSArray *)compressTxsForApi:(NSArray *)txList andAddress:(NSString *)address;
 
+- (BTHDAccount *)getHDAccountByHDAccountId:(int)hdAccountId;
+
 #pragma mark - for old version
 
 + (BOOL)updateKeyStoreFromFileToDbWithPasswordSeed:(BTPasswordSeed *)passwordSeed;

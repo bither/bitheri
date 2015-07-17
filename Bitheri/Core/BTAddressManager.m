@@ -629,6 +629,16 @@
     return [self.addressesSet intersectsSet:[NSSet setWithArray:fromAddresses]];
 }
 
+- (BTHDAccount *)getHDAccountByHDAccountId:(int)hdAccountId; {
+    if (self.hasHDAccountHot && self.hdAccountHot.getHDAccountId == hdAccountId) {
+        return self.hdAccountHot;
+    } else if (self.hasHDAccountMonitored && self.hdAccountMonitored.getHDAccountId == hdAccountId) {
+        return self.hdAccountMonitored;
+    } else {
+        return nil;
+    }
+}
+
 #pragma mark - for old version
 
 + (BOOL)updateKeyStoreFromFileToDbWithPasswordSeed:(BTPasswordSeed *)passwordSeed; {

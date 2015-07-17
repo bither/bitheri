@@ -78,6 +78,8 @@
 
 - (BOOL)isSendFromMe:(BTTx *)tx;
 
+- (NSInteger)issuedExternalIndex;
+
 - (void)updateIssuedIndex:(PathType)pathType index:(int)index;
 
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete;

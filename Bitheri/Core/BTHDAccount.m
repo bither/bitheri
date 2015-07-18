@@ -595,7 +595,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSSet *)getBelongAccountAddressesFromAddresses:(NSArray *)addresses {
-    return [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromAddresses:addresses];
+    return [[BTHDAccountAddressProvider instance] getAddressesByHDAccount:self.hdAccountId fromAddresses:addresses];
 }
 
 - (NSArray *)getAddressFromIn:(BTTx *)tx {

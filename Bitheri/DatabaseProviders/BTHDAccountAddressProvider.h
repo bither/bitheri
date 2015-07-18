@@ -72,6 +72,7 @@
 - (NSArray *)getRecentlyTxsByHDAccount:(int)hdAccountId blockNo:(int)greaterThanBlockNo limit:(int)limit;
 
 - (NSSet *)getBelongHDAccountAddressesFromAddresses:(NSArray *)addressList;
+- (NSSet *)getAddressesByHDAccount:(int)hdAccountId fromAddresses:(NSArray *)addressList;
 
 - (NSSet *)getBelongHDAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList;
 

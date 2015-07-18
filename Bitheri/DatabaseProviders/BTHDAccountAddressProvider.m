@@ -556,7 +556,30 @@
         set = [[self getBelongHDAccountAddressesFromDb:db addressList:addressList] mutableCopy];
     }];
     return set;
+}
 
+- (NSSet *)getAddressesByHDAccount:(int)hdAccountId fromAddresses:(NSArray *)addressList; {
+    __block NSMutableSet *result = [NSMutableSet new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        if (addressList.count == 0) {
+            return;
+        }
+        NSMutableArray *temp = [NSMutableArray new];
+        for (NSString *address in addressList) {
+            [temp addObject:[NSString stringWithFormat:@"'%@'", address]];
+        }
+        NSString *sql = @"select address from hd_account_addresses where address in (%@) and hd_account_id=? ";
+        FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:sql, [temp componentsJoinedByString:@","]], @(hdAccountId)];
+        while ([rs next]) {
+            int columnIndex = [rs columnIndexForName:@"address"];
+            if (columnIndex != -1) {
+                NSString *str = [rs stringForColumnIndex:columnIndex];
+                [result addObject:str];
+            }
+        }
+        [rs close];
+    }];
+    return result;
 }
 
 - (int)getUnspendOutCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType {

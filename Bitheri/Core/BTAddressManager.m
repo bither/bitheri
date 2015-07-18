@@ -535,9 +535,7 @@
 
 - (void)setHdAccountMonitored:(BTHDAccount *)hdAccountMonitored {
     _hdAccountMonitored = hdAccountMonitored;
-    if (!self.hasHDAccountHot) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccountMonitored.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
-    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccountMonitored.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
 }
 
 - (BOOL)hasHDAccountCold {

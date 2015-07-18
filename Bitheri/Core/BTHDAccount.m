@@ -216,16 +216,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (void)onNewTx:(BTTx *)tx andTxNotificationType:(TxNotificationType)txNotificationType {
     [self supplyEnoughKeys:YES];
-    NSInteger currentIssuedExternalIndex = self.issuedExternalIndex;
     [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification object:@[self.hasPrivKey ? kHDAccountPlaceHolder : kHDAccountMonitoredPlaceHolder, @([self getDeltaBalance]), tx, @(txNotificationType)]];
-    BOOL paymentAddressChanged = (_preIssuedExternalIndex != currentIssuedExternalIndex);
-    _preIssuedExternalIndex = currentIssuedExternalIndex;
-
-    if (self.hasPrivKey || ![BTAddressManager instance].hasHDAccountHot) {
-        if (paymentAddressChanged) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:self.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(NO)}];
-        }
-    }
 }
 
 - (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error {
@@ -312,14 +303,19 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete {
-    NSInteger lackOfExternal = self.issuedExternalIndex + 1 + kBTHDAccountLookAheadSize - self.allGeneratedExternalAddressCount;
+    NSInteger currentIssuedExternalIndex = self.issuedExternalIndex;
+    BOOL paymentAddressChanged = (_preIssuedExternalIndex != currentIssuedExternalIndex);
+    _preIssuedExternalIndex = currentIssuedExternalIndex;
+    NSInteger lackOfExternal = currentIssuedExternalIndex + 1 + kBTHDAccountLookAheadSize - self.allGeneratedExternalAddressCount;
     if (lackOfExternal > 0) {
         [self supplyNewExternalKeyForCount:lackOfExternal andSyncedComplete:isSyncedComplete];
     }
-
     NSInteger lackOfInternal = self.issuedInternalIndex + 1 + kBTHDAccountLookAheadSize - self.allGeneratedInternalAddressCount;
     if (lackOfInternal > 0) {
         [self supplyNewInternalKeyForCount:lackOfInternal andSyncedComplete:isSyncedComplete];
+    }
+    if (paymentAddressChanged) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:self.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(NO)}];
     }
 }
 

@@ -454,7 +454,16 @@ static BOOL canOpenAddressDb;
         if ([rs next]) {
             cnt = [rs intForColumnIndex:0];
         }
-        [rs next];
+        [rs close];
+        [db executeUpdate:@"create table if not exists hd_account_addresses2"
+                "(hd_account_id integer not null"
+                ", path_type integer not null"
+                ", address_index integer not null"
+                ", is_issued integer not null"
+                ", address text not null"
+                ", pub text not null"
+                ", is_synced integer not null"
+                ", primary key (address));"];
         if (cnt > 0) {
             [db executeUpdate:@"ALTER TABLE hd_account_addresses ADD COLUMN hd_account_id integer"];
 
@@ -481,15 +490,6 @@ static BOOL canOpenAddressDb;
             [db executeUpdate:@"INSERT INTO hd_account_addresses2(hd_account_id,path_type,address_index,is_issued,address,pub,is_synced)"
                     " SELECT hd_account_id,path_type,address_index,is_issued,address,pub,is_synced FROM hd_account_addresses;"];
         }
-        [db executeUpdate:@"create table if not exists hd_account_addresses2"
-                "(hd_account_id integer not null"
-                ", path_type integer not null"
-                ", address_index integer not null"
-                ", is_issued integer not null"
-                ", address text not null"
-                ", pub text not null"
-                ", is_synced integer not null"
-                ", primary key (address));"];
 
         int oldCnt = 0;
         int newCnt = 0;
@@ -498,7 +498,7 @@ static BOOL canOpenAddressDb;
             oldCnt = [rs intForColumnIndex:0];
         }
         [rs close];
-        [db executeQuery:@"select count(0) cnt from hd_account_addresses2"];
+        rs = [db executeQuery:@"select count(0) cnt from hd_account_addresses2"];
         if ([rs next]) {
             newCnt = [rs intForColumnIndex:0];
         }

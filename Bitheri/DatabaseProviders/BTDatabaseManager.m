@@ -227,7 +227,7 @@ static BOOL canOpenAddressDb;
                         break;
                     case 1://upgrade v1.3.2->new version
                         success &= [self txV1ToV2:db];
-                    case 2://upgrade v1.3.5->1.3.6
+                    case 2://upgrade v1.3.5->1.3.8
                         success &= [self txV2ToV3:db];
                         if (success) {
                             [self setTxDbVersion];
@@ -281,7 +281,7 @@ static BOOL canOpenAddressDb;
                         success &= [self addressV2ToV3:db];
                     case 3://upgrade v1.3.4->1.3.5
                         success &= [self addressV3tOv4:db];
-                    case 4://upgrade v1.3.5->1.3.6
+                    case 4://upgrade v1.3.5->1.3.8
                         success &= [self addressV4Tov5:db];
                         if (success) {
                             [self setAddressDbVersion];
@@ -399,7 +399,8 @@ static BOOL canOpenAddressDb;
                 ", external_pub text not null"
                 ", internal_pub text not null"
                 ", is_xrandom integer not null);"];
-        [db executeUpdate:@"INSERT INTO hd_account2 SELECT * FROM hd_account;"];
+        [db executeUpdate:@"INSERT INTO hd_account2(hd_account_id,encrypt_seed,encrypt_mnemonic_seed,hd_address,external_pub,internal_pub,is_xrandom) "
+                " SELECT hd_account_id,encrypt_seed,encrypt_mnemonic_seed,hd_address,external_pub,internal_pub,is_xrandom FROM hd_account;"];
 
         int oldCnt = 0;
         int newCnt = 0;
@@ -441,7 +442,7 @@ static BOOL canOpenAddressDb;
     }
 }
 
-// v1.3.6
+// v1.3.8
 - (BOOL)txV2ToV3:(FMDatabase *)db {
     if ([db open]) {
         [db beginTransaction];
@@ -454,9 +455,7 @@ static BOOL canOpenAddressDb;
             cnt = [rs intForColumnIndex:0];
         }
         [rs next];
-        if (cnt == 0) {
-            [db executeUpdate:@"ALTER TABLE hd_account_addresses ADD COLUMN hd_account_id integer not null"];
-        } else {
+        if (cnt > 0) {
             [db executeUpdate:@"ALTER TABLE hd_account_addresses ADD COLUMN hd_account_id integer"];
 
             __block int hdAccountId = -1;
@@ -479,37 +478,38 @@ static BOOL canOpenAddressDb;
             }
 
             [db executeUpdate:@"update hd_account_addresses set hd_account_id=?", @(hdAccountId)];
+            [db executeUpdate:@"INSERT INTO hd_account_addresses2(hd_account_id,path_type,address_index,is_issued,address,pub,is_synced)"
+                    " SELECT hd_account_id,path_type,address_index,is_issued,address,pub,is_synced FROM hd_account_addresses;"];
+        }
+        [db executeUpdate:@"create table if not exists hd_account_addresses2"
+                "(hd_account_id integer not null"
+                ", path_type integer not null"
+                ", address_index integer not null"
+                ", is_issued integer not null"
+                ", address text not null"
+                ", pub text not null"
+                ", is_synced integer not null"
+                ", primary key (address));"];
 
-            [db executeUpdate:@"create table if not exists hd_account_addresses2"
-                    "(hd_account_id integer not null"
-                    ", path_type integer not null"
-                    ", address_index integer not null"
-                    ", is_issued integer not null"
-                    ", address text not null"
-                    ", pub text not null"
-                    ", is_synced integer not null"
-                    ", primary key (address));"];
-            [db executeUpdate:@"INSERT INTO hd_account_addresses2 SELECT * FROM hd_account_addresses;"];
-            int oldCnt = 0;
-            int newCnt = 0;
-            rs = [db executeQuery:@"select count(0) cnt from hd_account_addresses"];
-            if ([rs next]) {
-                oldCnt = [rs intForColumnIndex:0];
-            }
-            [rs close];
-            [db executeQuery:@"select count(0) cnt from hd_account_addresses2"];
-            if ([rs next]) {
-                newCnt = [rs intForColumnIndex:0];
-            }
-            [rs close];
+        int oldCnt = 0;
+        int newCnt = 0;
+        rs = [db executeQuery:@"select count(0) cnt from hd_account_addresses"];
+        if ([rs next]) {
+            oldCnt = [rs intForColumnIndex:0];
+        }
+        [rs close];
+        [db executeQuery:@"select count(0) cnt from hd_account_addresses2"];
+        if ([rs next]) {
+            newCnt = [rs intForColumnIndex:0];
+        }
+        [rs close];
 
-            if (oldCnt != newCnt) {
-                [db rollback];
-                return NO;
-            } else {
-                [db executeUpdate:@"DROP TABLE hd_account_addresses;"];
-                [db executeUpdate:@"ALTER TABLE hd_account_addresses2 RENAME TO hd_account_addresses;"];
-            }
+        if (oldCnt != newCnt) {
+            [db rollback];
+            return NO;
+        } else {
+            [db executeUpdate:@"DROP TABLE hd_account_addresses;"];
+            [db executeUpdate:@"ALTER TABLE hd_account_addresses2 RENAME TO hd_account_addresses;"];
         }
 
         [db executeUpdate:self.indexOutsHDAccountIdSql];

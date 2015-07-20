@@ -78,7 +78,7 @@
         }
         [rs close];
 
-        sql = @"select hd_account_id,encrypt_seed,encrypt_mnemonic_seed from hd_account";
+        sql = @"select hd_account_id,encrypt_seed,encrypt_mnemonic_seed from hd_account where encrypt_mnemonic_seed is not null";
         rs = [db executeQuery:sql];
         while ([rs next]) {
             NSNumber *hdAccountId = @([rs intForColumnIndex:0]);

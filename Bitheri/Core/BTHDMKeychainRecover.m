@@ -33,7 +33,7 @@
             }
             for (BTHDMPubs *p in pubs) {
                 if (p.isCompleted) {
-                    [as addObject:[[BTHDMAddress alloc] initWithPubs:p andKeychain:self]];
+                    [as addObject:[[BTHDMAddress alloc] initWithPubs:p andKeychain:self syncCompleted:NO]];
                 } else {
                     [uncompPubs addObject:p];
                 }

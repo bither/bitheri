@@ -55,7 +55,7 @@
 
 @property(nonatomic, readonly) BOOL isInRecovery;
 
-- (instancetype)initWithPubs:(BTHDMPubs *)pubs andKeychain:(BTHDMKeychain *)keychain;
+- (instancetype)initWithPubs:(BTHDMPubs *)pubs andKeychain:(BTHDMKeychain *)keychain syncCompleted:(BOOL)isSyncCompleted;
 
 - (instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString *)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain;
 

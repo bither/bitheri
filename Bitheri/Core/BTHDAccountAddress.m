@@ -20,6 +20,8 @@
 #import "BTUtils.h"
 #import "BTKey.h"
 
+@implementation PathTypeIndex
+@end
 
 @implementation BTHDAccountAddress {
 
@@ -30,15 +32,20 @@
 }
 
 - (instancetype)initWithAddress:(NSString *)address pub:(NSData *)pub path:(PathType)path index:(int)index issued:(BOOL)issued andSyncedComplete:(BOOL)isSyncedComplete {
-    self = [super init];
-    if (self) {
-        self.address = address;
-        self.pub = pub;
-        self.index = index;
-        self.pathType = path;
-        self.isIssued = issued;
-        self.isSyncedComplete = isSyncedComplete;
-    }
+    return [self initWithHDAccountId:-1 address:address pub:pub path:path index:index issued:issued andSyncedComplete:isSyncedComplete];
+}
+
+- (instancetype)initWithHDAccountId:(int)hdAccountId address:(NSString *)address pub:(NSData *)pub path:(PathType)path index:(int)index issued:(BOOL)issued andSyncedComplete:(BOOL)isSyncedComplete; {
+    if (!(self = [super init])) return nil;
+
+    self.hdAccountId = hdAccountId;
+    self.address = address;
+    self.pub = pub;
+    self.index = index;
+    self.pathType = path;
+    self.isIssued = issued;
+    self.isSyncedComplete = isSyncedComplete;
+
     return self;
 }
 

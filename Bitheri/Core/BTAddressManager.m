@@ -22,10 +22,14 @@
 #import "BTIn.h"
 #import "BTQRCodeUtil.h"
 #import "BTAddressProvider.h"
+#import "BTHDAccountProvider.h"
+#import "BTHDAccountAddressProvider.h"
+#import "BTHDAccountCold.h"
 
 @interface BTAddressManager () <BTHDMAddressChangeDelegate> {
     BTHDMKeychain *_hdmKeychain;
-    BTHDAccount *_hdAccount;
+    BTHDAccount *_hdAccountHot;
+    BTHDAccount *_hdAccountMonitored;
 }
 
 @end
@@ -89,7 +93,7 @@
         return NSOrderedSame;
     }];
     [self initHDMKeychain];
-    [self initHDAccount];
+    [self initHDAccounts];
     [self initAliasAndVanity];
     self.isReady = YES;
     [tc signal];
@@ -100,10 +104,16 @@
     });
 }
 
-- (void)initHDAccount {
-    NSArray *seeds = [[BTAddressProvider instance] getHDAccountSeeds];
-    if (seeds && seeds.count > 0) {
-        _hdAccount = [[BTHDAccount alloc] initWithSeedId:((NSNumber *) seeds[0]).intValue];
+- (void)initHDAccounts {
+    if ([BTSettings instance].getAppMode == HOT) {
+        NSArray *seeds = [[BTHDAccountProvider instance] getHDAccountSeeds];
+        for (NSNumber *seedId in seeds) {
+            if (!_hdAccountHot && [[BTHDAccountProvider instance] hasMnemonicSeed:seedId.intValue]) {
+                _hdAccountHot = [[BTHDAccount alloc] initWithSeedId:seedId.intValue];
+            } else if (!_hdAccountMonitored && ![[BTHDAccountProvider instance] hasMnemonicSeed:seedId.intValue]) {
+                _hdAccountMonitored = [[BTHDAccount alloc] initWithSeedId:seedId.intValue];
+            }
+        }
     }
 }
 
@@ -308,7 +318,10 @@
             break;
         }
     }
-    if (allSync && self.hasHDAccount && !self.hdAccount.isSyncComplete) {
+    if (allSync && self.hasHDAccountHot && !self.hdAccountHot.isSyncComplete) {
+        allSync = NO;
+    }
+    if (allSync && self.hasHDAccountMonitored && !self.hdAccountMonitored.isSyncComplete) {
         allSync = NO;
     }
     return allSync;
@@ -321,13 +334,22 @@
 - (BOOL)isTxRelated:(BTTx *)tx; {
     for (BTAddress *address in self.allAddresses) {
         if ([self isAddress:address.address containsTransaction:tx]) {
-            return true;
+            return YES;
         }
     }
-    if (self.hasHDAccount) {
-        return [self.hdAccount isTxRelated:tx];
+    tx = [[BTHDAccountAddressProvider instance] updateOutHDAccountId:tx];
+    for (BTOut *out in tx.outs) {
+        if (out.hdAccountId > 0) {
+            return YES;
+        }
     }
-    return false;
+    NSMutableArray *addressList = [NSMutableArray new];
+    [addressList addObjectsFromArray:tx.getOutAddressList];
+    [addressList addObjectsFromArray:tx.getInAddresses];
+    if ([[BTHDAccountAddressProvider instance] getRelatedHDAccountIdListFromAddresses:addressList].count > 0) {
+        return YES;
+    }
+    return NO;
 }
 
 - (BOOL)isAddress:(NSString *)address containsTransaction:(BTTx *)transaction {
@@ -346,29 +368,38 @@
     }
 
     BOOL isRegister = NO;
-    BTTx *compressedTx = [self compressTx:tx];
+    BTTx *compressedTx;
+    tx = [[BTHDAccountAddressProvider instance] updateOutHDAccountId:tx];
+    if (txNotificationType != txSend) {
+        compressedTx = [self compressTx:tx];
+    } else {
+        compressedTx = tx;
+    }
     NSMutableSet *needNotifyAddressHashSet = [NSMutableSet new];
-    NSMutableSet *needNotifyHDAccountHS = [NSMutableSet new];
+//    NSMutableSet *needNotifyHDAccountHS = [NSMutableSet new];
     NSMutableArray *relatedAddresses = [NSMutableArray new];
-    NSMutableSet *relatedAddressesHS = [NSMutableSet new];
+//    NSMutableSet *relatedAddressesHS = [NSMutableSet new];
+    NSMutableArray *needNotifyHDAccountIdHS = [NSMutableArray new];
 
-    if (self.hasHDAccount) {
-        [relatedAddresses addObjectsFromArray:[self.hdAccount getRelatedAddressesForTx:compressedTx]];
-    }
+//    if (self.hasHDAccount) {
+//        [relatedAddresses addObjectsFromArray:[self.hdAccountHot getRelatedAddressesForTx:compressedTx]];
+//    }
 
-    for (BTHDAccountAddress *hdAccountAddress in relatedAddresses) {
-        [relatedAddressesHS addObject:hdAccountAddress.address];
-    }
+//    for (BTHDAccountAddress *hdAccountAddress in relatedAddresses) {
+//        [relatedAddressesHS addObject:hdAccountAddress.address];
+//    }
 
     for (BTOut *out in compressedTx.outs) {
         NSString *outAddress = out.outAddress;
         if ([self.addressesSet containsObject:outAddress]) {
             [needNotifyAddressHashSet addObject:outAddress];
         }
-
-        if ([relatedAddressesHS containsObject:outAddress]) {
-            [needNotifyHDAccountHS addObject:outAddress];
+        if (out.hdAccountId > 0) {
+            [needNotifyHDAccountIdHS addObject:@(out.hdAccountId)];
         }
+//        if ([relatedAddressesHS containsObject:outAddress]) {
+//            [needNotifyHDAccountHS addObject:outAddress];
+//        }
     }
 
     BTTx *txInDb = [[BTTxProvider instance] getTxDetailByTxHash:tx.txHash];
@@ -379,8 +410,11 @@
                 [needNotifyAddressHashSet removeObject:outAddress];
             }
 
-            if ([needNotifyHDAccountHS containsObject:outAddress]) {
-                [needNotifyHDAccountHS removeObject:outAddress];
+//            if ([needNotifyHDAccountHS containsObject:outAddress]) {
+//                [needNotifyHDAccountHS removeObject:outAddress];
+//            }
+            if (out.hdAccountId > 0 && [needNotifyHDAccountIdHS containsObject:@(out.hdAccountId)]) {
+                [needNotifyHDAccountIdHS removeObject:@(out.hdAccountId)];
             }
         }
         isRegister = YES;
@@ -391,13 +425,15 @@
                 [needNotifyAddressHashSet addObject:address];
             }
 
-            if ([relatedAddressesHS containsObject:address]) {
-                [needNotifyHDAccountHS addObject:address];
-            }
+//            if ([relatedAddressesHS containsObject:address]) {
+//                [needNotifyHDAccountHS addObject:address];
+//            }
+
         }
-        isRegister = needNotifyAddressHashSet.count > 0 || needNotifyHDAccountHS.count > 0;
+        [needNotifyHDAccountIdHS addObjectsFromArray:[[BTHDAccountAddressProvider instance] getRelatedHDAccountIdListFromAddresses:inAddresses]];
+        isRegister = needNotifyAddressHashSet.count > 0 || needNotifyHDAccountIdHS.count > 0;
     }
-    if (needNotifyAddressHashSet.count > 0 || needNotifyHDAccountHS.count > 0) {
+    if (needNotifyAddressHashSet.count > 0 || needNotifyHDAccountIdHS.count > 0) {
         [[BTTxProvider instance] add:compressedTx];
         DDLogDebug(@"register tx %@", [NSString hexWithHash:compressedTx.txHash]);
     }
@@ -407,15 +443,23 @@
         }
     }
 
-    NSMutableArray *needNotifyHDAddressList = [NSMutableArray new];
-    for (BTHDAccountAddress *a in relatedAddresses) {
-        if ([needNotifyHDAccountHS containsObject:a.address]) {
-            [needNotifyHDAddressList addObject:a];
-        }
-    }
+//    NSMutableArray *needNotifyHDAddressList = [NSMutableArray new];
+//    for (BTHDAccountAddress *a in relatedAddresses) {
+//        if ([needNotifyHDAccountHS containsObject:a.address]) {
+//            [needNotifyHDAddressList addObject:a];
+//        }
+//    }
 
-    if (needNotifyHDAddressList.count > 0) {
-        [self.hdAccount onNewTx:compressedTx withRelatedAddresses:needNotifyHDAddressList andTxNotificationType:txNotificationType];
+//    if (needNotifyHDAddressList.count > 0) {
+//        [self.hdAccountHot onNewTx:compressedTx withRelatedAddresses:needNotifyHDAddressList andTxNotificationType:txNotificationType];
+//    }
+    for (NSNumber *hdAccountId in needNotifyHDAccountIdHS) {
+        if ([self hasHDAccountHot] && [self.hdAccountHot getHDAccountId] == [hdAccountId intValue]) {
+            [self.hdAccountHot onNewTx:tx andTxNotificationType:txNotificationType];
+        }
+        if ([self hasHDAccountMonitored] && self.hdAccountMonitored.getHDAccountId == hdAccountId.intValue) {
+            [self.hdAccountMonitored onNewTx:tx andTxNotificationType:txNotificationType];
+        }
     }
 
     return isRegister;
@@ -468,17 +512,54 @@
     return _hdmKeychain;
 }
 
-- (BOOL)hasHDAccount {
-    return _hdAccount != nil;
+- (BOOL)hasHDAccountHot {
+    return _hdAccountHot != nil;
 }
 
-- (BTHDAccount *)hdAccount {
-    return _hdAccount;
+- (BTHDAccount *)hdAccountHot {
+    return _hdAccountHot;
 }
 
-- (void)setHdAccount:(BTHDAccount *)hdAccount {
-    _hdAccount = hdAccount;
-    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccount.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
+- (void)setHdAccountHot:(BTHDAccount *)hdAccountHot {
+    _hdAccountHot = hdAccountHot;
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccountHot.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
+}
+
+- (BOOL)hasHDAccountMonitored {
+    return _hdAccountMonitored != nil;
+}
+
+- (BTHDAccount *)hdAccountMonitored {
+    return _hdAccountMonitored;
+}
+
+- (void)setHdAccountMonitored:(BTHDAccount *)hdAccountMonitored {
+    _hdAccountMonitored = hdAccountMonitored;
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccountMonitored.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
+}
+
+- (BOOL)hasHDAccountCold {
+    if ([BTSettings instance].getAppMode == COLD) {
+        NSArray *seeds = [[BTHDAccountProvider instance] getHDAccountSeeds];
+        for (NSNumber *seedId in seeds) {
+            if ([[BTHDAccountProvider instance] hasMnemonicSeed:seedId.intValue]) {
+                return YES;
+            }
+        }
+    }
+    return NO;
+}
+
+- (BTHDAccountCold *)hdAccountCold {
+    if ([BTSettings instance].getAppMode == COLD) {
+        NSArray *seeds = [[BTHDAccountProvider instance] getHDAccountSeeds];
+        for (NSNumber *seedId in seeds) {
+            if ([[BTHDAccountProvider instance] hasMnemonicSeed:seedId.intValue]) {
+                return [[BTHDAccountCold alloc] initWithSeedId:seedId.intValue];
+            }
+        }
+    }
+    return nil;
 }
 
 - (void)blockChainChanged; {
@@ -491,6 +572,7 @@
     NSMutableDictionary *txDict = [NSMutableDictionary new];
     for (BTTx *tx in txList) {
         txDict[tx.txHash] = tx;
+        [[BTHDAccountAddressProvider instance] updateOutHDAccountId:tx];
     }
     for (BTTx *tx in txList) {
         if (![self isSendFromMe:tx andTxHashDict:txDict andAddress:address] && tx.outs.count > COMPRESS_OUT_NUM) {
@@ -523,11 +605,11 @@
 }
 
 - (BTTx *)compressTx:(BTTx *)tx {
-    if (![self isSendFromMe:tx] && (!self.hasHDAccount || ![self.hdAccount isSendFromMe:tx]) && tx.outs.count > COMPRESS_OUT_NUM) {
+    if (![self isSendFromMe:tx] && (!self.hasHDAccountHot || ![self.hdAccountHot isSendFromMe:tx]) && tx.outs.count > COMPRESS_OUT_NUM) {
         NSMutableArray *outList = [NSMutableArray new];
         NSMutableArray *hdAddresses = [NSMutableArray new];
-        if (self.hasHDAccount) {
-            [hdAddresses addObjectsFromArray:[self.hdAccount getBelongAccountAddressesFromAdresses:tx.getOutAddressList].allObjects];
+        if (self.hasHDAccountHot) {
+            [hdAddresses addObjectsFromArray:[self.hdAccountHot getBelongAccountAddressesFromAddresses:tx.getOutAddressList].allObjects];
         }
         for (BTOut *out in tx.outs) {
             NSString *outAddress = out.outAddress;
@@ -543,6 +625,16 @@
 - (BOOL)isSendFromMe:(BTTx *)tx; {
     NSArray *fromAddresses = [tx getInAddresses];
     return [self.addressesSet intersectsSet:[NSSet setWithArray:fromAddresses]];
+}
+
+- (BTHDAccount *)getHDAccountByHDAccountId:(int)hdAccountId; {
+    if (self.hasHDAccountHot && self.hdAccountHot.getHDAccountId == hdAccountId) {
+        return self.hdAccountHot;
+    } else if (self.hasHDAccountMonitored && self.hdAccountMonitored.getHDAccountId == hdAccountId) {
+        return self.hdAccountMonitored;
+    } else {
+        return nil;
+    }
 }
 
 #pragma mark - for old version
@@ -594,7 +686,7 @@
             NSString *addressStr = [str substringToIndex:(NSUInteger) (length - 4)];
             NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getPrivDir], addressStr];
             NSString *encryptString = [BTUtils readFile:privateKeyFullFileName];
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isSyncComplete:NO isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             [privKeyAddresses addObject:btAddress];
@@ -628,7 +720,7 @@
                 isFromXrandm = [BTUtils compareString:XRANDOM_FLAG compare:array[3]];
 
             }
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] encryptPrivKey:nil pubKey:[array[0] hexToData] hasPrivKey:NO isXRandom:isFromXrandm];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:[str substringToIndex:(NSUInteger) (length - 4)] encryptPrivKey:nil pubKey:[array[0] hexToData] hasPrivKey:NO isSyncComplete:NO isXRandom:isFromXrandm];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             [watchOnlyAddresses addObject:btAddress];
@@ -666,7 +758,7 @@
             NSString *addressStr = [str substringToIndex:(NSUInteger) (length - 4)];
             NSString *privateKeyFullFileName = [NSString stringWithFormat:PRIVATE_KEY_FILE_NAME, [BTUtils getTrashDir], addressStr];
             NSString *encryptString = [BTUtils readFile:privateKeyFullFileName];
-            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isXRandom:isFromXRandom];
+            BTAddress *btAddress = [[BTAddress alloc] initWithAddress:addressStr encryptPrivKey:encryptString pubKey:[array[0] hexToData] hasPrivKey:YES isSyncComplete:NO isXRandom:isFromXRandom];
             [btAddress setIsSyncComplete:[array[1] integerValue] == 1];
             [btAddress setSortTime:sortTime];
             btAddress.isTrashed = YES;

@@ -24,9 +24,14 @@ typedef enum {
 
 } PathType;
 
+@interface PathTypeIndex : NSObject
+@property PathType pathType;
+@property NSUInteger index;
+@end
+
 @interface BTHDAccountAddress : NSObject
 
-
+@property (nonatomic, readwrite) int hdAccountId;
 @property(nonatomic, strong) NSString *address;
 @property(nonatomic, strong) NSData *pub;
 @property(nonatomic, readwrite) PathType pathType;
@@ -37,7 +42,7 @@ typedef enum {
 + (PathType)getPathType:(int)type;
 
 - (instancetype)initWithPub:(NSData *)pub path:(PathType)path index:(int)index andSyncedComplete:(BOOL)isSyncedComplete;
-
 - (instancetype)initWithAddress:(NSString *)address pub:(NSData *)pub path:(PathType)path index:(int)index issued:(BOOL)issued andSyncedComplete:(BOOL)isSyncedComplete;
+- (instancetype)initWithHDAccountId:(int)hdAccountId address:(NSString *)address pub:(NSData *)pub path:(PathType)path index:(int)index issued:(BOOL)issued andSyncedComplete:(BOOL)isSyncedComplete;
 
 @end

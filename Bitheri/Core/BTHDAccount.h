@@ -25,6 +25,8 @@
 #define kHDAccountPaymentAddressChangedNotificationFirstAdding @"FirstAdding"
 #define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"
 #define kHDAccountPlaceHolder @"HDAccount"
+#define kHDAccountMonitoredPlaceHolder @"HDAccountMonitored"
+
 
 @interface BTHDAccount : BTAddress
 
@@ -34,21 +36,35 @@
 
 - (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
 
+- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub;
+
+- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub andFromXRandom:(BOOL)isFromXRandom;
+
+- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
+
 - (instancetype)initWithSeedId:(int)seedId;
 
-- (NSSet *)getBelongAccountAddressesFromAdresses:(NSArray *)addresses;
+- (NSSet *)getBelongAccountAddressesFromAddresses:(NSArray *)addresses;
 
 - (NSString *)getQRCodeFullEncryptPrivKey;
 
 - (BOOL)isTxRelated:(BTTx *)tx;
 
-- (void)onNewTx:(BTTx *)tx withRelatedAddresses:(NSArray *)relatedAddresses andTxNotificationType:(TxNotificationType)txNotificationType;
+- (void)onNewTx:(BTTx *)tx andTxNotificationType:(TxNotificationType)txNotificationType;
+
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error;
+
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error;
 
 - (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error;
 
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error;
 
+- (NSArray *)getSigningAddressesForInputs:(NSArray *)inputs;
+
 - (NSArray *)getRelatedAddressesForTx:(BTTx *)tx;
+
+- (BTHDAccountAddress *)addressForPath:(PathType)path atIndex:(NSUInteger)index;
 
 - (void)updateSyncComplete:(BTHDAccountAddress *)address;
 
@@ -62,9 +78,14 @@
 
 - (BOOL)isSendFromMe:(BTTx *)tx;
 
+- (NSInteger)issuedExternalIndex;
+
 - (void)updateIssuedIndex:(PathType)pathType index:(int)index;
 
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete;
 
 - (NSInteger)getHDAccountId;
+@end
+
+@interface DuplicatedHDAccountException : NSException
 @end

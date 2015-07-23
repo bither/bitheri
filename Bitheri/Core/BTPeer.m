@@ -52,7 +52,7 @@
 #import "BTIn.h"
 
 #define GET_BLOCK_DATA_PIECE_SIZE (5)
-#define MAX_PEER_MANAGER_WAITING_TASK_COUNT (0)
+#define MAX_PEER_MANAGER_WAITING_TASK_COUNT (5)
 #define PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL (0.1)
 #define BLOOMFILTER_UPDATE_BLOCK_INTERVAL (100)
 
@@ -712,7 +712,7 @@ typedef enum {
                 if (self.synchronising && [self.syncBlockHashes containsObject:block.blockHash]) {
                     [self.syncBlockHashes removeObject:block.blockHash];
                     [self.syncBlocks addObject:block];
-                    if (self.syncBlockHashes.count == 0) {
+                    if (self.syncBlockHashes.count == 0 && self.syncBlocks.count > 0) {
                         [self.delegate peer:self relayedBlocks:self.syncBlocks];
                         [self.syncBlocks removeAllObjects];
                     } else if (self.syncBlocks.count >= RELAY_BLOCK_COUNT_WHEN_SYNC) {
@@ -1085,7 +1085,7 @@ typedef enum {
             if (self.synchronising && [self.syncBlockHashes containsObject:block.blockHash]) {
                 [self.syncBlockHashes removeObject:block.blockHash];
                 [self.syncBlocks addObject:block];
-                if (self.syncBlockHashes.count == 0) {
+                if (self.syncBlockHashes.count == 0 && self.syncBlocks.count > 0) {
                     [self.delegate peer:self relayedBlocks:self.syncBlocks];
                     [self.syncBlocks removeAllObjects];
                 } else if (self.syncBlocks.count >= RELAY_BLOCK_COUNT_WHEN_SYNC) {

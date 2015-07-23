@@ -86,13 +86,13 @@ static NSData *EMPTYBYTES;
 
 @implementation BTHDMAddress
 
-- (instancetype)initWithPubs:(BTHDMPubs *)pubs andKeychain:(BTHDMKeychain *)keychain {
-    self = [self initWithPubs:pubs address:pubs.address syncCompleted:NO andKeychain:keychain];
+- (instancetype)initWithPubs:(BTHDMPubs *)pubs andKeychain:(BTHDMKeychain *)keychain syncCompleted:(BOOL)isSyncCompleted {
+    self = [self initWithPubs:pubs address:pubs.address syncCompleted:isSyncCompleted andKeychain:keychain];
     return self;
 }
 
 - (instancetype)initWithPubs:(BTHDMPubs *)pubs address:(NSString *)address syncCompleted:(BOOL)isSyncCompleted andKeychain:(BTHDMKeychain *)keychain {
-    self = [super initWithAddress:address encryptPrivKey:nil pubKey:pubs.multisigScript.program hasPrivKey:NO isXRandom:keychain.isFromXRandom];
+    self = [super initWithAddress:address encryptPrivKey:nil pubKey:pubs.multisigScript.program hasPrivKey:NO isSyncComplete:isSyncCompleted isXRandom:keychain.isFromXRandom];
     if (self) {
         self.pubs = pubs;
         self.keychain = keychain;

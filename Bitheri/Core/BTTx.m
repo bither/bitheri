@@ -30,7 +30,7 @@
 #import "BTTxProvider.h"
 #import "BTScriptBuilder.h"
 #import "BTHDAccount.h"
-#import "BTHDAccountProvider.h"
+#import "BTHDAccountAddressProvider.h"
 #import "BTUtils.h"
 
 @implementation BTTx
@@ -751,13 +751,13 @@
 
 - (int64_t)deltaAmountFromHDAccount:(BTHDAccount *)account {
     int64_t receive = 0;
-    NSSet *set = [account getBelongAccountAddressesFromAdresses:[self getOutAddressList]];
+    NSSet *set = [account getBelongAccountAddressesFromAddresses:[self getOutAddressList]];
     for (BTOut *out in [self outs]) {
         if ([set containsObject:out.outAddress]) {
             receive += out.outValue;
         }
     }
-    int64_t sent = [[BTHDAccountProvider instance] sentFromAccount:[account getHDAccountId] txHash:self.txHash];
+    int64_t sent = [[BTHDAccountAddressProvider instance] getAmountSentFromHDAccount:[account getHDAccountId] txHash:self.txHash];
     return receive - sent;
 }
 

@@ -17,26 +17,22 @@
 //  limitations under the License.
 
 #import "BTTxProvider.h"
-#import "BTOut.h"
 #import "BTIn.h"
 #import "BTTxHelper.h"
-#import "BTHDAccountProvider.h"
+#import "BTHDAccountAddressProvider.h"
 #import "BTAddressManager.h"
-
-
-static BTTxProvider *txProvider;
 
 @implementation BTTxProvider {
 
 }
 
-
 + (instancetype)instance; {
-    @synchronized (self) {
-        if (txProvider == nil) {
-            txProvider = [[self alloc] init];
-        }
-    }
+    static BTTxProvider *txProvider = nil;
+    static dispatch_once_t one;
+
+    dispatch_once(&one, ^{
+        txProvider = [[BTTxProvider alloc] init];
+    });
     return txProvider;
 }
 
@@ -318,14 +314,14 @@ static BTTxProvider *txProvider;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         // insert tx record
         [db beginTransaction];
-        NSSet *addressSet = [[BTHDAccountProvider instance] getBelongAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
-        for (BTOut *out in txItem.outs) {
-            if ([addressSet containsObject:out.outAddress]) {
-                out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
-            } else {
-                out.hdAccountId = -1;
-            }
-        }
+//        NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
+//        for (BTOut *out in txItem.outs) {
+//            if ([addressSet containsObject:out.outAddress]) {
+//                out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
+//            } else {
+//                out.hdAccountId = -1;
+//            }
+//        }
         NSNumber *blockNo = nil;
         if (txItem.blockNo != TX_UNCONFIRMED) {
             blockNo = @(txItem.blockNo);
@@ -363,12 +359,37 @@ static BTTxProvider *txProvider;
         // insert outs and get the out\'s addresses
         for (BTOut *outItem in txItem.outs) {
             sql = @"insert or replace into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
+            NSNumber *hdAccountId = nil;
+            if (outItem.hdAccountId > -1) {
+                hdAccountId = @(outItem.hdAccountId);
+            }
             success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                     , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                     , @(outItem.outValue), @(outItem.outStatus)
-                    , outItem.outAddress, @(outItem.hdAccountId)];
+                    , outItem.outAddress, hdAccountId];
             if (outItem.outAddress != nil) {
                 [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
+            }
+
+
+            if (outItem.hdAccountId > -1) {
+                // update hd account address 's issued
+                FMResultSet *rs = [db executeQuery:@"select hd_account_id,path_type,address_index "
+                                                           " from hd_account_addresses where address=?", outItem.outAddress];
+                int tmpHDAccountId = -1;
+                int tmpPathType = 0;
+                int tmpAddressIndex = 0;
+                if ([rs next]) {
+                    tmpHDAccountId = [rs intForColumnIndex:0];
+                    tmpPathType = [rs intForColumnIndex:1];
+                    tmpAddressIndex = [rs intForColumnIndex:2];
+                }
+                [rs close];
+                if (tmpHDAccountId > 0) {
+                    [db executeUpdate:@"update hd_account_addresses set is_issued=? "
+                                              " where hd_account_id=? and path_type=? and address_index=?"
+                            , @(1), @(tmpHDAccountId), @(tmpPathType), @(tmpAddressIndex)];
+                }
             }
 
             sql = @"select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
@@ -398,14 +419,14 @@ static BTTxProvider *txProvider;
         // insert tx record
         [db beginTransaction];
         for (BTTx *txItem in txs) {
-            NSSet *addressSet = [[BTHDAccountProvider instance] getBelongAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
-            for (BTOut *out in txItem.outs) {
-                if ([addressSet containsObject:out.outAddress]) {
-                    out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
-                } else {
-                    out.hdAccountId = -1;
-                }
-            }
+//            NSSet *addressSet = [[BTHDAccountAddressProvider instance] getBelongHDAccountAddressesFromDb:db addressList:[txItem getOutAddressList]];
+//            for (BTOut *out in txItem.outs) {
+//                if ([addressSet containsObject:out.outAddress]) {
+//                    out.hdAccountId = [[[BTAddressManager instance] hdAccount] getHDAccountId];
+//                } else {
+//                    out.hdAccountId = -1;
+//                }
+//            }
             NSNumber *blockNo = nil;
             if (txItem.blockNo != TX_UNCONFIRMED) {
                 blockNo = @(txItem.blockNo);
@@ -443,12 +464,36 @@ static BTTxProvider *txProvider;
             // insert outs and get the out\'s addresses
             for (BTOut *outItem in txItem.outs) {
                 sql = @"insert or replace into outs(tx_hash,out_sn,out_script,out_value,out_status,out_address,hd_account_id) values(?,?,?,?,?,?,?)";
+                NSNumber *hdAccountId = nil;
+                if (outItem.hdAccountId > -1) {
+                    hdAccountId = @(outItem.hdAccountId);
+                }
                 success = [db executeUpdate:sql, [NSString base58WithData:outItem.txHash]
                         , @(outItem.outSn), [NSString base58WithData:outItem.outScript]
                         , @(outItem.outValue), @(outItem.outStatus)
-                        , outItem.outAddress, @(outItem.hdAccountId)];
+                        , outItem.outAddress, hdAccountId];
                 if (outItem.outAddress != nil) {
                     [addressesTxsRels addObject:@[outItem.outAddress, txItem.txHash]];
+                }
+
+                if (outItem.hdAccountId > -1) {
+                    // update hd account address 's issued
+                    FMResultSet *rs = [db executeQuery:@"select hd_account_id,path_type,address_index "
+                                                  " from hd_account_addresses where address=?", outItem.outAddress];
+                    int tmpHDAccountId = -1;
+                    int tmpPathType = 0;
+                    int tmpAddressIndex = 0;
+                    if ([rs next]) {
+                        tmpHDAccountId = [rs intForColumnIndex:0];
+                        tmpPathType = [rs intForColumnIndex:1];
+                        tmpAddressIndex = [rs intForColumnIndex:2];
+                    }
+                    [rs close];
+                    if (tmpHDAccountId > 0) {
+                        [db executeUpdate:@"update hd_account_addresses set is_issued=? "
+                                                  " where hd_account_id=? and path_type=? and address_index=?"
+                                , @(1), @(tmpHDAccountId), @(tmpPathType), @(tmpAddressIndex)];
+                    }
                 }
 
                 sql = @"select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
@@ -1016,7 +1061,7 @@ static BTTxProvider *txProvider;
         }
         [rs close];
 
-        sql = @"select b.tx_hash,b.out_sn,b.out_value,b.out_address "
+        sql = @"select b.* "
                 " from addresses_txs a, outs b, txs c "
                 " where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.block_no is null and a.address=? "
                 " order by b.tx_hash,b.out_sn";

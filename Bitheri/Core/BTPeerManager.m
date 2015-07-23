@@ -99,7 +99,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _q = [[NSOperationQueue alloc] init];
     _q.name = @"net.bither.peermanager";
     _q.maxConcurrentOperationCount = 1;
-    if([_q respondsToSelector:@selector(setQualityOfService:)]){
+    if ([_q respondsToSelector:@selector(setQualityOfService:)]) {
         _q.qualityOfService = NSQualityOfServiceUserInitiated;
     }
     _txRelays = [NSMutableDictionary dictionary];
@@ -166,7 +166,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     self.filterUpdateHeight = self.lastBlockHeight;
     self.filterFpRate = BLOOM_DEFAULT_FALSEPOSITIVE_RATE;
 
-    if (self.lastBlockHeight + BLOCK_DIFFICULTY_INTERVAL < self.downloadPeer.versionLastBlock) {
+    if (self.lastBlockHeight + 500 < self.downloadPeer.versionLastBlock) {
         self.filterFpRate = BLOOM_REDUCED_FALSEPOSITIVE_RATE; // lower false positive rate during chain sync
     }
     else if (self.lastBlockHeight < self.downloadPeer.versionLastBlock) { // partially lower fp rate if we're nearly synced
@@ -176,7 +176,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
     NSArray *outs = [[BTAddressManager instance] outs];
 
-    NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count + ([BTAddressManager instance].hasHDAccount ? [BTAddressManager instance].hdAccount.elementCountForBloomFilter : 0);
+    NSUInteger elemCount = [[BTAddressManager instance] allAddresses].count * 2 + outs.count + ([BTAddressManager instance].hasHDAccountHot ? [BTAddressManager instance].hdAccountHot.elementCountForBloomFilter : 0) + ([BTAddressManager instance].hasHDAccountMonitored ? [BTAddressManager instance].hdAccountMonitored.elementCountForBloomFilter : 0);
     elemCount += 100;
     BTBloomFilter *filter = [[BTBloomFilter alloc] initWithFalsePositiveRate:self.filterFpRate
                                                              forElementCount:elemCount
@@ -195,8 +195,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if (![filter containsData:utxo]) [filter insertData:utxo];
     }
 
-    if ([BTAddressManager instance].hasHDAccount) {
-        [[BTAddressManager instance].hdAccount addElementsForBloomFilter:filter];
+    if ([BTAddressManager instance].hasHDAccountHot) {
+        [[BTAddressManager instance].hdAccountHot addElementsForBloomFilter:filter];
+    }
+
+    if ([BTAddressManager instance].hasHDAccountMonitored) {
+        [[BTAddressManager instance].hdAccountMonitored addElementsForBloomFilter:filter];
     }
 
     _bloomFilter = filter;
@@ -282,7 +286,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     if (!self.running)
         return;
 
-    [self.q addOperationWithBlock: ^{
+    [self.q addOperationWithBlock:^{
         [self.connectedPeers minusSet:[self.connectedPeers objectsPassingTest:^BOOL(id obj, BOOL *stop) {
             return [obj status] == BTPeerStatusDisconnected;
         }]];

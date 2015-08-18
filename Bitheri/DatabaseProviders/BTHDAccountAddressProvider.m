@@ -22,6 +22,7 @@
 #import "BTOut.h"
 #import "BTIn.h"
 #import "BTTxHelper.h"
+#import "BTHDAccount.h"
 
 #define HD_ACCOUNT_ID @"hd_account_id"
 #define PATH_TYPE @"path_type"
@@ -678,6 +679,27 @@
     return hdAccountIdList;
 }
 
+- (BOOL)requestNewReceivingAddress:(int)hdAccountId;{
+    int issuedIndex = [self getIssuedIndexByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH];
+    __block BOOL result = NO;
+    if (issuedIndex > kHDAccountMaxUnusedNewAddressCount) {
+        NSString *sql = @"select count(0) from hd_account_addresses a,outs b "
+                " where a.address=b.address and a.hd_account_id=? and a.address_id>=? and a.is_issued=?";
+        [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+            FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(issuedIndex - kHDAccountMaxUnusedNewAddressCount), @"1"];
+            if ([rs next]) {
+                result = [rs intForColumnIndex:0] > 0;
+            }
+            [rs close];
+        }];
+    } else {
+        result = YES;
+    }
+    if (result) {
+        [self updateIssuedByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH index:<#(int)index#>];
+    }
+    return result;
+}
 
 - (BTHDAccountAddress *)formatAddress:(FMResultSet *)rs {
     BTHDAccountAddress *address = [[BTHDAccountAddress alloc] init];

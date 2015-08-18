@@ -692,6 +692,14 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return _isFromXRandom;
 }
 
+- (BOOL)requestNewReceivingAddress {
+    BOOL result = [[BTHDAccountAddressProvider instance] requestNewReceivingAddress:self.hdAccountId];
+    if (result) {
+        [self supplyEnoughKeys:YES];
+    }
+    return result;
+}
+
 - (void)updateIssuedIndex:(PathType)pathType index:(int)index {
     if (pathType == EXTERNAL_ROOT_PATH) {
         [self updateIssuedExternalIndex:index];

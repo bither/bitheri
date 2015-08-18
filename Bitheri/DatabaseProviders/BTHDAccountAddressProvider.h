@@ -43,6 +43,7 @@
 - (NSArray *)getPubsByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
 - (NSArray *)getBelongHDAccount:(int)hdAccountId fromAddresses:(NSArray *)addresses;
+
 - (NSArray *)getBelongHDAccountFrom:(NSArray *)addresses;
 
 - (void)updateSyncedCompleteByHDAccountId:(int)hdAccountId address:(BTHDAccountAddress *)address;
@@ -50,6 +51,7 @@
 - (void)setSyncedAllNotComplete;
 
 - (int)getUnSyncedAddressCount:(int)hdAccountId;
+
 - (int)getUnSyncedAddressCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
 - (void)updateSyncedByHDAccountId:(int)hdAccountId pathType:(PathType)pathType index:(int)index;
@@ -65,6 +67,7 @@
 - (uint64_t)getAmountSentFromHDAccount:(int)hdAccountId txHash:(NSData *)txHash;
 
 - (NSArray *)getTxAndDetailByHDAccount:(int)hdAccountId;
+
 - (NSArray *)getTxAndDetailByHDAccount:(int)hdAccountId page:(int)page;
 
 - (NSArray *)getUnspendOutByHDAccount:(int)hdAccountId;
@@ -72,6 +75,7 @@
 - (NSArray *)getRecentlyTxsByHDAccount:(int)hdAccountId blockNo:(int)greaterThanBlockNo limit:(int)limit;
 
 - (NSSet *)getBelongHDAccountAddressesFromAddresses:(NSArray *)addressList;
+
 - (NSSet *)getAddressesByHDAccount:(int)hdAccountId fromAddresses:(NSArray *)addressList;
 
 - (NSSet *)getBelongHDAccountAddressesFromDb:(FMDatabase *)db addressList:(NSArray *)addressList;
@@ -80,8 +84,10 @@
 
 - (NSArray *)getUnspendOutByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
-- (BTTx *)updateOutHDAccountId:(BTTx *) tx;
+- (BTTx *)updateOutHDAccountId:(BTTx *)tx;
 
 - (NSArray *)getRelatedHDAccountIdListFromAddresses:(NSArray *)addresses;
+
+- (BOOL)requestNewReceivingAddress:(int)hdAccountId;
 
 @end

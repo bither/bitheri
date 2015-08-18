@@ -26,6 +26,7 @@
 #define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"
 #define kHDAccountPlaceHolder @"HDAccount"
 #define kHDAccountMonitoredPlaceHolder @"HDAccountMonitored"
+#define kHDAccountMaxUnusedNewAddressCount (20)
 
 
 @interface BTHDAccount : BTAddress
@@ -85,6 +86,8 @@
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete;
 
 - (NSInteger)getHDAccountId;
+
+- (BOOL)requestNewReceivingAddress;
 @end
 
 @interface DuplicatedHDAccountException : NSException

@@ -90,4 +90,5 @@
 
 - (BOOL)requestNewReceivingAddress:(int)hdAccountId;
 
+- (BOOL)hasHDAccount:(int)hdAccountId pathType:(PathType) pathType receiveTxInAddressCount:(int) addressCount;
 @end

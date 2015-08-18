@@ -701,6 +701,32 @@
     return result;
 }
 
+- (BOOL)hasHDAccount:(int)hdAccountId pathType:(PathType) pathType receiveTxInAddressCount:(int) addressCount; {
+    __block BOOL result = NO;
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select ifnull(max(address_index),-1) address_index from hd_account_addresses "
+                " where path_type=? and is_synced=? and hd_account_id=? ";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(YES), @(hdAccountId)];
+        int syncedIndex = -1;
+        if ([rs next]) {
+            syncedIndex = [rs intForColumnIndex:0];
+        }
+        if (syncedIndex > addressCount) {
+            sql = @"select count(0) from hd_account_addresses a,outs b "
+                    " where a.address=b.out_address and a.hd_account_id=? and a.address_index>=? and a.is_synced=?";
+            rs = [db executeQuery:sql, @(hdAccountId), @(syncedIndex - addressCount), @(YES)];
+            if ([rs next]) {
+                result = [rs intForColumnIndex:0] > 0;
+            }
+            [rs close];
+
+        } else {
+            result = YES;
+        }
+    }];
+    return result;
+}
+
 - (BTHDAccountAddress *)formatAddress:(FMResultSet *)rs {
     BTHDAccountAddress *address = [[BTHDAccountAddress alloc] init];
     int columnIndex = [rs columnIndexForName:HD_ACCOUNT_ID];

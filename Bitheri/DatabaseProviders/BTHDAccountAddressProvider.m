@@ -696,7 +696,7 @@
         result = YES;
     }
     if (result) {
-        [self updateIssuedByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH index:<#(int)index#>];
+        [self updateIssuedByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH index:issuedIndex + 1];
     }
     return result;
 }

@@ -684,7 +684,7 @@
     __block BOOL result = NO;
     if (issuedIndex > kHDAccountMaxUnusedNewAddressCount) {
         NSString *sql = @"select count(0) from hd_account_addresses a,outs b "
-                " where a.address=b.address and a.hd_account_id=? and a.address_id>=? and a.is_issued=?";
+                " where a.address=b.out_address and a.hd_account_id=? and a.address_index>=? and a.is_issued=?";
         [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
             FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(issuedIndex - kHDAccountMaxUnusedNewAddressCount), @"1"];
             if ([rs next]) {

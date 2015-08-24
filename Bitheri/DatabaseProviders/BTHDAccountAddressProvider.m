@@ -711,6 +711,7 @@
         if ([rs next]) {
             syncedIndex = [rs intForColumnIndex:0];
         }
+        [rs close];
         if (syncedIndex >= addressCount) {
             sql = @"select count(0) from hd_account_addresses a,outs b "
                     " where a.address=b.out_address and a.hd_account_id=? and a.address_index>=? and a.is_synced=? and a.path_type=?";

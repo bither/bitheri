@@ -682,7 +682,7 @@
 - (BOOL)requestNewReceivingAddress:(int)hdAccountId;{
     int issuedIndex = [self getIssuedIndexByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH];
     __block BOOL result = NO;
-    if (issuedIndex >= kHDAccountMaxUnusedNewAddressCount) {
+    if (issuedIndex >= kHDAccountMaxUnusedNewAddressCount - 2) {
         NSString *sql = @"select count(0) from hd_account_addresses a,outs b "
                 " where a.address=b.out_address and a.hd_account_id=? and a.address_index>? and a.is_issued=? and a.path_type=?";
         [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {

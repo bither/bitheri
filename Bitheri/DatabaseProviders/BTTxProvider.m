@@ -387,7 +387,7 @@
                 [rs close];
                 if (tmpHDAccountId > 0) {
                     [db executeUpdate:@"update hd_account_addresses set is_issued=? "
-                                              " where hd_account_id=? and path_type=? and address_index=?"
+                                              " where hd_account_id=? and path_type=? and address_index<=?"
                             , @(1), @(tmpHDAccountId), @(tmpPathType), @(tmpAddressIndex)];
                 }
             }

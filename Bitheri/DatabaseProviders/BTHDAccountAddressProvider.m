@@ -22,6 +22,7 @@
 #import "BTOut.h"
 #import "BTIn.h"
 #import "BTTxHelper.h"
+#import "BTHDAccount.h"
 
 #define HD_ACCOUNT_ID @"hd_account_id"
 #define PATH_TYPE @"path_type"
@@ -678,6 +679,54 @@
     return hdAccountIdList;
 }
 
+- (BOOL)requestNewReceivingAddress:(int)hdAccountId;{
+    int issuedIndex = [self getIssuedIndexByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH];
+    __block BOOL result = NO;
+    if (issuedIndex >= kHDAccountMaxUnusedNewAddressCount - 2) {
+        NSString *sql = @"select count(0) from hd_account_addresses a,outs b "
+                " where a.address=b.out_address and a.hd_account_id=? and a.address_index>? and a.is_issued=? and a.path_type=?";
+        [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+            FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(issuedIndex - kHDAccountMaxUnusedNewAddressCount + 1), @"1", @(EXTERNAL_ROOT_PATH)];
+            if ([rs next]) {
+                result = [rs intForColumnIndex:0] > 0;
+            }
+            [rs close];
+        }];
+    } else {
+        result = YES;
+    }
+    if (result) {
+        [self updateIssuedByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH index:issuedIndex + 1];
+    }
+    return result;
+}
+
+- (BOOL)hasHDAccount:(int)hdAccountId pathType:(PathType) pathType receiveTxInAddressCount:(int) addressCount; {
+    __block BOOL result = NO;
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select ifnull(max(address_index),-1) address_index from hd_account_addresses "
+                " where path_type=? and is_synced=? and hd_account_id=? ";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(YES), @(hdAccountId)];
+        int syncedIndex = -1;
+        if ([rs next]) {
+            syncedIndex = [rs intForColumnIndex:0];
+        }
+        [rs close];
+        if (syncedIndex >= addressCount) {
+            sql = @"select count(0) from hd_account_addresses a,outs b "
+                    " where a.address=b.out_address and a.hd_account_id=? and a.address_index>=? and a.is_synced=? and a.path_type=?";
+            rs = [db executeQuery:sql, @(hdAccountId), @(syncedIndex - addressCount), @(YES), @(EXTERNAL_ROOT_PATH)];
+            if ([rs next]) {
+                result = [rs intForColumnIndex:0] > 0;
+            }
+            [rs close];
+
+        } else {
+            result = YES;
+        }
+    }];
+    return result;
+}
 
 - (BTHDAccountAddress *)formatAddress:(FMResultSet *)rs {
     BTHDAccountAddress *address = [[BTHDAccountAddress alloc] init];

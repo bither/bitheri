@@ -699,7 +699,7 @@ typedef enum {
     DDLogDebug(@"%@:%u got tx %@", self.host, self.peerPort, [NSString hexWithHash:tx.txHash]);
 
     if (self.currentBlock) { // we're collecting tx messages for a merkleblock
-        if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
+        if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx confirmed:YES];
         [self.currentTxHashes removeObject:tx.txHash];
 
         if (self.currentTxHashes.count == 0) { // we received the entire block including all matched tx
@@ -740,7 +740,7 @@ typedef enum {
         BOOL valid = YES;
         valid &= [tx verify];
         if (valid && ![tx hasDustOut]) {
-            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx];
+            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:tx confirmed:NO];
 //            [self checkDependencyWith:tx];
         }
         // do not check dependency now, may check it in future
@@ -840,7 +840,7 @@ typedef enum {
                 }
             }
             if (!stillNeedDependency) {
-                if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx];
+                if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx confirmed:NO];
                 [checkedTxs addObject:eachTx];
             }
         } else {
@@ -874,7 +874,7 @@ typedef enum {
             }
         }
         if (!stillNeedDependency) {
-            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx];
+            if (_status == BTPeerStatusConnected) [self.delegate peer:self relayedTransaction:eachTx confirmed:NO];
             [checkedTxs addObject:eachTx];
         }
     }

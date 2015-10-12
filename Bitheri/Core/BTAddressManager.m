@@ -361,7 +361,7 @@
     return [[BTTxProvider instance] isAddress:address containsTx:transaction];
 }
 
-- (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType; {
+- (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType confirmed:(BOOL)confirmed {
     if ([[BTTxProvider instance] isTxDoubleSpendWithConfirmedTx:tx]) {
         // double spend with confirmed tx
         return false;

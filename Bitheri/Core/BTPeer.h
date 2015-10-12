@@ -50,7 +50,7 @@
 
 - (void)peer:(BTPeer *)peer relayedPeers:(NSArray *)peers;
 
-- (void)peer:(BTPeer *)peer relayedTransaction:(BTTx *)transaction;
+- (void)peer:(BTPeer *)peer relayedTransaction:(BTTx *)transaction confirmed:(BOOL) confirmed;
 
 // called when the peer relays either a merkleblock or a block header, headers will have 0 totalTransactions
 - (void)peer:(BTPeer *)peer relayedBlock:(BTBlock *)block;

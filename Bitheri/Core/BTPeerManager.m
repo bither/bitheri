@@ -43,7 +43,7 @@
 #import <netdb.h>
 #import "BTPeerProvider.h"
 #import "BTTxProvider.h"
-#import "asn1t.h"
+#import <openssl/asn1t.h>
 #import "BTHDAccount.h"
 
 #if BITCOIN_TESTNET

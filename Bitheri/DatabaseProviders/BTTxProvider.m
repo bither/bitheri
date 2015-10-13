@@ -1105,7 +1105,7 @@
     for (BTIn *eachIn in tx.ins) {
         NSMutableSet *each = [NSMutableSet new];
         [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-            FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:eachIn.prevTxHash], [NSNumber numberWithInt:eachIn.inSn]];
+            FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:eachIn.prevTxHash], [NSNumber numberWithInt:eachIn.prevOutSn]];
             while ([rs next]) {
                 [each addObject:[rs stringForColumnIndex:0]];
             }

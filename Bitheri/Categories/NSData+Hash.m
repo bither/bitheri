@@ -38,7 +38,7 @@
 
 #import "NSData+Hash.h"
 #import <openssl/ripemd.h>
-#import "bn.h"
+#import <openssl/bn.h>
 
 @implementation NSData (Hash)
 

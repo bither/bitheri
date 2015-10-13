@@ -63,7 +63,7 @@
 
 - (BOOL)allSyncComplete;
 
-- (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType;
+- (BOOL)registerTx:(BTTx *)tx withTxNotificationType:(TxNotificationType)txNotificationType confirmed:(BOOL) confirmed;
 
 - (BOOL)isTxRelated:(BTTx *)tx;
 

@@ -43,7 +43,7 @@
 #import <netdb.h>
 #import "BTPeerProvider.h"
 #import "BTTxProvider.h"
-#import "asn1t.h"
+#import <openssl/asn1t.h>
 #import "BTHDAccount.h"
 
 #if BITCOIN_TESTNET
@@ -412,7 +412,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         return;
     }
 
-    [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txSend];
+    [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txSend confirmed:NO];
     self.publishedTx[transaction.txHash] = transaction;
 
     if (completion) {
@@ -629,14 +629,14 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 //    [self addRelayedPeers:peers];
 }
 
-- (void)peer:(BTPeer *)peer relayedTransaction:(BTTx *)transaction {
+- (void)peer:(BTPeer *)peer relayedTransaction:(BTTx *)transaction confirmed:(BOOL) confirmed{
     if (!self.running)
         return;
 
     if (peer == self.downloadPeer) self.lastRelayTime = [NSDate timeIntervalSinceReferenceDate];
 
     [self.q addOperationWithBlock:^{
-        BOOL isRel = [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txReceive];
+        BOOL isRel = [[BTAddressManager instance] registerTx:transaction withTxNotificationType:txReceive confirmed:confirmed];
 
         if (isRel) {
             BOOL isAlreadyInDb = [[BTTxProvider instance] isExist:transaction.txHash];

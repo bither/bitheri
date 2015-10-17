@@ -1099,4 +1099,28 @@
     return result;
 }
 
+- (NSData *)isIdentify:(BTTx *)tx; {
+    NSMutableSet *result = [NSMutableSet new];
+    NSString *sql = @"select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
+    for (BTIn *eachIn in tx.ins) {
+        NSMutableSet *each = [NSMutableSet new];
+        [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+            FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:eachIn.prevTxHash], [NSNumber numberWithInt:eachIn.prevOutSn]];
+            while ([rs next]) {
+                [each addObject:[rs stringForColumnIndex:0]];
+            }
+            [rs close];
+        }];
+        [each removeObject:[NSString base58WithData:tx.txHash]];
+        [result intersectSet:each];
+        if (result.count == 0) {
+            break;
+        }
+    }
+    if (result.count) {
+        return nil;
+    } else {
+        return [[result anyObject] base58ToData];
+    }
+}
 @end

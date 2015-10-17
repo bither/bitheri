@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'Bitheri'
-  s.version  = '1.3.9'
+  s.version  = '1.4.0'
   s.license  = 'Apache License, Version 2.0'
   s.summary  = 'bither\'s ios framework'
   s.homepage = 'http://bither.net'
@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
 
   s.source_files = 'Bitheri/Bitheri.{h,m}', 'Bitheri/{Models,Categories,Core,DatabaseProviders,Script,Utils,Log}/*.{h,m}'
 
-  s.dependency 'OpenSSL', '1.0.110'
+  s.dependency 'OpenSSL', '1.0.1j'
   s.dependency 'Reachability', '~> 3.1.1'
   s.dependency 'FMDB', '~> 2.3'
   s.dependency 'CocoaLumberjack', '~> 1.9.1'

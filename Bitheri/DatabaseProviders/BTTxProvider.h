@@ -90,4 +90,6 @@
 - (NSArray *)getUnconfirmedTxWithAddress:(NSString *)address;
 
 - (uint64_t)getTotalReceiveWithAddress:(NSString *)address;
+
+- (NSData *)isIdentify:(BTTx *)tx;
 @end

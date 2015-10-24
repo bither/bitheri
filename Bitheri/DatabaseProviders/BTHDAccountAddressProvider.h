@@ -84,6 +84,10 @@
 
 - (NSArray *)getUnspendOutByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
 
+- (int)getUnconfirmedSpentOutCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
+
+- (NSArray *)getUnconfirmedSpentOutByHDAccountId:(int)hdAccountId pathType:(PathType)pathType;
+
 - (BTTx *)updateOutHDAccountId:(BTTx *)tx;
 
 - (NSArray *)getRelatedHDAccountIdListFromAddresses:(NSArray *)addresses;

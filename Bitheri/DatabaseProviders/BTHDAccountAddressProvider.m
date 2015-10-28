@@ -616,6 +616,39 @@
     return result;
 }
 
+- (int)getUnconfirmedSpentOutCountByHDAccountId:(int)hdAccountId pathType:(PathType)pathType {
+    __block int result = 0;
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select count(0) cnt from outs o, ins i, txs t, hd_account_addresses a "
+        "  where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash and o.out_address=a.address and a.path_type=? "
+        "    and o.out_status=? and t.block_no is null and a.hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(spent), @(hdAccountId)];
+        if ([rs next]) {
+            int columnIndex = [rs columnIndexForName:@"cnt"];
+            if (columnIndex != -1) {
+                result = [rs intForColumnIndex:columnIndex];
+            }
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (NSArray *)getUnconfirmedSpentOutByHDAccountId:(int)hdAccountId pathType:(PathType)pathType {
+    NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select o.* from outs o, ins i, txs t,hd_account_addresses a "
+        "  where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash and o.out_address=a.address and a.path_type=? "
+        "    and o.out_status=? and t.block_no is null and a.hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(spent), @(hdAccountId)];
+        while ([rs next]) {
+            [result addObject:[BTTxHelper formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (void)addHDAccountAddress:(FMDatabase *)db hdAccountAddress:(BTHDAccountAddress *)address {
     NSString *sql = @"insert into hd_account_addresses(hd_account_id,path_type,address_index"
             ",is_issued,address,pub,is_synced) "

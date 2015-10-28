@@ -493,8 +493,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSUInteger)elementCountForBloomFilter {
-    return [self allGeneratedExternalAddressCount] * 2 + [[BTHDAccountAddressProvider instance]
-            getUnspendOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
+    return [self allGeneratedExternalAddressCount] * 2 +
+    [[BTHDAccountAddressProvider instance] getUnspendOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH] +
+    [[BTHDAccountAddressProvider instance] getUnconfirmedSpentOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
 }
 
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter {
@@ -504,6 +505,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [filter insertData:[[BTKey alloc] initWithPublicKey:pub].address.addressToHash160];
     }
     NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
+    for (BTOut *out in outs) {
+        [filter insertData:getOutPoint(out.txHash, out.outSn)];
+    }
+    outs = [[BTHDAccountAddressProvider instance] getUnconfirmedSpentOutByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
     for (BTOut *out in outs) {
         [filter insertData:getOutPoint(out.txHash, out.outSn)];
     }

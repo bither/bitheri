@@ -100,7 +100,7 @@
 #define MSG_ALERT       @"alert"
 #define MSG_REJECT      @"reject" // described in BIP61: https://gist.github.com/gavinandresen/7079034
 
-#define BITHERI_VERSION @"1.4.4"
+#define BITHERI_VERSION @"1.4.5"
 #define BITHERI_NAME @"Bitheri"
 #define USERAGENT [NSString stringWithFormat:@"/Bither:%@/", BITHERI_VERSION]
 

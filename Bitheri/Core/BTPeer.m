@@ -70,6 +70,7 @@ typedef enum {
     int _unrelatedTxRelayCount;
     NSString *_host;
     BOOL _synchronising;
+    BOOL _relayTxesBeforeFilter;
     uint32_t _syncStartBlockNo;
     uint32_t _syncStartPeerBlockNo;
     uint32_t _synchronisingBlockCount;
@@ -107,6 +108,7 @@ typedef enum {
     _timestamp = timestamp;
     _peerServices = services;
     _peerConnectedCnt = 0;
+    _relayTxesBeforeFilter = YES;
 
     return self;
 }
@@ -515,9 +517,19 @@ typedef enum {
     }
 
     _versionLastBlock = [message UInt32AtOffset:80 + l];
+    
+    if (message.length < 80 + l + sizeof(uint32_t) + 1){
+        _relayTxesBeforeFilter = YES;
+    } else {
+        _relayTxesBeforeFilter = ((Byte *) message.bytes)[80 + l + sizeof(uint32_t)] != 0;
+        if(!self.canRelayTx){
+            [self error:@"%@:%d can NOT relay tx, got version %d, useragent:\"%@\", %@", self.host, self.peerPort, self.version, self.userAgent];
+            return;
+        }
+    }
 
-    DDLogDebug(@"%@:%d got version %d, useragent:\"%@\"", self.host, self.peerPort, self.version, self.userAgent);
-
+    DDLogDebug(@"%@:%d got version %d, useragent:\"%@\", %@", self.host, self.peerPort, self.version, self.userAgent, self.canRelayTx ? @"can relay tx" : @"can NOT relay tx");
+    
     [self sendVerAckMessage];
 }
 
@@ -1302,4 +1314,11 @@ typedef enum {
     return self.versionLastBlock + _incrementalBlockHeight;
 }
 
+- (BOOL)relayTxesBeforeFilter{
+    return _relayTxesBeforeFilter;
+}
+
+- (BOOL)canRelayTx{
+    return self.relayTxesBeforeFilter;
+}
 @end

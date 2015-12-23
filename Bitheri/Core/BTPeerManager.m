@@ -433,15 +433,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 //    }
 
     // if (completion) self.publishedCallback[transaction.txHash] = completion;
-
-    NSMutableSet *peers = [NSMutableSet setWithSet:self.connectedPeers];
-
-    // instead of publishing to all peers, leave one out to see if the tx propogates and is relayed back to us
-    if (peers.count > 1) [peers removeObject:[peers anyObject]];
-
+    
     [self.q addOperationWithBlock:^{
         [self performSelector:@selector(txTimeout:) withObject:transaction.txHash afterDelay:PROTOCOL_TIMEOUT];
-
+        
+        NSMutableSet *peers = [NSMutableSet setWithSet:self.connectedPeers];
         for (BTPeer *p in peers) {
             [p sendInvMessageWithTxHash:transaction.txHash];
         }

@@ -748,7 +748,7 @@
         if (syncedIndex >= addressCount) {
             sql = @"select count(0) from hd_account_addresses a,outs b "
                     " where a.address=b.out_address and a.hd_account_id=? and a.address_index>=? and a.is_synced=? and a.path_type=?";
-            rs = [db executeQuery:sql, @(hdAccountId), @(syncedIndex - addressCount), @(YES), @(EXTERNAL_ROOT_PATH)];
+            rs = [db executeQuery:sql, @(hdAccountId), @(syncedIndex - addressCount), @(YES), @(pathType)];
             if ([rs next]) {
                 result = [rs intForColumnIndex:0] > 0;
             }

@@ -71,7 +71,7 @@
 
 - (NSData *)getPubKeyExtended;
 
-+ (BTBIP32Key*)deserializeFromB58:(NSString*) serilized;
++ (BTBIP32Key *)deserializeFromB58:(NSString *) serilized;
 
 - (NSString *) serializePubB58;
 

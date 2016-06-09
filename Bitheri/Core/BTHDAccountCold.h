@@ -52,6 +52,6 @@
 
 - (NSInteger)getHDAccountId;
 
-- (BTBIP32Key*)xPub:(NSString *)password;
+- (BTBIP32Key *) xPub:(NSString *)password;
 
 @end

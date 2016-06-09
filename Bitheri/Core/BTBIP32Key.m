@@ -340,7 +340,7 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     return _key;
 }
 
-+ (BTBIP32Key*)deserializeFromB58:(NSString*) serialized{
++ (BTBIP32Key *)deserializeFromB58:(NSString *) serialized{
     NSData* data = serialized.base58checkToData;
     if (data.length != 78) return nil;
     const uint8_t* bytes = data.bytes;

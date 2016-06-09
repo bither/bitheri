@@ -222,7 +222,7 @@
     return account;
 }
 
-- (BTBIP32Key*)xPub:(NSString *)password {
+- (BTBIP32Key *)xPub:(NSString *)password {
     BTBIP32Key *master = [self masterKey:password];
     BTBIP32Key *account = [self getAccount:master];
     [master wipe];

@@ -38,6 +38,10 @@
 
 #import <Foundation/Foundation.h>
 
+typedef struct _BRPubKey {
+    uint8_t u8[33];
+} BRPubKey;
+
 #define SALT_LENGTH              8
 #define IS_COMPRESSED_FLAG       1
 #define IS_FROMXRANDOM_FLAG      2

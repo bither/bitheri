@@ -39,6 +39,8 @@
 #import <Foundation/Foundation.h>
 #import "BTKey.h"
 
+#define BIP32_HARD 0x80000000u
+
 @interface BTBIP32Key : NSObject
 
 @property(nonatomic, strong, readonly) BTKey *key;
@@ -55,16 +57,22 @@
 - (instancetype)initWithMasterPubKey:(NSData *)masterPubKey;
 
 - (instancetype)initWithSecret:(NSData *)secret andPubKey:(NSData *)pubKey andChain:(NSData *)chain
-                       andPath:(NSArray *)path;
+                       andPath:(NSArray *)path andParent: (BTBIP32Key*) parent;
 
 - (BTBIP32Key *)deriveSoftened:(uint)child;
 
 - (BTBIP32Key *)deriveHardened:(uint)child;
+
+- (int32_t)getFingerprint;
 
 - (void)clearPrivateKey;
 
 - (void)wipe;
 
 - (NSData *)getPubKeyExtended;
+
++ (BTBIP32Key*)deserializeFromB58:(NSString*) serilized;
+
+- (NSString *) serializePubB58;
 
 @end

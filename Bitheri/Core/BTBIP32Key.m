@@ -41,6 +41,7 @@
 #import "NSString+Base58.h"
 #import "NSMutableData+Bitcoin.h"
 #import "NSData+Hash.h"
+#import "NSData+Bitcoin.h"
 #import <CommonCrypto/CommonHMAC.h>
 #import <openssl/ecdsa.h>
 #import <openssl/obj_mac.h>
@@ -159,26 +160,28 @@ static void CKDPrime(NSMutableData *K, NSMutableData *c, uint32_t i) {
 }
 
 // helper function for serializing BIP32 master public/private keys to standard export format
-static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, NSData *chain, NSData *key) {
-    NSMutableData *d = [NSMutableData secureDataWithCapacity:14 + key.length + chain.length];
-
+static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, UInt256 chain, NSData *key)
+{
+    NSMutableData *d = [NSMutableData secureDataWithCapacity:14 + key.length + sizeof(chain)];
+    
     fingerprint = CFSwapInt32HostToBig(fingerprint);
     child = CFSwapInt32HostToBig(child);
-
+    
     [d appendBytes:key.length < 33 ? BIP32_XPRV : BIP32_XPUB length:4];
     [d appendBytes:&depth length:1];
     [d appendBytes:&fingerprint length:sizeof(fingerprint)];
     [d appendBytes:&child length:sizeof(child)];
-    [d appendData:chain];
+    [d appendBytes:&chain length:sizeof(chain)];
     if (key.length < 33) [d appendBytes:"\0" length:1];
     [d appendData:key];
-
+    
     return [NSString base58checkWithData:d];
 }
 
 @interface BTBIP32Key ()
 
 @property(nonatomic, copy) NSData *chain;
+@property int32_t parentFingerprint;
 
 @end
 
@@ -199,7 +202,7 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
             return nil;
         }
         NSArray *path = [BTBIP32Key path:parent.path extend:childNumber];
-        return [[BTBIP32Key alloc] initWithSecret:nil andPubKey:pubKey andChain:chain andPath:path];
+        return [[BTBIP32Key alloc] initWithSecret:nil andPubKey:pubKey andChain:chain andPath:path andParent:parent];
     } else {
         NSMutableData *secret = [NSMutableData dataWithData:[parent secret]];
         NSMutableData *chain = [NSMutableData dataWithData:[parent chain]];
@@ -208,7 +211,7 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
             return nil;
         }
         NSArray *path = [BTBIP32Key path:parent.path extend:childNumber];
-        return [[BTBIP32Key alloc] initWithSecret:secret andPubKey:nil andChain:chain andPath:path];
+        return [[BTBIP32Key alloc] initWithSecret:secret andPubKey:nil andChain:chain andPath:path andParent:parent];
     }
 }
 
@@ -248,13 +251,14 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
 }
 
 - (instancetype)initWithSecret:(NSData *)secret andPubKey:(NSData *)pubKey andChain:(NSData *)chain
-                       andPath:(NSArray *)path; {
+                       andPath:(NSArray *)path andParent: (BTBIP32Key*) parent {
     if (!(self = [super init])) return nil;
 
     self.secret = secret;
     self.pubKey = pubKey;
     self.chain = chain;
     self.path = path;
+    self.parentFingerprint = parent.getFingerprint;
 
     return self;
 }
@@ -279,6 +283,15 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     [pubKeyExtended appendBytes:self.pubKey.bytes length:self.pubKey.length];
     [pubKeyExtended appendBytes:self.chain.bytes length:self.chain.length];
     return pubKeyExtended;
+}
+
+- (int32_t) getFingerprint {
+    int32_t fingerprint = OSSwapBigToHostInt32(*((uint32_t*)self.getIdentifier.bytes));
+    return fingerprint;
+}
+
+- (NSData* ) getIdentifier {
+    return self.pubKey.hash160;
 }
 
 - (void)wipe {
@@ -325,6 +338,70 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
         _key = [BTKey keyWithPublicKey:_pubKey];
     }
     return _key;
+}
+
++ (BTBIP32Key*)deserializeFromB58:(NSString*) serialized{
+    NSData* data = serialized.base58checkToData;
+    if (data.length != 78) return nil;
+    const uint8_t* bytes = data.bytes;
+    uint32_t version = OSSwapBigToHostInt32(*((uint32_t*)bytes));
+    uint32_t keyprefix = bytes[45];
+    NSData* key = nil;
+    BOOL private = NO;
+    if (version == 0x0488ADE4) {
+        // Should have 0-prefixed private key (1 + 32 bytes).
+        if (keyprefix != 0) return nil;
+        private = YES;
+        key = [NSData dataWithBytes:(const unsigned char *) bytes + 46 length:32];
+    } else if (version == 0x0488B21E) {
+        // Should have a 33-byte public key with non-zero first byte.
+        if (keyprefix == 0) return nil;
+        private = NO;
+        key = [NSData dataWithBytes:(const unsigned char *) bytes + 45 length:33];
+    } else {
+        // Unknown version.
+        return nil;
+    }
+    NSData* chainCode = [NSData dataWithBytes:(const unsigned char *) bytes + 13 length:32];
+    NSMutableData* extendedBytes = [[NSMutableData alloc] init];
+    [extendedBytes appendData:key];
+    [extendedBytes appendData:chainCode];
+    int32_t parentFingerprint = OSSwapBigToHostInt32(*((uint32_t*)(bytes + 5)));
+    BTBIP32Key *result = nil;
+    if(private){
+        result = [[BTBIP32Key alloc] initWithSeed:extendedBytes];
+    }else{
+        result = [[BTBIP32Key alloc] initWithMasterPubKey:extendedBytes];
+    }
+    result.parentFingerprint = parentFingerprint;
+    return result;
+}
+
+
+- (NSString *)serializedPrivateMasterFromSeed:(NSData *)seed
+{
+    if (! seed) return nil;
+    
+    UInt512 I;
+    
+    HMAC(&I, SHA512, 512/8, BIP32_SEED_KEY, strlen(BIP32_SEED_KEY), seed.bytes, seed.length);
+    
+    UInt256 secret = *(UInt256 *)&I, chain = *(UInt256 *)&I.u8[sizeof(UInt256)];
+    
+    return serialize(0, 0, 0, chain, [NSData dataWithBytes:&secret length:sizeof(secret)]);
+}
+
+- (NSString *)serializedMasterPublicKey
+{
+    
+    UInt256 chain = *(UInt256 *)((const uint8_t *)self.chain.bytes);
+    BRPubKey pubKey = *(BRPubKey *)((const uint8_t *)self.pubKey.bytes);
+    
+    return serialize(1, self.parentFingerprint, 0 | BIP32_HARD, chain, [NSData dataWithBytes:&pubKey length:sizeof(pubKey)]);
+}
+
+- (NSString *) serializePubB58 {
+    return [self serializedMasterPublicKey];
 }
 
 @end

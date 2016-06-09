@@ -21,6 +21,7 @@
 #import "BTAddress.h"
 #import "BTBloomFilter.h"
 #import "BTEncryptData.h"
+#import "BTBIP32Key.h"
 
 #define kHDAccountPaymentAddressChangedNotificationFirstAdding @"FirstAdding"
 #define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"
@@ -88,6 +89,8 @@
 - (NSInteger)getHDAccountId;
 
 - (BOOL)requestNewReceivingAddress;
+
+- (BTBIP32Key*)xPub:(NSString *)password;
 @end
 
 @interface DuplicatedHDAccountException : NSException

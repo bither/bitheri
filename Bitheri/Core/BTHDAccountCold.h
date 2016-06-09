@@ -20,6 +20,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "BTBIP32Key.h"
 
 @class BTEncryptData;
 
@@ -50,5 +51,7 @@
 - (BOOL)checkWithPassword:(NSString *)password;
 
 - (NSInteger)getHDAccountId;
+
+- (BTBIP32Key*)xPub:(NSString *)password;
 
 @end

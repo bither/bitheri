@@ -222,6 +222,13 @@
     return account;
 }
 
+- (BTBIP32Key *)xPub:(NSString *)password {
+    BTBIP32Key *master = [self masterKey:password];
+    BTBIP32Key *account = [self getAccount:master];
+    [master wipe];
+    return account;
+}
+
 - (void)decryptHDSeed:(NSString *)password {
     if (self.hdSeed < 0 || !password) {
         return;

@@ -225,10 +225,19 @@ typedef enum {
     va_list args;
 
     va_start(args, message);
-    [self disconnectWithError:[NSError errorWithDomain:@"bitheri"
-                                                  code:ERR_PEER_DISCONNECT_CODE
-                                              userInfo:@{NSLocalizedDescriptionKey :
-                                                      [[NSString alloc] initWithFormat:message arguments:args]}]];
+    @try {
+        [self disconnectWithError:[NSError errorWithDomain:@"bitheri"
+                                                      code:ERR_PEER_DISCONNECT_CODE
+                                                  userInfo:@{NSLocalizedDescriptionKey :
+                                                                 [[NSString alloc] initWithFormat:message arguments:args]}]];
+    } @catch (NSException *exception) {
+        DDLogInfo(@"error nodes : %@", exception);
+        [self disconnectWithError:[NSError errorWithDomain:@"bitheri"
+                                                      code:ERR_PEER_DISCONNECT_CODE
+                                                  userInfo:@{NSLocalizedDescriptionKey :
+                                                                 @"error nodes"}]];
+    }
+    
     va_end(args);
 }
 

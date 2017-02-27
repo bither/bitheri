@@ -45,6 +45,8 @@
 
 @property(nonatomic) BOOL isUnitTest;
 
+@property NSString *wordList;
+
 + (instancetype)sharedInstance;
 
 - (NSString *)normalizeCode:(NSString *)phrase;

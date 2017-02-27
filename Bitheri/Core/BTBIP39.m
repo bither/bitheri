@@ -50,11 +50,6 @@
 // BIP39 is method for generating a deterministic wallet seed from a mnemonic code
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
-@interface BTBIP39()
-
-@property NSString *wordList;
-
-@end
 
 @implementation BTBIP39
 

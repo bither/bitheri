@@ -11,6 +11,10 @@
 		0A333FAD1A778F9B00F6EFF2 /* BTHDMPubsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A333FAC1A778F9B00F6EFF2 /* BTHDMPubsTest.m */; };
 		1BC274AE1F44DB054B95558C /* BTHDAccountCold.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */; };
 		1BC27BE1564E006216779DD1 /* DiceTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27F81F7C4CFD1E87303CF /* DiceTest.m */; };
+		402B83141E62E73100379C39 /* BIP39ZhCNWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */; };
+		402B83151E62E73100379C39 /* BIP39ZhTWWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */; };
+		402B83161E62E73A00379C39 /* BIP39ZhCNWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */; };
+		402B83171E62E73D00379C39 /* BIP39ZhTWWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */; };
 		42796BF619446739002BC454 /* BTBlockChain.m in Sources */ = {isa = PBXBuildFile; fileRef = 42796BF519446739002BC454 /* BTBlockChain.m */; };
 		428DB454194ECA9C00C81A4B /* BTPasswordSeed.m in Sources */ = {isa = PBXBuildFile; fileRef = 428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */; };
 		983833E3E62E487BB1A66946 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A40D2AD541D849FE969335C0 /* libPods.a */; };
@@ -174,6 +178,8 @@
 		1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountCold.m; sourceTree = "<group>"; };
 		1BC27F81F7C4CFD1E87303CF /* DiceTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiceTest.m; sourceTree = "<group>"; };
 		215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
+		402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BIP39ZhCNWords.plist; sourceTree = "<group>"; };
+		402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BIP39ZhTWWords.plist; sourceTree = "<group>"; };
 		42796BF419446739002BC454 /* BTBlockChain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBlockChain.h; sourceTree = "<group>"; };
 		42796BF519446739002BC454 /* BTBlockChain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBlockChain.m; sourceTree = "<group>"; };
 		428DB452194ECA9C00C81A4B /* BTPasswordSeed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPasswordSeed.h; sourceTree = "<group>"; };
@@ -672,6 +678,8 @@
 				D61D0663E99BEFE5D22A93E7 /* Script */,
 				D61D08E4511193E0FC821224 /* Log */,
 				D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */,
+				402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */,
+				402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */,
 				D61D03366870594DA71EFF05 /* Crypto */,
 			);
 			path = Bitheri;
@@ -788,11 +796,13 @@
 				DA2154391A71F592000BD6D3 /* BIP39EnglishWords.plist in Resources */,
 				DADE54121933420300F5E4DD /* InfoPlist.strings in Resources */,
 				D61D095BCFFDE8B63FAD7656 /* 1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR.tx in Resources */,
+				402B83171E62E73D00379C39 /* BIP39ZhTWWords.plist in Resources */,
 				D61D0CE65C0D1EB2F2F337EF /* copy.sh in Resources */,
 				D61D037F8ED0453172682832 /* script_invalid.json in Resources */,
 				D61D0FD136EDABF3346E88D4 /* script_valid.json in Resources */,
 				D61D06E1F6B9968DF163978C /* tx_invalid.json in Resources */,
 				D61D0D6814B9F443FF4E2A71 /* tx_valid.json in Resources */,
+				402B83161E62E73A00379C39 /* BIP39ZhCNWords.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -801,6 +811,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				DAFA70BA1A71392E00130717 /* BIP39EnglishWords.plist in Resources */,
+				402B83151E62E73100379C39 /* BIP39ZhTWWords.plist in Resources */,
+				402B83141E62E73100379C39 /* BIP39ZhCNWords.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

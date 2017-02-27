@@ -63,4 +63,6 @@
 
 - (NSArray *)getWords;
 
++ (instancetype)instanceForWord:(NSString *)word;
+
 @end

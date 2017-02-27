@@ -43,37 +43,55 @@
 #import "ccMemory.h"
 #import <CommonCrypto/CommonKeyDerivation.h>
 
-#define WORDS @"BIP39EnglishWords"
+#define kENG_WORDS @"BIP39EnglishWords"
+#define kZHCN_WOEDS @"BIP39ZhCNWords"
+#define kZHTW_WORDS @"BIP39ZhTWWords"
 
 // BIP39 is method for generating a deterministic wallet seed from a mnemonic code
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
+@interface BTBIP39()
+
+@property NSString *wordList;
+
+@end
+
 @implementation BTBIP39
 
-- (instancetype)init; {
+- (instancetype)initWithWordList:(NSString *)wordList {
     if (!(self = [super init])) return nil;
-
     self.isUnitTest = NO;
-
+    self.wordList = wordList;
     return self;
 }
 
 + (instancetype)sharedInstance {
     static id singleton = nil;
     static dispatch_once_t onceToken = 0;
-
+    
     dispatch_once(&onceToken, ^{
-        singleton = [self new];
+        singleton = [[BTBIP39 alloc] initWithWordList:kENG_WORDS];
     });
-
+    
     return singleton;
 }
 
-- (NSArray *)getWords; {
++ (instancetype)instanceForWord:(NSString *)word {
+    NSArray* wordLists = @[kENG_WORDS, kZHCN_WOEDS, kZHTW_WORDS];
+    for (NSString *wordList in wordLists) {
+        BTBIP39 *instance = [[BTBIP39 alloc] initWithWordList:wordList];
+        if ([[instance getWords] indexOfObject:word] != NSNotFound){
+            return instance;
+        }
+    }
+    return nil;
+}
+
+- (NSArray *)getWords {
     if (self.isUnitTest) {
-        return [NSArray arrayWithContentsOfFile:[[NSBundle bundleForClass:[self class]] pathForResource:WORDS ofType:@"plist"]];
+        return [NSArray arrayWithContentsOfFile:[[NSBundle bundleForClass:[self class]] pathForResource:self.wordList ofType:@"plist"]];
     } else {
-        return [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:WORDS ofType:@"plist"]];
+        return [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:self.wordList ofType:@"plist"]];
     }
 }
 

@@ -21,7 +21,6 @@
 
 #import "BTHDAccountCold.h"
 #import "BTEncryptData.h"
-#import "BTBIP39.h"
 #import "BTBIP32Key.h"
 #import "BTUtils.h"
 #import "BTHDMAddress.h"
@@ -39,11 +38,11 @@
 
 @implementation BTHDAccountCold
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom {
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom {
     self = [super init];
     if (self) {
         self.mnemonicSeed = mnemonicSeed;
-        self.hdSeed = [BTHDAccountCold seedFromMnemonic:mnemonicSeed];
+        self.hdSeed = [BTHDAccountCold seedFromMnemonic:mnemonicSeed btBip39:bip39];
         _isFromXRandom = isFromXRandom;
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTEncryptData *encryptedHDSeed = [[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:isFromXRandom];
@@ -66,12 +65,12 @@
     return self;
 }
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed andPassword:(NSString *)password {
-    return [self initWithMnemonicSeed:mnemonicSeed password:password andFromXRandom:NO];
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password {
+    return [self initWithMnemonicSeed:mnemonicSeed btBip39:bip39 password:password andFromXRandom:NO];
 }
 
 - (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed andPassword:(NSString *)password {
-    return [self initWithMnemonicSeed:[encryptedMnemonicSeed decrypt:password] password:password andFromXRandom:encryptedMnemonicSeed.isXRandom];
+    return [self initWithMnemonicSeed:[encryptedMnemonicSeed decrypt:password] btBip39:nil password:password andFromXRandom:encryptedMnemonicSeed.isXRandom];
 }
 
 - (instancetype)initWithSeedId:(int)seedId {
@@ -110,14 +109,14 @@
         } else {
             key = [internal deriveSoftened:path.index];
         }
-
+        
         NSMutableData *s = [NSMutableData dataWithData:[key.key sign:hash]];
-
+        
         NSMutableData *sig = [NSMutableData data];
         [s appendUInt8:SIG_HASH_ALL];
         [sig appendScriptPushData:s];
         [sig appendScriptPushData:[key.key publicKey]];
-
+        
         [sigs addObject:sig];
         [key wipe];
     }
@@ -146,7 +145,7 @@
 
 - (NSArray *)seedWords:(NSString *)password {
     [self decryptMnemonicSeed:password];
-    NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSArray *words = [[BTBIP39 getSharedInstance] toMnemonicArray:self.mnemonicSeed];
     [self wipeMnemonicSeed];
     return words;
 }
@@ -162,7 +161,7 @@
     }
     NSData *hdCopy = [NSData dataWithBytes:self.hdSeed.bytes length:self.hdSeed.length];
     BOOL hdSeedSafe = [BTUtils compareString:[self getFirstAddressFromDb] compare:[self firstAddressFromSeed:nil]];
-    BOOL mnemonicSeefSafe = [[BTHDAccountCold seedFromMnemonic:self.mnemonicSeed] isEqualToData:hdCopy];
+    BOOL mnemonicSeefSafe = [[BTHDAccountCold seedFromMnemonic:self.mnemonicSeed btBip39:nil] isEqualToData:hdCopy];
     [self wipeHDSeed];
     [self wipeMnemonicSeed];
     return hdSeedSafe && mnemonicSeefSafe;
@@ -262,8 +261,11 @@
     return [account deriveSoftened:path];
 }
 
-+ (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed {
-    return [[BTBIP39 sharedInstance] toSeed:[[BTBIP39 sharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
++ (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 {
+    if (!bip39) {
+        return [[BTBIP39 getSharedInstance] toSeed:[[BTBIP39 getSharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
+    }
+    return [bip39 toSeed:[bip39 toMnemonic:mnemonicSeed] withPassphrase:@""];
 }
 
 - (void)setIsFromXRandom:(BOOL)isFromXRandom {

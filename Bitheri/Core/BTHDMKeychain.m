@@ -129,7 +129,7 @@
     if (maxIndex >= 0) {
         startIndex = maxIndex + 1;
     }
-
+    
     if (startIndex > 0) {
         BTHDMBid *bid = [BTHDMBid getHDMBidFromDb];
         if (bid) {
@@ -139,7 +139,7 @@
             }
         }
     }
-
+    
     for (UInt32 i = startIndex; pubs.count < count; i++) {
         BTHDMPubs *p = [BTHDMPubs new];
         p.hot = [externalRootHot deriveSoftened:i].pubKey;
@@ -153,16 +153,16 @@
         p.index = i;
         [pubs addObject:p];
     }
-
+    
     [[BTAddressProvider instance] prepareHDMAddressesWithHDSeedId:self.hdSeedId andPubs:pubs];
     if (externalRootCold) {
         [externalRootCold wipe];
     }
-
+    
     if (externalRootHot) {
         [externalRootHot wipe];
     }
-
+    
     return pubs.count;
 }
 
@@ -354,15 +354,15 @@
 
 - (NSArray *)seedWords:(NSString *)password {
     [self decryptMnemonicSeed:password];
-    NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSArray *words = [[BTBIP39 getSharedInstance] toMnemonicArray:self.mnemonicSeed];
     [self wipeMnemonicSeed];
     return words;
 }
 
 - (BOOL)isInRecovery {
     return [BTUtils compareString:[[BTAddressProvider instance] getEncryptMnemonicSeed:self.hdSeedId] compare:[BTHDMKeychainRecover RecoverPlaceHolder]] ||
-            [BTUtils compareString:[[BTAddressProvider instance] getEncryptHDSeed:self.hdSeedId] compare:[BTHDMKeychainRecover RecoverPlaceHolder]] ||
-            [BTUtils compareString:self.firstAddressFromDb compare:[BTHDMKeychainRecover RecoverPlaceHolder]];
+    [BTUtils compareString:[[BTAddressProvider instance] getEncryptHDSeed:self.hdSeedId] compare:[BTHDMKeychainRecover RecoverPlaceHolder]] ||
+    [BTUtils compareString:self.firstAddressFromDb compare:[BTHDMKeychainRecover RecoverPlaceHolder]];
 }
 
 - (NSString *)getFullEncryptPrivKey {
@@ -378,6 +378,6 @@
 }
 
 + (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed {
-    return [[BTBIP39 sharedInstance] toSeed:[[BTBIP39 sharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
+    return [[BTBIP39 getSharedInstance] toSeed:[[BTBIP39 getSharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
 }
 @end

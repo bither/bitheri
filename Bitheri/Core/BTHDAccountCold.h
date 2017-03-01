@@ -21,6 +21,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BTBIP32Key.h"
+#import "BTBIP39.h"
 
 @class BTEncryptData;
 
@@ -28,9 +29,9 @@
 @interface BTHDAccountCold : NSObject
 @property BOOL isFromXRandom;
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom;
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom;
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed andPassword:(NSString *)password;
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password;
 
 - (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed andPassword:(NSString *)password;
 

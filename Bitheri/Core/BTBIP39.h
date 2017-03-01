@@ -67,4 +67,8 @@
 
 + (instancetype)instanceForWord:(NSString *)word;
 
++ (instancetype)sharedInstanceForBTBip39:(BTBIP39 *)bip39;
+
++ (instancetype)getSharedInstance;
+
 @end

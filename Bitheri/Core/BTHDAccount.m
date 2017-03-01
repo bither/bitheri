@@ -18,7 +18,6 @@
 
 #import "BTHDAccount.h"
 #import "BTHDAccountAddressProvider.h"
-#import "BTBIP39.h"
 #import "BTBIP32Key.h"
 #import "BTAddressProvider.h"
 #import "BTIn.h"
@@ -68,16 +67,16 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 @implementation BTHDAccount
 
 - (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andGenerationCallback:(void (^)(CGFloat progres))callback {
-    self = [self initWithMnemonicSeed:mnemonicSeed password:password fromXRandom:fromXRandom syncedComplete:YES andGenerationCallback:callback];
+    self = [self initWithMnemonicSeed:mnemonicSeed btBip39:nil password:password fromXRandom:fromXRandom syncedComplete:YES andGenerationCallback:callback];
     return self;
 }
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password fromXRandom:(BOOL)fromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     self = [super init];
     if (self) {
         self.hdAccountId = -1;
         self.mnemonicSeed = mnemonicSeed;
-        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed];
+        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:bip39];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTBIP32Key *account = [self getAccount:master];
         [account clearPrivateKey];
@@ -95,7 +94,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (!self.mnemonicSeed) {
             return nil;
         }
-        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed];
+        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:nil];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTBIP32Key *account = [self getAccount:master];
         [account clearPrivateKey];
@@ -163,30 +162,30 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if ([BTHDAccount checkDuplicatedHDAccountWithExternalRoot:externalKey.getPubKeyExtended andInternalRoot:internalKey.getPubKeyExtended]) {
         @throw [DuplicatedHDAccountException new];
     }
-
+    
     progress = kGenerationInitialProgress;
     if (callback) {
         callback(progress);
     }
-
+    
     CGFloat itemProgress = (1.0 - progress) / (double) (kBTHDAccountLookAheadSize * 2);
-
+    
     NSMutableArray *externalAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
     NSMutableArray *internalAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
     for (NSUInteger i = 0; i < kBTHDAccountLookAheadSize; i++) {
         NSData *subExternalPub = [externalKey deriveSoftened:i].pubKey;
         BTHDAccountAddress *externalAddress = [[BTHDAccountAddress alloc] initWithPub:subExternalPub path:EXTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
         [externalAddresses addObject:externalAddress];
-
+        
         progress += itemProgress;
         if (callback) {
             callback(MIN(progress, 1));
         }
-
+        
         NSData *subInternalPub = [internalKey deriveSoftened:i].pubKey;
         BTHDAccountAddress *internalAddress = [[BTHDAccountAddress alloc] initWithPub:subInternalPub path:INTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
         [internalAddresses addObject:internalAddress];
-
+        
         progress += itemProgress;
         if (callback) {
             callback(MIN(progress, 1));
@@ -251,22 +250,22 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
         return nil;
     }
-
+    
     BTBIP32Key *account = [self getAccount:master];
     BTBIP32Key *external = [self getChainRootKeyFromAccount:account withPathType:EXTERNAL_ROOT_PATH];
     BTBIP32Key *internal = [self getChainRootKeyFromAccount:account withPathType:INTERNAL_ROOT_PATH];
     [account wipe];
     [master wipe];
-
+    
     NSArray *unsignedHashes = [tx unsignedInHashes];
-
+    
     NSMutableArray *signatures = [[NSMutableArray alloc] initWithCapacity:unsignedHashes.count];
-
+    
     NSMutableDictionary *addressToKeyDict = [NSMutableDictionary new];
     for (NSUInteger i = 0; i < signingAddresses.count; i++) {
         BTHDAccountAddress *a = signingAddresses[i];
         NSData *unsignedHash = unsignedHashes[i];
-
+        
         if (![addressToKeyDict.allKeys containsObject:a.address]) {
             if (a.pathType == EXTERNAL_ROOT_PATH) {
                 [addressToKeyDict setObject:[external deriveSoftened:a.index] forKey:a.address];
@@ -274,19 +273,19 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
                 [addressToKeyDict setObject:[internal deriveSoftened:a.index] forKey:a.address];
             }
         }
-
+        
         BTBIP32Key *key = [addressToKeyDict objectForKey:a.address];
-
+        
         NSMutableData *sig = [NSMutableData data];
         NSMutableData *s = [NSMutableData dataWithData:[key.key sign:unsignedHash]];
-
+        
         [s appendUInt8:SIG_HASH_ALL];
         [sig appendScriptPushData:s];
         [sig appendScriptPushData:[key.key publicKey]];
         [signatures addObject:sig];
-
+        
     }
-
+    
     if (![tx signWithSignatures:signatures]) {
         return nil;
     }
@@ -357,30 +356,30 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     uint64_t balance = 0;
     NSMutableOrderedSet *utxos = [NSMutableOrderedSet orderedSet];
     NSMutableSet *spentOutputs = [NSMutableSet set], *invalidTx = [NSMutableSet set];
-
+    
     NSMutableArray *txs = [NSMutableArray arrayWithArray:[[BTHDAccountAddressProvider instance] getHDAccountUnconfirmedTx:self.hdAccountId]];
     [txs sortUsingComparator:hdTxComparator];
-
+    
     for (BTTx *tx in [txs reverseObjectEnumerator]) {
         NSMutableSet *spent = [NSMutableSet set];
-
+        
         for (BTIn *btIn in tx.ins) {
             [spent addObject:getOutPoint(btIn.prevTxHash, btIn.prevOutSn)];
         }
-
+        
         // check if any inputs are invalid or already spent
         NSMutableSet *inputHashSet = [NSMutableSet new];
         for (BTIn *in in tx.ins) {
             [inputHashSet addObject:in.prevTxHash];
         }
         if (tx.blockNo == TX_UNCONFIRMED &&
-                ([spent intersectsSet:spentOutputs] || [inputHashSet intersectsSet:invalidTx])) {
+            ([spent intersectsSet:spentOutputs] || [inputHashSet intersectsSet:invalidTx])) {
             [invalidTx addObject:tx.txHash];
             continue;
         }
-
+        
         [spentOutputs unionSet:spent]; // add inputs to spent output set
-
+        
         NSSet *addressSet = [self getBelongAccountAddressesFromAddresses:[tx getOutAddressList]];
         for (BTOut *out in tx.outs) { // add outputs to UTXO set
             if ([addressSet containsObject:out.outAddress]) {
@@ -388,15 +387,15 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
                 balance += out.outValue;
             }
         }
-
+        
         // transaction ordering is not guaranteed, so check the entire UTXO set against the entire spent output set
         [spent setSet:[utxos set]];
         [spent intersectSet:spentOutputs];
-
+        
         for (NSData *o in spent) { // remove any spent outputs from UTXO set
             BTTx *transaction = [[BTTxProvider instance] getTxDetailByTxHash:[o hashAtOffset:0]];
             uint n = [o UInt32AtOffset:CC_SHA256_DIGEST_LENGTH];
-
+            
             [utxos removeObject:o];
             balance -= [transaction getOut:n].outValue;
         }
@@ -586,12 +585,12 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (belongAccountOfOutList && belongAccountOfOutList.count > 0) {
         [hdAccountAddressList addObjectsFromArray:belongAccountOfOutList];
     }
-
+    
     NSArray *belongAccountOfInList = [self getAddressFromIn:tx];
     if (belongAccountOfInList && belongAccountOfInList.count > 0) {
         [hdAccountAddressList addObjectsFromArray:belongAccountOfInList];
     }
-
+    
     return hdAccountAddressList;
 }
 
@@ -636,7 +635,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         return nil;
     }
     [self decryptMnemonicSeed:password];
-    NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSArray *words = [[BTBIP39 getSharedInstance] toMnemonicArray:self.mnemonicSeed];
     [self wipeMnemonicSeed];
     return words;
 }
@@ -655,7 +654,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     NSData *hdCopy = [NSData dataWithBytes:self.hdSeed.bytes length:self.hdSeed.length];
     BOOL hdSeedSafe = [BTUtils compareString:[self getFirstAddressFromDb] compare:[self firstAddressFromSeed:nil]];
-    BOOL mnemonicSeefSafe = [[BTHDAccount seedFromMnemonic:self.mnemonicSeed] isEqualToData:hdCopy];
+    BOOL mnemonicSeefSafe = [[BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:[BTBIP39 getSharedInstance]] isEqualToData:hdCopy];
     [self wipeHDSeed];
     [self wipeMnemonicSeed];
     return hdSeedSafe && mnemonicSeefSafe;
@@ -684,8 +683,11 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [HD_QR_CODE_FLAT stringByAppendingString:[BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
 }
 
-+ (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed {
-    return [[BTBIP39 sharedInstance] toSeed:[[BTBIP39 sharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
++ (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bit39 {
+    if (!bit39) {
+        return [[BTBIP39 getSharedInstance] toSeed:[[BTBIP39 getSharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
+    }
+    return [bit39 toSeed:[bit39 toMnemonic:mnemonicSeed] withPassphrase:@""];
 }
 
 - (void)notificateTx:(BTTx *)tx withNotificationType:(TxNotificationType)type {

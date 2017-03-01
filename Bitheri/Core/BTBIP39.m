@@ -71,6 +71,15 @@
     return singleton;
 }
 
++ (instancetype)sharedInstanceForBTBip39:(BTBIP39 *)bip39 {
+    static id singleton = nil;
+    static dispatch_once_t onceToken = 0;
+    dispatch_once(&onceToken, ^{
+        singleton = bip39;
+    });
+    return singleton;
+}
+
 + (instancetype)instanceForWord:(NSString *)word {
     NSArray* wordLists = @[kENG_WORDS, kZHCN_WOEDS, kZHTW_WORDS];
     for (NSString *wordList in wordLists) {
@@ -80,6 +89,15 @@
         }
     }
     return nil;
+}
+
++ (instancetype)getSharedInstance {
+    BTBIP39 *bip39 = [BTBIP39 sharedInstanceForBTBip39:nil];
+    if (bip39) {
+        return bip39;
+    } else {
+        return [BTBIP39 sharedInstance];
+    }
 }
 
 - (NSArray *)getWords {

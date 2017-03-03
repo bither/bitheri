@@ -61,7 +61,7 @@
     static dispatch_once_t onceToken = 0;
     
     dispatch_once(&onceToken, ^{
-        singleton = [[BTBIP39 alloc] initWithWordList:[BTBIP39 getWordsType:EN]];
+        singleton = [[BTBIP39 alloc] initWithWordList:[BTBIP39 getWordsType:EN_WORDS]];
     });
     
     return singleton;
@@ -88,9 +88,9 @@
 
 + (NSString *)getWordsType:(WordsType)wordsType {
     switch (wordsType) {
-        case ZHCN:
+        case ZHCN_WORDS:
             return @"BIP39ZhCNWords";
-        case ZHTW:
+        case ZHTW_WORDS:
             return @"BIP39ZhTWWords";
         default:
             return @"BIP39EnglishWords";
@@ -98,7 +98,7 @@
 }
 
 + (NSArray *)getAllWordsType {
-    return @[[BTBIP39 getWordsType:EN], [BTBIP39 getWordsType:ZHCN], [BTBIP39 getWordsType:ZHTW]];
+    return @[[BTBIP39 getWordsType:EN_WORDS], [BTBIP39 getWordsType:ZHCN_WORDS], [BTBIP39 getWordsType:ZHTW_WORDS]];
 }
 
 - (NSArray *)toMnemonicArray:(NSData *)data {

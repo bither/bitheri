@@ -42,7 +42,7 @@
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
 typedef enum {
-    EN, ZHCN, ZHTW
+    EN_WORDS, ZHCN_WORDS, ZHTW_WORDS
 } WordsType;
 
 @interface BTBIP39 : NSObject

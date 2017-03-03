@@ -42,6 +42,7 @@
 #import "NSMutableData+Bitcoin.h"
 #import "ccMemory.h"
 #import <CommonCrypto/CommonKeyDerivation.h>
+#import "BTWordsTypeManager.h"
 
 // BIP39 is method for generating a deterministic wallet seed from a mnemonic code
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
@@ -61,17 +62,17 @@
     static dispatch_once_t onceToken = 0;
     
     dispatch_once(&onceToken, ^{
-        singleton = [[BTBIP39 alloc] initWithWordList:[BTBIP39 getWordsType:EN_WORDS]];
+        singleton = [[BTBIP39 alloc] initWithWordList:[BTWordsTypeManager getWordsTypeValue:EN_WORDS]];
     });
     
     return singleton;
 }
 
 + (instancetype)instanceForWord:(NSString *)word {
-    NSArray* wordLists = [BTBIP39 getAllWordsType];
+    NSArray *wordLists = [BTWordsTypeManager getAllWordsType];
     for (NSString *wordList in wordLists) {
         BTBIP39 *instance = [[BTBIP39 alloc] initWithWordList:wordList];
-        if ([[instance getWords] indexOfObject:word] != NSNotFound){
+        if ([[instance getWords] indexOfObject:word] != NSNotFound) {
             return instance;
         }
     }
@@ -84,21 +85,6 @@
     } else {
         return [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:self.wordList ofType:@"plist"]];
     }
-}
-
-+ (NSString *)getWordsType:(WordsType)wordsType {
-    switch (wordsType) {
-        case ZHCN_WORDS:
-            return @"BIP39ZhCNWords";
-        case ZHTW_WORDS:
-            return @"BIP39ZhTWWords";
-        default:
-            return @"BIP39EnglishWords";
-    }
-}
-
-+ (NSArray *)getAllWordsType {
-    return @[[BTBIP39 getWordsType:EN_WORDS], [BTBIP39 getWordsType:ZHCN_WORDS], [BTBIP39 getWordsType:ZHTW_WORDS]];
 }
 
 - (NSArray *)toMnemonicArray:(NSData *)data {

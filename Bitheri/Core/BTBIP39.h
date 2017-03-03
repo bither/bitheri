@@ -41,10 +41,6 @@
 // BIP39 is method for generating a deterministic wallet seed from a mnemonic phrase
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
-typedef enum {
-    EN_WORDS, ZHCN_WORDS, ZHTW_WORDS
-} WordsType;
-
 @interface BTBIP39 : NSObject
 
 @property(nonatomic) BOOL isUnitTest;
@@ -70,7 +66,5 @@ typedef enum {
 - (NSArray *)getWords;
 
 + (instancetype)instanceForWord:(NSString *)word;
-
-+ (NSString *)getWordsType:(WordsType)wordsType;
 
 @end

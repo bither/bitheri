@@ -354,7 +354,7 @@
 
 - (NSArray *)seedWords:(NSString *)password {
     [self decryptMnemonicSeed:password];
-    NSArray *words = [[BTBIP39 getSharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
     [self wipeMnemonicSeed];
     return words;
 }
@@ -378,6 +378,6 @@
 }
 
 + (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed {
-    return [[BTBIP39 getSharedInstance] toSeed:[[BTBIP39 getSharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
+    return [[BTBIP39 sharedInstance] toSeed:[[BTBIP39 sharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
 }
 @end

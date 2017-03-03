@@ -634,7 +634,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         return nil;
     }
     [self decryptMnemonicSeed:password];
-    NSArray *words = [[BTBIP39 getSharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
     [self wipeMnemonicSeed];
     return words;
 }
@@ -653,7 +653,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     NSData *hdCopy = [NSData dataWithBytes:self.hdSeed.bytes length:self.hdSeed.length];
     BOOL hdSeedSafe = [BTUtils compareString:[self getFirstAddressFromDb] compare:[self firstAddressFromSeed:nil]];
-    BOOL mnemonicSeefSafe = [[BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:[BTBIP39 getSharedInstance]] isEqualToData:hdCopy];
+    BOOL mnemonicSeefSafe = [[BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:[BTBIP39 sharedInstance]] isEqualToData:hdCopy];
     [self wipeHDSeed];
     [self wipeMnemonicSeed];
     return hdSeedSafe && mnemonicSeefSafe;
@@ -684,7 +684,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 + (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bit39 {
     if (!bit39) {
-        return [[BTBIP39 getSharedInstance] toSeed:[[BTBIP39 getSharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
+        return [[BTBIP39 sharedInstance] toSeed:[[BTBIP39 sharedInstance] toMnemonic:mnemonicSeed] withPassphrase:@""];
     }
     return [bit39 toSeed:[bit39 toMnemonic:mnemonicSeed] withPassphrase:@""];
 }

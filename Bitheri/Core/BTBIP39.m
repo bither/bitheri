@@ -43,10 +43,6 @@
 #import "ccMemory.h"
 #import <CommonCrypto/CommonKeyDerivation.h>
 
-#define kENG_WORDS @"BIP39EnglishWords"
-#define kZHCN_WOEDS @"BIP39ZhCNWords"
-#define kZHTW_WORDS @"BIP39ZhTWWords"
-
 // BIP39 is method for generating a deterministic wallet seed from a mnemonic code
 // https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
@@ -65,23 +61,14 @@
     static dispatch_once_t onceToken = 0;
     
     dispatch_once(&onceToken, ^{
-        singleton = [[BTBIP39 alloc] initWithWordList:kENG_WORDS];
+        singleton = [[BTBIP39 alloc] initWithWordList:[BTBIP39 getWordsType:EN]];
     });
     
     return singleton;
 }
 
-+ (instancetype)sharedInstanceForBTBip39:(BTBIP39 *)bip39 {
-    static id singleton = nil;
-    static dispatch_once_t onceToken = 0;
-    dispatch_once(&onceToken, ^{
-        singleton = bip39;
-    });
-    return singleton;
-}
-
 + (instancetype)instanceForWord:(NSString *)word {
-    NSArray* wordLists = @[kENG_WORDS, kZHCN_WOEDS, kZHTW_WORDS];
+    NSArray* wordLists = [BTBIP39 getAllWordsType];
     for (NSString *wordList in wordLists) {
         BTBIP39 *instance = [[BTBIP39 alloc] initWithWordList:wordList];
         if ([[instance getWords] indexOfObject:word] != NSNotFound){
@@ -91,21 +78,27 @@
     return nil;
 }
 
-+ (instancetype)getSharedInstance {
-    BTBIP39 *bip39 = [BTBIP39 sharedInstanceForBTBip39:nil];
-    if (bip39) {
-        return bip39;
-    } else {
-        return [BTBIP39 sharedInstance];
-    }
-}
-
 - (NSArray *)getWords {
     if (self.isUnitTest) {
         return [NSArray arrayWithContentsOfFile:[[NSBundle bundleForClass:[self class]] pathForResource:self.wordList ofType:@"plist"]];
     } else {
         return [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:self.wordList ofType:@"plist"]];
     }
+}
+
++ (NSString *)getWordsType:(WordsType)wordsType {
+    switch (wordsType) {
+        case ZHCN:
+            return @"BIP39ZhCNWords";
+        case ZHTW:
+            return @"BIP39ZhTWWords";
+        default:
+            return @"BIP39EnglishWords";
+    }
+}
+
++ (NSArray *)getAllWordsType {
+    return @[[BTBIP39 getWordsType:EN], [BTBIP39 getWordsType:ZHCN], [BTBIP39 getWordsType:ZHTW]];
 }
 
 - (NSArray *)toMnemonicArray:(NSData *)data {

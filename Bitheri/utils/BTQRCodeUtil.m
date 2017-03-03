@@ -192,4 +192,15 @@
     }
 }
 
++ (NSString *)getHDQrCodeFlat:(HDQrCodeFlatType)qrCodeFlatType {
+    switch (qrCodeFlatType) {
+        case ZHCN:
+            return @"%1%";
+        case ZHTW:
+            return @"%2%";
+        default:
+            return @"%";
+    }
+}
+
 @end

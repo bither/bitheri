@@ -23,7 +23,6 @@
 #import "BTIn.h"
 #import "BTOut.h"
 #import "BTTxProvider.h"
-#import "BTQRCodeUtil.h"
 #import "BTTxBuilder.h"
 #import "BTUtils.h"
 #import "BTBlockChain.h"
@@ -676,11 +675,11 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return address;
 }
 
-- (NSString *)getQRCodeFullEncryptPrivKey {
+- (NSString *)getQRCodeFullEncryptPrivKeyWithHDQrCodeFlatType:(HDQrCodeFlatType)qrCodeFlatType {
     if (!self.hasPrivKey) {
         return nil;
     }
-    return [HD_QR_CODE_FLAT stringByAppendingString:[BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
+    return [[BTQRCodeUtil getHDQrCodeFlat:qrCodeFlatType] stringByAppendingString:[BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
 }
 
 + (NSData *)seedFromMnemonic:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bit39 {

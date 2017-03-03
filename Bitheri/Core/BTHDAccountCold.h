@@ -22,6 +22,7 @@
 #import <Foundation/Foundation.h>
 #import "BTBIP32Key.h"
 #import "BTBIP39.h"
+#import "BTQRCodeUtil.h"
 
 @class BTEncryptData;
 
@@ -45,7 +46,7 @@
 
 - (NSString *)accountPubExtendedString:(NSString *)password;
 
-- (NSString *)getQRCodeFullEncryptPrivKey;
+- (NSString *)getQRCodeFullEncryptPrivKeyWithHDQrCodeFlatType:(HDQrCodeFlatType)qrCodeFlatType;
 
 - (NSArray *)seedWords:(NSString *)password;
 

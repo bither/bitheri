@@ -26,7 +26,6 @@
 #import "BTHDMAddress.h"
 #import "BTHDAccountProvider.h"
 #import "BTHDAccountAddress.h"
-#import "BTQRCodeUtil.h"
 
 @interface BTHDAccountCold () {
     BOOL _isFromXRandom;
@@ -139,8 +138,8 @@
     return [NSString stringWithFormat:@"%@%@", self.isFromXRandom ? XRANDOM_FLAG : @"", [NSString hexWithData:extended]];
 }
 
-- (NSString *)getQRCodeFullEncryptPrivKey {
-    return [HD_QR_CODE_FLAT stringByAppendingString:[BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
+- (NSString *)getQRCodeFullEncryptPrivKeyWithHDQrCodeFlatType:(HDQrCodeFlatType)qrCodeFlatType {
+    return [[BTQRCodeUtil getHDQrCodeFlat:qrCodeFlatType] stringByAppendingString:[BTEncryptData encryptedString:self.encryptedMnemonicSeed addIsCompressed:YES andIsXRandom:self.isFromXRandom]];
 }
 
 - (NSArray *)seedWords:(NSString *)password {

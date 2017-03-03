@@ -20,7 +20,6 @@
 
 #define XRANDOM_FLAG @"+"
 #define HDM_QR_CODE_FLAG  @"-"
-#define HD_QR_CODE_FLAT @"%"
 #define QR_CODE_SECONDARY_SPLIT (@"$")
 #define HD_MONITOR_QR_PREFIX (@"BitherHD:")
 
@@ -28,6 +27,10 @@ typedef enum {
     NORMAL,
     LOW
 } QRQuality;
+
+typedef enum {
+    EN, ZHCN, ZHTW
+} HDQrCodeFlatType;
 
 @interface BTQRCodeUtil : NSObject
 
@@ -56,5 +59,7 @@ typedef enum {
 + (void)setQrQuality:(QRQuality)quality;
 
 + (NSUInteger)maxSize;
+
++ (NSString *)getHDQrCodeFlat:(HDQrCodeFlatType)qrCodeFlatType;
 
 @end

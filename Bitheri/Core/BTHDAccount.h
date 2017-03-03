@@ -23,6 +23,7 @@
 #import "BTEncryptData.h"
 #import "BTBIP32Key.h"
 #import "BTBIP39.h"
+#import "BTQRCodeUtil.h"
 
 #define kHDAccountPaymentAddressChangedNotificationFirstAdding @"FirstAdding"
 #define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"
@@ -49,7 +50,7 @@
 
 - (NSSet *)getBelongAccountAddressesFromAddresses:(NSArray *)addresses;
 
-- (NSString *)getQRCodeFullEncryptPrivKey;
+- (NSString *)getQRCodeFullEncryptPrivKeyWithHDQrCodeFlatType:(HDQrCodeFlatType)qrCodeFlatType;
 
 - (BOOL)isTxRelated:(BTTx *)tx;
 

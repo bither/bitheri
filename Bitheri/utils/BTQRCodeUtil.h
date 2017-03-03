@@ -62,4 +62,6 @@ typedef enum {
 
 + (NSString *)getHDQrCodeFlat:(HDQrCodeFlatType)qrCodeFlatType;
 
++ (HDQrCodeFlatType)getHDQrCodeFlatForWordsTypeValue:(NSString *)value;
+
 @end

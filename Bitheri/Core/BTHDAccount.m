@@ -85,7 +85,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self;
 }
 
-- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     self = [super init];
     if (self) {
         self.hdAccountId = -1;
@@ -93,7 +93,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (!self.mnemonicSeed) {
             return nil;
         }
-        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:nil];
+        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:bip39];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTBIP32Key *account = [self getAccount:master];
         [account clearPrivateKey];

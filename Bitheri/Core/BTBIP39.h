@@ -49,6 +49,8 @@
 
 + (instancetype)sharedInstance;
 
+- (instancetype)initWithWordList:(NSString *)wordList;
+
 - (NSString *)normalizeCode:(NSString *)phrase;
 
 - (NSArray *)toMnemonicArray:(NSData *)data;

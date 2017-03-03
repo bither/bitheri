@@ -68,8 +68,8 @@
     return [self initWithMnemonicSeed:mnemonicSeed btBip39:bip39 password:password andFromXRandom:NO];
 }
 
-- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed andPassword:(NSString *)password {
-    return [self initWithMnemonicSeed:[encryptedMnemonicSeed decrypt:password] btBip39:nil password:password andFromXRandom:encryptedMnemonicSeed.isXRandom];
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password {
+    return [self initWithMnemonicSeed:[encryptedMnemonicSeed decrypt:password] btBip39:bip39 password:password andFromXRandom:encryptedMnemonicSeed.isXRandom];
 }
 
 - (instancetype)initWithSeedId:(int)seedId {

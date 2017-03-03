@@ -18,6 +18,7 @@
 
 #import "BTQRCodeUtil.h"
 #import "NSString+Base58.h"
+#import "BTWordsTypeManager.h"
 
 #define kQR_QUALITY_KEY (@"qr_quality")
 
@@ -201,6 +202,16 @@
         default:
             return @"%";
     }
+}
+
++ (HDQrCodeFlatType)getHDQrCodeFlatForWordsTypeValue:(NSString *)value {
+    if ([value isEqualToString:[BTWordsTypeManager getWordsTypeValue:ZHCN_WORDS]]) {
+        return ZHCN;
+    }
+    if ([value isEqualToString:[BTWordsTypeManager getWordsTypeValue:ZHTW_WORDS]]) {
+        return ZHTW;
+    }
+    return EN;
 }
 
 @end

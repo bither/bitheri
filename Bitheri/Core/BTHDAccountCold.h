@@ -34,7 +34,7 @@
 
 - (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password;
 
-- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed andPassword:(NSString *)password;
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password;
 
 - (instancetype)initWithSeedId:(int)seedId;
 

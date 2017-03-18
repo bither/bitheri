@@ -158,8 +158,8 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *firstAddress = key.address;
     [key wipe];
     [accountKey wipe];
-    if ([BTHDAccount checkDuplicatedHDAccountWithExternalRoot:externalKey.getPubKeyExtended andInternalRoot:internalKey.getPubKeyExtended]) {
-        @throw [DuplicatedHDAccountException new];
+    if ([BTHDAccount isRepeatHD:firstAddress]) {
+        @throw [[DuplicatedHDAccountException alloc] initWithName:@"DuplicatedHDAccountException" reason:@"DuplicatedHDAccountException" userInfo:nil];
     }
     
     progress = kGenerationInitialProgress;
@@ -210,6 +210,25 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     _preIssuedExternalIndex = -1;
     [internalKey wipe];
     [externalKey wipe];
+}
+
++ (BOOL)isRepeatHD:(NSString *)firstAddress {
+    BTHDAccount *hdAccountHot = [[BTAddressManager instance] hdAccountHot];
+    BTHDAccount *hdAccountMonitored = [[BTAddressManager instance] hdAccountMonitored];
+    if (hdAccountHot == nil && hdAccountMonitored == nil) {
+        return false;
+    }
+    
+    BTHDAccountAddress *addressMonitored = nil;
+    if (hdAccountHot != nil) {
+        addressMonitored = [hdAccountHot addressForPath:EXTERNAL_ROOT_PATH atIndex:0];
+    } else if (hdAccountMonitored != nil) {
+        addressMonitored = [hdAccountMonitored addressForPath:EXTERNAL_ROOT_PATH atIndex:0];
+    }
+    if ([firstAddress isEqualToString:addressMonitored.address]) {
+        return true;
+    }
+    return false;
 }
 
 - (void)onNewTx:(BTTx *)tx andTxNotificationType:(TxNotificationType)txNotificationType {

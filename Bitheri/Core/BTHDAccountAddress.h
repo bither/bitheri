@@ -38,6 +38,7 @@ typedef enum {
 @property(nonatomic, readwrite) int index;
 @property(nonatomic, readwrite) BOOL isSyncedComplete;
 @property(nonatomic, readwrite) BOOL isIssued;
+@property(nonatomic, readonly) uint64_t balance;
 
 + (PathType)getPathType:(int)type;
 

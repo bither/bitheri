@@ -744,6 +744,17 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [master wipe];
     return account;
 }
+
+- (BTBIP32Key *)privateKeyWithPath:(PathType)path index:(int)index password:(NSString *)password {
+    BTBIP32Key *accountKey = [self xPub:password];
+    BTBIP32Key *pathKey = [self getChainRootKeyFromAccount:accountKey withPathType:path];
+    BTBIP32Key *key = [pathKey deriveSoftened:index];
+    [accountKey wipe];
+    [pathKey wipe];
+    return key;
+}
+
+
 @end
 
 @implementation DuplicatedHDAccountException

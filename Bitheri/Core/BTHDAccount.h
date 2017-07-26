@@ -93,6 +93,9 @@
 - (BOOL)requestNewReceivingAddress;
 
 - (BTBIP32Key *)xPub:(NSString *)password;
+
+- (BTBIP32Key *)privateKeyWithPath:(PathType)path index:(int)index password:(NSString *)password;
+
 @end
 
 @interface DuplicatedHDAccountException : NSException

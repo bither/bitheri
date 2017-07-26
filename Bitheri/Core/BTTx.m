@@ -364,6 +364,63 @@
     return [d SHA256_2];
 }
 
+- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(uint8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay {
+    uint8_t sigHashType = [self calcSigHashValue:type anyoneCanPay:anyoneCanPay];
+    NSMutableData *d = [NSMutableData secureData];
+    NSMutableData *hashPrevouts = [NSMutableData secureData];
+    NSMutableData *hashSequence = [NSMutableData secureData];
+    NSMutableData *hashOutputs = [NSMutableData secureData];
+    anyoneCanPay = (sigHashType & SIG_HASH_ANYONECANPAY) == SIG_HASH_ANYONECANPAY;
+    if (!anyoneCanPay) {
+        for (BTIn *in in self.ins) {
+            [hashPrevouts appendData:in.prevTxHash];
+            [hashPrevouts appendUInt32:in.prevOutSn];
+        }
+    }
+    
+    if (!anyoneCanPay && type != SIG_HASH_SINGLE && type != SIG_HASH_NONE) {
+        for (BTIn *in in self.ins) {
+            [hashSequence appendUInt32:in.inSequence];
+        }
+    }
+    
+    if (type != SIG_HASH_SINGLE && type != SIG_HASH_NONE) {
+        for (BTOut *out in self.outs) {
+            [hashOutputs appendUInt64:out.outValue];
+            [hashOutputs appendVarInt:out.outScript.length];
+            [hashOutputs appendData:out.outScript];
+        }
+    } else if (type == SIG_HASH_SINGLE && inputIndex < self.outs.count) {
+        BTOut *out = self.outs[inputIndex];
+        [hashOutputs appendUInt64:out.outValue];
+        [hashOutputs appendVarInt:out.outScript.length];
+        [hashOutputs appendData:out.outScript];
+    }
+    
+    [d appendUInt32:1];
+    [d appendData:[hashPrevouts SHA256_2]];
+    [d appendData:[hashSequence SHA256_2]];
+    BTIn *in = self.ins[inputIndex];
+    [d appendData:in.prevTxHash];
+    [d appendUInt32:in.prevOutSn];
+    [d appendVarInt:connectedScript.length];
+    [d appendData:connectedScript];
+    [d appendUInt64:prevValue];
+    [d appendUInt32:in.inSequence];
+    [d appendData:[hashOutputs SHA256_2]];
+    [d appendUInt32:17];
+    [d appendUInt32:0x000000ff & sigHashType];
+    return [d SHA256_2];
+}
+
+- (uint8_t)calcSigHashValue:(uint8_t)sigHashValue anyoneCanPay:(BOOL)anyoneCanPay {
+    uint8_t sighashFlags = sigHashValue;
+    if (anyoneCanPay) {
+        sighashFlags |= 0x80;
+    }
+    return sighashFlags;
+}
+
 // Returns the binary transaction data that needs to be hashed and signed with the private key for the tx input at
 // subscriptIndex. A subscriptIndex of NSNotFound will return the entire signed transaction
 - (NSData *)toDataWithSubscriptIndex:(NSUInteger)subscriptIndex {

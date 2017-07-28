@@ -259,18 +259,18 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error {
-    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] password:password andError:error];
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:[self getNewChangeAddress] password:password andError:error coin:BTC];
 }
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
-    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] password:password andError:error coin:coin];
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:changeAddress password:password andError:error coin:coin];
 }
 
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error {
-    return [self newTxToAddresses:toAddresses withAmounts:amounts password:password andError:error coin:BTC];
+    return [self newTxToAddresses:toAddresses withAmounts:amounts andChangeAddress:[self getNewChangeAddress] password:password andError:error coin:BTC];
 }
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
     if (password && !self.hasPrivKey) {
         return nil;
     }

@@ -755,6 +755,39 @@
     return result;
 }
 
+- (NSArray *)getPrevOutsWithAddress:(NSString *)address {
+    NSMutableArray *outs = [NSMutableArray new];
+    [outs addObjectsFromArray:[self getPrevUnSpentOutsWithAddress:address]];
+    [outs addObjectsFromArray:[self getPrevSpentOutsWithAddress:address]];
+    return outs;
+}
+
+- (NSArray *)getPrevUnSpentOutsWithAddress:(NSString *)address {
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select a.* from outs a, txs b where a.tx_hash=b.tx_hash and a.out_address=? and a.out_status=? and b.block_no is not null and b.block_no<?";
+        FMResultSet *rs = [db executeQuery:sql, address, @(unspent), @(FORK_BLOCK_HEIGHT)];
+        while ([rs next]) {
+            [result addObject:[BTTxHelper formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (NSArray *)getPrevSpentOutsWithAddress:(NSString *)address {
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select a.* from outs a, txs out_b, ins in, txs b where a.tx_hash=out_b.tx_hash and a.out_sn=in.prev_out_sn and a.tx_hash=in.prev_tx_hash and a.out_address=? and b.tx_hash=in.tx_hash and a.out_status=? and out_b.block_no is not null and out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
+        FMResultSet *rs = [db executeQuery:sql, address, @(spent), @(FORK_BLOCK_HEIGHT)];
+        while ([rs next]) {
+            [result addObject:[BTTxHelper formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (NSArray *)getUnspendOutWithAddress:(NSString *)address; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {

@@ -106,17 +106,28 @@
 
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
                  andAddress:(NSArray *)addresses andError:(NSError **)error {
-    return [self buildTxForAddress:address andScriptPubKey:scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:address andError:error];
+    return [self buildTxForAddress:address andScriptPubKey:scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:address.address andError:error];
 }
 
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
                  andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error {
+    return [self buildTxForAddress:address andScriptPubKey:scriptPubKey andAmount:amounts
+                        andAddress:addresses andChangeAddress:changeAddress andError:error coin:BTC];
+}
+
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
+                 andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin {
     uint64_t value = 0;
     for (NSNumber *amount in amounts) {
         value += [amount unsignedLongLongValue];
     }
     NSArray *unspendTxs = [[BTTxProvider instance] getUnspendTxWithAddress:address.address];
-    NSArray *unspendOuts = [BTTxBuilder getUnspendOutsFromTxs:unspendTxs];
+    NSArray *unspendOuts;
+    if (coin == BCC) {
+        unspendOuts = [[BTTxProvider instance] getPrevOutsWithAddress:address.address];
+    } else {
+        unspendOuts = [[BTTxProvider instance] getUnspendTxWithAddress:address.address];
+    }
     NSArray *canSpendOuts = [BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs];
     NSArray *canNotSpendOuts = [BTTxBuilder getCanNotSpendOutsFromUnspendTxs:unspendTxs];
     if (value > [BTTxBuilder getAmount:unspendOuts]) {

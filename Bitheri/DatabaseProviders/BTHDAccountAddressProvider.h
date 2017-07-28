@@ -22,7 +22,7 @@
 #import "BTDatabaseManager.h"
 
 @class BTTx;
-
+@class BTOut;
 
 @interface BTHDAccountAddressProvider : NSObject
 
@@ -71,6 +71,10 @@
 - (NSArray *)getTxAndDetailByHDAccount:(int)hdAccountId page:(int)page;
 
 - (NSArray *)getUnspendOutByHDAccount:(int)hdAccountId;
+
+- (BTOut *)getPrevOutByTxHash:(NSData *)txHash outSn:(uint)outSn;
+
+- (NSArray *)getPrevCanSplitOutsByHDAccount:(int)hdAccountId;
 
 - (NSArray *)getRecentlyTxsByHDAccount:(int)hdAccountId blockNo:(int)greaterThanBlockNo limit:(int)limit;
 

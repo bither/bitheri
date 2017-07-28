@@ -479,6 +479,52 @@
     return result;
 }
 
+- (BTOut *)getPrevOutByTxHash:(NSData *)txHash outSn:(uint)outSn {
+    __block BTOut *btOut;
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select a.* from outs a where a.tx_hash=? and a.out_sn=?";
+        FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:txHash], @(outSn)];
+        while ([rs next]) {
+            btOut = [BTTxHelper formatOut:rs];
+        }
+        [rs close];
+    }];
+    return btOut;
+}
+
+- (NSArray *)getPrevCanSplitOutsByHDAccount:(int)hdAccountId {
+    NSMutableArray *outs = [NSMutableArray new];
+    [outs addObjectsFromArray:[self getPrevUnSpentOutsByHDAccount:hdAccountId]];
+    [outs addObjectsFromArray:[self getPrevSpentOutsByHDAccount:hdAccountId]];
+    return outs;
+}
+
+- (NSArray *)getPrevUnSpentOutsByHDAccount:(int)hdAccountId {
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select a.* from outs a, txs b where a.tx_hash=b.tx_hash and a.hd_account_id=? and a.out_status=? and b.block_no is not null and b.block_no<?";
+        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(unspent), @(FORK_BLOCK_HEIGHT)];
+        while ([rs next]) {
+            [result addObject:[BTTxHelper formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (NSArray *)getPrevSpentOutsByHDAccount:(int)hdAccountId {
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select a.* from outs a, txs out_b, ins in, txs b where a.tx_hash=out_b.tx_hash and a.out_sn=in.prev_out_sn and a.tx_hash=in.prev_tx_hash and a.hd_account_id=? and b.tx_hash=in.tx_hash and a.out_status=? and out_b.block_no is not null and out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
+        FMResultSet *rs = [db executeQuery:sql,  @(hdAccountId), @(spent), @(FORK_BLOCK_HEIGHT)];
+        while ([rs next]) {
+            [result addObject:[BTTxHelper formatOut:rs]];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (NSArray *)getRecentlyTxsByHDAccount:(int)hdAccountId blockNo:(int)greaterThanBlockNo limit:(int)limit; {
     __block NSMutableArray *txs = nil;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {

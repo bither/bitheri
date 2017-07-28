@@ -236,12 +236,21 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification object:@[self.hasPrivKey ? kHDAccountPlaceHolder : kHDAccountMonitoredPlaceHolder, @([self getDeltaBalance]), tx, @(txNotificationType)]];
 }
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error {
-    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andError:error];
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error  {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andError:error andChangeAddress:[self getNewChangeAddress] coin:BTC];
 }
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error {
-    NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin  {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andError:error andChangeAddress:changeAddress coin:coin];
+}
+
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin {
+    NSArray *outs;
+    if (coin == BCC) {
+        outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
+    } else {
+        outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
+    }
     BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:[self getNewChangeAddress] andError:error];
     if (error && !tx) {
         return nil;
@@ -253,15 +262,29 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] password:password andError:error];
 }
 
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] password:password andError:error coin:coin];
+}
+
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error {
+    return [self newTxToAddresses:toAddresses withAmounts:amounts password:password andError:error coin:BTC];
+}
+
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
     if (password && !self.hasPrivKey) {
         return nil;
     }
-    NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
+    NSArray *outs;
+    if (coin == BCC) {
+        outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
+    } else {
+        outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
+    }
     BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:[self getNewChangeAddress] andError:error];
     if (error && !tx) {
         return nil;
     }
+    tx.coin = coin;
     NSArray *signingAddresses = [self getSigningAddressesForInputs:tx.ins];
     BTBIP32Key *master = [self masterKey:password];
     if (!master) {

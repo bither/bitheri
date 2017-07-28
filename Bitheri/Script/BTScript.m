@@ -22,6 +22,8 @@
 #import "BTScriptOpCodes.h"
 #import "BTSettings.h"
 #import "BTKey.h"
+#import "BTIn.h"
+#import "BTOut.h"
 
 #define UINT24_MAX 8388607
 #define SIG_SIZE 75
@@ -446,7 +448,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         NSData *sig = sigs.lastObject;
         if (sig.length > 0) {
             NSData *hash = [self.tx hashForSignature:self.index connectedScript:scriptPubKey.program
-                                         sigHashType:[sig UInt8AtOffset:sig.length - 1]];
+                                     sigHashType:[sig UInt8AtOffset:sig.length - 1]];
             if ([key verify:hash signature:sig]) {
                 [result addObject:pubKey];
                 [sigs removeLastObject];
@@ -1200,8 +1202,15 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
     BTKey *key = [BTKey keyWithPublicKey:pubKey];
     if (sigBytes.length > 0) {
-        NSData *hash = [self.tx hashForSignature:self.index connectedScript:connectedScript
-                                     sigHashType:[sigBytes UInt8AtOffset:sigBytes.length - 1]];
+        NSData *hash;
+        if (self.tx.coin == BCC) {
+            BTIn *btIn = self.tx.ins[self.index];
+            BTOut *btOut = [self.tx getOut:btIn.prevOutSn];
+            hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:(SIG_HASH_ALL | 0x40 | 0) prevValue:btOut.outValue anyoneCanPay:false];
+        } else {
+            hash = [self.tx hashForSignature:self.index connectedScript:connectedScript
+                                 sigHashType:[sigBytes UInt8AtOffset:sigBytes.length - 1]];
+        }
         sigValid = [key verify:hash signature:sigBytes];
     }
 
@@ -1291,8 +1300,15 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         BTKey *key = [BTKey keyWithPublicKey:pubKey];
         NSData *sig = sigs.firstObject;
         if (sig.length > 0) {
-            NSData *hash = [self.tx hashForSignature:self.index connectedScript:script.program
-                                         sigHashType:[sig UInt8AtOffset:sig.length - 1]];
+            NSData *hash;
+            if (self.tx.coin == BCC) {
+                BTIn *btIn = self.tx.ins[self.index];
+                BTOut *btOut = [self.tx getOut:btIn.prevOutSn];
+                hash = [self.tx hashForSignatureWitness:self.index connectedScript:script.program type:(SIG_HASH_ALL | 0x40 | 0) prevValue:btOut.outValue anyoneCanPay:false];
+            } else {
+                hash = [self.tx hashForSignature:self.index connectedScript:script.program
+                                     sigHashType:[sig UInt8AtOffset:sig.length - 1]];
+            }
             if ([key verify:hash signature:sig])
                 [sigs removeObjectAtIndex:0];
         }

@@ -290,7 +290,14 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error {
-    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
+    return [self txForAmounts:amounts andAddress:addresses andChangeAddress:changeAddress andError:error coin:BTC];
+}
+
+- (BTTx *)txForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin {
+    BTTx *tx = [[BTTxBuilder instance] buildTxForAddress:self andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error coin:coin];
+    if (tx != nil) {
+        tx.coin = coin;
+    }
     return tx;
 }
 

@@ -32,6 +32,7 @@
 #import "BTHDAccount.h"
 #import "BTHDAccountAddressProvider.h"
 #import "BTUtils.h"
+#import "BTTxBuilder.h"
 
 @implementation BTTx
 
@@ -203,21 +204,27 @@
     }
 
     for (NSUInteger i = 0; i < self.ins.count; i++) {
-        BTIn *in = self.ins[i];
-        NSUInteger keyIdx = [addresses indexOfObject:[in.inScript
-                subdataWithRange:NSMakeRange([in.inScript length] - 22, 20)]];
+        BTIn *btIn = self.ins[i];
+        NSUInteger keyIdx = [addresses indexOfObject:[btIn.inScript
+                subdataWithRange:NSMakeRange([btIn.inScript length] - 22, 20)]];
 
         if (keyIdx == NSNotFound) continue;
 
         NSMutableData *sig = [NSMutableData data];
-        NSData *hash = [self toDataWithSubscriptIndex:i].SHA256_2;
+        NSData *hash;
+        if (self.coin == BCC) {
+            BTOut *btOut = [[BTHDAccountAddressProvider instance] getPrevOutByTxHash:btIn.prevTxHash outSn:btIn.prevOutSn];
+            hash = [self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false];
+        } else {
+            hash = [self toDataWithSubscriptIndex:i].SHA256_2;
+        }
         NSMutableData *s = [NSMutableData dataWithData:[keys[keyIdx] sign:hash]];
 
-        [s appendUInt8:SIG_HASH_ALL];
+        [s appendUInt8:[self getSigHashType]];
         [sig appendScriptPushData:s];
         [sig appendScriptPushData:[keys[keyIdx] publicKey]];
 
-        in.inSignature = sig;
+        btIn.inSignature = sig;
     }
 
     if (![self isSigned]) return NO;
@@ -237,7 +244,13 @@
 - (NSArray *)unsignedInHashes; {
     NSMutableArray *result = [NSMutableArray new];
     for (NSUInteger i = 0; i < self.ins.count; i++) {
-        [result addObject:[self toDataWithSubscriptIndex:i].SHA256_2];
+        if (self.coin == BCC) {
+            BTIn *btIn = self.ins[i];
+            BTOut *btOut = [self getOut:btIn.prevOutSn];
+            [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:(SIG_HASH_ALL | 0x40 | 0) prevValue:btOut.outValue anyoneCanPay:false]];
+        } else {
+            [result addObject:[self toDataWithSubscriptIndex:i].SHA256_2];
+        }
     }
     return result;
 }
@@ -880,4 +893,14 @@
         return NO;
     }
 }
+
+- (u_int32_t)getSigHashType {
+    switch (self.coin) {
+        case BCC:
+            return SIG_HASH_ALL | 0x40 | 0;
+        default:
+            return SIG_HASH_ALL;
+    }
+}
+
 @end

@@ -35,6 +35,10 @@
 #define TX_FEE_PER_KB        10000llu    // standard tx fee per kb of tx size, rounded up to the nearest kb
 #endif
 
+typedef enum {
+    BTC, BCC
+} Coin;
+
 @interface BTTx : NSObject
 
 @property(nonatomic, assign) uint32_t blockNo;
@@ -50,6 +54,7 @@
 
 @property(nonatomic, readonly) uint confirmationCnt;
 @property(nonatomic, readonly) BOOL isCoinBase;
+@property(nonatomic, readwrite) Coin coin;
 
 
 + (instancetype)transactionWithMessage:(NSData *)message;
@@ -130,5 +135,7 @@
 #pragma mark - confirm
 
 - (void)sawByPeer;
+
+- (u_int32_t)getSigHashType;
 
 @end

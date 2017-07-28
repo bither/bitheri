@@ -92,4 +92,7 @@
 - (uint64_t)getTotalReceiveWithAddress:(NSString *)address;
 
 - (NSData *)isIdentify:(BTTx *)tx;
+
+- (NSArray *)getPrevOutsWithAddress:(NSString *)address;
+
 @end

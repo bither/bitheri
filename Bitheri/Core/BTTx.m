@@ -246,7 +246,7 @@
     for (NSUInteger i = 0; i < self.ins.count; i++) {
         if (self.coin == BCC) {
             BTIn *btIn = self.ins[i];
-            BTOut *btOut = [self getOut:btIn.prevOutSn];
+            BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
             [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false]];
         } else {
             [result addObject:[self toDataWithSubscriptIndex:i].SHA256_2];

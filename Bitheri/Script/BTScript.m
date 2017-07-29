@@ -24,6 +24,7 @@
 #import "BTKey.h"
 #import "BTIn.h"
 #import "BTOut.h"
+#import "BTTxProvider.h"
 
 #define UINT24_MAX 8388607
 #define SIG_SIZE 75
@@ -1205,7 +1206,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         NSData *hash;
         if (self.tx.coin == BCC) {
             BTIn *btIn = self.tx.ins[self.index];
-            BTOut *btOut = [self.tx getOut:btIn.prevOutSn];
+            BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
             hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:[self.tx getSigHashType] prevValue:btOut.outValue anyoneCanPay:false];
         } else {
             hash = [self.tx hashForSignature:self.index connectedScript:connectedScript
@@ -1303,7 +1304,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             NSData *hash;
             if (self.tx.coin == BCC) {
                 BTIn *btIn = self.tx.ins[self.index];
-                BTOut *btOut = [self.tx getOut:btIn.prevOutSn];
+                BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
                 hash = [self.tx hashForSignatureWitness:self.index connectedScript:script.program type:[self.tx getSigHashType] prevValue:btOut.outValue anyoneCanPay:false];
             } else {
                 hash = [self.tx hashForSignature:self.index connectedScript:script.program

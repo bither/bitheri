@@ -255,6 +255,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (error && !tx) {
         return nil;
     }
+    tx.coin = coin;
     return tx;
 }
 

@@ -1206,7 +1206,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         if (self.tx.coin == BCC) {
             BTIn *btIn = self.tx.ins[self.index];
             BTOut *btOut = [self.tx getOut:btIn.prevOutSn];
-            hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:(SIG_HASH_ALL | 0x40 | 0) prevValue:btOut.outValue anyoneCanPay:false];
+            hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:[self.tx getSigHashType] prevValue:btOut.outValue anyoneCanPay:false];
         } else {
             hash = [self.tx hashForSignature:self.index connectedScript:connectedScript
                                  sigHashType:[sigBytes UInt8AtOffset:sigBytes.length - 1]];
@@ -1304,7 +1304,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             if (self.tx.coin == BCC) {
                 BTIn *btIn = self.tx.ins[self.index];
                 BTOut *btOut = [self.tx getOut:btIn.prevOutSn];
-                hash = [self.tx hashForSignatureWitness:self.index connectedScript:script.program type:(SIG_HASH_ALL | 0x40 | 0) prevValue:btOut.outValue anyoneCanPay:false];
+                hash = [self.tx hashForSignatureWitness:self.index connectedScript:script.program type:[self.tx getSigHashType] prevValue:btOut.outValue anyoneCanPay:false];
             } else {
                 hash = [self.tx hashForSignature:self.index connectedScript:script.program
                                      sigHashType:[sig UInt8AtOffset:sig.length - 1]];

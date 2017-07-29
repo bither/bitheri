@@ -320,7 +320,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         NSMutableData *sig = [NSMutableData data];
         NSMutableData *s = [NSMutableData dataWithData:[key.key sign:unsignedHash]];
         
-        [s appendUInt8:SIG_HASH_ALL];
+        [s appendUInt8:[tx getSigHashType]];
         [sig appendScriptPushData:s];
         [sig appendScriptPushData:[key.key publicKey]];
         [signatures addObject:sig];

@@ -247,7 +247,7 @@
         if (self.coin == BCC) {
             BTIn *btIn = self.ins[i];
             BTOut *btOut = [self getOut:btIn.prevOutSn];
-            [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:(SIG_HASH_ALL | 0x40 | 0) prevValue:btOut.outValue anyoneCanPay:false]];
+            [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false]];
         } else {
             [result addObject:[self toDataWithSubscriptIndex:i].SHA256_2];
         }

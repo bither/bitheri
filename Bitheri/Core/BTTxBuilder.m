@@ -121,12 +121,17 @@
     for (NSNumber *amount in amounts) {
         value += [amount unsignedLongLongValue];
     }
-    NSArray *unspendTxs = [[BTTxProvider instance] getUnspendTxWithAddress:address.address];
+    NSArray *unspendTxs;
     NSArray *unspendOuts;
-    if (coin == BCC) {
-        unspendOuts = [[BTTxProvider instance] getPrevOutsWithAddress:address.address];
-    } else {
-        unspendOuts = [[BTTxProvider instance] getUnspendTxWithAddress:address.address];
+    switch (coin) {
+        case BCC:
+            unspendOuts = [[BTTxProvider instance] getPrevOutsWithAddress:address.address];
+            unspendTxs = [[BTTxProvider instance] getPrevUnspendTxsWithAddress:address.address outs:unspendOuts];
+            break;
+        case BTC:
+            unspendTxs = [[BTTxProvider instance] getUnspendTxWithAddress:address.address];
+            unspendOuts = [BTTxBuilder getUnspendOutsFromTxs:unspendTxs];
+            break;
     }
     NSArray *canSpendOuts = [BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs];
     NSArray *canNotSpendOuts = [BTTxBuilder getCanNotSpendOutsFromUnspendTxs:unspendTxs];

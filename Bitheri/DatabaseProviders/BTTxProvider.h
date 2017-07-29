@@ -95,4 +95,6 @@
 
 - (NSArray *)getPrevOutsWithAddress:(NSString *)address;
 
+- (NSArray *)getPrevUnspendTxsWithAddress:(NSString *)address outs:(NSArray *)outs;
+
 @end

@@ -734,6 +734,29 @@
     }];
 }
 
+- (NSArray *)getPrevUnspendTxsWithAddress:(NSString *)address outs:(NSArray *)outs {
+    __block NSMutableArray *result = [NSMutableArray new];
+    [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *unspendOutSql = @"select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth "
+        "from outs a,txs b where a.tx_hash=b.tx_hash"
+        " and a.out_address=?";
+        FMResultSet *rs = [db executeQuery:unspendOutSql, address];
+        while ([rs next]) {
+            BTOut *outItem = [BTTxHelper formatOut:rs];
+            if ([outs containsObject:outItem]) {
+                BTTx *txItem = [BTTxHelper format:rs];
+                outItem.coinDepth = [rs unsignedLongLongIntForColumn:@"coin_depth"];
+                txItem.outs = [NSMutableArray new];
+                [txItem.outs addObject:outItem];
+                outItem.tx = txItem;
+                [result addObject:txItem];
+            }
+        }
+        [rs close];
+    }];
+    return result;
+}
+
 - (NSArray *)getUnspendTxWithAddress:(NSString *)address; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {

@@ -421,7 +421,7 @@
     [d appendUInt64:prevValue];
     [d appendUInt32:in.inSequence];
     [d appendData:[hashOutputs SHA256_2]];
-    [d appendUInt32:17];
+    [d appendUInt32:0];
     [d appendUInt32:0x000000ff & sigHashType];
     return [d SHA256_2];
 }

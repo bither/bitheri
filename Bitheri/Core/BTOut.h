@@ -23,7 +23,7 @@ typedef enum {
     spent = 1,
 } OUT_STATUS;
 
-#define FORK_BLOCK_HEIGHT (477768)
+#define FORK_BLOCK_HEIGHT (478559)
 
 @interface BTOut : NSObject
 

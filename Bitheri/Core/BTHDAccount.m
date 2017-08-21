@@ -259,6 +259,15 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return tx;
 }
 
+- (NSArray *)newBccTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress {
+    NSArray *outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
+    NSArray *txs = [[BTTxBuilder instance] buildBccTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+    if (error && !txs) {
+        return nil;
+    }
+    return txs;
+}
+
 - (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error {
     return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:[self getNewChangeAddress] password:password andError:error coin:BTC];
 }
@@ -337,6 +346,71 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [key wipe];
     }
     return tx;
+}
+
+- (NSArray *)newBccTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error {
+    if (password && !self.hasPrivKey) {
+        return nil;
+    }
+    NSArray *outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
+    NSArray *txs = [[BTTxBuilder instance] buildBccTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+    if (error && !txs) {
+        return nil;
+    }
+    
+    for (BTTx *tx in txs) {
+        NSArray *signingAddresses = [self getSigningAddressesForInputs:tx.ins];
+        BTBIP32Key *master = [self masterKey:password];
+        if (!master) {
+            [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
+            return nil;
+        }
+        
+        BTBIP32Key *account = [self getAccount:master];
+        BTBIP32Key *external = [self getChainRootKeyFromAccount:account withPathType:EXTERNAL_ROOT_PATH];
+        BTBIP32Key *internal = [self getChainRootKeyFromAccount:account withPathType:INTERNAL_ROOT_PATH];
+        [account wipe];
+        [master wipe];
+        
+        NSArray *unsignedHashes = [tx unsignedInHashes];
+        
+        NSMutableArray *signatures = [[NSMutableArray alloc] initWithCapacity:unsignedHashes.count];
+        
+        NSMutableDictionary *addressToKeyDict = [NSMutableDictionary new];
+        for (NSUInteger i = 0; i < signingAddresses.count; i++) {
+            BTHDAccountAddress *a = signingAddresses[i];
+            NSData *unsignedHash = unsignedHashes[i];
+            
+            if (![addressToKeyDict.allKeys containsObject:a.address]) {
+                if (a.pathType == EXTERNAL_ROOT_PATH) {
+                    [addressToKeyDict setObject:[external deriveSoftened:a.index] forKey:a.address];
+                } else {
+                    [addressToKeyDict setObject:[internal deriveSoftened:a.index] forKey:a.address];
+                }
+            }
+            
+            BTBIP32Key *key = [addressToKeyDict objectForKey:a.address];
+            
+            NSMutableData *sig = [NSMutableData data];
+            NSMutableData *s = [NSMutableData dataWithData:[key.key sign:unsignedHash]];
+            
+            [s appendUInt8:[tx getSigHashType]];
+            [sig appendScriptPushData:s];
+            [sig appendScriptPushData:[key.key publicKey]];
+            [signatures addObject:sig];
+            
+        }
+        
+        if (![tx signWithSignatures:signatures]) {
+            return nil;
+        }
+        [external wipe];
+        [internal wipe];
+        for (BTBIP32Key *key in addressToKeyDict.allValues) {
+            [key wipe];
+        }
+    }
+    return txs;
 }
 
 - (NSArray *)getSigningAddressesForInputs:(NSArray *)inputs {

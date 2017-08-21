@@ -301,6 +301,11 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return tx;
 }
 
+- (NSArray *)bccTxsForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error {
+    NSArray *txs = [[BTTxBuilder instance] buildBccTxsForAddress:self andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
+    return txs;
+}
+
 // sign any inputs in the given transaction that can be signed using private keys from the wallet
 - (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase; {
     [transaction signWithPrivateKeys:@[[BTKey keyWithBitcoinj:self.fullEncryptPrivKey andPassphrase:passphrase].privateKey]];

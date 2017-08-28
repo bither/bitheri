@@ -526,6 +526,11 @@ typedef enum {
 
     DDLogDebug(@"%@:%d got version %d, useragent:\"%@\", %@", self.host, self.peerPort, self.version, self.userAgent, self.canRelayTx ? @"can relay tx" : @"can NOT relay tx");
     
+    if ((_peerServices & NODE_BITCOIN_CASH) == NODE_BITCOIN_CASH) {
+        DDLogWarn(@"%@: Peer follows an incompatible block chain.", self);
+        return;
+    }
+    
     [self sendVerAckMessage];
 }
 

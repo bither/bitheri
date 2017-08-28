@@ -42,6 +42,7 @@
 
 // peer manager
 
+#define NODE_BITCOIN_CASH     1 << 5
 #define MAX_PEERS_COUNT       100
 #define NODE_NETWORK          1  // services value indicating a node offers full blocks, not just headers
 #define PROTOCOL_TIMEOUT      30.0

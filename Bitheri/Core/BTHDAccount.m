@@ -268,6 +268,14 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return txs;
 }
 
+- (NSArray *)newBccTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress andUnspentOut:(NSArray *) outs {
+    NSArray *txs = [[BTTxBuilder instance] buildBccTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+    if (error && !txs) {
+        return nil;
+    }
+    return txs;
+}
+
 - (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error {
     return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:[self getNewChangeAddress] password:password andError:error coin:BTC];
 }
@@ -406,6 +414,60 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         }
         [external wipe];
         [internal wipe];
+        for (BTBIP32Key *key in addressToKeyDict.allValues) {
+            [key wipe];
+        }
+    }
+    return txs;
+}
+
+- (NSArray *)extractBccToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress andUnspentOuts:(NSArray *)outs andPathTypeIndex:(PathTypeIndex *) pathTypeIndex password:(NSString *)password andError:(NSError **)error {
+    if (password && !self.hasPrivKey) {
+        return nil;
+    }
+    NSArray *txs = [[BTTxBuilder instance] buildBccTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+    if (error && !txs) {
+        return nil;
+    }
+    
+    for (BTTx *tx in txs) {
+        tx.isDetectBcc = true;
+        BTBIP32Key *master = [self masterKey:password];
+        if (!master) {
+            [BTHDMPasswordWrongException raise:@"password wrong" format:nil];
+            return nil;
+        }
+        
+        u_int64_t preOutValues[] = {};
+        for (int idx = 0; idx< outs.count; idx ++) {
+            preOutValues[idx] = [ outs[idx]outValue];
+        }
+        NSArray *unsignedHashes = [tx unsignedInHashesForBcc:preOutValues];
+        
+        NSMutableArray *signatures = [[NSMutableArray alloc] initWithCapacity:unsignedHashes.count];
+        
+        NSMutableDictionary *addressToKeyDict = [NSMutableDictionary new];
+        for (NSUInteger i = 0; i < tx.ins.count; i++) {
+            NSData *unsignedHash = unsignedHashes[i];
+            
+            BTBIP32Key *account = [self getAccount:master];
+            BTBIP32Key *pathPrivate = [account deriveSoftened: pathTypeIndex.pathType];
+            BTBIP32Key *key = [pathPrivate deriveSoftened:(uint)pathTypeIndex.index];
+            
+            NSMutableData *sig = [NSMutableData data];
+            NSMutableData *s = [NSMutableData dataWithData:[key.key sign:unsignedHash]];
+            
+            [s appendUInt8:[tx getSigHashType]];
+            [sig appendScriptPushData:s];
+            [sig appendScriptPushData:[key.key publicKey]];
+            [signatures addObject:sig];
+            
+        }
+        
+        if (![tx signWithSignatures:signatures]) {
+            return nil;
+        }
+        
         for (BTBIP32Key *key in addressToKeyDict.allValues) {
             [key wipe];
         }

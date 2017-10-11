@@ -55,7 +55,7 @@ typedef enum {
 @property(nonatomic, readonly) uint confirmationCnt;
 @property(nonatomic, readonly) BOOL isCoinBase;
 @property(nonatomic, readwrite) Coin coin;
-
+@property(nonatomic,readwrite) BOOL isDetectBcc;
 
 + (instancetype)transactionWithMessage:(NSData *)message;
 
@@ -85,7 +85,11 @@ typedef enum {
 
 - (NSArray *)unsignedInHashes;
 
+- (NSArray *)unsignedInHashesForBcc:(uint64_t []) preOutValues;
+
 - (BOOL)signWithSignatures:(NSArray *)signatures;
+
+- (BOOL)signWithPrivateKeys:(NSArray *)privateKeys andUnspentOuts:(NSArray *) unspentOuts;
 
 - (NSData *)hashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
 

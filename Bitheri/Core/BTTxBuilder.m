@@ -267,6 +267,23 @@
     return nil;
 }
 
+- (NSArray *)buildBccTxsForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
+                        andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andUnspentOuts:(NSArray *)unspendOuts andError:(NSError **)error {
+    uint64_t value = 0;
+    for (NSNumber *amount in amounts) {
+        value += [amount unsignedLongLongValue];
+    }
+    
+    NSArray *emptyWalletTxs = [self getEmptyWalletTxsWithAddress:address andScriptPubKey:scriptPubKey WithUnspendOuts:unspendOuts andAddress:addresses andChangeAddress:changeAddress splitNumber:1];
+    if (emptyWalletTxs != nil && emptyWalletTxs.count > 0) {
+        return emptyWalletTxs;
+    }
+    
+    *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_CAN_NOT_CALCULATE_CODE userInfo:nil];
+    return nil;
+    
+}
+
 - (NSArray *)getEmptyWalletTxsWithAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress splitNumber:(NSInteger)splitNumber {
     NSMutableArray *emptyWalletTxs = [NSMutableArray new];
     NSUInteger count = (unspendTxs.count % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendTxs.count / splitNumber + 1) : unspendTxs.count / splitNumber;
@@ -289,6 +306,27 @@
     return emptyWalletTxs;
 }
 
+- (NSArray *)getEmptyWalletTxsWithAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendOuts:(NSArray *)unspendOuts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress splitNumber:(NSInteger)splitNumber {
+    NSMutableArray *emptyWalletTxs = [NSMutableArray new];
+    NSUInteger count = (unspendOuts.count % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendOuts.count / splitNumber + 1) : unspendOuts.count / splitNumber;
+    for (int i = 0; i < splitNumber; i++) {
+        NSArray *outs = [unspendOuts subarrayWithRange:NSMakeRange(i * count, MIN(count, unspendOuts.count - i * count))];
+        NSArray *amounts = @[@([BTTxBuilder getAmount:outs])];
+        
+        BTTx *emptyWalletTx = [emptyWallet buildBccTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendOuts:unspendOuts andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress];
+        
+        if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andScriptPubKey:scriptPubKey andOuts:emptyWalletTx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
+            emptyWalletTx.coin = BCC;
+            [emptyWalletTxs addObject:emptyWalletTx];
+        } else if (emptyWalletTx != nil) {
+            if (outs.count == 1) {
+                return nil;
+            }
+            return [self getEmptyWalletTxsWithAddress:address andScriptPubKey:scriptPubKey WithUnspendOuts:unspendOuts andAddress:addresses andChangeAddress:changeAddress splitNumber:splitNumber + 1];
+        }
+    }
+    return emptyWalletTxs;
+}
 
 + (BTTx *)prepareTxWithAmounts:(NSArray *)amounts andAddresses:(NSArray *)addresses; {
     BTTx *tx = [BTTx new];
@@ -944,6 +982,61 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
         [tx addInputHash:outItem.txHash index:outItem.outSn script:scriptPubKey];
     }
 
+    tx.source = 1;
+    return tx;
+}
+
+- (BTTx *)buildBccTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendOuts:(NSArray *)unspendOuts andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress {
+    uint64_t feeBase = [[BTSettings instance] feeBase];
+    NSMutableArray *outs = [NSMutableArray arrayWithArray:unspendOuts];
+    
+    uint64_t value = 0;
+    for (BTOut *out in tx.outs) {
+        value += out.outValue;
+    }
+    BOOL needMinFee = [BTTxBuilder needMinFee:tx];
+    
+    if (value != [BTTxBuilder getAmount:unspendOuts] || value != [BTTxBuilder getAmount:outs]) {
+        return nil;
+    }
+    
+    uint64_t fees = 0;
+    if (needMinFee) {
+        fees = feeBase;
+    } else {
+        // no fee logic
+        size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
+        if (![BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s) {
+            fees = feeBase;
+        }
+    }
+    
+    size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
+    if (size > 1000) {
+        fees = (size / 1000 + 1) * feeBase;
+    }
+    
+    // note : like bitcoinj, empty wallet will not check min output
+    if (fees > 0) {
+        BTTx *newTx = [BTTx new];
+        for (NSUInteger i = 0; i < tx.outs.count; i++) {
+            BTOut *out = tx.outs[i];
+            uint64_t amount = out.outValue;
+            if (i == tx.outs.count - 1) {
+                if (amount > fees) {
+                    amount -= fees;
+                } else {
+                    return nil;
+                }
+            }
+            [newTx addOutputAddress:out.outAddress amount:amount];
+        }
+        tx = newTx;
+    }
+    for (BTOut *outItem in outs) {
+        [tx addInputHash:outItem.txHash index:outItem.outSn script:scriptPubKey];
+    }
+    
     tx.source = 1;
     return tx;
 }

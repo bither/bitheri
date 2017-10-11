@@ -35,6 +35,9 @@
 - (NSArray *)buildBccTxsForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
                           andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error;
 
+- (NSArray *)buildBccTxsForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
+                        andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andUnspentOuts:(NSArray *)unspendOuts andError:(NSError **)error;
+
 - (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error;
 
 - (NSArray *)buildBccTxsWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error;
@@ -49,6 +52,8 @@
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress;
 
 - (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andTx:(BTTx *)tx;
+@optional
+- (BTTx *)buildBccTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendOuts:(NSArray *)unspendOuts andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress;
 @end
 
 @interface BTTxBuilderEmptyWallet : NSObject <BTTxBuilderProtocol>

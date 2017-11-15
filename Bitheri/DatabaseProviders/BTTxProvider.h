@@ -93,7 +93,7 @@
 
 - (NSData *)isIdentify:(BTTx *)tx;
 
-- (NSArray *)getPrevOutsWithAddress:(NSString *)address;
+- (NSArray *)getPrevOutsWithAddress:(NSString *)address coin:(Coin)coin;
 
 - (NSArray *)getPrevUnspendTxsWithAddress:(NSString *)address outs:(NSArray *)outs;
 

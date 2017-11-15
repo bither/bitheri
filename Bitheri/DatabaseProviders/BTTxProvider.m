@@ -778,18 +778,18 @@
     return result;
 }
 
-- (NSArray *)getPrevOutsWithAddress:(NSString *)address {
+- (NSArray *)getPrevOutsWithAddress:(NSString *)address coin:(Coin)coin {
     NSMutableArray *outs = [NSMutableArray new];
-    [outs addObjectsFromArray:[self getPrevUnSpentOutsWithAddress:address]];
-    [outs addObjectsFromArray:[self getPostSpentOutsWithAddress:address]];
+    [outs addObjectsFromArray:[self getPrevUnSpentOutsWithAddress:address coin:coin]];
+    [outs addObjectsFromArray:[self getPostSpentOutsWithAddress:address coin:coin]];
     return outs;
 }
 
-- (NSArray *)getPrevUnSpentOutsWithAddress:(NSString *)address {
+- (NSArray *)getPrevUnSpentOutsWithAddress:(NSString *)address coin:(Coin)coin {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.* from outs a, txs b where a.tx_hash=b.tx_hash and a.out_address=? and a.out_status=? and b.block_no is not null and b.block_no<?";
-        FMResultSet *rs = [db executeQuery:sql, address, @(unspent), @(FORK_BLOCK_HEIGHT)];
+        FMResultSet *rs = [db executeQuery:sql, address, @(unspent), @([BTTx getForkBlockHeightForCoin:coin])];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -798,11 +798,12 @@
     return result;
 }
 
-- (NSArray *)getPostSpentOutsWithAddress:(NSString *)address {
+- (NSArray *)getPostSpentOutsWithAddress:(NSString *)address coin:(Coin)coin {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select a.* from outs a, txs out_b, ins i, txs b where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and a.tx_hash=i.prev_tx_hash and a.out_address=? and b.tx_hash=i.tx_hash and a.out_status=? and out_b.block_no is not null and out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
-        FMResultSet *rs = [db executeQuery:sql, address, @(spent), @(FORK_BLOCK_HEIGHT), @(FORK_BLOCK_HEIGHT)];
+        uint64_t forkBlockHeight = [BTTx getForkBlockHeightForCoin:coin];
+        FMResultSet *rs = [db executeQuery:sql, address, @(spent), @(forkBlockHeight), @(forkBlockHeight)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }

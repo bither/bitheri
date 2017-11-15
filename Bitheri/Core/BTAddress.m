@@ -301,8 +301,8 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return tx;
 }
 
-- (NSArray *)bccTxsForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error {
-    NSArray *txs = [[BTTxBuilder instance] buildBccTxsForAddress:self andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error];
+- (NSArray *)splitCoinTxsForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin {
+    NSArray *txs = [[BTTxBuilder instance] buildSplitCoinTxsForAddress:self andScriptPubKey:self.scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:changeAddress andError:error coin:coin];
     return txs;
 }
 

@@ -50,7 +50,7 @@
     return self;
 }
 
-- (NSArray *)buildBccTxsWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error {
+- (NSArray *)buildSplitCoinTxsWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin {
     uint64_t value = 0;
     for (NSNumber *amount in amounts) {
         value += [amount unsignedLongLongValue];
@@ -62,7 +62,7 @@
         return nil;
     }
     
-    NSArray *emptyWalletTxs = [self getEmptyWalletTxsWithOutputs:unspendOuts toAddresses:addresses changeAddress:changeAddress splitNumber:1];
+    NSArray *emptyWalletTxs = [self getEmptyWalletTxsWithOutputs:unspendOuts toAddresses:addresses changeAddress:changeAddress splitNumber:1 coin:coin];
     if (emptyWalletTxs != nil && emptyWalletTxs.count > 0) {
         return emptyWalletTxs;
     }
@@ -71,7 +71,7 @@
     return nil;
 }
 
-- (NSArray *)getEmptyWalletTxsWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses changeAddress:(NSString *)changeAddress splitNumber:(NSInteger)splitNumber {
+- (NSArray *)getEmptyWalletTxsWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses changeAddress:(NSString *)changeAddress splitNumber:(NSInteger)splitNumber coin:(Coin)coin {
     NSMutableArray *emptyWalletTxs = [NSMutableArray new];
     NSUInteger count = (unspendOuts.count % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendOuts.count / splitNumber + 1) : unspendOuts.count / splitNumber;
     for (int i = 0; i < splitNumber; i++) {
@@ -79,13 +79,13 @@
         NSArray *amounts = @[@([BTTxBuilder getAmount:outs])];
         BTTx *emptyWalletTx = [emptyWallet buildTxWithOutputs:outs toAddresses:addresses amounts:amounts changeAddress:changeAddress andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses]];
         if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
-            emptyWalletTx.coin = BCC;
+            emptyWalletTx.coin = coin;
             [emptyWalletTxs addObject:emptyWalletTx];
         } else if (emptyWalletTx != nil) {
             if (outs.count == 1) {
                 return nil;
             }
-            return [self getEmptyWalletTxsWithOutputs:unspendOuts toAddresses:addresses changeAddress:changeAddress splitNumber:splitNumber + 1];
+            return [self getEmptyWalletTxsWithOutputs:unspendOuts toAddresses:addresses changeAddress:changeAddress splitNumber:splitNumber + 1 coin:coin];
         } 
     }
     return emptyWalletTxs;
@@ -164,13 +164,13 @@
     NSArray *unspendTxs;
     NSArray *unspendOuts;
     switch (coin) {
-        case BCC:
-            unspendOuts = [[BTTxProvider instance] getPrevOutsWithAddress:address.address];
-            unspendTxs = [[BTTxProvider instance] getPrevUnspendTxsWithAddress:address.address outs:unspendOuts];
-            break;
         case BTC:
             unspendTxs = [[BTTxProvider instance] getUnspendTxWithAddress:address.address];
             unspendOuts = [BTTxBuilder getUnspendOutsFromTxs:unspendTxs];
+            break;
+        default:
+            unspendOuts = [[BTTxProvider instance] getPrevOutsWithAddress:address.address coin:coin];
+            unspendTxs = [[BTTxProvider instance] getPrevUnspendTxsWithAddress:address.address outs:unspendOuts];
             break;
     }
     NSArray *canSpendOuts = [BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs];
@@ -233,13 +233,12 @@
     }
 }
 
-- (NSArray *)buildBccTxsForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
-                          andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error {
+- (NSArray *)buildSplitCoinTxsForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin {
     uint64_t value = 0;
     for (NSNumber *amount in amounts) {
         value += [amount unsignedLongLongValue];
     }
-    NSArray *unspendOuts = [[BTTxProvider instance] getPrevOutsWithAddress:address.address];
+    NSArray *unspendOuts = [[BTTxProvider instance] getPrevOutsWithAddress:address.address coin:coin];
     NSArray *unspendTxs = [[BTTxProvider instance] getPrevUnspendTxsWithAddress:address.address outs:unspendOuts];
     NSArray *canSpendOuts = [BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs];
     NSArray *canNotSpendOuts = [BTTxBuilder getCanNotSpendOutsFromUnspendTxs:unspendTxs];
@@ -258,7 +257,7 @@
         return nil;
     }
     
-    NSArray *emptyWalletTxs = [self getEmptyWalletTxsWithAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs andAddress:addresses andChangeAddress:changeAddress splitNumber:1];
+    NSArray *emptyWalletTxs = [self getEmptyWalletTxsWithAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs andAddress:addresses andChangeAddress:changeAddress splitNumber:1 coin:coin];
     if (emptyWalletTxs != nil && emptyWalletTxs.count > 0) {
         return emptyWalletTxs;
     }
@@ -267,7 +266,7 @@
     return nil;
 }
 
-- (NSArray *)getEmptyWalletTxsWithAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress splitNumber:(NSInteger)splitNumber {
+- (NSArray *)getEmptyWalletTxsWithAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress splitNumber:(NSInteger)splitNumber coin:(Coin)coin {
     NSMutableArray *emptyWalletTxs = [NSMutableArray new];
     NSUInteger count = (unspendTxs.count % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendTxs.count / splitNumber + 1) : unspendTxs.count / splitNumber;
     for (int i = 0; i < splitNumber; i++) {
@@ -277,13 +276,13 @@
         BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:txs
                                                        andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress];
         if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andScriptPubKey:scriptPubKey andOuts:emptyWalletTx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
-            emptyWalletTx.coin = BCC;
+            emptyWalletTx.coin = coin;
             [emptyWalletTxs addObject:emptyWalletTx];
         } else if (emptyWalletTx != nil) {
             if (outs.count == 1) {
                 return nil;
             }
-            return [self getEmptyWalletTxsWithAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs andAddress:addresses andChangeAddress:changeAddress splitNumber:splitNumber + 1];
+            return [self getEmptyWalletTxsWithAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs andAddress:addresses andChangeAddress:changeAddress splitNumber:splitNumber + 1 coin:coin];
         }
     }
     return emptyWalletTxs;

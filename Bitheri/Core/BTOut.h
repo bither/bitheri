@@ -23,8 +23,6 @@ typedef enum {
     spent = 1,
 } OUT_STATUS;
 
-#define FORK_BLOCK_HEIGHT (478559)
-
 @interface BTOut : NSObject
 
 @property(nonatomic, copy) NSData *txHash;

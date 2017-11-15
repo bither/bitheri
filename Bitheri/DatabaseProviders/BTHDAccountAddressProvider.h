@@ -20,8 +20,8 @@
 #import <Foundation/Foundation.h>
 #import "BTHDAccountAddress.h"
 #import "BTDatabaseManager.h"
+#import "BTTx.h"
 
-@class BTTx;
 @class BTOut;
 
 @interface BTHDAccountAddressProvider : NSObject
@@ -74,7 +74,7 @@
 
 - (BTOut *)getPrevOutByTxHash:(NSData *)txHash outSn:(uint)outSn;
 
-- (NSArray *)getPrevCanSplitOutsByHDAccount:(int)hdAccountId;
+- (NSArray *)getPrevCanSplitOutsByHDAccount:(int)hdAccountId coin:(Coin)coin;
 
 - (NSArray *)getRecentlyTxsByHDAccount:(int)hdAccountId blockNo:(int)greaterThanBlockNo limit:(int)limit;
 

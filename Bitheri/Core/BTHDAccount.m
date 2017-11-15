@@ -246,8 +246,8 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin {
     NSArray *outs;
-    if (coin == BCC) {
-        outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
+    if (coin != BTC) {
+        outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId coin:coin];
     } else {
         outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
     }
@@ -259,9 +259,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return tx;
 }
 
-- (NSArray *)newBccTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress {
-    NSArray *outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
-    NSArray *txs = [[BTTxBuilder instance] buildBccTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+- (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin {
+    NSArray *outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId coin:coin];
+    NSArray *txs = [[BTTxBuilder instance] buildSplitCoinTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error coin:coin];
     if (error && !txs) {
         return nil;
     }
@@ -285,8 +285,8 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         return nil;
     }
     NSArray *outs;
-    if (coin == BCC) {
-        outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
+    if (coin != BTC) {
+        outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId coin:coin];
     } else {
         outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
     }
@@ -348,12 +348,12 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return tx;
 }
 
-- (NSArray *)newBccTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error {
+- (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
     if (password && !self.hasPrivKey) {
         return nil;
     }
-    NSArray *outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId];
-    NSArray *txs = [[BTTxBuilder instance] buildBccTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+    NSArray *outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId coin:coin];
+    NSArray *txs = [[BTTxBuilder instance] buildSplitCoinTxsWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error coin:coin];
     if (error && !txs) {
         return nil;
     }

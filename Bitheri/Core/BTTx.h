@@ -36,7 +36,7 @@
 #endif
 
 typedef enum {
-    BTC, BCC
+    BTC, BCC, BTG
 } Coin;
 
 @interface BTTx : NSObject
@@ -89,7 +89,7 @@ typedef enum {
 
 - (NSData *)hashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
 
-- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(uint8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay;
+- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(uint8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin;
 
 - (BOOL)isSigned;
 
@@ -137,5 +137,7 @@ typedef enum {
 - (void)sawByPeer;
 
 - (u_int32_t)getSigHashType;
+
++ (uint64_t)getForkBlockHeightForCoin:(Coin)coin;
 
 @end

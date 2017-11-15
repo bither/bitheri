@@ -212,9 +212,9 @@
 
         NSMutableData *sig = [NSMutableData data];
         NSData *hash;
-        if (self.coin == BCC) {
+        if (self.coin != BTC) {
             BTOut *btOut = [[BTHDAccountAddressProvider instance] getPrevOutByTxHash:btIn.prevTxHash outSn:btIn.prevOutSn];
-            hash = [self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false];
+            hash = [self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.coin];
         } else {
             hash = [self toDataWithSubscriptIndex:i].SHA256_2;
         }
@@ -244,10 +244,10 @@
 - (NSArray *)unsignedInHashes; {
     NSMutableArray *result = [NSMutableArray new];
     for (NSUInteger i = 0; i < self.ins.count; i++) {
-        if (self.coin == BCC) {
+        if (self.coin != BTC) {
             BTIn *btIn = self.ins[i];
             BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
-            [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false]];
+            [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.coin]];
         } else {
             [result addObject:[self toDataWithSubscriptIndex:i].SHA256_2];
         }
@@ -377,7 +377,7 @@
     return [d SHA256_2];
 }
 
-- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(uint8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay {
+- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(uint8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin {
     uint8_t sigHashType = [self calcSigHashValue:type anyoneCanPay:anyoneCanPay];
     NSMutableData *d = [NSMutableData secureData];
     NSMutableData *hashPrevouts = [NSMutableData secureData];
@@ -898,8 +898,19 @@
     switch (self.coin) {
         case BCC:
             return SIG_HASH_ALL | 0x40 | 0;
+        case BTG:
+            return SIG_HASH_ALL | 0x40 | (79 << 8);
         default:
             return SIG_HASH_ALL;
+    }
+}
+
++ (uint64_t)getForkBlockHeightForCoin:(Coin)coin {
+    switch (coin) {
+        case BTG:
+            return 491407;
+        default:
+            return 478559;
     }
 }
 

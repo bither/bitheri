@@ -32,12 +32,11 @@
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
                  andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin;
 
-- (NSArray *)buildBccTxsForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
-                          andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error;
+- (NSArray *)buildSplitCoinTxsForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin;
 
 - (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error;
 
-- (NSArray *)buildBccTxsWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error;
+- (NSArray *)buildSplitCoinTxsWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin;
 
 + (uint64_t)getAmount:(NSArray *)outs;
 

@@ -80,7 +80,11 @@
 
 - (NSArray *)splitCoinTxsForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andError:(NSError **)error coin:(Coin)coin;
 
+- (NSArray *)bccTxsForAmounts:(NSArray *)amounts andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress andUnspentOuts:(NSArray *)unspentOuts andError:(NSError **)error;
+
 - (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase;
+
+- (BOOL)signTransaction:(BTTx *)transaction withPassphrase:(NSString *)passphrase andUnspentOuts:(NSArray*) unspentOuts;
 
 - (NSArray *)signHashes:(NSArray *)unsignedInHashes withPassphrase:(NSString *)passphrase;
 

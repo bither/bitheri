@@ -375,10 +375,13 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     }
 
 
-    if (![BTScript castToBool:stack.lastObject]) {
-        DDLogWarn(@"[Script Error] Script resulted in a non-true stack: %@", stack);
-        return NO;
+    if (!self.tx.isDetectBcc) {
+        if (![BTScript castToBool:stack.lastObject]) {
+            DDLogWarn(@"[Script Error] Script resulted in a non-true stack: %@", stack);
+            return NO;
+        }
     }
+
     [stack removeLastObject];
 
     if (enforceP2SH && [scriptPubKey isSentToP2SH]) {
@@ -1206,8 +1209,16 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         NSData *hash;
         if (self.tx.coin != BTC) {
             BTIn *btIn = self.tx.ins[self.index];
-            BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
-            hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:[self.tx getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.tx.coin];
+            if (self.tx.isDetectBcc) {
+                u_int64_t preOutValues[] = {};
+                for (int idx = 0; idx<self.tx.outs.count; idx ++) {
+                    preOutValues[idx] = [self.tx.outs[idx]outValue];
+                }
+                hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:[self.tx getSigHashType] prevValue:preOutValues[self.index] anyoneCanPay:false coin:self.tx.coin];
+            } else {
+                BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
+                hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:[self.tx getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.tx.coin];
+            }
         } else {
             hash = [self.tx hashForSignature:self.index connectedScript:connectedScript
                                  sigHashType:[sigBytes UInt8AtOffset:sigBytes.length - 1]];

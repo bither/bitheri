@@ -241,6 +241,55 @@
     return YES;
 }
 
+- (BOOL)signWithPrivateKeys:(NSArray *)privateKeys andUnspentOuts:(NSArray *) unspentOuts{
+    NSMutableArray *addresses = [NSMutableArray arrayWithCapacity:privateKeys.count],
+    *keys = [NSMutableArray arrayWithCapacity:privateKeys.count];
+    
+    for (NSString *pk in privateKeys) {
+        BTKey *key = [BTKey keyWithPrivateKey:pk];
+        
+        if (!key) continue;
+        
+        [keys addObject:key];
+        [addresses addObject:key.hash160];
+    }
+    u_int64_t preOutValues[] = {};
+    for (int idx = 0; idx<unspentOuts.count; idx ++) {
+        preOutValues[idx] = [unspentOuts[idx]outValue];
+    }
+    for (NSUInteger i = 0; i < self.ins.count; i++) {
+        BTIn *btIn = self.ins[i];
+        NSUInteger keyIdx = [addresses indexOfObject:[btIn.inScript
+                                                      subdataWithRange:NSMakeRange([btIn.inScript length] - 22, 20)]];
+        
+        if (keyIdx == NSNotFound) continue;
+        
+        NSMutableData *sig = [NSMutableData data];
+        NSData *hash = [self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:preOutValues[i] anyoneCanPay:false coin:BCC];
+        
+        NSMutableData *s = [NSMutableData dataWithData:[keys[keyIdx] sign:hash]];
+        
+        [s appendUInt8:[self getSigHashType]];
+        [sig appendScriptPushData:s];
+        [sig appendScriptPushData:[keys[keyIdx] publicKey]];
+        
+        btIn.inSignature = sig;
+    }
+    
+    if (![self isSigned]) return NO;
+    
+    _txHash = [self toData].SHA256_2;
+    // update in & out 's tx hash
+    for (BTIn *in in self.ins) {
+        in.txHash = _txHash;
+    }
+    for (BTOut *out in self.outs) {
+        out.txHash = _txHash;
+    }
+    
+    return YES;
+}
+
 - (NSArray *)unsignedInHashes; {
     NSMutableArray *result = [NSMutableArray new];
     for (NSUInteger i = 0; i < self.ins.count; i++) {
@@ -251,6 +300,15 @@
         } else {
             [result addObject:[self toDataWithSubscriptIndex:i].SHA256_2];
         }
+    }
+    return result;
+}
+
+- (NSArray *)unsignedInHashesForBcc:(uint64_t []) preOutValues {
+    NSMutableArray *result = [NSMutableArray new];
+    for (NSUInteger i = 0; i < self.ins.count; i++) {
+        BTIn *btIn = self.ins[i];
+        [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:preOutValues[i] anyoneCanPay:false coin:BCC]];
     }
     return result;
 }

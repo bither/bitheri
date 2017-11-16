@@ -93,7 +93,7 @@ typedef enum {
 
 - (NSData *)hashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
 
-- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(uint8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin;
+- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(u_int8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin;
 
 - (BOOL)isSigned;
 

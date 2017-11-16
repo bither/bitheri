@@ -435,8 +435,8 @@
     return [d SHA256_2];
 }
 
-- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(uint8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin {
-    uint8_t sigHashType = [self calcSigHashValue:type anyoneCanPay:anyoneCanPay];
+- (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(u_int8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin {
+    u_int8_t sigHashType = [self calcSigHashValue:type anyoneCanPay:anyoneCanPay];
     NSMutableData *d = [NSMutableData secureData];
     NSMutableData *hashPrevouts = [NSMutableData secureData];
     NSMutableData *hashSequence = [NSMutableData secureData];
@@ -480,12 +480,12 @@
     [d appendUInt32:in.inSequence];
     [d appendData:[hashOutputs SHA256_2]];
     [d appendUInt32:0];
-    [d appendUInt32:0x000000ff & sigHashType];
+    [d appendUInt32:coin == BTG ? (sigHashType | (79 << 8)) : 0x000000ff & sigHashType];
     return [d SHA256_2];
 }
 
-- (uint8_t)calcSigHashValue:(uint8_t)sigHashValue anyoneCanPay:(BOOL)anyoneCanPay {
-    uint8_t sighashFlags = sigHashValue;
+- (u_int8_t)calcSigHashValue:(u_int8_t)sigHashValue anyoneCanPay:(BOOL)anyoneCanPay {
+    u_int8_t sighashFlags = sigHashValue;
     if (anyoneCanPay) {
         sighashFlags |= 0x80;
     }
@@ -957,7 +957,7 @@
         case BCC:
             return SIG_HASH_ALL | 0x40 | 0;
         case BTG:
-            return SIG_HASH_ALL | 0x40 | (79 << 8);
+            return SIG_HASH_ALL | 0x40;
         default:
             return SIG_HASH_ALL;
     }

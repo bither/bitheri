@@ -416,6 +416,20 @@ CFAllocatorRef SecureAllocator() {
 #endif
 }
 
+- (BOOL)isValidBitcoinGoldAddress {
+    NSData *d = self.base58checkToData;
+    
+    if (d.length != 21) return NO;
+    
+    uint8_t version = *(const uint8_t *) d.bytes;
+    
+#if BITCOIN_TESTNET
+    return (version == BITCOIN_PUBKEY_ADDRESS_TEST || version == BITCOIN_SCRIPT_ADDRESS_TEST) ? YES : NO;
+#else
+    return (version == BITCOIN_GOLD_PUBKEY_ADDRESS || version == BITCOIN_GOLD_SCRIPT_ADDRESS) ? YES : NO;
+#endif
+}
+
 - (BOOL)isValidBitcoinPrivateKey {
     NSData *d = self.base58checkToData;
 

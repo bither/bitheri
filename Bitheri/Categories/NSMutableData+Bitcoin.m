@@ -181,9 +181,9 @@
 
     uint8_t version = *(const uint8_t *) d.bytes;
 
-    if (version == BITCOIN_PUBKEY_ADDRESS) {
+    if (version == BITCOIN_PUBKEY_ADDRESS || version == BITCOIN_GOLD_PUBKEY_ADDRESS) {
         [self appendScriptPubKeyForHash:address.addressToHash160];
-    } else if (version == BITCOIN_SCRIPT_ADDRESS) {
+    } else if (version == BITCOIN_SCRIPT_ADDRESS || version == BITCOIN_GOLD_SCRIPT_ADDRESS) {
         [self appendScriptPubKeyForP2SH:address.addressToHash160];
     }
 }

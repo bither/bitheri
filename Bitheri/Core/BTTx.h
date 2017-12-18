@@ -36,7 +36,7 @@
 #endif
 
 typedef enum {
-    BTC, BCC, BTG
+    BTC, BCC, BTG, SBTC
 } Coin;
 
 @interface BTTx : NSObject
@@ -92,6 +92,8 @@ typedef enum {
 - (BOOL)signWithPrivateKeys:(NSArray *)privateKeys andUnspentOuts:(NSArray *) unspentOuts;
 
 - (NSData *)hashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
+
+- (NSData *)sbtcHashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
 
 - (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(u_int8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin;
 

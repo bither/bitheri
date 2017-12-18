@@ -70,6 +70,8 @@ CFAllocatorRef SecureAllocator();
 
 + (NSString *)hexWithHash:(NSData *)d;
 
++ (NSString *)hexStringFromString:(NSString *)string;
+
 - (NSData *)base58ToData;
 
 - (NSString *)hexToBase58;

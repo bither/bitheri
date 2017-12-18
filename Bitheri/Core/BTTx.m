@@ -1114,6 +1114,8 @@
             return SIG_HASH_ALL | 0x40 | 0;
         case BTG:
             return SIG_HASH_ALL | 0x40;
+        case SBTC:
+            return SIG_HASH_ALL | 0x40;
         default:
             return SIG_HASH_ALL;
     }
@@ -1123,6 +1125,8 @@
     switch (coin) {
         case BTG:
             return 491407;
+        case SBTC:
+            return 498888;
         default:
             return 478559;
     }

@@ -213,11 +213,11 @@
         
         NSMutableData *sig = [NSMutableData data];
         NSData *hash;
-        if (self.coin != BTC) {
+        if(self.coin == SBTC){
+            hash = [self sbtcToDataWithSubscriptIndex:i].SHA256_2;
+        }else if (self.coin != BTC) {
             BTOut *btOut = [[BTHDAccountAddressProvider instance] getPrevOutByTxHash:btIn.prevTxHash outSn:btIn.prevOutSn];
             hash = [self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.coin];
-        }else if(self.coin == SBTC){
-            hash = [self sbtcToDataWithSubscriptIndex:i].SHA256_2;
         } else {
             hash = [self toDataWithSubscriptIndex:i].SHA256_2;
         }

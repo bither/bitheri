@@ -49,7 +49,7 @@
 @required
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
 
-- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andTx:(BTTx *)tx;
+- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andTx:(BTTx *)tx coin:(Coin)coin;
 @optional
 - (BTTx *)buildBccTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendOuts:(NSArray *)unspendOuts andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress;
 @end

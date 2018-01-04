@@ -191,7 +191,7 @@
     }
 
     BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs
-                                                   andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress];
+                                                   andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress coin:coin];
     if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andScriptPubKey:scriptPubKey andOuts:emptyWalletTx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
         return emptyWalletTx;
     } else if (emptyWalletTx != nil) {
@@ -211,7 +211,7 @@
     NSMutableArray *txs = [NSMutableArray new];
     for (NSObject <BTTxBuilderProtocol> *builder in txBuilders) {
         BTTx *tx = [builder buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs
-                                        andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress];
+                                        andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress coin:coin];
         if (tx != nil && [BTTxBuilder estimationTxSizeWithInCount:tx.ins.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
             [txs addObject:tx];
         } else if (tx != nil) {
@@ -289,7 +289,7 @@
         NSArray *outs = [BTTxBuilder getUnspendOutsFromTxs:txs];
         NSArray *amounts = @[@([BTTxBuilder getAmount:outs])];
         BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:txs
-                                                       andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress];
+                                                       andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress coin:coin];
         if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andScriptPubKey:scriptPubKey andOuts:emptyWalletTx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
             emptyWalletTx.coin = coin;
             [emptyWalletTxs addObject:emptyWalletTx];
@@ -652,7 +652,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     return tx;
 }
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress {
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress coin:(Coin)coin; {
     BOOL ensureMinRequiredFee = [[BTSettings instance] ensureMinRequiredFee];
     uint64_t feeBase = [[BTSettings instance] feeBase];
 
@@ -927,8 +927,8 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     return tx;
 }
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress {
-    uint64_t feeBase = [[BTSettings instance] feeBase];
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress coin:(Coin)coin; {
+    uint64_t feeBase = [BTTx getSplitNormalFeeForCoin:coin];
     NSMutableArray *outs = [NSMutableArray arrayWithArray:[BTTxBuilder getCanSpendOutsFromUnspendTxs:unspendTxs]];
     NSMutableArray *unspendOuts = [NSMutableArray arrayWithArray:[BTTxBuilder getUnspendOutsFromTxs:unspendTxs]];
 
@@ -1045,7 +1045,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 }
 
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress {
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress coin:(Coin)coin; {
     return nil;
 }
 
@@ -1060,7 +1060,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 }
 
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress {
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress coin:(Coin)coin; {
     return nil;
 }
 

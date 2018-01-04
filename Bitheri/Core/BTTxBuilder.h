@@ -47,7 +47,7 @@
 @protocol BTTxBuilderProtocol
 
 @required
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress;
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
 
 - (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress andTx:(BTTx *)tx;
 @optional

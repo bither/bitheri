@@ -356,7 +356,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return tx;
 }
 
-- (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
+- (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin blockHah:(NSString*)hash; {
     if (password && !self.hasPrivKey) {
         return nil;
     }
@@ -367,6 +367,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     
     for (BTTx *tx in txs) {
+        if(hash != NULL && ![hash isEqualToString:@""]) {
+            tx.blockHash = [hash hexToData];
+        }
         NSArray *signingAddresses = [self getSigningAddressesForInputs:tx.ins];
         BTBIP32Key *master = [self masterKey:password];
         if (!master) {
@@ -408,10 +411,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
             [signatures addObject:sig];
             
         }
-        
         if (![tx signWithSignatures:signatures]) {
             return nil;
         }
+        
         [external wipe];
         [internal wipe];
         for (BTBIP32Key *key in addressToKeyDict.allValues) {
@@ -420,7 +423,6 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     return txs;
 }
-
 - (NSArray *)extractBccToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress andUnspentOuts:(NSArray *)outs andPathTypeIndex:(PathTypeIndex *) pathTypeIndex password:(NSString *)password andError:(NSError **)error {
     if (password && !self.hasPrivKey) {
         return nil;

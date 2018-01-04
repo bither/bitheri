@@ -74,7 +74,7 @@
 
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
 
-- (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
+- (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin blockHah:(NSString*)hash;
 
 - (NSArray *)extractBccToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress andUnspentOuts:(NSArray *)outs andPathTypeIndex:(PathTypeIndex *) pathTypeIndex password:(NSString *)password andError:(NSError **)error;
 

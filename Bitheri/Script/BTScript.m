@@ -1218,6 +1218,9 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             }else if(self.tx.coin == SBTC) {
                 hash = [self.tx sbtcHashForSignature:self.index connectedScript:connectedScript
                                          sigHashType:[sigBytes UInt8AtOffset:sigBytes.length - 1]];
+            }else if(self.tx.coin == BCD) {
+                hash = [self.tx bcdHashForSignature:self.index connectedScript:connectedScript
+                                        sigHashType:[sigBytes UInt8AtOffset:sigBytes.length - 1]];
             } else {
                 BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
                 hash = [self.tx hashForSignatureWitness:self.index connectedScript:connectedScript type:[self.tx getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.tx.coin];

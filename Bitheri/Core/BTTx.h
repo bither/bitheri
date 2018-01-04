@@ -36,13 +36,14 @@
 #endif
 
 typedef enum {
-    BTC, BCC, BTG, SBTC
+    BTC, BCC, BTG, SBTC, BTW, BCD
 } Coin;
 
 @interface BTTx : NSObject
 
 @property(nonatomic, assign) uint32_t blockNo;
 @property(nonatomic, copy) NSData *txHash;
+@property(nonatomic, copy) NSData *blockHash;
 @property(nonatomic, assign) uint32_t txVer;
 @property(nonatomic, assign) uint32_t txLockTime;
 @property(nonatomic, assign) uint32_t txTime;
@@ -93,6 +94,8 @@ typedef enum {
 
 - (NSData *)hashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
 
+- (NSData *)bcdHashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
+
 - (NSData *)sbtcHashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;
 
 - (NSData *)hashForSignatureWitness:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript type:(u_int8_t)type prevValue:(uint64_t)prevValue anyoneCanPay:(BOOL)anyoneCanPay coin:(Coin)coin;
@@ -108,6 +111,8 @@ typedef enum {
 - (NSArray *)getInAddresses;
 
 - (NSData *)toData;
+
+- (NSData *)bcdToData;
 
 - (size_t)size;
 
@@ -143,6 +148,8 @@ typedef enum {
 - (void)sawByPeer;
 
 - (u_int32_t)getSigHashType;
+
++ (u_int64_t)getSplitNormalFeeForCoin:(Coin)coin;
 
 + (uint64_t)getForkBlockHeightForCoin:(Coin)coin;
 

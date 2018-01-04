@@ -215,6 +215,8 @@
         NSData *hash;
         if(self.coin == SBTC){
             hash = [self sbtcToDataWithSubscriptIndex:i].SHA256_2;
+        }else if(self.coin == BCD) {
+            hash = [self bcdToDataWithSubscriptIndex:i].SHA256_2;
         }else if (self.coin != BTC) {
             BTOut *btOut = [[BTHDAccountAddressProvider instance] getPrevOutByTxHash:btIn.prevTxHash outSn:btIn.prevOutSn];
             hash = [self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.coin];
@@ -300,6 +302,8 @@
             BTIn *btIn = self.ins[i];
             if(self.coin == SBTC) {
                 [result addObject:[self sbtcToDataWithSubscriptIndex:i].SHA256_2];
+            }else if(self.coin == BCD) {
+                [result addObject:[self bcdToDataWithSubscriptIndex:i].SHA256_2];
             }else{
                 BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
                 [result addObject:[self hashForSignatureWitness:i connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.coin]];
@@ -338,6 +342,110 @@
     }
     
     return YES;
+}
+
+- (NSData *)bcdHashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType {
+    NSMutableArray *inputHashes = [NSMutableArray new];
+    NSMutableArray *inputIndexes = [NSMutableArray new];
+    NSMutableArray *inputScripts = [NSMutableArray new];
+    NSMutableArray *inputSignatures = [NSMutableArray new];
+    NSMutableArray *inputSequences = [NSMutableArray new];
+    NSMutableArray *outputScripts = [NSMutableArray new];
+    NSMutableArray *outputAmounts = [NSMutableArray new];
+    
+    for (BTIn *in in self.ins) {
+        [inputHashes addObject:in.prevTxHash];
+        [inputIndexes addObject:@(in.prevOutSn)];
+        [inputScripts addObject:in.inScript ?: [NSNull null]];
+        [inputSignatures addObject:in.inSignature ?: [NSNull null]];
+        [inputSequences addObject:@(in.inSequence)];
+    }
+    
+    for (BTOut *out in self.outs) {
+        [outputScripts addObject:out.outScript];
+        [outputAmounts addObject:@(out.outValue)];
+    }
+    
+    for (NSUInteger i = 0; i < inputHashes.count; i++) {
+        inputScripts[i] = [NSData data];
+    }
+    if (connectedScript != nil) {
+        NSMutableData *codeSeparator = [NSMutableData secureData];
+        [codeSeparator appendUInt8:OP_CODESEPARATOR];
+        connectedScript = [BTScript removeAllInstancesOf:connectedScript and:codeSeparator];
+        inputScripts[inputIndex] = connectedScript;
+    } else {
+        inputScripts[inputIndex] = ((BTIn *) self.ins[inputIndex]).inScript;
+    }
+    
+    
+    if ((sigHashType & 0x1f) == 2) {
+        outputScripts = [NSMutableArray new];
+        for (NSUInteger i = 0; i < inputHashes.count; i++) {
+            if (i != inputIndex) {
+                inputSequences[i] = @0;
+            }
+        }
+    } else if ((sigHashType & 0x1f) == 3) {
+        if (inputIndex >= outputScripts.count) {
+            // Satoshis bug is that SignatureHash was supposed to return a hash and on this codepath it
+            // actually returns the constant "1" to indicate an error, which is never checked for. Oops.
+            return [@"0100000000000000000000000000000000000000000000000000000000000000" hexToData];
+        }
+        outputAmounts = [NSMutableArray arrayWithArray:[outputAmounts subarrayWithRange:NSMakeRange(0, inputIndex + 1)]];
+        outputScripts = [NSMutableArray arrayWithArray:[outputScripts subarrayWithRange:NSMakeRange(0, inputIndex + 1)]];
+        
+        for (NSUInteger i = 0; i < inputIndex; i++) {
+            outputAmounts[i] = @0xffffffffffffffff;
+            outputScripts[i] = [NSData data];
+        }
+        for (NSUInteger i = 0; i < inputHashes.count; i++) {
+            if (i != inputIndex) {
+                inputSequences[i] = @0;
+            }
+        }
+    }
+    
+    if ((sigHashType & 0x80) == 0x80) {
+        // SIGHASH_ANYONECANPAY means the signature in the input is not broken by changes/additions/removals
+        // of other inputs. For example, this is useful for building assurance contracts.
+        inputHashes = [NSMutableArray arrayWithArray:@[inputHashes[inputIndex]]];
+        inputIndexes = [NSMutableArray arrayWithArray:@[inputIndexes[inputIndex]]];
+        inputScripts = [NSMutableArray arrayWithArray:@[inputScripts[inputIndex]]];
+        inputSignatures = [NSMutableArray arrayWithArray:@[inputSignatures[inputIndex]]];
+        inputSequences = [NSMutableArray arrayWithArray:@[inputSequences[inputIndex]]];
+    }
+    
+    NSMutableData *d = [NSMutableData secureData];
+    
+    [d appendUInt32:12];
+    if(self.blockHash != NULL && self.blockHash.length > 0) {
+        [d appendData:self.blockHash];
+    }
+    [d appendVarInt:inputHashes.count];
+    
+    for (NSUInteger i = 0; i < inputHashes.count; i++) {
+        [d appendData:inputHashes[i]];
+        [d appendUInt32:[inputIndexes[i] unsignedIntValue]];
+        [d appendVarInt:[inputScripts[i] length]];
+        [d appendData:inputScripts[i]];
+        [d appendUInt32:[inputSequences[i] unsignedIntValue]];
+    }
+    
+    [d appendVarInt:outputAmounts.count];
+    
+    for (NSUInteger i = 0; i < outputAmounts.count; i++) {
+        [d appendUInt64:[outputAmounts[i] unsignedLongLongValue]];
+        [d appendVarInt:[outputScripts[i] length]];
+        [d appendData:outputScripts[i]];
+    }
+    
+    [d appendUInt32:self.txLockTime];
+    
+    if (inputIndex != NSNotFound) {
+        [d appendUInt32:sigHashType];
+    }
+    return [d SHA256_2];
 }
 
 - (NSData *)sbtcHashForSignature:(NSUInteger)inputIndex connectedScript:(NSData *)connectedScript sigHashType:(uint8_t)sigHashType;{
@@ -591,7 +699,13 @@
     [d appendUInt32:in.inSequence];
     [d appendData:[hashOutputs SHA256_2]];
     [d appendUInt32:0];
-    [d appendUInt32:coin == BTG ? (sigHashType | (79 << 8)) : 0x000000ff & sigHashType];
+    if(coin == BTG) {
+        [d appendUInt32:sigHashType | (79 << 8)];
+    }else if(coin == BTW) {
+        [d appendUInt32:sigHashType | (87 << 8)];
+    }else{
+        [d appendUInt32:0x000000ff & sigHashType];
+    }
     return [d SHA256_2];
 }
 
@@ -647,6 +761,53 @@
     
     return d;
 }
+
+- (NSData *)bcdToDataWithSubscriptIndex:(NSUInteger)subscriptIndex {
+    NSMutableData *d = [NSMutableData dataWithCapacity:self.size];
+    
+    [d appendUInt32:12];
+    if(self.blockHash != NULL && self.blockHash.length > 0) {
+        [d appendData:self.blockHash];
+    }
+    [d appendVarInt:self.ins.count];
+    
+    NSUInteger i = 0;
+    for (BTIn *in in self.ins) {
+        [d appendData:in.prevTxHash];
+        [d appendUInt32:in.prevOutSn];
+        
+        if ([self isSigned] && subscriptIndex == NSNotFound) {
+            [d appendVarInt:[in.inSignature length]];
+            [d appendData:in.inSignature];
+        }
+        else if (i == subscriptIndex) {
+            //TODO: to fully match the reference implementation, OP_CODESEPARATOR related checksig logic should go here
+            [d appendVarInt:[in.inScript length]];
+            [d appendData:in.inScript];
+        }
+        else [d appendVarInt:0];
+        
+        [d appendUInt32:in.inSequence];
+        i++;
+    }
+    
+    [d appendVarInt:self.outs.count];
+    
+    for (BTOut *out in self.outs) {
+        [d appendUInt64:out.outValue];
+        [d appendVarInt:out.outScript.length];
+        [d appendData:out.outScript];
+    }
+    
+    [d appendUInt32:self.txLockTime];
+    
+    if (subscriptIndex != NSNotFound) {
+        [d appendUInt32:SIG_HASH_ALL];
+    }
+    
+    return d;
+}
+
 - (NSData *)sbtcToDataWithSubscriptIndex:(NSUInteger)subscriptIndex {
     u_int8_t sigHashType = [self calcSigHashValue:SIG_HASH_ALL| 0x40 anyoneCanPay:false];
     
@@ -855,6 +1016,10 @@
 
 - (NSData *)toData {
     return [self toDataWithSubscriptIndex:NSNotFound];
+}
+
+- (NSData *)bcdToData {
+    return [self bcdToDataWithSubscriptIndex:NSNotFound];
 }
 
 - (size_t)size {
@@ -1112,6 +1277,7 @@
     switch (self.coin) {
         case BCC:
             return SIG_HASH_ALL | 0x40 | 0;
+        case BTW:
         case BTG:
             return SIG_HASH_ALL | 0x40;
         case SBTC:
@@ -1121,12 +1287,25 @@
     }
 }
 
++ (u_int64_t)getSplitNormalFeeForCoin:(Coin)coin; {
+    switch (coin) {
+        case BTW:
+            return 1000;
+        default:
+            return [[BTSettings instance] feeBase];
+    }
+}
+
 + (uint64_t)getForkBlockHeightForCoin:(Coin)coin {
     switch (coin) {
         case BTG:
             return 491407;
         case SBTC:
             return 498888;
+        case BTW:
+            return 499777;
+        case BCD:
+            return 495866;
         default:
             return 478559;
     }

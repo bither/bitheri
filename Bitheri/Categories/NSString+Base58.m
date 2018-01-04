@@ -412,7 +412,7 @@ CFAllocatorRef SecureAllocator() {
 #if BITCOIN_TESTNET
     return (version == BITCOIN_PUBKEY_ADDRESS_TEST || version == BITCOIN_SCRIPT_ADDRESS_TEST) ? YES : NO;
 #else
-    return (version == BITCOIN_PUBKEY_ADDRESS || version == BITCOIN_SCRIPT_ADDRESS || version == BITCOIN_GOLD_PUBKEY_ADDRESS || version == BITCOIN_GOLD_SCRIPT_ADDRESS) ? YES : NO;
+    return (version == BITCOIN_PUBKEY_ADDRESS || version == BITCOIN_SCRIPT_ADDRESS || version == BITCOIN_GOLD_PUBKEY_ADDRESS || version == BITCOIN_GOLD_SCRIPT_ADDRESS || version == BITCOIN_WORLD_PUBKEY_ADDRESS || version == BITCOIN_WORLD_SCRIPT_ADDRESS) ? YES : NO;
 #endif
 }
 

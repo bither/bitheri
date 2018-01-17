@@ -77,10 +77,12 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         self.mnemonicSeed = mnemonicSeed;
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:bip39];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        BTBIP32Key *account = [self getAccount:master];
+        BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
+        BTBIP32Key *segwitAccount = [self getAccount:master withPurposePathLevel:P2SHP2WPKH];
         [account clearPrivateKey];
         [master clearPrivateKey];
-        [self initHDAccountWithAccount:account password:password encryptedMnemonicSeed:[[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom] encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom] fromXRandom:fromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [segwitAccount clearPrivateKey];
+        [self initHDAccountWithAccount:account segwitAccountKey: segwitAccount password:password encryptedMnemonicSeed:[[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom] encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom] fromXRandom:fromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
@@ -667,7 +669,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return account;
 }
 
-- (BTBIP32Key *)getAccount:(BTBIP32Key *)master withPurposePathLevel:(int) purposeLevel {
+- (BTBIP32Key *)getAccount:(BTBIP32Key *)master withPurposePathLevel:(PurposePathLevel) purposeLevel {
     BTBIP32Key *purpose = [master deriveHardened:purposeLevel];
     BTBIP32Key *coinType = [purpose deriveHardened:0];
     BTBIP32Key *account = [coinType deriveHardened:0];

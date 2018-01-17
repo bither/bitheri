@@ -30,7 +30,11 @@
 }
 
 - (instancetype)initWithPub:(NSData *)pub path:(PathType)path index:(int)index andSyncedComplete:(BOOL)isSyncedComplete {
-    return [self initWithAddress:[[[BTKey alloc] initWithPublicKey:pub] address] pub:pub path:path index:index issued:NO andSyncedComplete:isSyncedComplete];
+    if (path == EXTERNAL_BIP49_PATH || path == INTERNAL_BIP49_PATH) {
+        return [self initWithAddress:[[[BTKey alloc] initWithPublicKey:pub] toSegwitAddress] pub:pub path:path index:index issued:NO andSyncedComplete:isSyncedComplete];
+    } else {
+        return [self initWithAddress:[[[BTKey alloc] initWithPublicKey:pub] address] pub:pub path:path index:index issued:NO andSyncedComplete:isSyncedComplete];
+    }
 }
 
 - (instancetype)initWithAddress:(NSString *)address pub:(NSData *)pub path:(PathType)path index:(int)index issued:(BOOL)issued andSyncedComplete:(BOOL)isSyncedComplete {

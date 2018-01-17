@@ -404,4 +404,48 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     return [self serializedMasterPublicKey];
 }
 
+- (NSString *)toSegwitAddress {
+    NSData *hash = [self.pubKey hash160];
+    if (!hash.length) {
+        return nil;
+    }
+    
+    NSMutableData *scriptSig = [NSMutableData secureDataWithCapacity:hash.length + 2];
+    [scriptSig appendUInt8:0x00];
+    [scriptSig appendUInt8:hash.length];
+    [scriptSig appendData:hash];
+    NSData *addressBytes = scriptSig.hash160;
+    
+    if (!addressBytes.length) {
+        return nil;
+    }
+    
+    NSMutableData *d = [NSMutableData secureDataWithCapacity:addressBytes.length + 1];
+#if BITCOIN_TESTNET
+    uint8_t version = BITCOIN_SCRIPT_ADDRESS_TEST;
+#else
+    uint8_t version = BITCOIN_SCRIPT_ADDRESS;
+#endif
+    
+    [d appendBytes:&version length:1];
+    [d appendData:addressBytes];
+    
+    return [NSString base58checkWithData:d];
+}
+
+- (NSData *)getRedeemScript {
+    NSData *hash = [self.pubKey hash160];
+    if (!hash.length) {
+        return nil;
+    }
+    
+    NSData *prefixData = [@"76a9" hexToData];
+    NSData *suffixData = [@"88ac" hexToData];
+    NSMutableData *redeemScript = [NSMutableData secureDataWithCapacity:prefixData.length + 1 + hash.length + suffixData.length];
+    [redeemScript appendData:prefixData];
+    [redeemScript appendUInt8:hash.length];
+    [redeemScript appendData:hash];
+    [redeemScript appendData:suffixData];
+    return redeemScript;
+}
 @end

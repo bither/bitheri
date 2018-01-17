@@ -31,8 +31,12 @@
 #define kHDAccountMonitoredPlaceHolder @"HDAccountMonitored"
 #define kHDAccountMaxUnusedNewAddressCount (20)
 
+typedef enum {
+    NormalAddress = 44, P2SHP2WPKH = 49,
+} PurposePathLevel;
 
 @interface BTHDAccount : BTAddress
+@property(nonatomic,readwrite) PurposePathLevel purposePathLevel;
 
 - (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andGenerationCallback:(void (^)(CGFloat progres))callback;
 
@@ -112,6 +116,11 @@
 
 - (BTBIP32Key *)privateKeyWithPath:(PathType)path index:(int)index password:(NSString *)password;
 
+- (PathType) getCurrentExternalPathType;
+
+- (PathType) getCurrentInternalPathType;
+
+- (PurposePathLevel) getPurposeLevel;
 @end
 
 @interface DuplicatedHDAccountException : NSException

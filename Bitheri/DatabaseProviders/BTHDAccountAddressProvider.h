@@ -36,7 +36,7 @@
 
 - (void)updateIssuedByHDAccountId:(int)hdAccountId pathType:(PathType)pathType index:(int)index;
 
-- (NSString *)getExternalAddress:(int)hdAccountId;
+- (NSString *)getExternalAddress:(int)hdAccountId path:(PathType)type;
 
 - (BTHDAccountAddress *)getAddressByHDAccountId:(int)hdAccountId path:(PathType)type index:(int)index;
 
@@ -96,7 +96,7 @@
 
 - (NSArray *)getRelatedHDAccountIdListFromAddresses:(NSArray *)addresses;
 
-- (BOOL)requestNewReceivingAddress:(int)hdAccountId;
+- (BOOL)requestNewReceivingAddress:(int)hdAccountId pathType:(PathType) pathType;
 
 - (BOOL)hasHDAccount:(int)hdAccountId pathType:(PathType) pathType receiveTxInAddressCount:(int) addressCount;
 @end

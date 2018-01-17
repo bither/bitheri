@@ -83,4 +83,7 @@ typedef struct _BRPubKey {
 
 + (BTKey *)signedMessageToKey:(NSString *)message andSignatureBase64:(NSString *)signatureBase64;
 
+- (NSString *)toSegwitAddress;
+
+- (NSData *)getRedeemScript;
 @end

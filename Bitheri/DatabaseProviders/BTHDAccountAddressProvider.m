@@ -93,18 +93,18 @@
     }];
 }
 
-- (NSString *)getExternalAddress:(int)hdAccountId; {
+- (NSString *)getExternalAddress:(int)hdAccountId path:(PathType)type; {
     __block NSString *address;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select address from hd_account_addresses"
-                " where path_type=? and is_issued=? and hd_account_id=? order by address_index asc limit 1  ";
-        FMResultSet *resultSet = [db executeQuery:sql, @(EXTERNAL_ROOT_PATH), @(NO), @(hdAccountId)];
+        " where path_type=? and is_issued=? and hd_account_id=? order by address_index asc limit 1  ";
+        FMResultSet *resultSet = [db executeQuery:sql, @(type), @(NO), @(hdAccountId)];
         if ([resultSet next]) {
             address = [resultSet stringForColumnIndex:0];
         }
         [resultSet close];
     }];
-
+    
     return address;
 }
 
@@ -758,14 +758,14 @@
     return hdAccountIdList;
 }
 
-- (BOOL)requestNewReceivingAddress:(int)hdAccountId;{
-    int issuedIndex = [self getIssuedIndexByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH];
+- (BOOL)requestNewReceivingAddress:(int)hdAccountId pathType:(PathType) pathType;{
+    int issuedIndex = [self getIssuedIndexByHDAccountId:hdAccountId pathType:pathType];
     __block BOOL result = NO;
     if (issuedIndex >= kHDAccountMaxUnusedNewAddressCount - 2) {
         NSString *sql = @"select count(0) from hd_account_addresses a,outs b "
                 " where a.address=b.out_address and a.hd_account_id=? and a.address_index>? and a.is_issued=? and a.path_type=?";
         [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-            FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(issuedIndex - kHDAccountMaxUnusedNewAddressCount + 1), @"1", @(EXTERNAL_ROOT_PATH)];
+            FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(issuedIndex - kHDAccountMaxUnusedNewAddressCount + 1), @"1", @(pathType)];
             if ([rs next]) {
                 result = [rs intForColumnIndex:0] > 0;
             }
@@ -775,7 +775,7 @@
         result = YES;
     }
     if (result) {
-        [self updateIssuedByHDAccountId:hdAccountId pathType:EXTERNAL_ROOT_PATH index:issuedIndex + 1];
+        [self updateIssuedByHDAccountId:hdAccountId pathType:pathType index:issuedIndex + 1];
     }
     return result;
 }

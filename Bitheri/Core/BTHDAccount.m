@@ -95,10 +95,12 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         }
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:bip39];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        BTBIP32Key *account = [self getAccount:master];
+        BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
+        BTBIP32Key *segwitAccount = [self getAccount:master withPurposePathLevel:P2SHP2WPKH];
         [account clearPrivateKey];
         [master clearPrivateKey];
-        [self initHDAccountWithAccount:account password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] fromXRandom:encryptedMnemonicSeed.isXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [segwitAccount clearPrivateKey];
+        [self initHDAccountWithAccount:account segwitAccountKey: segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] fromXRandom:encryptedMnemonicSeed.isXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
@@ -118,7 +120,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (self) {
         _isFromXRandom = isFromXRandom;
         BTBIP32Key *account = [[BTBIP32Key alloc] initWithMasterPubKey:accountExtendedPub];
-        [self initHDAccountWithAccount:account password:nil encryptedMnemonicSeed:nil encryptedHDSeed:nil fromXRandom:isFromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [self initHDAccountWithAccount:account segwitAccountKey: nil password:nil encryptedMnemonicSeed:nil encryptedHDSeed:nil fromXRandom:isFromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
@@ -139,7 +141,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self.hdAccountId;
 }
 
-- (void)initHDAccountWithAccount:(BTBIP32Key *)accountKey password:(NSString *)password encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
+- (void)initHDAccountWithAccount:(BTBIP32Key *)accountKey segwitAccountKey:(BTBIP32Key *)segwitAccountKey password:(NSString *)password encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     _isFromXRandom = isFromXRandom;
     CGFloat progress = 0;
     if (callback) {
@@ -149,15 +151,30 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     BTEncryptData *encryptedDataOfPS = nil;
     if (encryptedMnemonicSeed && password && self.hdSeed) {
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        addressOfPs = master.key.address;
+        if ([[NSUserDefaults standardUserDefaults] objectForKey:CHOOSE_SEGWIT_ADDRESS]) {
+            addressOfPs = master.key.toSegwitAddress;
+        } else {
+            addressOfPs = master.key.address;
+        }
         encryptedDataOfPS = [[BTEncryptData alloc] initWithData:master.secret andPassowrd:password andIsXRandom:isFromXRandom];
     }
     BTBIP32Key *internalKey = [self getChainRootKeyFromAccount:accountKey withPathType:INTERNAL_ROOT_PATH];
     BTBIP32Key *externalKey = [self getChainRootKeyFromAccount:accountKey withPathType:EXTERNAL_ROOT_PATH];
-    BTBIP32Key *key = [externalKey deriveSoftened:0];
-    NSString *firstAddress = key.address;
-    [key wipe];
+    BTBIP32Key *segwitInternalKey = [self getChainRootKeyFromAccount:segwitAccountKey withPathType:INTERNAL_ROOT_PATH];
+    BTBIP32Key *segwitExternalKey = [self getChainRootKeyFromAccount:segwitAccountKey withPathType:EXTERNAL_ROOT_PATH];
+    NSString *firstAddress = nil;
+    if ([[NSUserDefaults standardUserDefaults] objectForKey:CHOOSE_SEGWIT_ADDRESS]) {
+        BTBIP32Key *segwitKey = [segwitExternalKey deriveSoftened:0];
+        firstAddress = segwitKey.toSegwitAddress;
+        [segwitKey wipe];
+    } else {
+        BTBIP32Key *key = [externalKey deriveSoftened:0];
+        firstAddress = key.address;
+        [key wipe];
+    }
+    
     [accountKey wipe];
+    [segwitAccountKey wipe];
     if ([BTHDAccount isRepeatHD:firstAddress]) {
         @throw [[DuplicatedHDAccountException alloc] initWithName:@"DuplicatedHDAccountException" reason:@"DuplicatedHDAccountException" userInfo:nil];
     }
@@ -171,6 +188,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     
     NSMutableArray *externalAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
     NSMutableArray *internalAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
+    NSMutableArray *externalSegwitAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
+    NSMutableArray *internalSegwitAddresses = [[NSMutableArray alloc] initWithCapacity:kBTHDAccountLookAheadSize];
+    
     for (NSUInteger i = 0; i < kBTHDAccountLookAheadSize; i++) {
         NSData *subExternalPub = [externalKey deriveSoftened:i].pubKey;
         BTHDAccountAddress *externalAddress = [[BTHDAccountAddress alloc] initWithPub:subExternalPub path:EXTERNAL_ROOT_PATH index:i andSyncedComplete:isSyncedComplete];
@@ -189,6 +209,25 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (callback) {
             callback(MIN(progress, 1));
         }
+        
+        NSData *subSegwitExternalPub = [segwitExternalKey deriveSoftened:i].pubKey;
+        BTHDAccountAddress *externalSegwitAddress = [[BTHDAccountAddress alloc] initWithPub:subSegwitExternalPub path:EXTERNAL_BIP49_PATH index:i andSyncedComplete:isSyncedComplete];
+        [externalSegwitAddresses addObject:externalSegwitAddress];
+        
+        progress += itemProgress;
+        if (callback) {
+            callback(MIN(progress, 1));
+        }
+        
+        NSData *subSegwitInternalPub = [segwitInternalKey deriveSoftened:i].pubKey;
+        BTHDAccountAddress *internalSegwitAddress = [[BTHDAccountAddress alloc] initWithPub:subSegwitInternalPub path:INTERNAL_BIP49_PATH index:i andSyncedComplete:isSyncedComplete];
+        [internalSegwitAddresses addObject:internalSegwitAddress];
+        
+        progress += itemProgress;
+        if (callback) {
+            callback(MIN(progress, 1));
+            
+        }
     }
     [self wipeHDSeed];
     [self wipeMnemonicSeed];
@@ -205,11 +244,21 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     for (BTHDAccountAddress *each in internalAddresses) {
         each.hdAccountId = _hdAccountId;
     }
+    for (BTHDAccountAddress *each in externalSegwitAddresses) {
+        each.hdAccountId = _hdAccountId;
+    }
+    for (BTHDAccountAddress *each in internalSegwitAddresses) {
+        each.hdAccountId = _hdAccountId;
+    }
     [[BTHDAccountAddressProvider instance] addAddress:externalAddresses];
     [[BTHDAccountAddressProvider instance] addAddress:internalAddresses];
+    [[BTHDAccountAddressProvider instance] addAddress:externalSegwitAddresses];
+    [[BTHDAccountAddressProvider instance] addAddress:internalSegwitAddresses];
     _preIssuedExternalIndex = -1;
     [internalKey wipe];
     [externalKey wipe];
+    [segwitInternalKey wipe];
+    [segwitExternalKey wipe];
 }
 
 + (BOOL)isRepeatHD:(NSString *)firstAddress {
@@ -525,7 +574,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSString *)address {
-    return [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId];
+    return [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId path: [self getCurrentExternalPathType]];
 }
 
 - (void)updateBalance {
@@ -610,7 +659,16 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BTBIP32Key *)getAccount:(BTBIP32Key *)master {
-    BTBIP32Key *purpose = [master deriveHardened:44];
+    BTBIP32Key *purpose = [master deriveHardened:[self getPurposePathLevel]];
+    BTBIP32Key *coinType = [purpose deriveHardened:0];
+    BTBIP32Key *account = [coinType deriveHardened:0];
+    [purpose wipe];
+    [coinType wipe];
+    return account;
+}
+
+- (BTBIP32Key *)getAccount:(BTBIP32Key *)master withPurposePathLevel:(int) purposeLevel {
+    BTBIP32Key *purpose = [master deriveHardened:purposeLevel];
     BTBIP32Key *coinType = [purpose deriveHardened:0];
     BTBIP32Key *account = [coinType deriveHardened:0];
     [purpose wipe];
@@ -694,19 +752,19 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSInteger)issuedInternalIndex {
-    return [[BTHDAccountAddressProvider instance] getIssuedIndexByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getIssuedIndexByHDAccountId:self.hdAccountId pathType:[self getCurrentInternalPathType]];
 }
 
 - (NSInteger)issuedExternalIndex {
-    return [[BTHDAccountAddressProvider instance] getIssuedIndexByHDAccountId:self.hdAccountId pathType:EXTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getIssuedIndexByHDAccountId:self.hdAccountId pathType:[self getCurrentExternalPathType]];
 }
 
 - (NSUInteger)allGeneratedInternalAddressCount {
-    return [[BTHDAccountAddressProvider instance] getGeneratedAddressCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getGeneratedAddressCountByHDAccountId:self.hdAccountId pathType:[self getCurrentInternalPathType]];
 }
 
 - (NSUInteger)allGeneratedExternalAddressCount {
-    return [[BTHDAccountAddressProvider instance] getGeneratedAddressCountByHDAccountId:self.hdAccountId pathType:EXTERNAL_ROOT_PATH];
+    return [[BTHDAccountAddressProvider instance] getGeneratedAddressCountByHDAccountId:self.hdAccountId pathType:[self getCurrentExternalPathType]];
 }
 
 - (BTHDAccountAddress *)addressForPath:(PathType)path atIndex:(NSUInteger)index {
@@ -714,15 +772,15 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)updateIssuedInternalIndex:(int)index {
-    [[BTHDAccountAddressProvider instance] updateIssuedByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH index:index];
+    [[BTHDAccountAddressProvider instance] updateIssuedByHDAccountId:self.hdAccountId pathType:[self getCurrentInternalPathType] index:index];
 }
 
 - (void)updateIssuedExternalIndex:(int)index {
-    [[BTHDAccountAddressProvider instance] updateIssuedByHDAccountId:self.hdAccountId pathType:EXTERNAL_ROOT_PATH index:index];
+    [[BTHDAccountAddressProvider instance] updateIssuedByHDAccountId:self.hdAccountId pathType:[self getCurrentExternalPathType] index:index];
 }
 
 - (NSString *)getNewChangeAddress {
-    return [self addressForPath:INTERNAL_ROOT_PATH atIndex:[self issuedInternalIndex] + 1].address;
+    return [self addressForPath:[self getCurrentInternalPathType] atIndex:[self issuedInternalIndex] + 1].address;
 }
 
 - (void)updateSyncComplete:(BTHDAccountAddress *)address {
@@ -880,7 +938,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BOOL)requestNewReceivingAddress {
-    BOOL result = [[BTHDAccountAddressProvider instance] requestNewReceivingAddress:self.hdAccountId];
+    BOOL result = [[BTHDAccountAddressProvider instance] requestNewReceivingAddress:self.hdAccountId pathType:[self getCurrentExternalPathType]];
     if (result) {
         [self supplyEnoughKeys:YES];
     }
@@ -888,9 +946,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (void)updateIssuedIndex:(PathType)pathType index:(int)index {
-    if (pathType == EXTERNAL_ROOT_PATH) {
+    if (pathType == EXTERNAL_ROOT_PATH || pathType == EXTERNAL_BIP49_PATH) {
         [self updateIssuedExternalIndex:index];
-    } else if (pathType == INTERNAL_ROOT_PATH) {
+    } else if (pathType == INTERNAL_ROOT_PATH || pathType == INTERNAL_BIP49_PATH) {
         [self updateIssuedInternalIndex:index];
     }
 }
@@ -916,6 +974,29 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return key;
 }
 
+- (PathType) getCurrentExternalPathType {
+    if ([[NSUserDefaults standardUserDefaults]objectForKey: CHOOSE_SEGWIT_ADDRESS]) {
+        return EXTERNAL_BIP49_PATH;
+    } else {
+        return EXTERNAL_ROOT_PATH;
+    }
+}
+
+- (PathType) getCurrentInternalPathType {
+    if ([[NSUserDefaults standardUserDefaults]objectForKey: CHOOSE_SEGWIT_ADDRESS]) {
+        return INTERNAL_BIP49_PATH;
+    } else {
+        return INTERNAL_ROOT_PATH;
+    }
+}
+
+- (PurposePathLevel) getPurposePathLevel {
+    if ([[NSUserDefaults standardUserDefaults]objectForKey: CHOOSE_SEGWIT_ADDRESS]) {
+        return P2SHP2WPKH;
+    } else {
+        return NormalAddress;
+    }
+}
 
 @end
 

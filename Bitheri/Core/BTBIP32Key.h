@@ -75,4 +75,7 @@
 
 - (NSString *) serializePubB58;
 
+- (NSString *)toSegwitAddress;
+
+- (NSData *)getRedeemScript;
 @end

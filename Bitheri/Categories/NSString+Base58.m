@@ -147,6 +147,24 @@ CFAllocatorRef SecureAllocator() {
     return [self base58WithData:data];
 }
 
++(BOOL)validAddressPubkey:(u_int8_t)pubkey {
+    if(pubkey == BITCOIN_PUBKEY_ADDRESS || pubkey == BITCOIN_GOLD_PUBKEY_ADDRESS ||
+       pubkey == BITCOIN_WORLD_PUBKEY_ADDRESS || pubkey == BITCOIN_FAITH_PUBKEY_ADDRESS ||
+       pubkey == BITCOIN_PAY_PUBKEY_ADDRESS) {
+        return true;
+    }
+    return false;
+}
+
++(BOOL)validAddressScript:(u_int8_t)script {
+    if(script == BITCOIN_SCRIPT_ADDRESS || script == BITCOIN_GOLD_SCRIPT_ADDRESS ||
+       script == BITCOIN_WORLD_SCRIPT_ADDRESS || script == BITCOIN_FAITH_SCRIPT_ADDRESS ||
+       script == BITCOIN_PAY_SCRIPT_ADDRESS) {
+        return true;
+    }
+    return false;
+}
+
 - (NSData *)base58ToData {
     NSMutableData *d = [NSMutableData secureDataWithCapacity:self.length * 138 / 100 + 1];
     unsigned int b;
@@ -412,7 +430,7 @@ CFAllocatorRef SecureAllocator() {
 #if BITCOIN_TESTNET
     return (version == BITCOIN_PUBKEY_ADDRESS_TEST || version == BITCOIN_SCRIPT_ADDRESS_TEST) ? YES : NO;
 #else
-    return (version == BITCOIN_PUBKEY_ADDRESS || version == BITCOIN_SCRIPT_ADDRESS || version == BITCOIN_GOLD_PUBKEY_ADDRESS || version == BITCOIN_GOLD_SCRIPT_ADDRESS || version == BITCOIN_WORLD_PUBKEY_ADDRESS || version == BITCOIN_WORLD_SCRIPT_ADDRESS) ? YES : NO;
+   return ([NSString validAddressPubkey:version] || [NSString validAddressScript:version]) ? YES : NO;
 #endif
 }
 

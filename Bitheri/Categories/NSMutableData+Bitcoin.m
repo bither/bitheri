@@ -181,9 +181,9 @@
 
     uint8_t version = *(const uint8_t *) d.bytes;
 
-    if (version == BITCOIN_PUBKEY_ADDRESS || version == BITCOIN_GOLD_PUBKEY_ADDRESS || version == BITCOIN_WORLD_PUBKEY_ADDRESS) {
+    if ([NSString validAddressPubkey:version]) {
         [self appendScriptPubKeyForHash:address.addressToHash160];
-    } else if (version == BITCOIN_SCRIPT_ADDRESS || version == BITCOIN_GOLD_SCRIPT_ADDRESS || version == BITCOIN_WORLD_SCRIPT_ADDRESS) {
+    } else if ([NSString validAddressScript:version]) {
         [self appendScriptPubKeyForP2SH:address.addressToHash160];
     }
 }

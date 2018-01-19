@@ -36,7 +36,7 @@
 #endif
 
 typedef enum {
-    BTC, BCC, BTG, SBTC, BTW, BCD
+    BTC, BCC, BTG, SBTC, BTW, BCD, BTF, BTP, BTN
 } Coin;
 
 @interface BTTx : NSObject

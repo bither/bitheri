@@ -703,6 +703,12 @@
         [d appendUInt32:sigHashType | (79 << 8)];
     }else if(coin == BTW) {
         [d appendUInt32:sigHashType | (87 << 8)];
+    }else if(coin == BTF) {
+        [d appendUInt32:sigHashType | (70 << 8)];
+    }else if(coin == BTP) {
+        [d appendUInt32:sigHashType | (80 << 8)];
+    }else if(coin == BTN) {
+        [d appendUInt32:sigHashType | (88 << 8)];
     }else{
         [d appendUInt32:0x000000ff & sigHashType];
     }
@@ -1279,7 +1285,9 @@
             return SIG_HASH_ALL | 0x40 | 0;
         case BTW:
         case BTG:
-            return SIG_HASH_ALL | 0x40;
+        case BTF:
+        case BTP:
+        case BTN:
         case SBTC:
             return SIG_HASH_ALL | 0x40;
         default:
@@ -1291,6 +1299,10 @@
     switch (coin) {
         case BTW:
             return 1000;
+        case BTP:
+        case BTF:
+        case BTN:
+            return 10000;
         default:
             return [[BTSettings instance] feeBase];
     }
@@ -1306,6 +1318,12 @@
             return 499777;
         case BCD:
             return 495866;
+        case BTF:
+            return 500000;
+        case BTP:
+            return 499345;
+        case BTN:
+            return 501000;
         default:
             return 478559;
     }

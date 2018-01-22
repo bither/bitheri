@@ -1297,14 +1297,15 @@
 
 + (u_int64_t)getSplitNormalFeeForCoin:(Coin)coin; {
     switch (coin) {
+        case BTC:
+            return [[BTSettings instance] feeBase];
         case BTW:
             return 1000;
         case BTP:
-        case BTF:
-        case BTN:
+        case BCD:
             return 10000;
         default:
-            return [[BTSettings instance] feeBase];
+            return 100000;
     }
 }
 

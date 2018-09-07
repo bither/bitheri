@@ -73,17 +73,29 @@
     _ins = [NSMutableArray new];
     _outs = [NSMutableArray new];
     
-    NSString *address = nil;
     NSUInteger l = 0, off = 0;
     uint64_t count = 0;
-    NSData *d = nil;
+    NSMutableData *tx = [NSMutableData secureData];
     
-    _txHash = message.SHA256_2;
+    NSUInteger verSize = sizeof(uint32_t);
+    [tx appendData:[message subdataWithRange:NSMakeRange(0, verSize)]];
     _txVer = [message UInt32AtOffset:off]; // tx version
-    off += sizeof(uint32_t);
+    off += verSize;
     count = [message varIntAtOffset:off length:&l]; // input count
-    if (count == 0) return nil; // at least one input is required
+    if (count == 0) {
+        off += l;
+        if ([message UInt8AtOffset:off] == 1) {
+            off += sizeof(uint8_t);
+            count = [message varIntAtOffset:off length:&l];
+            if (count == 0) return nil;
+        }
+    }  // at least one input is required
+    [tx appendData:[message subdataWithRange:NSMakeRange(off, l)]];
     off += l;
+    NSUInteger insBeginIndex = off;
+    
+    NSString *address = nil;
+    NSData *d = nil;
     
     for (NSUInteger i = 0; i < count; i++) { // inputs
         BTIn *in = [BTIn new];
@@ -120,7 +132,17 @@
         out.outSn = self.outs.count;
         [self.outs addObject:out];
     }
-    
+    [tx appendData:[message subdataWithRange:NSMakeRange(insBeginIndex, off - insBeginIndex)]];
+    NSUInteger txLockTimeSize = sizeof(uint32_t);
+    off = message.length - txLockTimeSize;
+    [tx appendData:[message subdataWithRange:NSMakeRange(off, txLockTimeSize)]];
+    _txHash = tx.SHA256_2;
+    for (BTIn *in in _ins) {
+        in.txHash = _txHash;
+    }
+    for (BTOut *out in _outs) {
+        out.txHash = _txHash;
+    }
     _txLockTime = [message UInt32AtOffset:off]; // tx locktime
     
     return self;

@@ -300,9 +300,12 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (NSString *)getFromAddress; {
-    if (self.chunks.count == 2
-            && ((BTScriptChunk *) self.chunks[0]).data != nil && ((BTScriptChunk *) self.chunks[0]).data.length > 2
-            && ((BTScriptChunk *) self.chunks[1]).data != nil && ((BTScriptChunk *) self.chunks[1]).data.length > 2) {
+    if ([self isBTInP2SHAddress]) {
+        NSData *scriptSig = [_program subdataWithRange:NSMakeRange(1, _program.length - 1)];
+        return [self toSegwitAddressFromScriptSig:scriptSig];
+    } else if (self.chunks.count == 2
+               && ((BTScriptChunk *) self.chunks[0]).data != nil && ((BTScriptChunk *) self.chunks[0]).data.length > 2
+               && ((BTScriptChunk *) self.chunks[1]).data != nil && ((BTScriptChunk *) self.chunks[1]).data.length > 2) {
         return [self addressFromHash:[((BTScriptChunk *) self.chunks[1]).data hash160]];
     } else if (self.chunks.count >= 3 && ((BTScriptChunk *) self.chunks[0]).opCode == OP_0) {
         BOOL isP2SHScript = YES;
@@ -314,6 +317,29 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
         }
     }
     return nil;
+}
+
+- (NSString *)toSegwitAddressFromScriptSig:(NSData *)scriptSig {
+    if (!scriptSig.length) {
+        return nil;
+    }
+    NSData *addressBytes = scriptSig.hash160;
+    
+    if (!addressBytes.length) {
+        return nil;
+    }
+    
+    NSMutableData *d = [NSMutableData secureDataWithCapacity:addressBytes.length + 1];
+#if BITCOIN_TESTNET
+    uint8_t version = BITCOIN_SCRIPT_ADDRESS_TEST;
+#else
+    uint8_t version = BITCOIN_SCRIPT_ADDRESS;
+#endif
+    
+    [d appendBytes:&version length:1];
+    [d appendData:addressBytes];
+    
+    return [NSString base58checkWithData:d];
 }
 
 - (NSString *)getToAddress; {

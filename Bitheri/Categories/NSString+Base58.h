@@ -40,10 +40,19 @@
 
 #define BITCOIN_PUBKEY_ADDRESS      0
 #define BITCOIN_SCRIPT_ADDRESS      5
+
 #define BITCOIN_GOLD_PUBKEY_ADDRESS 38
 #define BITCOIN_GOLD_SCRIPT_ADDRESS 23
+
 #define BITCOIN_WORLD_PUBKEY_ADDRESS 73
 #define BITCOIN_WORLD_SCRIPT_ADDRESS 31
+
+#define BITCOIN_FAITH_PUBKEY_ADDRESS 36
+#define BITCOIN_FAITH_SCRIPT_ADDRESS 40
+
+#define BITCOIN_PAY_PUBKEY_ADDRESS 56
+#define BITCOIN_PAY_SCRIPT_ADDRESS 58
+
 #define BITCOIN_PUBKEY_ADDRESS_TEST 111
 #define BITCOIN_SCRIPT_ADDRESS_TEST 196
 #define BITCOIN_PRIVKEY             128
@@ -73,6 +82,10 @@ CFAllocatorRef SecureAllocator();
 + (NSString *)hexWithHash:(NSData *)d;
 
 + (NSString *)hexStringFromString:(NSString *)string;
+
++(BOOL)validAddressPubkey:(u_int8_t)pubkey;
+
++(BOOL)validAddressScript:(u_int8_t)script;
 
 - (NSData *)base58ToData;
 

@@ -176,7 +176,14 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             [((BTScriptChunk *) self.chunks[4]) isEqualOpCode:OP_CHECKSIG];
 }
 
-- (BOOL)isSentToP2SH; {
+- (BOOL)isBTInP2SHAddress {
+    NSData *program = [self program];
+    return ([program UInt8AtOffset:0] & 0xff) == program.length - 1 &&
+    ([program UInt8AtOffset:1] & 0xff) == 0x00 &&
+    ([program UInt8AtOffset:2] & 0xff) == program.length - 3;
+}
+
+- (BOOL)isSentToP2SH {
     NSData *program = [self program];
     return program.length == 23 &&
             ([program UInt8AtOffset:0] & 0xff) == OP_HASH160 &&

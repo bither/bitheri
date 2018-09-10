@@ -102,7 +102,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [account clearPrivateKey];
         [master clearPrivateKey];
         [segwitAccount clearPrivateKey];
-        [self initHDAccountWithAccount:account segwitAccountKey: segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] fromXRandom:encryptedMnemonicSeed.isXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] fromXRandom:encryptedMnemonicSeed.isXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
@@ -122,7 +122,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (self) {
         _isFromXRandom = isFromXRandom;
         BTBIP32Key *account = [[BTBIP32Key alloc] initWithMasterPubKey:accountExtendedPub];
-        [self initHDAccountWithAccount:account segwitAccountKey: nil password:nil encryptedMnemonicSeed:nil encryptedHDSeed:nil fromXRandom:isFromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [self initHDAccountWithAccount:account segwitAccountKey:nil password:nil encryptedMnemonicSeed:nil encryptedHDSeed:nil fromXRandom:isFromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
@@ -153,30 +153,17 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     BTEncryptData *encryptedDataOfPS = nil;
     if (encryptedMnemonicSeed && password && self.hdSeed) {
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
-        if ([[NSUserDefaults standardUserDefaults] objectForKey:CHOOSE_SEGWIT_ADDRESS]) {
-            addressOfPs = master.key.toSegwitAddress;
-        } else {
-            addressOfPs = master.key.address;
-        }
+        addressOfPs = master.key.address;
         encryptedDataOfPS = [[BTEncryptData alloc] initWithData:master.secret andPassowrd:password andIsXRandom:isFromXRandom];
     }
     BTBIP32Key *internalKey = [self getChainRootKeyFromAccount:accountKey withPathType:INTERNAL_ROOT_PATH];
     BTBIP32Key *externalKey = [self getChainRootKeyFromAccount:accountKey withPathType:EXTERNAL_ROOT_PATH];
     BTBIP32Key *segwitInternalKey = [self getChainRootKeyFromAccount:segwitAccountKey withPathType:INTERNAL_ROOT_PATH];
     BTBIP32Key *segwitExternalKey = [self getChainRootKeyFromAccount:segwitAccountKey withPathType:EXTERNAL_ROOT_PATH];
-    NSString *firstAddress = nil;
-    if ([[NSUserDefaults standardUserDefaults] objectForKey:CHOOSE_SEGWIT_ADDRESS]) {
-        BTBIP32Key *segwitKey = [segwitExternalKey deriveSoftened:0];
-        firstAddress = segwitKey.toSegwitAddress;
-        [segwitKey wipe];
-    } else {
-        BTBIP32Key *key = [externalKey deriveSoftened:0];
-        firstAddress = key.address;
-        [key wipe];
-    }
-    
+    BTBIP32Key *key = [externalKey deriveSoftened:0];
+    NSString *firstAddress = key.address;
+    [key wipe];
     [accountKey wipe];
-    [segwitAccountKey wipe];
     if ([BTHDAccount isRepeatHD:firstAddress]) {
         @throw [[DuplicatedHDAccountException alloc] initWithName:@"DuplicatedHDAccountException" reason:@"DuplicatedHDAccountException" userInfo:nil];
     }
@@ -977,7 +964,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (PathType) getCurrentExternalPathType {
-    if ([[NSUserDefaults standardUserDefaults]objectForKey: CHOOSE_SEGWIT_ADDRESS]) {
+    if ([self isSegwitAddressType]) {
         return EXTERNAL_BIP49_PATH;
     } else {
         return EXTERNAL_ROOT_PATH;
@@ -985,7 +972,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (PathType) getCurrentInternalPathType {
-    if ([[NSUserDefaults standardUserDefaults]objectForKey: CHOOSE_SEGWIT_ADDRESS]) {
+    if ([self isSegwitAddressType]) {
         return INTERNAL_BIP49_PATH;
     } else {
         return INTERNAL_ROOT_PATH;
@@ -993,11 +980,15 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (PurposePathLevel) getPurposePathLevel {
-    if ([[NSUserDefaults standardUserDefaults]objectForKey: CHOOSE_SEGWIT_ADDRESS]) {
+    if ([self isSegwitAddressType]) {
         return P2SHP2WPKH;
     } else {
         return NormalAddress;
     }
+}
+
+- (BOOL)isSegwitAddressType {
+    return [[NSUserDefaults standardUserDefaults] objectForKey: BTHDAccountIsSegwitAddressType];
 }
 
 @end

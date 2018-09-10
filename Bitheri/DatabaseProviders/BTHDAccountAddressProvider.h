@@ -96,7 +96,7 @@
 
 - (NSArray *)getRelatedHDAccountIdListFromAddresses:(NSArray *)addresses;
 
-- (BOOL)requestNewReceivingAddress:(int)hdAccountId pathType:(PathType) pathType;
+- (BOOL)requestNewReceivingAddress:(int)hdAccountId pathType:(PathType)pathType;
 
 - (BOOL)hasHDAccount:(int)hdAccountId pathType:(PathType) pathType receiveTxInAddressCount:(int) addressCount;
 @end

@@ -758,7 +758,7 @@
     return hdAccountIdList;
 }
 
-- (BOOL)requestNewReceivingAddress:(int)hdAccountId pathType:(PathType) pathType;{
+- (BOOL)requestNewReceivingAddress:(int)hdAccountId pathType:(PathType)pathType {
     int issuedIndex = [self getIssuedIndexByHDAccountId:hdAccountId pathType:pathType];
     __block BOOL result = NO;
     if (issuedIndex >= kHDAccountMaxUnusedNewAddressCount - 2) {

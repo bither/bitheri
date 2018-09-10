@@ -24,7 +24,7 @@
 #import "BTHDAccountCold.h"
 
 #define BTAddressManagerIsReady @"BTAddressManagerIsReady"
-#define CHOOSE_SEGWIT_ADDRESS @"choose_segwit_address"
+#define BTHDAccountIsSegwitAddressType @"BTHDAccountIsSegwitAddressType"
 
 @interface BTAddressManager : NSObject
 

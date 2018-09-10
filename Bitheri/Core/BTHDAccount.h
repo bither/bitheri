@@ -36,7 +36,6 @@ typedef enum {
 } PurposePathLevel;
 
 @interface BTHDAccount : BTAddress
-@property(nonatomic,readwrite) PurposePathLevel purposePathLevel;
 
 - (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andGenerationCallback:(void (^)(CGFloat progres))callback;
 
@@ -116,11 +115,6 @@ typedef enum {
 
 - (BTBIP32Key *)privateKeyWithPath:(PathType)path index:(int)index password:(NSString *)password;
 
-- (PathType) getCurrentExternalPathType;
-
-- (PathType) getCurrentInternalPathType;
-
-- (PurposePathLevel) getPurposeLevel;
 @end
 
 @interface DuplicatedHDAccountException : NSException

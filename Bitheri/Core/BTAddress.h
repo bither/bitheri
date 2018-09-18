@@ -20,6 +20,7 @@
 #import "BTKey+Bitcoinj.h"
 #import "BTTx.h"
 #import "BTSettings.h"
+#import "BTHDAccountAddress.h"
 
 @interface BTAddress : NSObject
 
@@ -125,5 +126,7 @@
 - (void)removeVanity;
 
 - (BOOL)exsitsVanityLen;
+
+- (NSString *)addressForPath:(PathType)path;
 
 @end

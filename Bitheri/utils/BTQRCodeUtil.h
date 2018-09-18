@@ -21,7 +21,9 @@
 #define XRANDOM_FLAG @"+"
 #define HDM_QR_CODE_FLAG  @"-"
 #define QR_CODE_SECONDARY_SPLIT (@"$")
-#define HD_MONITOR_QR_PREFIX (@"BitherHD:")
+#define OLD_HD_MONITOR_QR_PREFIX (@"BitherHD:")
+#define HD_MONITOR_QR_PREFIX (@"BitherHDSupportP2SHP2WPKH:")
+#define HD_MONITOR_QR_SPLIT (@",")
 
 typedef enum {
     NORMAL,

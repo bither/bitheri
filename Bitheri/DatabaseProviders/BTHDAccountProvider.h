@@ -29,6 +29,9 @@
 - (int)addMonitoredHDAccount:(NSString *)firstAddress isXRandom:(int)isXRandom externalPub:(NSData *)externalPub
                  internalPub:(NSData *)internalPub;
 
+- (void)addHDAccountSegwitPubForHDAccountId:(int)hdAccountId segwitExternalPub:(NSData *)segwitExternalPub
+            segwitInternalPub:(NSData *)segwitInternalPub;
+
 - (BOOL)hasMnemonicSeed:(int)hdAccountId;
 
 - (NSString *)getHDFirstAddress:(int)hdAccountId;
@@ -36,6 +39,10 @@
 - (NSData *)getExternalPub:(int)hdAccountId;
 
 - (NSData *)getInternalPub:(int)hdAccountId;
+
+- (NSData *)getSegwitExternalPub:(int)hdAccountId;
+
+- (NSData *)getSegwitInternalPub:(int)hdAccountId;
 
 - (NSString *)getHDAccountEncryptSeed:(int)hdAccountId;
 

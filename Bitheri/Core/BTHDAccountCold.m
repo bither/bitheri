@@ -26,6 +26,7 @@
 #import "BTHDMAddress.h"
 #import "BTHDAccountProvider.h"
 #import "BTHDAccountAddress.h"
+#import "BTHDAccountUtil.h"
 
 @interface BTHDAccountCold () {
     BOOL _isFromXRandom;
@@ -94,33 +95,45 @@
     NSMutableArray *sigs = [[NSMutableArray alloc] init];
     BTBIP32Key *master = [self masterKey:password];
     BTBIP32Key *account = [self getAccount:master];
+    BTBIP32Key *purpose49Account = [self getAccount:master withPurposePathLevel:P2SHP2WPKH];
     BTBIP32Key *external = [self getChainRootKeyFromAccount:account withPathType:EXTERNAL_ROOT_PATH];
     BTBIP32Key *internal = [self getChainRootKeyFromAccount:account withPathType:INTERNAL_ROOT_PATH];
+    BTBIP32Key *purpose49External = [self getChainRootKeyFromAccount:purpose49Account withPathType:EXTERNAL_ROOT_PATH];
+    BTBIP32Key *purpose49Internal = [self getChainRootKeyFromAccount:purpose49Account withPathType:INTERNAL_ROOT_PATH];
     [master wipe];
     [account wipe];
+    [purpose49Account wipe];
     NSUInteger count = hashes.count;
     for (NSUInteger i = 0; i < count; i++) {
         NSData *hash = [hashes objectAtIndex:i];
         PathTypeIndex *path = [paths objectAtIndex:i];
         BTBIP32Key *key;
         if (path.pathType == EXTERNAL_ROOT_PATH) {
-            key = [external deriveSoftened:path.index];
+            key = [external deriveSoftened:(uint) path.index];
+        } else if (path.pathType == INTERNAL_ROOT_PATH) {
+            key = [internal deriveSoftened:(uint) path.index];
+        } else if (path.pathType == EXTERNAL_BIP49_PATH) {
+            key = [purpose49External deriveSoftened:(uint) path.index];
         } else {
-            key = [internal deriveSoftened:path.index];
+            key = [purpose49Internal deriveSoftened:(uint) path.index];
         }
-        
-        NSMutableData *s = [NSMutableData dataWithData:[key.key sign:hash]];
-        
-        NSMutableData *sig = [NSMutableData data];
-        [s appendUInt8:SIG_HASH_ALL];
-        [sig appendScriptPushData:s];
-        [sig appendScriptPushData:[key.key publicKey]];
-        
-        [sigs addObject:sig];
+        if ([path isSegwit]) {
+            NSData *sign = [BTHDAccountUtil getSign:key.key unsignedHash:hash];
+            [sigs addObject:[BTHDAccountUtil getWitness:key.getPubKeyExtended sign:sign]];
+        } else {
+            NSMutableData *s = [NSMutableData dataWithData:[key.key sign:hash]];
+            NSMutableData *sig = [NSMutableData data];
+            [s appendUInt8:SIG_HASH_ALL];
+            [sig appendScriptPushData:s];
+            [sig appendScriptPushData:[key.key publicKey]];
+            [sigs addObject:sig];
+        }
         [key wipe];
     }
     [external wipe];
     [internal wipe];
+    [purpose49External wipe];
+    [purpose49Internal wipe];
     return sigs;
 }
 
@@ -212,7 +225,7 @@
 }
 
 - (BTBIP32Key *)getAccount:(BTBIP32Key *)master {
-    BTBIP32Key *purpose = [master deriveHardened:44];
+    BTBIP32Key *purpose = [master deriveHardened:NormalAddress];
     BTBIP32Key *coinType = [purpose deriveHardened:0];
     BTBIP32Key *account = [coinType deriveHardened:0];
     [purpose wipe];
@@ -220,9 +233,18 @@
     return account;
 }
 
-- (BTBIP32Key *)xPub:(NSString *)password {
+- (BTBIP32Key *)getAccount:(BTBIP32Key *)master withPurposePathLevel:(PurposePathLevel)purposeLevel {
+    BTBIP32Key *purpose = [master deriveHardened:purposeLevel];
+    BTBIP32Key *coinType = [purpose deriveHardened:0];
+    BTBIP32Key *account = [coinType deriveHardened:0];
+    [purpose wipe];
+    [coinType wipe];
+    return account;
+}
+
+- (BTBIP32Key *)xPub:(NSString *)password withPurposePathLevel:(PurposePathLevel)purposePathLevel {
     BTBIP32Key *master = [self masterKey:password];
-    BTBIP32Key *account = [self getAccount:master];
+    BTBIP32Key *account = [self getAccount:master withPurposePathLevel:purposePathLevel];
     [master wipe];
     return account;
 }

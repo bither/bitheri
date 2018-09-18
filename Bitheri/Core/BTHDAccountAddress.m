@@ -23,6 +23,11 @@
 #import "BTIn.h"
 
 @implementation PathTypeIndex
+
+- (BOOL)isSegwit {
+    return _pathType == EXTERNAL_BIP49_PATH || _pathType == INTERNAL_BIP49_PATH;
+}
+
 @end
 
 @implementation BTHDAccountAddress {
@@ -59,8 +64,12 @@
 + (PathType)getPathType:(int)type {
     if (type == 0) {
         return EXTERNAL_ROOT_PATH;
-    } else {
+    } else if (type == 1) {
         return INTERNAL_ROOT_PATH;
+    } else if (type == 9) {
+        return EXTERNAL_BIP49_PATH;
+    } else {
+        return INTERNAL_BIP49_PATH;
     }
 }
 

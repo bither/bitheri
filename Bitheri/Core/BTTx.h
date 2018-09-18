@@ -28,6 +28,7 @@
 @class BTAddress;
 @class BTOut;
 @class BTHDAccount;
+@class BTIn;
 
 #if TX_FEE_07_RULES
 #define TX_FEE_PER_KB        50000llu    // standard tx fee per kb of tx size, rounded up to the nearest kb (0.7 rules)
@@ -56,7 +57,9 @@ typedef enum {
 @property(nonatomic, readonly) uint confirmationCnt;
 @property(nonatomic, readonly) BOOL isCoinBase;
 @property(nonatomic, readwrite) Coin coin;
-@property(nonatomic,readwrite) BOOL isDetectBcc;
+@property(nonatomic, readwrite) BOOL isDetectBcc;
+@property(nonatomic, assign) BOOL isSegwitAddress;
+@property(nonatomic, strong) NSMutableArray *witnesses;
 
 + (instancetype)transactionWithMessage:(NSData *)message;
 
@@ -87,6 +90,10 @@ typedef enum {
 - (NSArray *)unsignedInHashes;
 
 - (NSArray *)unsignedInHashesForBcc:(uint64_t []) preOutValues;
+
+- (NSData *)getSegwitUnsignedInHashesForRedeemScript:(NSData *)redeemScript btIn:(BTIn *)btIn;
+
+- (NSData *)getUnsignedInHashesForIn:(BTIn *)btIn;
 
 - (BOOL)signWithSignatures:(NSArray *)signatures;
 

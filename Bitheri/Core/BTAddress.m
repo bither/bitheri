@@ -106,6 +106,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     return _address;
 }
 
+- (NSString *)addressForPath:(PathType)path {
+    return _address;
+}
+
 - (NSData *)scriptPubKey {
     NSMutableData *_scriptPubKey = [NSMutableData data];
     [_scriptPubKey appendScriptPubKeyForAddress:_address];

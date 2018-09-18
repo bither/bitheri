@@ -92,6 +92,22 @@
     return hdAccountId;
 }
 
+- (void)addHDAccountSegwitPubForHDAccountId:(int)hdAccountId segwitExternalPub:(NSData *)segwitExternalPub
+                          segwitInternalPub:(NSData *)segwitInternalPub {
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        [db beginTransaction];
+        NSString *sql = @"insert into hd_account_segwit_pub("
+        "hd_account_id,segwit_external_pub,segwit_internal_pub) "
+        " values(?,?,?)";
+        BOOL success = [db executeUpdate:sql, @(hdAccountId), [NSString base58WithData:segwitExternalPub], [NSString base58WithData:segwitInternalPub]];
+        if (success) {
+            [db commit];
+        } else {
+            [db rollback];
+        }
+    }];
+}
+
 - (BOOL)hasMnemonicSeed:(int)hdAccountId; {
     __block BOOL result = NO;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
@@ -135,6 +151,32 @@
     __block NSData *result = nil;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select internal_pub from hd_account where hd_account_id=? ";
+        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];
+        if ([rs next]) {
+            result = [[rs stringForColumnIndex:0] base58ToData];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (NSData *)getSegwitExternalPub:(int)hdAccountId {
+    __block NSData *result = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select segwit_external_pub from hd_account_segwit_pub where hd_account_id=? ";
+        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];
+        if ([rs next]) {
+            result = [[rs stringForColumnIndex:0] base58ToData];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+- (NSData *)getSegwitInternalPub:(int)hdAccountId {
+    __block NSData *result = nil;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select segwit_internal_pub from hd_account_segwit_pub where hd_account_id=? ";
         FMResultSet *rs = [db executeQuery:sql, @(hdAccountId)];
         if ([rs next]) {
             result = [[rs stringForColumnIndex:0] base58ToData];

@@ -522,7 +522,8 @@
 
 - (void)setHdAccountHot:(BTHDAccount *)hdAccountHot {
     _hdAccountHot = hdAccountHot;
-    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccountHot.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
+    PathType pathType = [[NSUserDefaults standardUserDefaults] objectForKey: BTHDAccountIsSegwitAddressType] ? EXTERNAL_BIP49_PATH : EXTERNAL_ROOT_PATH;
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:[_hdAccountHot addressForPath:pathType] userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
 }
 
 - (BOOL)hasHDAccountMonitored {
@@ -535,7 +536,8 @@
 
 - (void)setHdAccountMonitored:(BTHDAccount *)hdAccountMonitored {
     _hdAccountMonitored = hdAccountMonitored;
-    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:_hdAccountMonitored.address userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
+    PathType pathType = [[NSUserDefaults standardUserDefaults] objectForKey: BTHDAccountIsSegwitAddressType] ? EXTERNAL_BIP49_PATH : EXTERNAL_ROOT_PATH;
+    [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:[_hdAccountMonitored addressForPath:pathType] userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(YES)}];
 }
 
 - (BOOL)hasHDAccountCold {

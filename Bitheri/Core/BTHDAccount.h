@@ -31,10 +31,6 @@
 #define kHDAccountMonitoredPlaceHolder @"HDAccountMonitored"
 #define kHDAccountMaxUnusedNewAddressCount (20)
 
-typedef enum {
-    NormalAddress = 44, P2SHP2WPKH = 49,
-} PurposePathLevel;
-
 @interface BTHDAccount : BTAddress
 
 - (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andGenerationCallback:(void (^)(CGFloat progres))callback;
@@ -43,11 +39,11 @@ typedef enum {
 
 - (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
 
-- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub;
+- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub p2shp2wpkhAccountExtentedPub:(NSData *)p2shp2wpkhAccountExtentedPub;
 
-- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub andFromXRandom:(BOOL)isFromXRandom;
+- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub p2shp2wpkhAccountExtentedPub:(NSData *)p2shp2wpkhAccountExtentedPub andFromXRandom:(BOOL)isFromXRandom;
 
-- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
+- (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub p2shp2wpkhAccountExtentedPub:(NSData *)p2shp2wpkhAccountExtentedPub fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
 
 - (instancetype)initWithSeedId:(int)seedId;
 
@@ -59,7 +55,7 @@ typedef enum {
 
 - (void)onNewTx:(BTTx *)tx andTxNotificationType:(TxNotificationType)txNotificationType;
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error;
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType andError:(NSError **)error;
 
 - (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
 
@@ -69,11 +65,11 @@ typedef enum {
 
 - (NSArray *)newBccTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress andUnspentOut:(NSArray *) outs;
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount password:(NSString *)password andError:(NSError **)error;
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType password:(NSString *)password andError:(NSError **)error;
 
 - (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts password:(NSString *)password andError:(NSError **)error;
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts pathType:(PathType)pathType password:(NSString *)password andError:(NSError **)error;
 
 - (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
 
@@ -99,17 +95,17 @@ typedef enum {
 
 - (BOOL)isSendFromMe:(BTTx *)tx;
 
-- (NSInteger)issuedInternalIndex;
+- (NSInteger)issuedInternalIndexForPathType:(PathType)pathType;
 
-- (NSInteger)issuedExternalIndex;
+- (NSInteger)issuedExternalIndexForPathType:(PathType)pathType;
 
-- (void)updateIssuedIndex:(PathType)pathType index:(int)index;
+- (void)updateIssuedIndex:(int)index pathType:(PathType)pathType;
 
 - (void)supplyEnoughKeys:(BOOL)isSyncedComplete;
 
 - (NSInteger)getHDAccountId;
 
-- (BOOL)requestNewReceivingAddress;
+- (BOOL)requestNewReceivingAddressForPathType:(PathType)pathType;
 
 - (BTBIP32Key *)xPub:(NSString *)password;
 

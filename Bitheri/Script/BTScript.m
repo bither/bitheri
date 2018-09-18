@@ -408,7 +408,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     }
 
 
-    if (!self.tx.isDetectBcc) {
+    if (!self.tx.isDetectBcc && !self.tx.isSegwitAddress) {
         if (![BTScript castToBool:stack.lastObject]) {
             DDLogWarn(@"[Script Error] Script resulted in a non-true stack: %@", stack);
             return NO;

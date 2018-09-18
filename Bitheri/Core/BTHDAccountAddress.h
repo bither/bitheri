@@ -22,12 +22,14 @@
 typedef enum {
     EXTERNAL_ROOT_PATH = 0, INTERNAL_ROOT_PATH = 1,
     EXTERNAL_BIP49_PATH = 9, INTERNAL_BIP49_PATH = 10,
-
 } PathType;
 
 @interface PathTypeIndex : NSObject
 @property PathType pathType;
 @property NSUInteger index;
+
+- (BOOL)isSegwit;
+
 @end
 
 @interface BTHDAccountAddress : NSObject

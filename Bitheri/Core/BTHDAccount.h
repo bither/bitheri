@@ -111,6 +111,8 @@
 
 - (BTBIP32Key *)privateKeyWithPath:(PathType)path index:(int)index password:(NSString *)password;
 
+- (void)addSegwitPub:(NSString *)password complete:(void (^)(BOOL))complete;
+
 @end
 
 @interface DuplicatedHDAccountException : NSException

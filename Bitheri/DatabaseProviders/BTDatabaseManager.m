@@ -193,7 +193,7 @@ static BOOL canOpenAddressDb;
     _hdAccountSegwitPubSql = @"create table if not exists hd_account_segwit_pub "
     "( hd_account_id integer not null primary key"
     ", segwit_external_pub text not null"
-    ", segwit_internal_pub text not null;";
+    ", segwit_internal_pub text not null;)";
     return self;
 }
 

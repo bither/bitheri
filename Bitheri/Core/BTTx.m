@@ -339,7 +339,7 @@
 
 - (NSData *)getSegwitUnsignedInHashesForRedeemScript:(NSData *)redeemScript btIn:(BTIn *)btIn {
     BTOut *btOut = [[BTTxProvider instance] getOutByTxHash:btIn.prevTxHash andOutSn:btIn.prevOutSn];
-    NSData *hash = [self hashForSignatureWitness:btIn.inSn connectedScript:btIn.inScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.coin];
+    NSData *hash = [self hashForSignatureWitness:btIn.inSn connectedScript:redeemScript type:[self getSigHashType] prevValue:btOut.outValue anyoneCanPay:false coin:self.coin];
     return hash;
 }
 
@@ -762,7 +762,9 @@
     NSMutableData *d = [NSMutableData dataWithCapacity:self.size];
     
     [d appendUInt32:self.txVer];
-    if (_isSegwitAddress) {
+    BOOL isSigned = [self isSigned] && subscriptIndex == NSNotFound;
+    if (_isSegwitAddress && isSigned) {
+        [d appendUInt8:0];
         [d appendUInt8:1];
     }
     [d appendVarInt:self.ins.count];
@@ -772,7 +774,7 @@
         [d appendData:in.prevTxHash];
         [d appendUInt32:in.prevOutSn];
         
-        if ([self isSigned] && subscriptIndex == NSNotFound) {
+        if (isSigned) {
             [d appendVarInt:[in.inSignature length]];
             [d appendData:in.inSignature];
         }
@@ -794,7 +796,7 @@
         [d appendVarInt:out.outScript.length];
         [d appendData:out.outScript];
     }
-    if (_isSegwitAddress) {
+    if (_isSegwitAddress && isSigned) {
         for (NSData *witness in _witnesses) {
             [d appendData:witness];
         }

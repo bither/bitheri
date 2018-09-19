@@ -266,16 +266,25 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
 }
 
-- (void)addSegwitPub:(NSString *)password {
+- (void)addSegwitPub:(NSString *)password complete:(void (^)(BOOL))complete {
     BTHDAccountProvider *provider = [BTHDAccountProvider instance];
     if (![provider getHDAccountEncryptSeed:_hdAccountId]) {
+        if (complete) {
+            complete(false);
+        }
         return;
     }
     if ([provider getSegwitExternalPub:_hdAccountId] && [provider getSegwitInternalPub:_hdAccountId]) {
+        if (complete) {
+            complete(true);
+        }
         return;
     }
     BTBIP32Key *master = [self masterKey:password];
     if (!master) {
+        if (complete) {
+            complete(false);
+        }
         return;
     }
     BTBIP32Key *accountPurpose49Key = [self getAccount:master withPurposePathLevel:P2SHP2WPKH];
@@ -304,6 +313,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [[BTHDAccountAddressProvider instance] addAddress:internalSegwitAddresses];
     [externalBIP49Key wipe];
     [internalBIP49Key wipe];
+    if (complete) {
+        complete(true);
+    }
 }
 
 + (BOOL)isRepeatHD:(NSString *)firstAddress {
@@ -651,7 +663,15 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSString *)addressForPath:(PathType)path {
-    return [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId path:path];
+    NSString *address = [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId path:path];
+    if (!address) {
+        if (path == EXTERNAL_BIP49_PATH) {
+            address = [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId path:EXTERNAL_ROOT_PATH];
+        } else if (path == INTERNAL_BIP49_PATH) {
+            address = [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId path:INTERNAL_ROOT_PATH];
+        }
+    }
+    return address;
 }
 
 - (void)updateBalance {
@@ -1099,7 +1119,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (BOOL)isSegwitAddressType {
-    return [[NSUserDefaults standardUserDefaults] objectForKey: BTHDAccountIsSegwitAddressType];
+    return [[NSUserDefaults standardUserDefaults] objectForKey:BTHDAccountIsSegwitAddressType];
 }
 
 @end

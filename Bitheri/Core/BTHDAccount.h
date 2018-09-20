@@ -109,6 +109,8 @@
 
 - (BTBIP32Key *)xPub:(NSString *)password;
 
+- (BTBIP32Key *)xPub:(NSString *)password withPurposePathLevel:(PurposePathLevel)purposeLevel;
+
 - (BTBIP32Key *)privateKeyWithPath:(PathType)path index:(int)index password:(NSString *)password;
 
 - (void)addSegwitPub:(NSString *)password complete:(void (^)(BOOL))complete;

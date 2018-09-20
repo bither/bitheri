@@ -662,6 +662,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     DDLogInfo(@"HD supplied %d external addresses", as.count);
 }
 
+- (NSString *)address {
+    return [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId path:EXTERNAL_ROOT_PATH];
+}
+
 - (NSString *)addressForPath:(PathType)path {
     NSString *address = [[BTHDAccountAddressProvider instance] getExternalAddress:self.hdAccountId path:path];
     if (!address) {
@@ -1076,6 +1080,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 + (BOOL)checkDuplicatedHDAccountWithExternalRoot:(NSData *)ex andInternalRoot:(NSData *)in {
     //TODO checkDuplicatedHDAccount
     return NO;
+}
+
+- (BTBIP32Key *)xPub:(NSString *)password {
+    return [self xPub:password withPurposePathLevel:NormalAddress];
 }
 
 - (BTBIP32Key *)xPub:(NSString *)password withPurposePathLevel:(PurposePathLevel)purposeLevel {

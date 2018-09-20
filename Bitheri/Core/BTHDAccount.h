@@ -106,7 +106,7 @@
 
 - (NSInteger)getHDAccountId;
 
-- (BOOL)requestNewReceivingAddressForPathType:(PathType)pathType;
+- (BOOL)requestNewReceivingAddress:(PathType)pathType;
 
 - (BTBIP32Key *)xPub:(NSString *)password;
 

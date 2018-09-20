@@ -119,6 +119,8 @@ typedef enum {
 
 - (NSData *)toData;
 
+- (NSData *)toSegwitTxHashData;
+
 - (NSData *)bcdToData;
 
 - (size_t)size;

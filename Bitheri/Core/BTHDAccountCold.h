@@ -23,6 +23,7 @@
 #import "BTBIP32Key.h"
 #import "BTBIP39.h"
 #import "BTQRCodeUtil.h"
+#import "BTHDAccountUtil.h"
 
 @class BTEncryptData;
 
@@ -54,6 +55,6 @@
 
 - (NSInteger)getHDAccountId;
 
-- (BTBIP32Key *)xPub:(NSString *)password;
+- (BTBIP32Key *)xPub:(NSString *)password withPurposePathLevel:(PurposePathLevel)purposePathLevel;
 
 @end

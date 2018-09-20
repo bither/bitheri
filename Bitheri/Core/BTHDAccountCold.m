@@ -26,7 +26,6 @@
 #import "BTHDMAddress.h"
 #import "BTHDAccountProvider.h"
 #import "BTHDAccountAddress.h"
-#import "BTHDAccountUtil.h"
 
 @interface BTHDAccountCold () {
     BOOL _isFromXRandom;
@@ -119,7 +118,7 @@
         }
         if ([path isSegwit]) {
             NSData *sign = [BTHDAccountUtil getSign:key.key unsignedHash:hash];
-            [sigs addObject:[BTHDAccountUtil getWitness:key.getPubKeyExtended sign:sign]];
+            [sigs addObject:[BTHDAccountUtil getWitness:key.pubKey sign:sign]];
         } else {
             NSMutableData *s = [NSMutableData dataWithData:[key.key sign:hash]];
             NSMutableData *sig = [NSMutableData data];

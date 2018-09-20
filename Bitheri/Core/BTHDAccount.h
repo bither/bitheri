@@ -113,6 +113,10 @@
 
 - (void)addSegwitPub:(NSString *)password complete:(void (^)(BOOL))complete;
 
+- (NSData *)getExternalPub:(PathType)pathType;
+
+- (NSData *)getInternalPub:(PathType)pathType;
+
 @end
 
 @interface DuplicatedHDAccountException : NSException

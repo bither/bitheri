@@ -145,4 +145,8 @@
     return balance;
 }
 
+- (BOOL)isSegwit {
+    return _pathType == EXTERNAL_BIP49_PATH || _pathType == INTERNAL_BIP49_PATH;
+}
+
 @end

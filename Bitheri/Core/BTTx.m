@@ -362,10 +362,13 @@
         BTIn *in = self.ins[i];
         in.inSignature = signatures[i];
     }
-    if (![self verifySignatures])
-        return NO;
-    
-    _txHash = [self toData].SHA256_2;
+    if (!_isSegwitAddress) {
+        if (![self verifySignatures])
+            return NO;
+        _txHash = [self toData].SHA256_2;
+    } else {
+        _txHash = [self toSegwitTxHashData].SHA256_2;
+    }
     // update in & out 's tx hash
     for (BTIn *in in self.ins) {
         in.txHash = _txHash;
@@ -759,10 +762,17 @@
 // Returns the binary transaction data that needs to be hashed and signed with the private key for the tx input at
 // subscriptIndex. A subscriptIndex of NSNotFound will return the entire signed transaction
 - (NSData *)toDataWithSubscriptIndex:(NSUInteger)subscriptIndex {
-    NSMutableData *d = [NSMutableData dataWithCapacity:self.size];
+    BOOL isSigned = [self isSigned] && subscriptIndex == NSNotFound;
+    size_t size = self.size;
+    if (_isSegwitAddress && isSigned) {
+        size += 2;
+        for (NSData *witness in _witnesses) {
+            size += witness.length;
+        }
+    }
+    NSMutableData *d = [NSMutableData dataWithCapacity:size];
     
     [d appendUInt32:self.txVer];
-    BOOL isSigned = [self isSigned] && subscriptIndex == NSNotFound;
     if (_isSegwitAddress && isSigned) {
         [d appendUInt8:0];
         [d appendUInt8:1];
@@ -807,6 +817,29 @@
         [d appendUInt32:SIG_HASH_ALL];
     }
     
+    return d;
+}
+
+- (NSData *)toSegwitTxHashData {
+    NSMutableData *d = [NSMutableData dataWithCapacity:self.size];
+    [d appendUInt32:self.txVer];
+    [d appendVarInt:self.ins.count];
+    NSUInteger i = 0;
+    for (BTIn *in in self.ins) {
+        [d appendData:in.prevTxHash];
+        [d appendUInt32:in.prevOutSn];
+        [d appendVarInt:[in.inSignature length]];
+        [d appendData:in.inSignature];
+        [d appendUInt32:in.inSequence];
+        i++;
+    }
+    [d appendVarInt:self.outs.count];
+    for (BTOut *out in self.outs) {
+        [d appendUInt64:out.outValue];
+        [d appendVarInt:out.outScript.length];
+        [d appendData:out.outScript];
+    }
+    [d appendUInt32:self.txLockTime];
     return d;
 }
 

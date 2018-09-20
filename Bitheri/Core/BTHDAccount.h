@@ -24,6 +24,7 @@
 #import "BTBIP32Key.h"
 #import "BTBIP39.h"
 #import "BTQRCodeUtil.h"
+#import "BTHDAccountUtil.h"
 
 #define kHDAccountPaymentAddressChangedNotificationFirstAdding @"FirstAdding"
 #define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"

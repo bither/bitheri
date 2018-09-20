@@ -28,7 +28,6 @@
 #import "BTBlockChain.h"
 #import "BTHDAccountProvider.h"
 #import "BTAddressManager.h"
-#import "BTHDAccountUtil.h"
 
 #define kBTHDAccountLookAheadSize (100)
 #define kGenerationInitialProgress (0.02)

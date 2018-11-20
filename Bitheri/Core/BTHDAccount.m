@@ -1026,10 +1026,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         return nil;
     }
     BTBIP32Key *master = [self masterKey:password];
-    BTBIP32Key *account = [self getAccount:master];
+    BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
     BTBIP32Key *external = [self getChainRootKeyFromAccount:account withPathType:EXTERNAL_ROOT_PATH];
     BTBIP32Key *key = [external deriveSoftened:0];
-    NSString *address = key.key.address;
+    NSString *address = key.address;
     [master wipe];
     [account wipe];
     [external wipe];

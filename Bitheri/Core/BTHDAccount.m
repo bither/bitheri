@@ -122,7 +122,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (self) {
         _isFromXRandom = isFromXRandom;
         BTBIP32Key *account = [[BTBIP32Key alloc] initWithMasterPubKey:accountExtendedPub];
-        BTBIP32Key *segwitAccount = [[BTBIP32Key alloc] initWithMasterPubKey:p2shp2wpkhAccountExtentedPub];
+        BTBIP32Key *segwitAccount = p2shp2wpkhAccountExtentedPub == nil ? nil : [[BTBIP32Key alloc] initWithMasterPubKey:p2shp2wpkhAccountExtentedPub];
         [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:nil encryptedMnemonicSeed:nil encryptedHDSeed:nil fromXRandom:isFromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;

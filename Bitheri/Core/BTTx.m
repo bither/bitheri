@@ -78,6 +78,7 @@
     NSMutableData *tx = [NSMutableData secureData];
     
     NSUInteger verSize = sizeof(uint32_t);
+    if (verSize > message.length) { return nil; }
     [tx appendData:[message subdataWithRange:NSMakeRange(0, verSize)]];
     _txVer = [message UInt32AtOffset:off]; // tx version
     off += verSize;
@@ -90,6 +91,7 @@
             if (count == 0) return nil;
         }
     }  // at least one input is required
+    if (off + l > message.length) { return nil; }
     [tx appendData:[message subdataWithRange:NSMakeRange(off, l)]];
     off += l;
     NSUInteger insBeginIndex = off;
@@ -132,6 +134,7 @@
         out.outSn = self.outs.count;
         [self.outs addObject:out];
     }
+    if (off > message.length) { return nil; }
     [tx appendData:[message subdataWithRange:NSMakeRange(insBeginIndex, off - insBeginIndex)]];
     NSUInteger txLockTimeSize = sizeof(uint32_t);
     off = message.length - txLockTimeSize;

@@ -65,6 +65,8 @@ typedef enum {
 
 - (instancetype)initWithMessage:(NSData *)message;
 
+- (instancetype)initWithTxDict:(NSDictionary *)txDict;
+
 #pragma mark - manage in & out
 
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script;

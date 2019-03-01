@@ -75,7 +75,7 @@
     _txHash = [[[txDict getStringFromDict:@"hash"] hexToData] reverse];
     _txTime = [txDict getIntFromDict:@"created_at"];
     _txVer = [txDict getIntFromDict:@"version"];
-    _txLockTime = [txDict getLongFromDict:@"lock_time"];
+    _txLockTime = (uint32_t) [txDict getIntFromDict:@"lock_time"];
     _ins = [NSMutableArray new];
     NSArray *inJsonArray = txDict[@"inputs"];
     if (inJsonArray) {

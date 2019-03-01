@@ -32,7 +32,7 @@
     _prevTxHash = [[inDict getStringFromDict:@"prev_tx_hash"] hexToData];
     _prevOutSn = [inDict getIntFromDict:@"prev_position"];
     _inSignature = [[inDict getStringFromDict:@"script_hex"] hexToData];
-    _inSequence = [inDict getLongFromDict:@"sequence"];
+    _inSequence = [inDict getIntFromDict:@"sequence"];
     _tx = tx;
     _txHash = tx.txHash;
     

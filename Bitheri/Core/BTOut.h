@@ -38,4 +38,6 @@ typedef enum {
 
 @property int hdAccountId;
 
+- (instancetype)initWithTx:(BTTx *)tx outDict:(NSDictionary *)outDict;
+
 @end

@@ -20,9 +20,23 @@
 #import "BTTx.h"
 #import "BTIn.h"
 #import "BTScript.h"
+#import "NSDictionary+Fromat.h"
 
 @implementation BTIn {
 
+}
+
+- (instancetype)initWithTx:(BTTx *)tx inDict:(NSDictionary *)inDict {
+    if (!(self = [self init])) return nil;
+    
+    _prevTxHash = [[inDict getStringFromDict:@"prev_tx_hash"] hexToData];
+    _prevOutSn = [inDict getIntFromDict:@"prev_position"];
+    _inSignature = [[inDict getStringFromDict:@"script_hex"] hexToData];
+    _inSequence = [inDict getLongFromDict:@"sequence"];
+    _tx = tx;
+    _txHash = tx.txHash;
+    
+    return self;
 }
 
 - (void)setTx:(BTTx *)tx {

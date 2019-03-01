@@ -19,11 +19,24 @@
 
 #import "BTTx.h"
 #import "BTOut.h"
+#import "NSDictionary+Fromat.h"
 
 @implementation BTOut {
 
 
 }
+
+- (instancetype)initWithTx:(BTTx *)tx outDict:(NSDictionary *)outDict {
+    if (!(self = [self init])) return nil;
+    
+    _outValue = [outDict getLongFromDict:@"value"];
+    _outScript = [[outDict getStringFromDict:@"script_hex"] hexToData];
+    _tx = tx;
+    _txHash = tx.txHash;
+    
+    return self;
+}
+
 
 - (void)setTx:(BTTx *)tx {
     _tx = tx;

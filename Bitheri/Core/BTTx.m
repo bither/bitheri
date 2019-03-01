@@ -34,6 +34,7 @@
 #import "BTUtils.h"
 #import "BTTxBuilder.h"
 #import "NSString+Base58.h"
+#import "NSDictionary+Fromat.h"
 
 @implementation BTTx
 
@@ -64,6 +65,39 @@
     _blockNo = TX_UNCONFIRMED;
     _txTime = (uint) [[NSDate date] timeIntervalSince1970];
     
+    return self;
+}
+
+- (instancetype)initWithTxDict:(NSDictionary *)txDict {
+    if (!(self = [self init])) return nil;
+    
+    _blockNo = (uint32_t) [txDict getIntFromDict:@"block_height"];
+    _txHash = [[[txDict getStringFromDict:@"hash"] hexToData] reverse];
+    _txTime = [txDict getIntFromDict:@"created_at"];
+    _txVer = [txDict getIntFromDict:@"version"];
+    _txLockTime = [txDict getLongFromDict:@"lock_time"];
+    _ins = [NSMutableArray new];
+    NSArray *inJsonArray = txDict[@"inputs"];
+    if (inJsonArray) {
+        for (int i = 0; i < inJsonArray.count; i++) {
+            NSDictionary *inDict = inJsonArray[i];
+            BTIn *btIn = [[BTIn alloc] initWithTx:self inDict:inDict];
+            btIn.inSn = i;
+            [_ins addObject:btIn];
+        }
+    }
+    
+    _outs = [NSMutableArray new];
+    NSArray *outJsonArray = txDict[@"outputs"];
+    if (outJsonArray) {
+        for (int i = 0; i < outJsonArray.count; i++) {
+            NSDictionary *outDict = outJsonArray[i];
+            BTOut *btout = [[BTOut alloc] initWithTx:self outDict:outDict];
+            btout.outSn = i;
+            [_outs addObject:btout];
+        }
+    }
+    _blockHash = [[txDict getStringFromDict:@"block_hash"] hexToData];
     return self;
 }
 

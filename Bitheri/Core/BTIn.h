@@ -47,4 +47,6 @@ static NSData *getOutPoint(NSData *txHash, uint32_t n) {
 
 - (NSArray *)getP2SHPubKeys;
 
+- (instancetype)initWithTx:(BTTx *)tx inDict:(NSDictionary *)inDict;
+
 @end

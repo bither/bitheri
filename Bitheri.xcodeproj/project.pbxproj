@@ -15,6 +15,7 @@
 		402B83151E62E73100379C39 /* BIP39ZhTWWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */; };
 		402B83161E62E73A00379C39 /* BIP39ZhCNWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */; };
 		402B83171E62E73D00379C39 /* BIP39ZhTWWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */; };
+		403C71F222295BC200E523D1 /* NSDictionary+Fromat.m in Sources */ = {isa = PBXBuildFile; fileRef = 403C71F022295BC200E523D1 /* NSDictionary+Fromat.m */; };
 		407FA2661E6939A8004EA17C /* BTWordsTypeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */; };
 		407FA2671E6939A8004EA17C /* BTWordsTypeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */; };
 		4085AAF6214FCEAC00F67B78 /* BTHDAccountUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 4085AAF5214FCEAC00F67B78 /* BTHDAccountUtil.m */; };
@@ -183,6 +184,8 @@
 		215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BIP39ZhCNWords.plist; sourceTree = "<group>"; };
 		402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BIP39ZhTWWords.plist; sourceTree = "<group>"; };
+		403C71F022295BC200E523D1 /* NSDictionary+Fromat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+Fromat.m"; sourceTree = "<group>"; };
+		403C71F122295BC200E523D1 /* NSDictionary+Fromat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+Fromat.h"; sourceTree = "<group>"; };
 		407FA2641E6939A8004EA17C /* BTWordsTypeManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTWordsTypeManager.h; sourceTree = "<group>"; };
 		407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTWordsTypeManager.m; sourceTree = "<group>"; };
 		4085AAF4214FCEAC00F67B78 /* BTHDAccountUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BTHDAccountUtil.h; path = Bitheri/utils/BTHDAccountUtil.h; sourceTree = SOURCE_ROOT; };
@@ -499,6 +502,8 @@
 				D61D052EF26C3A60C89B988B /* NSData+Hash.h */,
 				D61D03715FC41C121DC18067 /* NSData+Bitcoin.m */,
 				D61D07A8E015E08C57BAECE0 /* NSData+Bitcoin.h */,
+				403C71F122295BC200E523D1 /* NSDictionary+Fromat.h */,
+				403C71F022295BC200E523D1 /* NSDictionary+Fromat.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -908,6 +913,7 @@
 				D61D01FDA529E4A7DEE5715A /* BTAddressProvider.m in Sources */,
 				D61D0940D0FF7FAA8F3F0024 /* BTHDMBid.m in Sources */,
 				0A29B0C61A761C380020BCD7 /* BTHDMKeychainRecover.m in Sources */,
+				403C71F222295BC200E523D1 /* NSDictionary+Fromat.m in Sources */,
 				D61D0F1510BE313FA122AE97 /* BTHDMAddress.m in Sources */,
 				D61D0E06C49C62BA68C71A16 /* BTHDMKeychain.m in Sources */,
 				D61D03664AB5C571267EBBC6 /* BTEncryptData.m in Sources */,

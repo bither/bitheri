@@ -29,7 +29,7 @@
 - (instancetype)initWithTx:(BTTx *)tx inDict:(NSDictionary *)inDict {
     if (!(self = [self init])) return nil;
     
-    _prevTxHash = [[inDict getStringFromDict:@"prev_tx_hash"] hexToData];
+    _prevTxHash = [[[inDict getStringFromDict:@"prev_tx_hash"] hexToData] reverse];
     _prevOutSn = [inDict getIntFromDict:@"prev_position"];
     _inSignature = [[inDict getStringFromDict:@"script_hex"] hexToData];
     _inSequence = [inDict getIntFromDict:@"sequence"];

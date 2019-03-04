@@ -20,6 +20,7 @@
 #import "BTTx.h"
 #import "BTOut.h"
 #import "NSDictionary+Fromat.h"
+#import "BTScript.h"
 
 @implementation BTOut {
 
@@ -33,7 +34,8 @@
     _outScript = [[outDict getStringFromDict:@"script_hex"] hexToData];
     _tx = tx;
     _txHash = tx.txHash;
-    
+    _outAddress = [[[BTScript alloc] initWithProgram:_outScript] getToAddress];
+
     return self;
 }
 

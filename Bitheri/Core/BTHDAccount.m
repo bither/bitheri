@@ -620,16 +620,23 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (lackOfInternal > 0) {
         [self supplyNewInternalKeyForCount:lackOfInternal pathType:internalPath andSyncedComplete:isSyncedComplete];
     }
+    
     PathType segwitExternalPath = EXTERNAL_BIP49_PATH;
-    NSInteger lackOfSegwitExternal = [self issuedExternalIndexForPathType:segwitExternalPath] + 1 + kBTHDAccountLookAheadSize - [self allGeneratedExternalAddressCountForPathType:segwitExternalPath];
-    if (lackOfSegwitExternal > 0) {
-        [self supplyNewExternalKeyForCount:lackOfSegwitExternal pathType:segwitExternalPath andSyncedComplete:isSyncedComplete];
+    if ([self getExternalPub:segwitExternalPath]) {
+        NSInteger lackOfSegwitExternal = [self issuedExternalIndexForPathType:segwitExternalPath] + 1 + kBTHDAccountLookAheadSize - [self allGeneratedExternalAddressCountForPathType:segwitExternalPath];
+        if (lackOfSegwitExternal > 0) {
+            [self supplyNewExternalKeyForCount:lackOfSegwitExternal pathType:segwitExternalPath andSyncedComplete:isSyncedComplete];
+        }
     }
+    
     PathType segwitInternalPath = INTERNAL_BIP49_PATH;
-    NSInteger lackOfSegwitInternal = [self issuedInternalIndexForPathType:segwitInternalPath] + 1 + kBTHDAccountLookAheadSize - [self allGeneratedInternalAddressCountForPathType:segwitInternalPath];
-    if (lackOfSegwitInternal > 0) {
-        [self supplyNewInternalKeyForCount:lackOfSegwitInternal pathType:segwitInternalPath andSyncedComplete:isSyncedComplete];
+    if ([self getInternalPub:segwitInternalPath]) {
+        NSInteger lackOfSegwitInternal = [self issuedInternalIndexForPathType:segwitInternalPath] + 1 + kBTHDAccountLookAheadSize - [self allGeneratedInternalAddressCountForPathType:segwitInternalPath];
+        if (lackOfSegwitInternal > 0) {
+            [self supplyNewInternalKeyForCount:lackOfSegwitInternal pathType:segwitInternalPath andSyncedComplete:isSyncedComplete];
+        }
     }
+    
     if (paymentAddressChanged) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kHDAccountPaymentAddressChangedNotification object:[self addressForPath:[self getCurrentExternalPathType]] userInfo:@{kHDAccountPaymentAddressChangedNotificationFirstAdding : @(NO)}];
     }
@@ -830,11 +837,17 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSUInteger)elementCountForBloomFilter {
-    return [self allGeneratedExternalAddressCountForPathType:EXTERNAL_ROOT_PATH] * 2 +
+    NSUInteger count = [self allGeneratedExternalAddressCountForPathType:EXTERNAL_ROOT_PATH] * 2 +
     [[BTHDAccountAddressProvider instance] getUnspendOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH] +
-    [[BTHDAccountAddressProvider instance] getUnconfirmedSpentOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH] + [self allGeneratedExternalAddressCountForPathType:EXTERNAL_BIP49_PATH] * 2 +
-    [[BTHDAccountAddressProvider instance] getUnspendOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_BIP49_PATH] +
-    [[BTHDAccountAddressProvider instance] getUnconfirmedSpentOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_BIP49_PATH];
+    [[BTHDAccountAddressProvider instance] getUnconfirmedSpentOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
+    if ([self getExternalPub:EXTERNAL_BIP49_PATH]) {
+        count += [self allGeneratedExternalAddressCountForPathType:EXTERNAL_BIP49_PATH] * 2;
+    }
+    if ([self getInternalPub:INTERNAL_BIP49_PATH]) {
+        count += [[BTHDAccountAddressProvider instance] getUnspendOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_BIP49_PATH] +
+        [[BTHDAccountAddressProvider instance] getUnconfirmedSpentOutCountByHDAccountId:self.hdAccountId pathType:INTERNAL_BIP49_PATH];
+    }
+    return count;
 }
 
 - (void)addElementsForBloomFilter:(BTBloomFilter *)filter {

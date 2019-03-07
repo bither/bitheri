@@ -213,13 +213,13 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
 #pragma mark - peer & sync
 
-- (NSArray *)bestPeers; {
-    NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
-    if (bestPeers.count < [self maxPeerCount]) {
+- (NSArray *)bestPeersWithMaxPeerCount:(int)maxPeerCount {
+    NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:maxPeerCount];
+    if (bestPeers.count < maxPeerCount) {
         [[BTPeerProvider instance] recreate];
         [[BTPeerProvider instance] addPeers:bestPeers];
         [[BTPeerProvider instance] addPeers:[self getPeersFromDns]];
-        bestPeers = [[BTPeerProvider instance] getPeersWithLimit:[self maxPeerCount]];
+        bestPeers = [[BTPeerProvider instance] getPeersWithLimit:maxPeerCount];
     }
     return bestPeers;
 }
@@ -285,40 +285,41 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 - (void)reconnect {
     if (!self.running)
         return;
-
+    
     [self.q addOperationWithBlock:^{
         [self.connectedPeers minusSet:[self.connectedPeers objectsPassingTest:^BOOL(id obj, BOOL *stop) {
             return [obj status] == BTPeerStatusDisconnected;
         }]];
-
-        if (self.connectedPeers.count >= [self maxPeerCount])
-            return; // we're already connected to [self maxPeerCount] peers
-
-        NSMutableOrderedSet *peers = [NSMutableOrderedSet orderedSetWithArray:[self bestPeers]];
-
-        for (BTPeer *peer in peers) {
-            if (self.connectedPeers.count >= [self maxPeerCount]) {
-                break;
+        [self maxPeerCountWithCompletion:^(int maxPeerCount) {
+            if (self.connectedPeers.count >= maxPeerCount)
+                return;
+            // we're already connected to [self maxPeerCount] peers
+            NSMutableOrderedSet *peers = [NSMutableOrderedSet orderedSetWithArray:[self bestPeersWithMaxPeerCount:maxPeerCount]];
+            
+            for (BTPeer *peer in peers) {
+                if (self.connectedPeers.count >= maxPeerCount) {
+                    break;
+                }
+                if (![self.connectedPeers containsObject:peer]) {
+                    [self.connectedPeers addObject:peer];
+                    peer.delegate = self;
+                    //                peer.delegateQueue = self.q;
+                    [peer connectPeer];
+                }
             }
-            if (![self.connectedPeers containsObject:peer]) {
-                [self.connectedPeers addObject:peer];
-                peer.delegate = self;
-//                peer.delegateQueue = self.q;
-                [peer connectPeer];
+            
+            [self sendPeerCountChangeNotification:self.connectedPeers.count];
+            if (self.connectedPeers.count == 0) {
+                [self.downloadPeer setSynchronising:NO];
+                [self syncStopped];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
+                                                                        object:nil userInfo:@{@"error" : [NSError errorWithDomain:@"bitheri" code:1
+                                                                                                                         userInfo:@{NSLocalizedDescriptionKey : @"no peers found"}]}];
+                });
             }
-        }
-
-        [self sendPeerCountChangeNotification:self.connectedPeers.count];
-        if (self.connectedPeers.count == 0) {
-            [self.downloadPeer setSynchronising:NO];
-            [self syncStopped];
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
-                                                                    object:nil userInfo:@{@"error" : [NSError errorWithDomain:@"bitheri" code:1
-                                                                                                                     userInfo:@{NSLocalizedDescriptionKey : @"no peers found"}]}];
-            });
-        }
+        }];
     }];
 }
 
@@ -888,13 +889,32 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     });
 }
 
-- (int)maxPeerCount; {
-    UIApplicationState state = [UIApplication sharedApplication].applicationState;
-    if (state == UIApplicationStateBackground) {
-        return [BTSettings instance].maxBackgroundPeerConnections;
+- (void)maxPeerCountWithCompletion:(void (^)(int maxPeerCount))completion {
+    if ([NSThread isMainThread]) {
+        [self maxPeerCountHandleWithCompletion:completion];
     } else {
-        return [BTSettings instance].maxPeerConnections;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self maxPeerCountHandleWithCompletion:completion];
+        });
     }
 }
+
+- (void)maxPeerCountHandleWithCompletion:(void (^)(int maxPeerCount))completion {
+    UIApplicationState state = [UIApplication sharedApplication].applicationState;
+    if (state == UIApplicationStateBackground) {
+        if (completion) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                completion([BTSettings instance].maxBackgroundPeerConnections);
+            });
+        }
+    } else {
+        if (completion) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                completion([BTSettings instance].maxPeerConnections);
+            });
+        }
+    }
+}
+
 
 @end

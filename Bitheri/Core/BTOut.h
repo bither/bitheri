@@ -21,6 +21,8 @@
 typedef enum {
     unspent = 0,
     spent = 1,
+    reloadUnspent = 2,
+    reloadSpent = 3
 } OUT_STATUS;
 
 @interface BTOut : NSObject
@@ -38,6 +40,8 @@ typedef enum {
 
 @property int hdAccountId;
 
-- (instancetype)initWithTx:(BTTx *)tx outDict:(NSDictionary *)outDict;
+- (instancetype)initWithTx:(BTTx *)tx outDict:(NSDictionary *)outDict unspentOutAddress:(NSString *)unspentOutAddress;
+
+- (BOOL)isReload;
 
 @end

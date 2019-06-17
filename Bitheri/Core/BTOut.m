@@ -27,7 +27,7 @@
 
 }
 
-- (instancetype)initWithTx:(BTTx *)tx outDict:(NSDictionary *)outDict {
+- (instancetype)initWithTx:(BTTx *)tx outDict:(NSDictionary *)outDict unspentOutAddress:(NSString *)unspentOutAddress {
     if (!(self = [self init])) return nil;
     
     _outValue = [outDict getLongFromDict:@"value"];
@@ -35,10 +35,23 @@
     _tx = tx;
     _txHash = tx.txHash;
     _outAddress = [[[BTScript alloc] initWithProgram:_outScript] getToAddress];
-
+    if (_outAddress != NULL && ![_outAddress isEqualToString:unspentOutAddress]) {
+        _outStatus = reloadSpent;
+    } else {
+        _outStatus = reloadUnspent;
+    }
     return self;
 }
 
+- (BOOL)isReload {
+    switch (_outStatus) {
+        case reloadSpent:
+        case reloadUnspent:
+            return true;
+        default:
+            return false;
+    }
+}
 
 - (void)setTx:(BTTx *)tx {
     _tx = tx;

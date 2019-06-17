@@ -456,9 +456,6 @@
                 success = [db executeUpdate:sql, [NSString base58WithData:inItem.txHash]
                         , @(inItem.inSn), [NSString base58WithData:inItem.prevTxHash]
                         , @(inItem.prevOutSn), inSignature, @(inItem.inSequence)];
-                sql = @"update outs set out_status=? where tx_hash=? and out_sn=?";
-                success = [db executeUpdate:sql, @(spent)
-                        , [NSString base58WithData:inItem.prevTxHash], @(inItem.prevOutSn)];
             }
 
             // insert outs and get the out\'s addresses
@@ -501,8 +498,6 @@
                         , @(outItem.outSn)];
                 if ([rs next]) {
                     [addressesTxsRels addObject:@[outItem.outAddress, [[rs stringForColumn:@"tx_hash"] base58ToData]]];
-                    sql = @"update outs set out_status=? where tx_hash=? and out_sn=?";
-                    success = [db executeUpdate:sql, @(spent), [NSString base58WithData:txItem.txHash], @(outItem.outSn)];
                 }
                 [rs close];
             }
@@ -762,8 +757,8 @@
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth "
                 "from outs a,txs b where a.tx_hash=b.tx_hash"
-                " and a.out_address=? and a.out_status=?";
-        FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent)];
+                " and a.out_address=? and (a.out_status=? or a.out_status=?)";
+        FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent), @(reloadUnspent)];
         while ([rs next]) {
             BTTx *txItem = [BTTxHelper format:rs];
             BTOut *outItem = [BTTxHelper formatOut:rs];
@@ -788,8 +783,8 @@
 - (NSArray *)getPrevUnSpentOutsWithAddress:(NSString *)address coin:(Coin)coin {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select a.* from outs a, txs b where a.tx_hash=b.tx_hash and a.out_address=? and a.out_status=? and b.block_no is not null and b.block_no<?";
-        FMResultSet *rs = [db executeQuery:sql, address, @(unspent), @([BTTx getForkBlockHeightForCoin:coin])];
+        NSString *sql = @"select a.* from outs a, txs b where a.tx_hash=b.tx_hash and a.out_address=? and (a.out_status=? or a.out_status=?) and b.block_no is not null and b.block_no<?";
+        FMResultSet *rs = [db executeQuery:sql, address, @(unspent), @(reloadUnspent), @([BTTx getForkBlockHeightForCoin:coin])];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -801,9 +796,9 @@
 - (NSArray *)getPostSpentOutsWithAddress:(NSString *)address coin:(Coin)coin {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select a.* from outs a, txs out_b, ins i, txs b where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and a.tx_hash=i.prev_tx_hash and a.out_address=? and b.tx_hash=i.tx_hash and a.out_status=? and out_b.block_no is not null and out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
+        NSString *sql = @"select a.* from outs a, txs out_b, ins i, txs b where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and a.tx_hash=i.prev_tx_hash and a.out_address=? and b.tx_hash=i.tx_hash and (a.out_status=? or a.out_status=?) and out_b.block_no is not null and out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
         uint64_t forkBlockHeight = [BTTx getForkBlockHeightForCoin:coin];
-        FMResultSet *rs = [db executeQuery:sql, address, @(spent), @(forkBlockHeight), @(forkBlockHeight)];
+        FMResultSet *rs = [db executeQuery:sql, address, @(spent), @(reloadSpent), @(forkBlockHeight), @(forkBlockHeight)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -816,8 +811,8 @@
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
-                " and a.out_address=? and a.out_status=?";
-        FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent)];
+                " and a.out_address=? and (a.out_status=? or a.out_status=?)";
+        FMResultSet *rs = [db executeQuery:unspendOutSql, address, @(unspent), @(reloadUnspent)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -830,17 +825,17 @@
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *confirmedOutSql = @"select a.*,b.block_no*a.out_value coin_depth from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is not null"
-                " and a.out_address=? and a.out_status=?";
+                " and a.out_address=? and (a.out_status=? or a.out_status=?)";
         NSString *selfOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
-                " and a.out_address=? and a.out_status=? and b.source>=?";
-        FMResultSet *rs = [db executeQuery:confirmedOutSql, address, @(unspent)];
+                " and a.out_address=? and (a.out_status=? or a.out_status=?) and b.source>=?";
+        FMResultSet *rs = [db executeQuery:confirmedOutSql, address, @(unspent), @(reloadUnspent)];
         while ([rs next]) {
             BTOut *outItem = [BTTxHelper formatOut:rs];
             outItem.coinDepth = [rs unsignedLongLongIntForColumn:@"coin_depth"];
             [result addObject:outItem];
         }
         [rs close];
-        rs = [db executeQuery:selfOutSql, address, @(unspent), @1];
+        rs = [db executeQuery:selfOutSql, address, @(unspent), @(reloadUnspent), @1];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -853,8 +848,8 @@
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *selfOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash and b.block_no is null"
-                " and a.out_address=? and a.out_status=? and b.source=?";
-        FMResultSet *rs = [db executeQuery:selfOutSql, address, @(unspent), @0];
+                " and a.out_address=? and (a.out_status=? or a.out_status=?) and b.source=?";
+        FMResultSet *rs = [db executeQuery:selfOutSql, address, @(unspent), @(reloadUnspent), @0];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -900,8 +895,8 @@
 - (NSArray *)getUnSpentOuts; {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select a.* from outs a where a.out_status=?";
-        FMResultSet *rs = [db executeQuery:sql, @(0)];
+        NSString *sql = @"select a.* from outs a where (a.out_status=? or a.out_status=?)";
+        FMResultSet *rs = [db executeQuery:sql, @(unspent), @(reloadUnspent)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -1076,9 +1071,9 @@
 - (uint64_t)getConfirmedBalanceWithAddress:(NSString *)address; {
     __block uint64_t sum = 0;
     NSString *sql = @"select ifnull(sum(a.out_value),0) sum from outs a,txs b where a.tx_hash=b.tx_hash "
-            " and a.out_address=? and a.out_status=? and b.block_no is not null";
+            " and a.out_address=? and (a.out_status=? or a.out_status=?) and b.block_no is not null";
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        FMResultSet *rs = [db executeQuery:sql, address, @0];
+        FMResultSet *rs = [db executeQuery:sql, address, @(unspent), @(reloadUnspent)];
         if ([rs next]) {
             sum = (uint64_t) [rs longLongIntForColumnIndex:0];
         }

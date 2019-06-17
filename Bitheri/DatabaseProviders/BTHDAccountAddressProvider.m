@@ -287,8 +287,8 @@
     __block long long balance = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @" select ifnull(sum(a.out_value),0) sum from outs a,txs b where a.tx_hash=b.tx_hash "
-                "  and a.out_status=? and a.hd_account_id=? and b.block_no is not null";
-        FMResultSet *resultSet = [db executeQuery:sql, @(unspent), @(hdAccountId)];
+                "  and (a.out_status=? or a.out_status=?) and a.hd_account_id=? and b.block_no is not null";
+        FMResultSet *resultSet = [db executeQuery:sql, @(unspent), @(reloadUnspent), @(hdAccountId)];
         if ([resultSet next]) {
             balance = [resultSet longLongIntForColumnIndex:0];
         }
@@ -468,8 +468,8 @@
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *unspendOutSql = @"select a.* from outs a,txs b where a.tx_hash=b.tx_hash "
-                " and a.out_status=? and a.hd_account_id=?";
-        FMResultSet *rs = [db executeQuery:unspendOutSql, @(unspent), @(hdAccountId)];
+                " and (a.out_status=? or a.out_status=?) and a.hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:unspendOutSql, @(unspent), @(reloadUnspent), @(hdAccountId)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -501,8 +501,8 @@
 - (NSArray *)getPrevUnSpentOutsByHDAccount:(int)hdAccountId coin:(Coin)coin {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select a.* from outs a, txs b where a.tx_hash=b.tx_hash and a.hd_account_id=? and a.out_status=? and b.block_no is not null and b.block_no<?";
-        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(unspent), @([BTTx getForkBlockHeightForCoin:coin])];
+        NSString *sql = @"select a.* from outs a, txs b where a.tx_hash=b.tx_hash and a.hd_account_id=? and (a.out_status=? or a.out_status=?) and b.block_no is not null and b.block_no<?";
+        FMResultSet *rs = [db executeQuery:sql, @(hdAccountId), @(unspent), @(reloadUnspent), @([BTTx getForkBlockHeightForCoin:coin])];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -514,9 +514,9 @@
 - (NSArray *)getPostSpentOutsByHDAccount:(int)hdAccountId coin:(Coin)coin {
     __block NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"select a.* from outs a, txs out_b, ins i, txs b where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and a.tx_hash=i.prev_tx_hash and a.hd_account_id=? and b.tx_hash=i.tx_hash and a.out_status=? and out_b.block_no is not null and out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
+        NSString *sql = @"select a.* from outs a, txs out_b, ins i, txs b where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and a.tx_hash=i.prev_tx_hash and a.hd_account_id=? and b.tx_hash=i.tx_hash and (a.out_status=? or a.out_status=?) and out_b.block_no is not null and out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
         uint64_t forkBlockHeight = [BTTx getForkBlockHeightForCoin:coin];
-        FMResultSet *rs = [db executeQuery:sql,  @(hdAccountId), @(spent), @(forkBlockHeight), @(forkBlockHeight)];
+        FMResultSet *rs = [db executeQuery:sql,  @(hdAccountId), @(spent), @(reloadSpent), @(forkBlockHeight), @(forkBlockHeight)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -633,9 +633,9 @@
     __block int result = 0;
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(tx_hash) cnt from outs where out_address in "
-                "(select address from hd_account_addresses where path_type =? and out_status=?) "
+                "(select address from hd_account_addresses where path_type =? and (out_status=? or out_status=?)) "
                 "and hd_account_id=?";
-        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(unspent), @(hdAccountId)];
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(unspent), @(reloadUnspent), @(hdAccountId)];
         if ([rs next]) {
             int columnIndex = [rs columnIndexForName:@"cnt"];
             if (columnIndex != -1) {
@@ -651,9 +651,9 @@
     NSMutableArray *result = [NSMutableArray new];
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select * from outs where out_address in "
-                "(select address from hd_account_addresses where path_type =? and out_status=?) "
+                "(select address from hd_account_addresses where path_type =? and (out_status=? or out_status=?)) "
                 "and hd_account_id=?";
-        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(unspent), @(hdAccountId)];
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(unspent), @(reloadUnspent), @(hdAccountId)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }
@@ -667,8 +667,8 @@
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select count(0) cnt from outs o, ins i, txs t, hd_account_addresses a "
         "  where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash and o.out_address=a.address and a.path_type=? "
-        "    and o.out_status=? and t.block_no is null and a.hd_account_id=?";
-        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(spent), @(hdAccountId)];
+        "    and (o.out_status=? or o.out_status=?) and t.block_no is null and a.hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(spent), @(reloadSpent), @(hdAccountId)];
         if ([rs next]) {
             int columnIndex = [rs columnIndexForName:@"cnt"];
             if (columnIndex != -1) {
@@ -685,8 +685,8 @@
     [[[BTDatabaseManager instance] getTxDbQueue] inDatabase:^(FMDatabase *db) {
         NSString *sql = @"select o.* from outs o, ins i, txs t,hd_account_addresses a "
         "  where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash and o.out_address=a.address and a.path_type=? "
-        "    and o.out_status=? and t.block_no is null and a.hd_account_id=?";
-        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(spent), @(hdAccountId)];
+        "    and (o.out_status=? or o.out_status=?) and t.block_no is null and a.hd_account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, @(pathType), @(spent), @(reloadSpent), @(hdAccountId)];
         while ([rs next]) {
             [result addObject:[BTTxHelper formatOut:rs]];
         }

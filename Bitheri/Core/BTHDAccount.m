@@ -941,7 +941,30 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 }
 
 - (NSArray *)txs:(int)page {
-    return [[BTHDAccountAddressProvider instance] getTxAndDetailByHDAccount:self.hdAccountId page:page];
+    NSArray *arr = [[BTHDAccountAddressProvider instance] getTxAndDetailByHDAccount:self.hdAccountId page:page];
+    return [self handleTxs:arr];
+}
+
+- (NSArray *)handleTxs:(NSArray *)txs {
+    NSMutableArray *arr = [NSMutableArray array];
+    for (BTTx *tx in txs) {
+        BOOL isAdd = false;
+        for (BTOut *out in tx.outs) {
+            if (out.outAddress == NULL) {
+                continue;
+            }
+            NSMutableArray *addresses = [NSMutableArray array];
+            [addresses addObject:out.outAddress];
+            BOOL isMeOut = [[BTHDAccountAddressProvider instance] getBelongHDAccount:self.hdAccountId fromAddresses:addresses].count > 0;
+            if (out.outStatus != reloadSpent && isMeOut) {
+                isAdd = true;
+            }
+        }
+        if (isAdd) {
+            [arr addObject:tx];
+        }
+    }
+    return arr;
 }
 
 - (NSArray *)getRelatedAddressesForTx:(BTTx *)tx {

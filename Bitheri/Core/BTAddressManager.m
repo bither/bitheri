@@ -576,6 +576,8 @@
         txDict[tx.txHash] = tx;
         [[BTHDAccountAddressProvider instance] updateOutHDAccountId:tx];
     }
+    NSMutableArray *txArr = [NSMutableArray array];
+    BTTxProvider *txProvider = [BTTxProvider instance];
     for (BTTx *tx in txList) {
         if (![self isSendFromMe:tx andTxHashDict:txDict andAddress:address] && tx.outs.count > COMPRESS_OUT_NUM) {
             NSMutableArray *outList = [NSMutableArray new];
@@ -586,8 +588,22 @@
             }
             tx.outs = outList;
         }
+        BTTx *existTx = [txProvider getTxDetailByTxHash:tx.txHash];
+        if (existTx == NULL) {
+            [txArr addObject:tx];
+            continue;
+        }
+        for (int i = 0; i < tx.outs.count; i++) {
+            BTOut *out = tx.outs[i];
+            if (out.outStatus == reloadSpent) {
+                BTOut *existOut = existTx.outs[i];
+                out.outStatus = existOut.outStatus;
+                [tx.outs replaceObjectAtIndex:i withObject:out];
+            }
+        }
+        [txArr addObject:tx];
     }
-    return txList;
+    return txArr;
 }
 
 - (BOOL)isSendFromMe:(BTTx *)tx andTxHashDict:(NSDictionary *)txDict andAddress:(NSString *)address; {

@@ -65,7 +65,7 @@ typedef enum {
 
 - (instancetype)initWithMessage:(NSData *)message;
 
-- (instancetype)initWithTxDict:(NSDictionary *)txDict;
+- (instancetype)initWithTxDict:(NSDictionary *)txDict unspentOutAddress:(NSString *)unspentOutAddress;
 
 #pragma mark - manage in & out
 

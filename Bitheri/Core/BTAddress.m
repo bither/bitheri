@@ -351,13 +351,33 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
 #pragma mark - query tx
 
 - (NSArray *)txs:(int)page {
-    return [self sortTxs:[[BTTxProvider instance] getTxAndDetailByAddress:self.address andPage:page]];
+    NSArray *arr = [[BTTxProvider instance] getTxAndDetailByAddress:self.address andPage:page];
+    return [self sortTxs:[self handleTxs:arr]];
 }
 
 - (NSArray *)sortTxs:(NSArray *)txs; {
     NSMutableArray *result = [NSMutableArray arrayWithArray:txs];
     [result sortUsingComparator:txComparator];
     return result;
+}
+
+- (NSArray *)handleTxs:(NSArray *)txs {
+    NSMutableArray *arr = [NSMutableArray array];
+    for (BTTx *tx in txs) {
+        BOOL isAdd = false;
+        for (BTOut *out in tx.outs) {
+            if (out.outAddress == NULL) {
+                continue;
+            }
+            if (out.outStatus != reloadSpent && [out.outAddress isEqualToString:_address]) {
+                isAdd = true;
+            }
+        }
+        if (isAdd) {
+            [arr addObject:tx];
+        }
+    }
+    return arr;
 }
 
 // returns the amount received to the wallet by the transaction (total outputs to change and/or recieve addresses)

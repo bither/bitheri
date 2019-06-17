@@ -68,7 +68,7 @@
     return self;
 }
 
-- (instancetype)initWithTxDict:(NSDictionary *)txDict {
+- (instancetype)initWithTxDict:(NSDictionary *)txDict unspentOutAddress:(NSString *)unspentOutAddress {
     if (!(self = [self init])) return nil;
     
     _blockNo = (uint32_t) [txDict getIntFromDict:@"block_height"];
@@ -92,7 +92,7 @@
     if (outJsonArray) {
         for (int i = 0; i < outJsonArray.count; i++) {
             NSDictionary *outDict = outJsonArray[i];
-            BTOut *btout = [[BTOut alloc] initWithTx:self outDict:outDict];
+            BTOut *btout = [[BTOut alloc] initWithTx:self outDict:outDict unspentOutAddress:unspentOutAddress];
             btout.outSn = i;
             [_outs addObject:btout];
         }
@@ -1307,25 +1307,41 @@
     }
     uint64_t receive = 0;
     uint64_t sent = 0;
-    
+    BOOL isReload = false;
     for (BTOut *out in self.outs) {
-        if ([addr.address isEqualToString:out.outAddress])
+        if ([addr.address isEqualToString:out.outAddress]) {
             receive += out.outValue;
+        }
+        if (out.isReload) {
+            isReload = true;
+        }
     }
-    sent = [[BTTxProvider instance] sentFromAddress:self.txHash address:addr.address];
-    return receive - sent;
+    if (isReload) {
+        return receive;
+    } else {
+        sent = [[BTTxProvider instance] sentFromAddress:self.txHash address:addr.address];
+        return receive - sent;
+    }
 }
 
 - (int64_t)deltaAmountFromHDAccount:(BTHDAccount *)account {
     int64_t receive = 0;
+    BOOL isReload = false;
     NSSet *set = [account getBelongAccountAddressesFromAddresses:[self getOutAddressList]];
     for (BTOut *out in [self outs]) {
         if ([set containsObject:out.outAddress]) {
             receive += out.outValue;
         }
+        if (out.isReload) {
+            isReload = true;
+        }
     }
-    int64_t sent = [[BTHDAccountAddressProvider instance] getAmountSentFromHDAccount:[account getHDAccountId] txHash:self.txHash];
-    return receive - sent;
+    if (isReload) {
+        return receive;
+    } else {
+        int64_t sent = [[BTHDAccountAddressProvider instance] getAmountSentFromHDAccount:[account getHDAccountId] txHash:self.txHash];
+        return receive - sent;
+    }
 }
 
 - (NSArray *)getOutAddressList {

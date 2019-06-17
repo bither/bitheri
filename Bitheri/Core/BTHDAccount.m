@@ -958,6 +958,10 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
             BOOL isMeOut = [[BTHDAccountAddressProvider instance] getBelongHDAccount:self.hdAccountId fromAddresses:addresses].count > 0;
             if (out.outStatus != reloadSpent && isMeOut) {
                 isAdd = true;
+                break;
+            } else if (!out.isReload) {
+                isAdd = true;
+                break;
             }
         }
         if (isAdd) {

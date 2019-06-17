@@ -371,6 +371,10 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
             }
             if (out.outStatus != reloadSpent && [out.outAddress isEqualToString:_address]) {
                 isAdd = true;
+                break;
+            } else if (!out.isReload) {
+                isAdd = true;
+                break;
             }
         }
         if (isAdd) {

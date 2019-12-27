@@ -16,6 +16,10 @@
 		402B83161E62E73A00379C39 /* BIP39ZhCNWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */; };
 		402B83171E62E73D00379C39 /* BIP39ZhTWWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */; };
 		403C71F222295BC200E523D1 /* NSDictionary+Fromat.m in Sources */ = {isa = PBXBuildFile; fileRef = 403C71F022295BC200E523D1 /* NSDictionary+Fromat.m */; };
+		40561B1F23B4D7A700AEECF3 /* BTSegwitAddrCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1823B4D7A700AEECF3 /* BTSegwitAddrCoder.m */; };
+		40561B2023B4D7A700AEECF3 /* BTBech32Data.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1A23B4D7A700AEECF3 /* BTBech32Data.m */; };
+		40561B2123B4D7A700AEECF3 /* BTSegwitAddrData.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1C23B4D7A700AEECF3 /* BTSegwitAddrData.m */; };
+		40561B2223B4D7A700AEECF3 /* BTBech32.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1D23B4D7A700AEECF3 /* BTBech32.m */; };
 		407FA2661E6939A8004EA17C /* BTWordsTypeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */; };
 		407FA2671E6939A8004EA17C /* BTWordsTypeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */; };
 		4085AAF6214FCEAC00F67B78 /* BTHDAccountUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 4085AAF5214FCEAC00F67B78 /* BTHDAccountUtil.m */; };
@@ -186,6 +190,14 @@
 		402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BIP39ZhTWWords.plist; sourceTree = "<group>"; };
 		403C71F022295BC200E523D1 /* NSDictionary+Fromat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+Fromat.m"; sourceTree = "<group>"; };
 		403C71F122295BC200E523D1 /* NSDictionary+Fromat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+Fromat.h"; sourceTree = "<group>"; };
+		40561B1723B4D7A700AEECF3 /* BTSegwitAddrData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTSegwitAddrData.h; sourceTree = "<group>"; };
+		40561B1823B4D7A700AEECF3 /* BTSegwitAddrCoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTSegwitAddrCoder.m; sourceTree = "<group>"; };
+		40561B1923B4D7A700AEECF3 /* BTBech32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBech32.h; sourceTree = "<group>"; };
+		40561B1A23B4D7A700AEECF3 /* BTBech32Data.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBech32Data.m; sourceTree = "<group>"; };
+		40561B1B23B4D7A700AEECF3 /* BTSegwitAddrCoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTSegwitAddrCoder.h; sourceTree = "<group>"; };
+		40561B1C23B4D7A700AEECF3 /* BTSegwitAddrData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTSegwitAddrData.m; sourceTree = "<group>"; };
+		40561B1D23B4D7A700AEECF3 /* BTBech32.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBech32.m; sourceTree = "<group>"; };
+		40561B1E23B4D7A700AEECF3 /* BTBech32Data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTBech32Data.h; sourceTree = "<group>"; };
 		407FA2641E6939A8004EA17C /* BTWordsTypeManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTWordsTypeManager.h; sourceTree = "<group>"; };
 		407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTWordsTypeManager.m; sourceTree = "<group>"; };
 		4085AAF4214FCEAC00F67B78 /* BTHDAccountUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BTHDAccountUtil.h; path = Bitheri/utils/BTHDAccountUtil.h; sourceTree = SOURCE_ROOT; };
@@ -376,6 +388,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		40561B1623B4D7A700AEECF3 /* Bech32 */ = {
+			isa = PBXGroup;
+			children = (
+				40561B1723B4D7A700AEECF3 /* BTSegwitAddrData.h */,
+				40561B1C23B4D7A700AEECF3 /* BTSegwitAddrData.m */,
+				40561B1923B4D7A700AEECF3 /* BTBech32.h */,
+				40561B1D23B4D7A700AEECF3 /* BTBech32.m */,
+				40561B1E23B4D7A700AEECF3 /* BTBech32Data.h */,
+				40561B1A23B4D7A700AEECF3 /* BTBech32Data.m */,
+				40561B1B23B4D7A700AEECF3 /* BTSegwitAddrCoder.h */,
+				40561B1823B4D7A700AEECF3 /* BTSegwitAddrCoder.m */,
+			);
+			path = Bech32;
+			sourceTree = "<group>";
+		};
 		4697C285C631B6C66D39F53C /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -692,6 +719,7 @@
 				D61D0C0CCC65252DFAC5502F /* Core */,
 				D61D0A4DE2342DCDACF2A15E /* DatabaseProviders */,
 				D61D0663E99BEFE5D22A93E7 /* Script */,
+				40561B1623B4D7A700AEECF3 /* Bech32 */,
 				D61D08E4511193E0FC821224 /* Log */,
 				D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */,
 				402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */,
@@ -791,6 +819,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = DADE53EB1933420300F5E4DD;
@@ -880,6 +909,7 @@
 				D61D077CA4DF6B44CE86B54A /* BTPeerManager.m in Sources */,
 				D61D0F5905AFC504FAD98EA7 /* BTPeer.m in Sources */,
 				D61D06A081B477BF13A1C553 /* BTBloomFilter.m in Sources */,
+				40561B2223B4D7A700AEECF3 /* BTBech32.m in Sources */,
 				D61D0355FD98B828C6D39CB4 /* BTBlock.m in Sources */,
 				42796BF619446739002BC454 /* BTBlockChain.m in Sources */,
 				428DB454194ECA9C00C81A4B /* BTPasswordSeed.m in Sources */,
@@ -894,6 +924,7 @@
 				D61D01265EEC0A5F8F670EEB /* BTPeerProvider.m in Sources */,
 				D61D08CF5B5B1A4F4D9C7E19 /* BTSettings.m in Sources */,
 				D61D044677DB5502A4D3E2EE /* BTScript.m in Sources */,
+				40561B2023B4D7A700AEECF3 /* BTBech32Data.m in Sources */,
 				AC9BC60A19D15B08003B88B5 /* BTUtils.m in Sources */,
 				D61D074F6F789C1FD2924293 /* BTScriptBuilder.m in Sources */,
 				AC9BC60919D15B08003B88B5 /* BTQRCodeUtil.m in Sources */,
@@ -914,11 +945,13 @@
 				D61D0940D0FF7FAA8F3F0024 /* BTHDMBid.m in Sources */,
 				0A29B0C61A761C380020BCD7 /* BTHDMKeychainRecover.m in Sources */,
 				403C71F222295BC200E523D1 /* NSDictionary+Fromat.m in Sources */,
+				40561B2123B4D7A700AEECF3 /* BTSegwitAddrData.m in Sources */,
 				D61D0F1510BE313FA122AE97 /* BTHDMAddress.m in Sources */,
 				D61D0E06C49C62BA68C71A16 /* BTHDMKeychain.m in Sources */,
 				D61D03664AB5C571267EBBC6 /* BTEncryptData.m in Sources */,
 				DC0ECB14B2E83351D83C609A /* BTHDAccountAddressProvider.m in Sources */,
 				DC00C6BF008CEE40148AB07B /* BTHDAccountAddress.m in Sources */,
+				40561B1F23B4D7A700AEECF3 /* BTSegwitAddrCoder.m in Sources */,
 				DC0605EF620D34198D3675CE /* BTHDAccount.m in Sources */,
 				DC01C63E5CF9D73A26C76B5B /* BTTxHelper.m in Sources */,
 				D61D0EB6432F204B3CAE3F5F /* BTHDAccountProvider.m in Sources */,

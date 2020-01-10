@@ -111,5 +111,14 @@
     return [self getBoolFromDict:key andDefault:NO];
 }
 
+- (NSArray *)getArrayFromDict:(NSString *)key {
+    if ([[self allKeys] containsObject:key]) {
+        id obj = [self objectForKey:key];
+        if ([obj isKindOfClass:[NSArray class]]) {
+            return obj;
+        }
+    }
+    return [NSArray array];
+}
 
 @end

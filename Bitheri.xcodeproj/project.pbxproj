@@ -11,6 +11,10 @@
 		0A333FAD1A778F9B00F6EFF2 /* BTHDMPubsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A333FAC1A778F9B00F6EFF2 /* BTHDMPubsTest.m */; };
 		1BC274AE1F44DB054B95558C /* BTHDAccountCold.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */; };
 		1BC27BE1564E006216779DD1 /* DiceTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27F81F7C4CFD1E87303CF /* DiceTest.m */; };
+		4005800B23B601600068E594 /* BTSegwitAddrData.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1C23B4D7A700AEECF3 /* BTSegwitAddrData.m */; };
+		4005800C23B601630068E594 /* BTBech32.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1D23B4D7A700AEECF3 /* BTBech32.m */; };
+		4005800D23B601650068E594 /* BTBech32Data.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1A23B4D7A700AEECF3 /* BTBech32Data.m */; };
+		4005800E23B601680068E594 /* BTSegwitAddrCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1823B4D7A700AEECF3 /* BTSegwitAddrCoder.m */; };
 		402B83141E62E73100379C39 /* BIP39ZhCNWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */; };
 		402B83151E62E73100379C39 /* BIP39ZhTWWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */; };
 		402B83161E62E73A00379C39 /* BIP39ZhCNWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = 402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */; };
@@ -971,6 +975,7 @@
 				DAB2E12219B857DA00F791F1 /* BTIn.m in Sources */,
 				DAB2E12319B857DA00F791F1 /* BTOut.m in Sources */,
 				DA05F3C4198B70220013BBD6 /* BTTxBuilder.m in Sources */,
+				4005800D23B601650068E594 /* BTBech32Data.m in Sources */,
 				DA1543B4196FD5EB007F629E /* BTCompressingLogFileManager.m in Sources */,
 				DA6F188119663F3300259A89 /* BTScript.m in Sources */,
 				DA6F188219663F3300259A89 /* BTScriptBuilder.m in Sources */,
@@ -999,8 +1004,10 @@
 				D61D0DCED98EF699D80677CF /* BTBlockChainTest.m in Sources */,
 				D61D0201BC6A4C70B34590FA /* BTBlockTestData.m in Sources */,
 				D61D09793CC0D917F95CDF3D /* BTBlockProviderTest.m in Sources */,
+				4005800E23B601680068E594 /* BTSegwitAddrCoder.m in Sources */,
 				DAC2DBFC1953D98000C67B0B /* BTTxProviderTest.m in Sources */,
 				D61D0E96F9382CD65D87B06F /* BTAddressTest.m in Sources */,
+				4005800C23B601630068E594 /* BTBech32.m in Sources */,
 				0A333FAD1A778F9B00F6EFF2 /* BTHDMPubsTest.m in Sources */,
 				D61D01F8A7EDDC948192727E /* BTBlockTests.m in Sources */,
 				D61D045042B58F1554DCB664 /* BTPeerTest.m in Sources */,
@@ -1010,6 +1017,7 @@
 				DAC2DC011953D9C400C67B0B /* BTTxTest.m in Sources */,
 				D61D0CACA25938147243E44B /* BTDatabaseManager+UnitTest.m in Sources */,
 				D61D0050BF2C7433CAE22D0E /* BTTestHelper.m in Sources */,
+				4005800B23B601600068E594 /* BTSegwitAddrData.m in Sources */,
 				D61D067E88CE080E4A616847 /* BTPasswordSeedTest.m in Sources */,
 				D61D0E3AA0B80AE7E15C613E /* BTScriptTest.m in Sources */,
 				D61D04F79FCDAC9A9FD240C9 /* NSDataHashTest.m in Sources */,

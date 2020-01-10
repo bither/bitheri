@@ -105,6 +105,10 @@ CFAllocatorRef SecureAllocator();
 
 - (BOOL)isValidBitcoinAddress;
 
+- (BOOL)isValidBech32Address;
+
+- (BOOL)isBitcoinNewAddressPrefix;
+
 - (BOOL)isValidBitcoinGoldAddress;
 
 - (BOOL)isValidBitcoinPrivateKey;

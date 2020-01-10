@@ -47,5 +47,6 @@
 
 - (BOOL)getBoolFromDict:(NSString *)key;
 
+- (NSArray *)getArrayFromDict:(NSString *)key;
 
 @end

@@ -35,6 +35,8 @@
 #import "BTTxBuilder.h"
 #import "NSString+Base58.h"
 #import "NSDictionary+Fromat.h"
+#import "BTBech32.h"
+#import "BTSegwitAddrCoder.h"
 
 @implementation BTTx
 
@@ -228,7 +230,17 @@
     out.outValue = amount;
     out.outAddress = address;
     NSMutableData *scriptPubKey = [NSMutableData data];
-    [scriptPubKey appendScriptPubKeyForAddress:address];
+    if (address.isBitcoinNewAddressPrefix) {
+        BTBech32Data *bech32Data = [[[BTBech32 alloc] init] decode:address];
+        if (bech32Data != NULL && bech32Data.checksum != NULL && bech32Data.checksum.length > 0) {
+            BTScriptBuilder *scriptBuilder = [[BTScriptBuilder alloc] init];
+            [scriptBuilder smallNum:[BTSegwitAddrCoder getWitnessVersion:bech32Data.checksum]];
+            [scriptBuilder data:[BTSegwitAddrCoder getWitnessProgram:bech32Data.checksum]];
+            [scriptPubKey appendData:scriptBuilder.build.program];
+        }
+    } else {
+        [scriptPubKey appendScriptPubKeyForAddress:address];
+    }
     out.outScript = scriptPubKey;
     out.tx = self;
     out.outSn = self.outs.count;

@@ -19,6 +19,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)encode:(NSString *)hrp version:(int)version program:(NSData *)program;
 
++ (int)getWitnessVersion:(NSData *)program;
+
++ (NSData *)getWitnessProgram:(NSData *)program;
+
++ (NSData *)convertBits:(NSData *)idata inStart:(int)inStart inLen:(NSUInteger)inLen from:(int)from to:(int)to pad:(BOOL)pad;
+
 @end
 
 NS_ASSUME_NONNULL_END

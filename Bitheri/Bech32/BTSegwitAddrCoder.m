@@ -29,6 +29,47 @@
     return self;
 }
 
++ (int)getWitnessVersion:(NSData *)program {
+    const char *bytes = [program bytes];
+    int version = bytes[0] & 0xff;
+    return version;
+}
+
++ (NSData *)getWitnessProgram:(NSData *)program {
+    return [BTSegwitAddrCoder convertBits:program inStart:1 inLen:program.length - 1 from:5 to:8 pad:false];
+}
+
++ (NSData *)convertBits:(NSData *)idata inStart:(int)inStart inLen:(NSUInteger)inLen from:(int)from to:(int)to pad:(BOOL)pad {
+    int acc = 0;
+    int bits = 0;
+    int maxv = (1 << to) - 1;
+    int maxAcc = (1 << (from + to - 1)) - 1;
+    NSMutableData *odata = [NSMutableData secureData];
+    const char *bytes = [idata bytes];
+    for (int i = 0; i < inLen; i++) {
+        int ibyte = bytes[i + inStart] & 0xff;
+        if ((ibyte >> from) != 0) {
+            NSLog(@"Input value '%d' exceeds '%d' bit size", ibyte, from);
+            return nil;
+        }
+        acc = ((acc << from) | ibyte) & maxAcc;
+        bits += from;
+        while (bits >= to) {
+            bits -= to;
+            [odata appendUInt8:(acc >> bits) & maxv];
+        }
+    }
+    if (pad) {
+        if (bits > 0) {
+            [odata appendUInt8:(acc << (to - bits)) & maxv];
+        }
+    } else if (bits >= from || ((acc << (to - bits)) & maxv) != 0) {
+        NSLog(@"Failed to perform bits conversion");
+        return nil;
+    }
+    return odata;
+}
+
 /// Convert from one power-of-2 number base to another
 - (NSData *)convertBits:(int)from to:(int)to pad:(BOOL)pad idata:(NSData *)idata {
     int acc = 0;
@@ -47,7 +88,7 @@
         }
     }
     if (pad) {
-        if (bits != 0) {
+        if (bits > 0) {
             [odata appendUInt8:(acc << (to - bits)) & maxv];
         }
     } else if (bits >= from || ((acc << (to - bits)) & maxv) != 0) {
@@ -63,7 +104,7 @@
     if (!dec) {
         return nil;
     }
-    if (dec.hrp != hrp) {
+    if (![dec.hrp isEqualToString:hrp]) {
         NSLog(@"Human-readable-part %@ does not match requested %@", dec.hrp, hrp);
         return nil;
     }

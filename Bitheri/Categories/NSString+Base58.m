@@ -40,8 +40,10 @@
 #import "NSData+Hash.h"
 #import "NSMutableData+Bitcoin.h"
 #import <openssl/bn.h>
+#import "BTBech32.h"
 
 #define SCRIPT_SUFFIX "\x88\xAC" // OP_EQUALVERIFY OP_CHECKSIG
+#define BitcoinNewAddressPrefix  @"bc1"
 
 static const char base58chars[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -421,6 +423,9 @@ CFAllocatorRef SecureAllocator() {
 }
 
 - (BOOL)isValidBitcoinAddress {
+    if ([self isValidBech32Address]) {
+        return true;
+    }
     NSData *d = self.base58checkToData;
 
     if (d.length != 21) return NO;
@@ -432,6 +437,17 @@ CFAllocatorRef SecureAllocator() {
 #else
    return ([NSString validAddressPubkey:version] || [NSString validAddressScript:version]) ? YES : NO;
 #endif
+}
+
+- (BOOL)isValidBech32Address {
+    if ([self isBitcoinNewAddressPrefix] && [[[BTBech32 alloc] init] decode:self] != NULL) {
+        return true;
+    }
+    return false;
+}
+
+- (BOOL)isBitcoinNewAddressPrefix {
+    return [[self lowercaseString] hasPrefix:BitcoinNewAddressPrefix];
 }
 
 + (NSString *)hexStringFromString:(NSString *)string{

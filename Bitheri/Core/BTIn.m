@@ -21,6 +21,7 @@
 #import "BTIn.h"
 #import "BTScript.h"
 #import "NSDictionary+Fromat.h"
+#import "BTScriptBuilder.h"
 
 @implementation BTIn {
 
@@ -31,7 +32,20 @@
     
     _prevTxHash = [[[inDict getStringFromDict:@"prev_tx_hash"] hexToData] reverse];
     _prevOutSn = [inDict getIntFromDict:@"prev_position"];
-    _inSignature = [[inDict getStringFromDict:@"script_hex"] hexToData];
+    NSString *prevType = [inDict getStringFromDict:@"prev_type"];
+    if (prevType && [[prevType uppercaseString] isEqualToString: @"P2WPKH_V0"]) {
+        NSArray *witness = [inDict getArrayFromDict:@"witness"];
+        if (witness.count == 2 && [witness[1] isKindOfClass:[NSString class]]) {
+            NSData *pubkeyHash = [[witness[1] hexToData] hash160];
+            BTScriptBuilder *scriptBuilder = [[BTScriptBuilder alloc] init];
+            [scriptBuilder smallNum:0];
+            [scriptBuilder data:pubkeyHash];
+            _inSignature = [[scriptBuilder build] program];
+        }
+    }
+    if (!_inSignature && _inSignature.length == 0) {
+        _inSignature = [[inDict getStringFromDict:@"script_hex"] hexToData];
+    }
     _inSequence = [inDict getIntFromDict:@"sequence"];
     _tx = tx;
     _txHash = tx.txHash;

@@ -25,6 +25,7 @@
 #import "BTIn.h"
 #import "BTOut.h"
 #import "BTTxProvider.h"
+#import "BTSegwitAddrCoder.h"
 
 #define UINT24_MAX 8388607
 #define SIG_SIZE 75
@@ -33,8 +34,8 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
 @interface BTScript ()
 
-
 @property uint32_t creationTimeSeconds;
+@property(nonatomic, assign) int version;
 
 @end
 
@@ -95,6 +96,10 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 - (BOOL)parse:(NSData *)program {
     NSMutableArray *chunks = [NSMutableArray new];
     NSUInteger pos = 0;
+    
+    if ([self isP2WPKHScriptHash] || [self isP2WSHScriptHash]) {
+        _version = [program UInt8AtOffset:0];
+    }
 
     while (pos < program.length) {
         int startLocationInProgram = (int) pos;
@@ -178,7 +183,8 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
 - (BOOL)isBTInP2SHAddress {
     NSData *program = [self program];
-    return ([program UInt8AtOffset:0] & 0xff) == program.length - 1 &&
+    return (program.length > 3 &&
+            [program UInt8AtOffset:0] & 0xff) == program.length - 1 &&
     ([program UInt8AtOffset:1] & 0xff) == 0x00 &&
     ([program UInt8AtOffset:2] & 0xff) == program.length - 3;
 }
@@ -189,6 +195,16 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
             ([program UInt8AtOffset:0] & 0xff) == OP_HASH160 &&
             ([program UInt8AtOffset:1] & 0xff) == 0x14 &&
             ([program UInt8AtOffset:22] & 0xff) == OP_EQUAL;
+}
+
+- (BOOL)isP2WSHScriptHash {
+    NSData *program = [self program];
+    return program.length == 34;
+}
+
+- (BOOL)isP2WPKHScriptHash {
+    NSData *program = [self program];
+    return program.length == 22;
 }
 
 - (BOOL)isSentToOldMultiSig; {
@@ -242,7 +258,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 - (NSData *)getPubKeyHash; {
     if ([self isSentToAddress])
         return ((BTScriptChunk *) self.chunks[2]).data;
-    else if ([self isSentToP2SH])
+    else if ([self isSentToP2SH] || [self isP2WSHScriptHash] || [self isP2WPKHScriptHash])
         return ((BTScriptChunk *) self.chunks[1]).data;
     else
         return nil;
@@ -307,7 +323,9 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (NSString *)getFromAddress; {
-    if ([self isBTInP2SHAddress]) {
+    if ([self isP2WPKHScriptHash] || [self isP2WSHScriptHash]) {
+        return [[[BTSegwitAddrCoder alloc] init] encode:kSegwitAddressHrp version:_version program:[self getPubKeyHash]];
+    } else if ([self isBTInP2SHAddress]) {
         NSData *scriptSig = [_program subdataWithRange:NSMakeRange(1, _program.length - 1)];
         return [self toSegwitAddressFromScriptSig:scriptSig];
     } else if (self.chunks.count == 2
@@ -350,12 +368,15 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 }
 
 - (NSString *)getToAddress; {
-    if ([self isSentToAddress])
+    if ([self isSentToAddress]) {
         return [self addressFromHash:[self getPubKeyHash]];
-    else if ([self isSentToP2SH])
+    } else if ([self isSentToP2SH]) {
         return [self p2shAddressFromHash:[self getPubKeyHash]];
-    else
+    } else if ([self isP2WPKHScriptHash] || [self isP2WSHScriptHash]) {
+        return [[[BTSegwitAddrCoder alloc] init] encode:kSegwitAddressHrp version:_version program:[self getPubKeyHash]];
+    } else {
         return nil;
+    }
 }
 
 - (NSString *)addressFromHash:(NSData *)hash; {

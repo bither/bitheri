@@ -183,8 +183,8 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
 - (BOOL)isBTInP2SHAddress {
     NSData *program = [self program];
-    return (program.length > 3 &&
-            [program UInt8AtOffset:0] & 0xff) == program.length - 1 &&
+    return program.length > 3 &&
+            ([program UInt8AtOffset:0] & 0xff) == program.length - 1 &&
     ([program UInt8AtOffset:1] & 0xff) == 0x00 &&
     ([program UInt8AtOffset:2] & 0xff) == program.length - 3;
 }

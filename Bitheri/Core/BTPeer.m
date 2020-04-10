@@ -58,11 +58,15 @@
 
 
 typedef enum {
-    error = 0,
-    tx,
-    block,
-    merkleblock
+    error = 0x0,
+    tx = 0x1,
+    block = 0x2,
+    merkleblock = 0x3,
+    witness_tx = 0x40000001,
+    witness_block = 0x40000002,
+    witness_merkleblock = 0x40000003
 } inv_t;
+
 
 @interface BTPeer () {
     BOOL _bloomFilterSent;
@@ -391,7 +395,7 @@ typedef enum {
     NSMutableData *msg = [NSMutableData data];
 
     [msg appendVarInt:1];
-    [msg appendUInt32:tx];
+    [msg appendUInt32:[self isWitnessSupported] ? witness_tx : tx];
     [msg appendData:txHash];
     [self sendMessage:msg type:MSG_INV];
     [self.knownTxHashes addObject:txHash];
@@ -410,7 +414,7 @@ typedef enum {
     [msg appendVarInt:txHashes.count + blockHashes.count];
 
     for (NSData *hash in txHashes) {
-        [msg appendUInt32:tx];
+        [msg appendUInt32:[self isWitnessSupported] ? witness_tx : tx];
         [msg appendData:hash];
     }
 
@@ -534,6 +538,10 @@ typedef enum {
     [self sendVerAckMessage];
 }
 
+- (BOOL)isWitnessSupported {
+    return (_peerServices & NODE_WITNESS) == NODE_WITNESS;
+}
+
 - (void)acceptVerAckMessage:(NSData *)message {
     if (self.gotVerAck) {
         DDLogWarn(@"%@:%d got unexpected verack", self.host, self.peerPort);
@@ -630,6 +638,8 @@ typedef enum {
                 break;
             case block:
             case merkleblock:
+            case witness_block:
+            case witness_merkleblock:
                 [blockHashes addObject:hash];
                 break;
             default:

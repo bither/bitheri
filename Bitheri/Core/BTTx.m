@@ -119,9 +119,11 @@
     _txVer = [message UInt32AtOffset:off]; // tx version
     off += verSize;
     count = [message varIntAtOffset:off length:&l]; // input count
+    BOOL isWitness = NO;
     if (count == 0) {
         off += l;
         if ([message UInt8AtOffset:off] == 1) {
+            isWitness = YES;
             off += sizeof(uint8_t);
             count = [message varIntAtOffset:off length:&l];
             if (count == 0) return nil;
@@ -172,12 +174,37 @@
     }
     if (off > message.length) { return nil; }
     [tx appendData:[message subdataWithRange:NSMakeRange(insBeginIndex, off - insBeginIndex)]];
+    
+    NSUInteger witnessIndex = off;
+    
     NSUInteger txLockTimeSize = sizeof(uint32_t);
     off = message.length - txLockTimeSize;
     [tx appendData:[message subdataWithRange:NSMakeRange(off, txLockTimeSize)]];
     _txHash = tx.SHA256_2;
+    
+    if (isWitness) {
+        off = witnessIndex;
+    }
+    
     for (BTIn *in in _ins) {
         in.txHash = _txHash;
+        if (isWitness && (in.inSignature == NULL || in.inSignature.length == 0)) {
+            uint64_t pref = [message varIntAtOffset:off length:&l];
+            if (pref != 2) {
+                continue;
+            }
+            off += l;
+            d = [message dataAtOffset:off length:&l];
+            if (!d) continue;
+            off += l;
+            d = [message dataAtOffset:off length:&l];
+            if (!d) continue;
+            NSData *pubkeyHash = [d hash160];
+            BTScriptBuilder *scriptBuilder = [[BTScriptBuilder alloc] init];
+            [scriptBuilder smallNum:0];
+            [scriptBuilder data:pubkeyHash];
+            in.inSignature = [[scriptBuilder build] program];
+        }
     }
     for (BTOut *out in _outs) {
         out.txHash = _txHash;

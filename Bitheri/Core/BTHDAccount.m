@@ -859,7 +859,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     pubs = [[BTHDAccountAddressProvider instance] getPubsByHDAccountId:self.hdAccountId pathType:EXTERNAL_BIP49_PATH];
     for (NSData *pub in pubs) {
         [filter insertData:pub];
-        [filter insertData:[[BTKey alloc] initWithPublicKey:pub].address.addressToHash160];
+        [filter insertData:[[BTKey alloc] initWithPublicKey:pub].toSegwitAddress.addressToHash160];
     }
     NSArray *outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccountId:self.hdAccountId pathType:INTERNAL_ROOT_PATH];
     for (BTOut *out in outs) {

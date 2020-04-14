@@ -188,22 +188,28 @@
     
     for (BTIn *in in _ins) {
         in.txHash = _txHash;
-        if (isWitness && (in.inSignature == NULL || in.inSignature.length == 0)) {
+        if (isWitness) {
             uint64_t pref = [message varIntAtOffset:off length:&l];
-            if (pref != 2) {
+            if (pref == 0) {
+                off += l;
                 continue;
             }
-            off += l;
-            d = [message dataAtOffset:off length:&l];
-            if (!d) continue;
-            off += l;
-            d = [message dataAtOffset:off length:&l];
-            if (!d) continue;
-            NSData *pubkeyHash = [d hash160];
-            BTScriptBuilder *scriptBuilder = [[BTScriptBuilder alloc] init];
-            [scriptBuilder smallNum:0];
-            [scriptBuilder data:pubkeyHash];
-            in.inSignature = [[scriptBuilder build] program];
+            if (pref == 2) {
+                off += l;
+                d = [message dataAtOffset:off length:&l];
+                if (!d) continue;
+                off += l;
+                d = [message dataAtOffset:off length:&l];
+                if (!d) continue;
+                off += l;
+                if (in.inSignature == NULL || in.inSignature.length == 0) {
+                    NSData *pubkeyHash = [d hash160];
+                    BTScriptBuilder *scriptBuilder = [[BTScriptBuilder alloc] init];
+                    [scriptBuilder smallNum:0];
+                    [scriptBuilder data:pubkeyHash];
+                    in.inSignature = [[scriptBuilder build] program];
+                }
+            }
         }
     }
     for (BTOut *out in _outs) {

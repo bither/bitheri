@@ -341,22 +341,22 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [[NSNotificationCenter defaultCenter] postNotificationName:BitherBalanceChangedNotification object:@[self.hasPrivKey ? kHDAccountPlaceHolder : kHDAccountMonitoredPlaceHolder, @([self getDeltaBalance]), tx, @(txNotificationType)]];
 }
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType andError:(NSError **)error  {
-    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andError:error andChangeAddress:[self getNewChangeAddressForPathType:pathType] coin:BTC];
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error  {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] dynamicFeeBase:dynamicFeeBase andError:error andChangeAddress:[self getNewChangeAddressForPathType:pathType] coin:BTC];
 }
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin  {
-    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andError:error andChangeAddress:changeAddress coin:coin];
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin  {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] dynamicFeeBase:dynamicFeeBase andError:error andChangeAddress:changeAddress coin:coin];
 }
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin {
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin {
     NSArray *outs;
     if (coin != BTC) {
         outs = [[BTHDAccountAddressProvider instance] getPrevCanSplitOutsByHDAccount:self.hdAccountId coin:coin];
     } else {
         outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
     }
-    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase andError:error];
     if (error && !tx) {
         return nil;
     }
@@ -381,19 +381,19 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return txs;
 }
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType password:(NSString *)password andError:(NSError **)error {
-    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:[self getNewChangeAddressForPathType:pathType] password:password andError:error coin:BTC];
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:[self getNewChangeAddressForPathType:pathType] dynamicFeeBase:dynamicFeeBase password:password andError:error coin:BTC];
 }
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
-    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:changeAddress password:password andError:error coin:coin];
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
+    return [self newTxToAddresses:@[toAddress] withAmounts:@[@(amount)] andChangeAddress:changeAddress dynamicFeeBase:dynamicFeeBase password:password andError:error coin:coin];
 }
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts pathType:(PathType)pathType password:(NSString *)password andError:(NSError **)error {
-    return [self newTxToAddresses:toAddresses withAmounts:amounts andChangeAddress:[self getNewChangeAddressForPathType:pathType] password:password andError:error coin:BTC];
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts pathType:(PathType)pathType dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error {
+    return [self newTxToAddresses:toAddresses withAmounts:amounts andChangeAddress:[self getNewChangeAddressForPathType:pathType] dynamicFeeBase:dynamicFeeBase password:password andError:error coin:BTC];
 }
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error coin:(Coin)coin {
     if (password && !self.hasPrivKey) {
         return nil;
     }
@@ -403,7 +403,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     } else {
         outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
     }
-    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress andError:error];
+    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase andError:error];
     if (error && !tx) {
         return nil;
     }

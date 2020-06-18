@@ -56,23 +56,23 @@
 
 - (void)onNewTx:(BTTx *)tx andTxNotificationType:(TxNotificationType)txNotificationType;
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType andError:(NSError **)error;
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error;
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
 
 - (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress coin:(Coin)coin;
 
 - (NSArray *)newBccTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andError:(NSError **)error andChangeAddress:(NSString *)changeAddress andUnspentOut:(NSArray *) outs;
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType password:(NSString *)password andError:(NSError **)error;
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount pathType:(PathType)pathType dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error;
 
-- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
+- (BTTx *)newTxToAddress:(NSString *)toAddress withAmount:(uint64_t)amount andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts pathType:(PathType)pathType password:(NSString *)password andError:(NSError **)error;
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts pathType:(PathType)pathType dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error;
 
-- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
+- (BTTx *)newTxToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase password:(NSString *)password andError:(NSError **)error coin:(Coin)coin;
 
 - (NSArray *)newSplitCoinTxsToAddresses:(NSArray *)toAddresses withAmounts:(NSArray *)amounts andChangeAddress:(NSString *)changeAddress password:(NSString *)password andError:(NSError **)error coin:(Coin)coin blockHah:(NSString*)hash;
 

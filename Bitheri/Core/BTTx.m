@@ -103,6 +103,37 @@
     return self;
 }
 
+- (instancetype)initWithBlockchairTxDict:(NSDictionary *)blockchairTxJsonObject transactionJson:(NSDictionary *)transactionJson {
+    if (!(self = [self init])) return nil;
+    _blockNo = (uint32_t) [transactionJson getIntFromDict:@"block_id"];
+    _txHash = [[[transactionJson getStringFromDict:@"hash"] hexToData] reverse];
+    _txTime = [transactionJson getIntFromDict:@"time"];
+    _txVer = [transactionJson getIntFromDict:@"version"];
+    _txLockTime = (uint32_t) [transactionJson getIntFromDict:@"lock_time"];
+    _ins = [NSMutableArray new];
+    NSArray *inJsonArray = blockchairTxJsonObject[@"inputs"];
+    if (inJsonArray) {
+        for (int i = 0; i < inJsonArray.count; i++) {
+            NSDictionary *inDict = inJsonArray[i];
+            BTIn *btIn = [[BTIn alloc] initWithTx:self blockchairJsonObject:inDict];
+            btIn.inSn = i;
+            [_ins addObject:btIn];
+        }
+    }
+    
+    _outs = [NSMutableArray new];
+    NSArray *outJsonArray = blockchairTxJsonObject[@"outputs"];
+    if (outJsonArray) {
+        for (int i = 0; i < outJsonArray.count; i++) {
+            NSDictionary *outDict = outJsonArray[i];
+            BTOut *btout = [[BTOut alloc] initWithTx:self blockchairJsonObject:outDict];
+            btout.outSn = i;
+            [_outs addObject:btout];
+        }
+    }
+    return self;
+}
+
 - (instancetype)initWithMessage:(NSData *)message {
     if (!(self = [self init])) return nil;
     

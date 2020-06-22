@@ -43,6 +43,22 @@
     return self;
 }
 
+- (instancetype)initWithTx:(BTTx *)tx blockchairJsonObject:(NSDictionary *)blockchairJsonObject {
+    if (!(self = [self init])) return nil;
+    
+    _outValue = [blockchairJsonObject getLongFromDict:@"value"];
+    _outScript = [[blockchairJsonObject getStringFromDict:@"script_hex"] hexToData];
+    _tx = tx;
+    _txHash = tx.txHash;
+    _outAddress = [[[BTScript alloc] initWithProgram:_outScript] getToAddress];
+    if ([blockchairJsonObject getBoolFromDict:@"is_spent"]) {
+        _outStatus = reloadSpent;
+    } else {
+        _outStatus = reloadUnspent;
+    }
+    return self;
+}
+
 - (BOOL)isReload {
     switch (_outStatus) {
         case reloadSpent:

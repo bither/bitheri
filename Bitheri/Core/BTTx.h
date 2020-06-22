@@ -67,6 +67,8 @@ typedef enum {
 
 - (instancetype)initWithTxDict:(NSDictionary *)txDict unspentOutAddress:(NSString *)unspentOutAddress;
 
+- (instancetype)initWithBlockchairTxDict:(NSDictionary *)blockchairTxJsonObject transactionJson:(NSDictionary *)transactionJson;
+
 #pragma mark - manage in & out
 
 - (void)addInputHash:(NSData *)hash index:(NSUInteger)index script:(NSData *)script;

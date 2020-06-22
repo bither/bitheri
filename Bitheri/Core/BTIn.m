@@ -53,6 +53,22 @@
     return self;
 }
 
+- (instancetype)initWithTx:(BTTx *)tx blockchairJsonObject:(NSDictionary *)blockchairJsonObject {
+    if (!(self = [self init])) return nil;
+    
+    _prevTxHash = [[[blockchairJsonObject getStringFromDict:@"transaction_hash"] hexToData] reverse];
+    _prevOutSn = [blockchairJsonObject getIntFromDict:@"index"];
+    if ([[blockchairJsonObject getStringFromDict:@"type"] isEqualToString:@"witness_v0_keyhash"]) {
+        _inSignature = [[blockchairJsonObject getStringFromDict:@"script_hex"] hexToData];
+    } else {
+        _inSignature = [[blockchairJsonObject getStringFromDict:@"spending_signature_hex"] hexToData];
+    }
+    _inSequence = [blockchairJsonObject getIntFromDict:@"spending_sequence"];
+    _tx = tx;
+    _txHash = tx.txHash;
+    return self;
+}
+
 - (void)setTx:(BTTx *)tx {
     _tx = tx;
     _txHash = tx.txHash;

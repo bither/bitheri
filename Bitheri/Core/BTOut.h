@@ -42,6 +42,8 @@ typedef enum {
 
 - (instancetype)initWithTx:(BTTx *)tx outDict:(NSDictionary *)outDict unspentOutAddress:(NSString *)unspentOutAddress;
 
+- (instancetype)initWithTx:(BTTx *)tx blockchairJsonObject:(NSDictionary *)blockchairJsonObject;
+
 - (BOOL)isReload;
 
 @end

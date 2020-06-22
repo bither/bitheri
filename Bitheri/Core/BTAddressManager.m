@@ -622,6 +622,58 @@
     return NO;
 }
 
+- (NSArray *)compressTxsForApi:(NSArray *)txList andAddressArr:(NSArray *)addressArr {
+    NSMutableDictionary *txDict = [NSMutableDictionary new];
+    for (BTTx *tx in txList) {
+        txDict[tx.txHash] = tx;
+        [[BTHDAccountAddressProvider instance] updateOutHDAccountId:tx];
+    }
+    NSMutableArray *txArr = [NSMutableArray array];
+    BTTxProvider *txProvider = [BTTxProvider instance];
+    for (BTTx *tx in txList) {
+        if (![self isSendFromMe:tx andTxHashDict:txDict andAddressArr:addressArr] && tx.outs.count > COMPRESS_OUT_NUM) {
+            NSMutableArray *outList = [NSMutableArray new];
+            for (BTOut *out in tx.outs) {
+                if ([addressArr containsObject:out.outAddress]) {
+                    [outList addObject:out];
+                }
+            }
+            tx.outs = outList;
+        }
+        BTTx *existTx = [txProvider getTxDetailByTxHash:tx.txHash];
+        if (existTx == NULL) {
+            [txArr addObject:tx];
+            continue;
+        }
+        for (int i = 0; i < tx.outs.count; i++) {
+            BTOut *out = tx.outs[i];
+            if (out.outStatus == reloadSpent) {
+                BTOut *existOut = existTx.outs[i];
+                out.outStatus = existOut.outStatus;
+                [tx.outs replaceObjectAtIndex:i withObject:out];
+            }
+        }
+        [txArr addObject:tx];
+    }
+    return txArr;
+}
+
+- (BOOL)isSendFromMe:(BTTx *)tx andTxHashDict:(NSDictionary *)txDict andAddressArr:(NSArray *)addressArr {
+    for (BTIn *btIn in tx.ins) {
+        if (txDict[btIn.prevTxHash] != nil) {
+            BTTx *prevTx = txDict[btIn.prevTxHash];
+            for (BTOut *out in prevTx.outs) {
+                if (out.outSn == btIn.prevOutSn) {
+                    if ([addressArr containsObject:out.outAddress]) {
+                        return YES;
+                    }
+                }
+            }
+        }
+    }
+    return NO;
+}
+
 - (BTTx *)compressTx:(BTTx *)tx {
     if (![self isSendFromMe:tx] && (!self.hasHDAccountHot || ![self.hdAccountHot isSendFromMe:tx]) && tx.outs.count > COMPRESS_OUT_NUM) {
         NSMutableArray *outList = [NSMutableArray new];

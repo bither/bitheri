@@ -49,4 +49,6 @@ static NSData *getOutPoint(NSData *txHash, uint32_t n) {
 
 - (instancetype)initWithTx:(BTTx *)tx inDict:(NSDictionary *)inDict;
 
+- (instancetype)initWithTx:(BTTx *)tx blockchairJsonObject:(NSDictionary *)blockchairJsonObject;
+
 @end

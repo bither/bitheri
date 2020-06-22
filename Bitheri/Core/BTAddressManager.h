@@ -76,6 +76,8 @@
 
 - (NSArray *)compressTxsForApi:(NSArray *)txList andAddress:(NSString *)address;
 
+- (NSArray *)compressTxsForApi:(NSArray *)txList andAddressArr:(NSArray *)addressArr;
+
 - (BTHDAccount *)getHDAccountByHDAccountId:(int)hdAccountId;
 
 #pragma mark - for old version

@@ -35,10 +35,19 @@
     _tx = tx;
     _txHash = tx.txHash;
     _outAddress = [[[BTScript alloc] initWithProgram:_outScript] getToAddress];
-    if (_outAddress != NULL && ![_outAddress isEqualToString:unspentOutAddress]) {
-        _outStatus = reloadSpent;
-    } else {
-        _outStatus = reloadUnspent;
+    if ([outDict.allKeys containsObject:@"spent_by_tx"]) {
+        NSString *spentByTx = [outDict objectForKey:@"spent_by_tx"];
+        if (!spentByTx || [spentByTx isMemberOfClass:[NSNull class]] || ([spentByTx isMemberOfClass:[NSString class]] && spentByTx.length == 0)) {
+            _outStatus = reloadUnspent;
+        } else {
+            _outStatus = reloadSpent;
+        }
+    } else{
+        if (_outAddress != NULL && ![_outAddress isEqualToString:unspentOutAddress]) {
+            _outStatus = reloadSpent;
+        } else {
+            _outStatus = reloadUnspent;
+        }
     }
     return self;
 }

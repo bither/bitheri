@@ -37,6 +37,7 @@
 #import "NSDictionary+Fromat.h"
 #import "BTBech32.h"
 #import "BTSegwitAddrCoder.h"
+#import "BTDateUtil.h"
 
 @implementation BTTx
 
@@ -107,7 +108,7 @@
     if (!(self = [self init])) return nil;
     _blockNo = (uint32_t) [transactionJson getIntFromDict:@"block_id"];
     _txHash = [[[transactionJson getStringFromDict:@"hash"] hexToData] reverse];
-    _txTime = [transactionJson getIntFromDict:@"time"];
+    _txTime = [[BTDateUtil getDateFormStringWithTimeZone:[transactionJson getStringFromDict:@"time"]] timeIntervalSince1970];
     _txVer = [transactionJson getIntFromDict:@"version"];
     _txLockTime = (uint32_t) [transactionJson getIntFromDict:@"lock_time"];
     _ins = [NSMutableArray new];

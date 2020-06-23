@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface BTDateUtil : BlockchairQueryApi
+@interface BTDateUtil : NSObject
 
 + (NSDate *)getDateFormStringWithTimeZone:(NSString *)str;
 

@@ -26,6 +26,8 @@
 #import "BTHDMAddress.h"
 #import "BTHDAccountProvider.h"
 #import "BTHDAccountAddress.h"
+#import "BTAddressManager.h"
+#import "BTAddressProvider.h"
 
 @interface BTHDAccountCold () {
     BOOL _isFromXRandom;
@@ -46,6 +48,13 @@
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTEncryptData *encryptedHDSeed = [[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:isFromXRandom];
         BTEncryptData *encryptedMnemonicSeed = [[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:isFromXRandom];
+        
+        NSData *validMnemonicSeed = [encryptedMnemonicSeed decrypt:password];
+        NSData *validHdSeed = [BTHDAccountCold seedFromMnemonic:validMnemonicSeed btBip39:bip39];
+        if (![mnemonicSeed isEqualToData:validMnemonicSeed] || ![_hdSeed isEqualToData:validHdSeed]) {
+            @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+        }
+        
         NSString *addressOfPs = master.key.address;
         BTEncryptData *encryptedDataOfPS = [[BTEncryptData alloc] initWithData:master.secret andPassowrd:password andIsXRandom:isFromXRandom];
         BTBIP32Key *accountKey = [self getAccount:master];
@@ -60,6 +69,13 @@
         self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:encryptedMnemonicSeed.toEncryptedString encryptSeed:encryptedHDSeed.toEncryptedString firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedDataOfPS.toEncryptedString addressOfPS:addressOfPs externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended];
         [externalKey wipe];
         [internalKey wipe];
+        
+        @try {
+            [self seedWords:password];
+        } @catch (NSException *e) {
+            [self validFailedDelete:password];
+            @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+        }
     }
     return self;
 }
@@ -79,6 +95,13 @@
         _isFromXRandom = [[BTHDAccountProvider instance] hdAccountIsXRandom:self.hdAccountId];
     }
     return self;
+}
+
+- (void)validFailedDelete:(NSString *)password {
+    if ([[BTAddressManager instance] noAddress]) {
+        [[BTAddressProvider instance] deletePassword:password];
+    }
+    [[BTHDAccountProvider instance] deleteHDAccount:_hdAccountId];
 }
 
 - (NSArray *)signHashHexes:(NSArray *)hashes paths:(NSArray *)paths andPassword:(NSString *)password {
@@ -157,8 +180,36 @@
 - (NSArray *)seedWords:(NSString *)password {
     [self decryptMnemonicSeed:password];
     NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSString *validFirstAddress = [self getValidFirstAddress:words];
+    NSString *dbFirstAddress = [self getFirstAddressFromDb];
     [self wipeMnemonicSeed];
+    if (![validFirstAddress isEqualToString:dbFirstAddress]) {
+        @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+    }
     return words;
+}
+
+- (NSString *)getValidFirstAddress:(NSArray *)words {
+    if (words == NULL || words.count == 0) {
+        @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+    }
+    NSString *code = [[BTBIP39 sharedInstance] toMnemonicWithArray:words];
+    NSData *mnemonicCodeSeed = [[BTBIP39 sharedInstance] toEntropy:code];
+    if (mnemonicCodeSeed == NULL) {
+        @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+    }
+    NSData *hdSeed = [BTHDAccountCold seedFromMnemonic:mnemonicCodeSeed btBip39:[BTBIP39 sharedInstance]];
+    BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:hdSeed];
+    BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
+    [account clearPrivateKey];
+    [master clearPrivateKey];
+    BTBIP32Key *externalKey = [self getChainRootKeyFromAccount:account withPathType:EXTERNAL_ROOT_PATH];
+    BTBIP32Key *key = [externalKey deriveSoftened:0];
+    NSString *firstAddress = key.address;
+    [key wipe];
+    [externalKey wipe];
+    [account wipe];
+    return firstAddress;
 }
 
 - (BOOL)checkWithPassword:(NSString *)password {

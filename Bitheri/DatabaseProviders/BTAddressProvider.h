@@ -31,6 +31,8 @@
 
 - (BOOL)changePasswordWithOldPassword:(NSString *)oldPassword andNewPassword:(NSString *)newPassword;
 
+- (void)deletePassword:(NSString *)password;
+
 - (BTPasswordSeed *)getPasswordSeed;
 
 - (BOOL)hasPasswordSeed;

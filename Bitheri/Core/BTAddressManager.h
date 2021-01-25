@@ -50,6 +50,8 @@
 
 - (NSInteger)addressCount;
 
+- (BOOL)noAddress;
+
 - (void)addAddress:(BTAddress *)address;
 
 - (void)stopMonitor:(BTAddress *)address;

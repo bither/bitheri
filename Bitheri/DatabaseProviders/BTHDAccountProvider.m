@@ -238,4 +238,17 @@
     return result;
 }
 
+- (void)deleteHDAccount:(int)hdAccountId {
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        [db beginTransaction];
+        NSString *sql = @"delete from hd_account where hd_account_id=?";
+        BOOL success = [db executeUpdate:sql, @(hdAccountId)];
+        if (success) {
+            [db commit];
+        } else {
+            [db rollback];
+        }
+    }];
+}
+
 @end

@@ -24,6 +24,7 @@
 #import "BTBIP39.h"
 #import "BTQRCodeUtil.h"
 #import "BTHDAccountUtil.h"
+#import "EncryptionException.h"
 
 @class BTEncryptData;
 

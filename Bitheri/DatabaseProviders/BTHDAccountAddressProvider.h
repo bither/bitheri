@@ -99,4 +99,7 @@
 - (BOOL)requestNewReceivingAddress:(int)hdAccountId pathType:(PathType)pathType;
 
 - (BOOL)hasHDAccount:(int)hdAccountId pathType:(PathType) pathType receiveTxInAddressCount:(int) addressCount;
+
+- (void)deleteHDAccountAddress:(int)hdAccountId;
+
 @end

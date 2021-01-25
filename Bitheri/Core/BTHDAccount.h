@@ -25,6 +25,7 @@
 #import "BTBIP39.h"
 #import "BTQRCodeUtil.h"
 #import "BTHDAccountUtil.h"
+#import "EncryptionException.h"
 
 #define kHDAccountPaymentAddressChangedNotificationFirstAdding @"FirstAdding"
 #define kHDAccountPaymentAddressChangedNotification @"HDAccountPaymentAddressChangedNotification"
@@ -47,6 +48,8 @@
 - (instancetype)initWithAccountExtendedPub:(NSData *)accountExtendedPub p2shp2wpkhAccountExtentedPub:(NSData *)p2shp2wpkhAccountExtentedPub fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback;
 
 - (instancetype)initWithSeedId:(int)seedId;
+
+- (void)validFailedDelete:(NSString *)password;
 
 - (NSSet *)getBelongAccountAddressesFromAddresses:(NSArray *)addresses;
 

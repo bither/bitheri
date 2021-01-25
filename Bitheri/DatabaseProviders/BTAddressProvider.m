@@ -190,6 +190,19 @@
     return [[[BTEncryptData alloc] initWithData:[encryptedData decrypt:oldPassword] andPassowrd:newPassword] toEncryptedString];
 }
 
+- (void)deletePassword:(NSString *)password {
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        [db beginTransaction];
+        NSString *sql = @"delete from password_seed";
+        BOOL success = [db executeUpdate:sql];
+        if (success) {
+            [db commit];
+        } else {
+            [db rollback];
+        }
+    }];
+}
+
 - (BTPasswordSeed *)getPasswordSeed; {
     __block BTPasswordSeed *passwordSeed = nil;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {

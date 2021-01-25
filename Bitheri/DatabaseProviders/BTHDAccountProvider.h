@@ -52,4 +52,6 @@
 
 - (NSArray *)getHDAccountSeeds;
 
+- (void)deleteHDAccount:(int)hdAccountId;
+
 @end

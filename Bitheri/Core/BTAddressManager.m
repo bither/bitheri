@@ -179,6 +179,11 @@
     return [[self privKeyAddresses] count] + [[self watchOnlyAddresses] count] + (self.hasHDMKeychain ? self.hdmKeychain.addresses.count : 0);
 }
 
+- (BOOL)noAddress {
+    NSMutableArray *allAddresses = [self allAddresses];
+    return (allAddresses == NULL || allAddresses.count == 0) && ![self hasHDAccountHot] && ![self hasHDAccountMonitored] && ![self hasHDAccountCold];
+}
+
 - (NSMutableArray *)privKeyAddresses {
     if (self.isReady) {
         return _privKeyAddresses;

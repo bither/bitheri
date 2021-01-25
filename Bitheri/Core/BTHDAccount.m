@@ -76,13 +76,22 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         self.hdAccountId = -1;
         self.mnemonicSeed = mnemonicSeed;
         self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:bip39];
+        BTEncryptData *encryptedMnemonicSeed = [[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom];
+        BTEncryptData *encryptedHDSeed = [[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom];
+        
+        NSData *validMnemonicSeed = [encryptedMnemonicSeed decrypt:password];
+        NSData *validHdSeed = [BTHDAccount seedFromMnemonic:validMnemonicSeed btBip39:bip39];
+        if (![mnemonicSeed isEqualToData:validMnemonicSeed] || ![_hdSeed isEqualToData:validHdSeed]) {
+            @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+        }
+        
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
         BTBIP32Key *segwitAccount = [self getAccount:master withPurposePathLevel:P2SHP2WPKH];
         [account clearPrivateKey];
         [master clearPrivateKey];
         [segwitAccount clearPrivateKey];
-        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:password encryptedMnemonicSeed:[[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom] encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom] fromXRandom:fromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:encryptedHDSeed fromXRandom:fromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
     }
     return self;
 }
@@ -147,6 +156,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 - (void)initHDAccountWithAccount:(BTBIP32Key *)accountKey segwitAccountKey:(BTBIP32Key *)segwitAccountKey password:(NSString *)password encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
     _isFromXRandom = isFromXRandom;
     CGFloat progress = 0;
+    
     if (callback) {
         callback(progress);
     }
@@ -231,6 +241,21 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (encryptedMnemonicSeed) {
         self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedDataOfPS.toEncryptedString addressOfPS:addressOfPs externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
         _hasSeed = YES;
+        
+        @try {
+            [self seedWords:password];
+        } @catch (NSException *e) {
+            [self validFailedDelete:password];
+            [internalKey wipe];
+            [externalKey wipe];
+            if (segwitInternalKey) {
+                [segwitInternalKey wipe];
+            }
+            if (segwitExternalKey) {
+                [segwitExternalKey wipe];
+            }
+            @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+        }
     } else {
         self.hdAccountId = [[BTHDAccountProvider instance] addMonitoredHDAccount:firstAddress isXRandom:isFromXRandom externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended];
         _hasSeed = NO;
@@ -263,6 +288,14 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (segwitExternalKey) {
         [segwitExternalKey wipe];
     }
+}
+
+- (void)validFailedDelete:(NSString *)password {
+    if ([[BTAddressManager instance] noAddress]) {
+        [[BTAddressProvider instance] deletePassword:password];
+    }
+    [[BTHDAccountProvider instance] deleteHDAccount:_hdAccountId];
+    [[BTHDAccountAddressProvider instance] deleteHDAccountAddress:_hdAccountId];
 }
 
 - (void)addSegwitPub:(NSString *)password complete:(void (^)(BOOL))complete {
@@ -1037,8 +1070,36 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     [self decryptMnemonicSeed:password];
     NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSString *validFirstAddress = [self getValidFirstAddress:words];
+    NSString *dbFirstAddress = [self getFirstAddressFromDb];
     [self wipeMnemonicSeed];
+    if (![validFirstAddress isEqualToString:dbFirstAddress]) {
+        @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+    }
     return words;
+}
+
+- (NSString *)getValidFirstAddress:(NSArray *)words {
+    if (words == NULL || words.count == 0) {
+        @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+    }
+    NSString *code = [[BTBIP39 sharedInstance] toMnemonicWithArray:words];
+    NSData *mnemonicCodeSeed = [[BTBIP39 sharedInstance] toEntropy:code];
+    if (mnemonicCodeSeed == NULL) {
+        @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
+    }
+    NSData *hdSeed = [BTHDAccount seedFromMnemonic:mnemonicCodeSeed btBip39:[BTBIP39 sharedInstance]];
+    BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:hdSeed];
+    BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
+    [account clearPrivateKey];
+    [master clearPrivateKey];
+    BTBIP32Key *externalKey = [self getChainRootKeyFromAccount:account withPathType:EXTERNAL_ROOT_PATH];
+    BTBIP32Key *key = [externalKey deriveSoftened:0];
+    NSString *firstAddress = key.address;
+    [key wipe];
+    [externalKey wipe];
+    [account wipe];
+    return firstAddress;
 }
 
 - (BOOL)checkWithPassword:(NSString *)password {
@@ -1173,3 +1234,5 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 
 @implementation DuplicatedHDAccountException
 @end
+
+

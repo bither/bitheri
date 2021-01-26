@@ -61,6 +61,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 @property NSData *hdSeed;
 @property NSData *mnemonicSeed;
 @property int hdAccountId;
+@property BTBIP39 *btBip39;
 @end
 
 @implementation BTHDAccount
@@ -75,12 +76,13 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     if (self) {
         self.hdAccountId = -1;
         self.mnemonicSeed = mnemonicSeed;
-        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:bip39];
+        self.btBip39 = bip39;
+        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:_btBip39];
         BTEncryptData *encryptedMnemonicSeed = [[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:fromXRandom];
         BTEncryptData *encryptedHDSeed = [[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:fromXRandom];
         
         NSData *validMnemonicSeed = [encryptedMnemonicSeed decrypt:password];
-        NSData *validHdSeed = [BTHDAccount seedFromMnemonic:validMnemonicSeed btBip39:bip39];
+        NSData *validHdSeed = [BTHDAccount seedFromMnemonic:validMnemonicSeed btBip39:_btBip39];
         if (![mnemonicSeed isEqualToData:validMnemonicSeed] || ![_hdSeed isEqualToData:validHdSeed]) {
             @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
         }
@@ -104,7 +106,8 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         if (!self.mnemonicSeed) {
             return nil;
         }
-        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:bip39];
+        self.btBip39 = bip39;
+        self.hdSeed = [BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:_btBip39];
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
         BTBIP32Key *segwitAccount = [self getAccount:master withPurposePathLevel:P2SHP2WPKH];
@@ -1069,7 +1072,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         return nil;
     }
     [self decryptMnemonicSeed:password];
-    NSArray *words = [[BTBIP39 sharedInstance] toMnemonicArray:self.mnemonicSeed];
+    NSArray *words = [[self getBip39] toMnemonicArray:self.mnemonicSeed];
     NSString *validFirstAddress = [self getValidFirstAddress:words];
     NSString *dbFirstAddress = [self getFirstAddressFromDb];
     [self wipeMnemonicSeed];
@@ -1079,16 +1082,21 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return words;
 }
 
+- (BTBIP39 *)getBip39 {
+    return  !_btBip39 ? [BTBIP39 sharedInstance] : _btBip39;
+}
+
 - (NSString *)getValidFirstAddress:(NSArray *)words {
     if (words == NULL || words.count == 0) {
         @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
     }
-    NSString *code = [[BTBIP39 sharedInstance] toMnemonicWithArray:words];
-    NSData *mnemonicCodeSeed = [[BTBIP39 sharedInstance] toEntropy:code];
+    BTBIP39 *bip39 = [self getBip39];
+    NSString *code = [bip39 toMnemonicWithArray:words];
+    NSData *mnemonicCodeSeed = [bip39 toEntropy:code];
     if (mnemonicCodeSeed == NULL) {
         @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
     }
-    NSData *hdSeed = [BTHDAccount seedFromMnemonic:mnemonicCodeSeed btBip39:[BTBIP39 sharedInstance]];
+    NSData *hdSeed = [BTHDAccount seedFromMnemonic:mnemonicCodeSeed btBip39:bip39];
     BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:hdSeed];
     BTBIP32Key *account = [self getAccount:master withPurposePathLevel:NormalAddress];
     [account clearPrivateKey];
@@ -1116,7 +1124,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     }
     NSData *hdCopy = [NSData dataWithBytes:self.hdSeed.bytes length:self.hdSeed.length];
     BOOL hdSeedSafe = [BTUtils compareString:[self getFirstAddressFromDb] compare:[self firstAddressFromSeed:nil]];
-    BOOL mnemonicSeefSafe = [[BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:[BTBIP39 sharedInstance]] isEqualToData:hdCopy];
+    BOOL mnemonicSeefSafe = [[BTHDAccount seedFromMnemonic:self.mnemonicSeed btBip39:[self getBip39]] isEqualToData:hdCopy];
     [self wipeHDSeed];
     [self wipeMnemonicSeed];
     return hdSeedSafe && mnemonicSeefSafe;

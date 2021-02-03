@@ -391,17 +391,17 @@ static NSString *serialize(uint8_t depth, uint32_t fingerprint, uint32_t child, 
     return serialize(0, 0, 0, chain, [NSData dataWithBytes:&secret length:sizeof(secret)]);
 }
 
-- (NSString *)serializedMasterPublicKey
-{
-    
+- (NSString *)serializedMasterPublicKey {
     UInt256 chain = *(UInt256 *)((const uint8_t *)self.chain.bytes);
     BRPubKey pubKey = *(BRPubKey *)((const uint8_t *)self.pubKey.bytes);
-    
     return serialize(1, self.parentFingerprint, 0 | BIP32_HARD, chain, [NSData dataWithBytes:&pubKey length:sizeof(pubKey)]);
 }
 
-- (NSString *) serializePubB58 {
-    return [self serializedMasterPublicKey];
+- (NSString *)serializePubB58 {
+    UInt256 chain = *(UInt256 *)((const uint8_t *)self.chain.bytes);
+    BRPubKey pubKey = *(BRPubKey *)((const uint8_t *)self.pubKey.bytes);
+    uint8_t depth = (self.path == NULL || self.path.count == 0) ? 1 : self.path.count;
+    return serialize(depth, self.parentFingerprint, 0 | BIP32_HARD, chain, [NSData dataWithBytes:&pubKey length:sizeof(pubKey)]);
 }
 
 - (NSString *)toSegwitAddress {

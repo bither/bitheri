@@ -392,7 +392,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     } else {
         outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
     }
-    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase andError:error];
+    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:true andError:error];
     if (error && !tx) {
         return nil;
     }
@@ -439,7 +439,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     } else {
         outs = [[BTHDAccountAddressProvider instance] getUnspendOutByHDAccount:self.hdAccountId];
     }
-    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase andError:error];
+    BTTx *tx = [[BTTxBuilder instance] buildTxWithOutputs:outs toAddresses:toAddresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:false andError:error];
     if (error && !tx) {
         return nil;
     }

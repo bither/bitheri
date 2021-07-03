@@ -27,6 +27,7 @@
 		407FA2661E6939A8004EA17C /* BTWordsTypeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */; };
 		407FA2671E6939A8004EA17C /* BTWordsTypeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */; };
 		4085AAF6214FCEAC00F67B78 /* BTHDAccountUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 4085AAF5214FCEAC00F67B78 /* BTHDAccountUtil.m */; };
+		40862AB22690081D001FA440 /* BTMinerFeeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40862AB12690081D001FA440 /* BTMinerFeeUtil.m */; };
 		40E78B8124A1DE6C00E9EA83 /* BTDateUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E78B8024A1DE6C00E9EA83 /* BTDateUtil.m */; };
 		40F5367E25BEC3960026ACF2 /* EncryptionException.m in Sources */ = {isa = PBXBuildFile; fileRef = 40F5367D25BEC3960026ACF2 /* EncryptionException.m */; };
 		42796BF619446739002BC454 /* BTBlockChain.m in Sources */ = {isa = PBXBuildFile; fileRef = 42796BF519446739002BC454 /* BTBlockChain.m */; };
@@ -208,6 +209,8 @@
 		407FA2651E6939A8004EA17C /* BTWordsTypeManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTWordsTypeManager.m; sourceTree = "<group>"; };
 		4085AAF4214FCEAC00F67B78 /* BTHDAccountUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BTHDAccountUtil.h; path = Bitheri/utils/BTHDAccountUtil.h; sourceTree = SOURCE_ROOT; };
 		4085AAF5214FCEAC00F67B78 /* BTHDAccountUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BTHDAccountUtil.m; path = Bitheri/utils/BTHDAccountUtil.m; sourceTree = SOURCE_ROOT; };
+		40862AB02690081D001FA440 /* BTMinerFeeUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BTMinerFeeUtil.h; path = Bitheri/utils/BTMinerFeeUtil.h; sourceTree = SOURCE_ROOT; };
+		40862AB12690081D001FA440 /* BTMinerFeeUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BTMinerFeeUtil.m; path = Bitheri/utils/BTMinerFeeUtil.m; sourceTree = SOURCE_ROOT; };
 		40E78B7F24A1DE6C00E9EA83 /* BTDateUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BTDateUtil.h; path = Bitheri/utils/BTDateUtil.h; sourceTree = SOURCE_ROOT; };
 		40E78B8024A1DE6C00E9EA83 /* BTDateUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BTDateUtil.m; path = Bitheri/utils/BTDateUtil.m; sourceTree = SOURCE_ROOT; };
 		40F5367C25BEC3960026ACF2 /* EncryptionException.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EncryptionException.h; sourceTree = "<group>"; };
@@ -435,6 +438,8 @@
 				4085AAF5214FCEAC00F67B78 /* BTHDAccountUtil.m */,
 				40E78B7F24A1DE6C00E9EA83 /* BTDateUtil.h */,
 				40E78B8024A1DE6C00E9EA83 /* BTDateUtil.m */,
+				40862AB02690081D001FA440 /* BTMinerFeeUtil.h */,
+				40862AB12690081D001FA440 /* BTMinerFeeUtil.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -957,6 +962,7 @@
 				D61D0CC9D60EFAF93A9126CB /* BTBIP32Key.m in Sources */,
 				D61D0956B11B4375D723770C /* BTBIP39.m in Sources */,
 				D61D01FDA529E4A7DEE5715A /* BTAddressProvider.m in Sources */,
+				40862AB22690081D001FA440 /* BTMinerFeeUtil.m in Sources */,
 				D61D0940D0FF7FAA8F3F0024 /* BTHDMBid.m in Sources */,
 				0A29B0C61A761C380020BCD7 /* BTHDMKeychainRecover.m in Sources */,
 				403C71F222295BC200E523D1 /* NSDictionary+Fromat.m in Sources */,

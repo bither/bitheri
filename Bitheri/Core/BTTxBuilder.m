@@ -24,6 +24,7 @@
 #import "BTTxProvider.h"
 #import "BTScriptBuilder.h"
 #import "BTAddress.h"
+#import "BTMinerFeeUtil.h"
 
 @implementation BTTxBuilder {
     BTTxBuilderEmptyWallet *emptyWallet;
@@ -77,7 +78,7 @@
     for (int i = 0; i < splitNumber; i++) {
         NSArray *outs = [unspendOuts subarrayWithRange:NSMakeRange(i * count, MIN(count, unspendOuts.count - i * count))];
         NSArray *amounts = @[@([BTTxBuilder getAmount:outs])];
-        BTTx *emptyWalletTx = [emptyWallet buildTxWithOutputs:outs toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:0 andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:coin];
+        BTTx *emptyWalletTx = [emptyWallet buildTxWithOutputs:outs toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:0 isNoPrivKey:true andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:coin];
         if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
             emptyWalletTx.coin = coin;
             [emptyWalletTxs addObject:emptyWalletTx];
@@ -91,7 +92,7 @@
     return emptyWalletTxs;
 }
 
-- (BTTx *)buildTxWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error {
+- (BTTx *)buildTxWithOutputs:(NSArray *)unspendOuts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andError:(NSError **)error {
     uint64_t value = 0;
     for (NSNumber *amount in amounts) {
         value += [amount unsignedLongLongValue];
@@ -103,7 +104,7 @@
         return nil;
     }
 
-    BTTx *emptyWalletTx = [emptyWallet buildTxWithOutputs:unspendOuts toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:BTC];
+    BTTx *emptyWalletTx = [emptyWallet buildTxWithOutputs:unspendOuts toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:BTC];
     if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
         return emptyWalletTx;
     } else if (emptyWalletTx != nil) {
@@ -122,7 +123,7 @@
     BOOL mayTxMaxSize = NO;
     NSMutableArray *txs = [NSMutableArray new];
     for (NSObject <BTTxBuilderProtocol> *builder in txBuilders) {
-        BTTx *tx = [builder buildTxWithOutputs:unspendOuts toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:BTC];
+        BTTx *tx = [builder buildTxWithOutputs:unspendOuts toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:BTC];
         if (tx != nil && [BTTxBuilder estimationTxSizeWithInCount:tx.ins.count andOutCount:tx.outs.count] <= TX_MAX_SIZE) {
             [txs addObject:tx];
         } else if (tx != nil) {
@@ -145,18 +146,18 @@
 }
 
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
-                 andAddress:(NSArray *)addresses dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error {
-    return [self buildTxForAddress:address andScriptPubKey:scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:address.address dynamicFeeBase:dynamicFeeBase andError:error];
+                 andAddress:(NSArray *)addresses dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andError:(NSError **)error {
+    return [self buildTxForAddress:address andScriptPubKey:scriptPubKey andAmount:amounts andAddress:addresses andChangeAddress:address.address dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey andError:error];
 }
 
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
-                 andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error {
+                 andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andError:(NSError **)error {
     return [self buildTxForAddress:address andScriptPubKey:scriptPubKey andAmount:amounts
-                        andAddress:addresses andChangeAddress:changeAddress dynamicFeeBase:dynamicFeeBase andError:error coin:BTC];
+                        andAddress:addresses andChangeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey andError:error coin:BTC];
 }
 
 - (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey andAmount:(NSArray *)amounts
-                 andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase andError:(NSError **)error coin:(Coin)coin {
+                 andAddress:(NSArray *)addresses andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andError:(NSError **)error coin:(Coin)coin {
     uint64_t value = 0;
     for (NSNumber *amount in amounts) {
         value += [amount unsignedLongLongValue];
@@ -191,7 +192,7 @@
     }
 
     BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs
-                                                   andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress dynamicFeeBase:dynamicFeeBase coin:coin];
+                                                   andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey coin:coin];
     if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andScriptPubKey:scriptPubKey andOuts:emptyWalletTx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
         return emptyWalletTx;
     } else if (emptyWalletTx != nil) {
@@ -211,7 +212,7 @@
     NSMutableArray *txs = [NSMutableArray new];
     for (NSObject <BTTxBuilderProtocol> *builder in txBuilders) {
         BTTx *tx = [builder buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:unspendTxs
-                                        andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress dynamicFeeBase:dynamicFeeBase coin:coin];
+                                        andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey coin:coin];
         if (tx != nil && [BTTxBuilder estimationTxSizeWithInCount:tx.ins.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
             [txs addObject:tx];
         } else if (tx != nil) {
@@ -289,7 +290,7 @@
         NSArray *outs = [BTTxBuilder getUnspendOutsFromTxs:txs];
         NSArray *amounts = @[@([BTTxBuilder getAmount:outs])];
         BTTx *emptyWalletTx = [emptyWallet buildTxForAddress:address andScriptPubKey:scriptPubKey WithUnspendTxs:txs
-                                                       andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress dynamicFeeBase:0 coin:coin];
+                                                       andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] andChangeAddress:changeAddress dynamicFeeBase:0 isNoPrivKey:true coin:coin];
         if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andScriptPubKey:scriptPubKey andOuts:emptyWalletTx.outs andIsCompressed:address.isCompressed] <= TX_MAX_SIZE) {
             emptyWalletTx.coin = coin;
             [emptyWalletTxs addObject:emptyWalletTx];
@@ -452,7 +453,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 @implementation BTTxBuilderDefault {
 
 }
-- (BTTx *)buildTxWithOutputs:(NSArray *)unspendouts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase andTx:(BTTx *)tx coin:(Coin)coin{
+- (BTTx *)buildTxWithOutputs:(NSArray *)unspendouts toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andTx:(BTTx *)tx coin:(Coin)coin {
     BOOL ensureMinRequiredFee = [[BTSettings instance] ensureMinRequiredFee];
     uint64_t feeBase = [[BTSettings instance] feeBase];
     if (coin == BTC && dynamicFeeBase > 0) {
@@ -487,8 +488,13 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
             fees += (lastCalculatedSize / 1000 + 1) * feeBase;
         }
-        if (needAtLeastReferenceFee && fees < feeBase)
+        if (needAtLeastReferenceFee && fees < feeBase) {
             fees = feeBase;
+        }
+        
+        if (isNoPrivKey) {
+            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
+        }
 
         valueNeeded = value + fees;
 
@@ -512,7 +518,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outs.count];
             if (total - value > CENT)
                 s += 34;
-            if (![BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s) {
+            if (!([BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s)) {
                 needAtLeastReferenceFee = YES;
                 continue;
             }
@@ -655,7 +661,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     return tx;
 }
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase coin:(Coin)coin; {
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey coin:(Coin)coin {
     BOOL ensureMinRequiredFee = [[BTSettings instance] ensureMinRequiredFee];
     uint64_t feeBase = [[BTSettings instance] feeBase];
     if (coin == BTC && dynamicFeeBase > 0) {
@@ -690,8 +696,13 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
             fees += (lastCalculatedSize / 1000 + 1) * feeBase;
         }
-        if (needAtLeastReferenceFee && fees < feeBase)
+        if (needAtLeastReferenceFee && fees < feeBase) {
             fees = feeBase;
+        }
+        
+        if (isNoPrivKey) {
+            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
+        }
 
         valueNeeded = value + fees;
 
@@ -715,7 +726,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
             if (total - value > CENT)
                 s += 34;
-            if (![BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s) {
+            if (!([BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s)) {
                 needAtLeastReferenceFee = YES;
                 continue;
             }
@@ -879,7 +890,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 @implementation BTTxBuilderEmptyWallet {
 
 }
-- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase andTx:(BTTx *)tx coin:(Coin)coin {
+- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andTx:(BTTx *)tx coin:(Coin)coin {
     uint64_t feeBase = [BTTx getSplitNormalFeeForCoin:coin];
     if (coin == BTC && dynamicFeeBase > 0) {
         feeBase = dynamicFeeBase;
@@ -901,7 +912,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     } else {
         // no fee logic
         size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outs.count];
-        if (![BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s) {
+        if (!([BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s)) {
             fees = feeBase;
         }
     }
@@ -913,6 +924,9 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 
     // note : like bitcoinj, empty wallet will not check min output
     if (fees > 0) {
+        if (isNoPrivKey) {
+            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
+        }
         BTTx *newTx = [BTTx new];
         for (NSUInteger i = 0; i < tx.outs.count; i++) {
             BTOut *out = tx.outs[i];
@@ -936,7 +950,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     return tx;
 }
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase coin:(Coin)coin {
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey coin:(Coin)coin {
     uint64_t feeBase = [BTTx getSplitNormalFeeForCoin:coin];
     if (coin == BTC && dynamicFeeBase > 0) {
         feeBase = dynamicFeeBase;
@@ -961,7 +975,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     } else {
         // no fee logic
         size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
-        if (![BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s) {
+        if (!([BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s)) {
             fees = feeBase;
         }
     }
@@ -973,6 +987,9 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 
     // note : like bitcoinj, empty wallet will not check min output
     if (fees > 0) {
+        if (isNoPrivKey) {
+            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
+        }
         BTTx *newTx = [BTTx new];
         for (NSUInteger i = 0; i < tx.outs.count; i++) {
             BTOut *out = tx.outs[i];
@@ -1016,7 +1033,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     } else {
         // no fee logic
         size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
-        if (![BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s) {
+        if (!([BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s)) {
             fees = feeBase;
         }
     }
@@ -1028,6 +1045,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     
     // note : like bitcoinj, empty wallet will not check min output
     if (fees > 0) {
+        fees = [BTMinerFeeUtil getFinalMinerFee:fees];
         BTTx *newTx = [BTTx new];
         for (NSUInteger i = 0; i < tx.outs.count; i++) {
             BTOut *out = tx.outs[i];
@@ -1058,11 +1076,11 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 }
 
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase coin:(Coin)coin; {
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey coin:(Coin)coin; {
     return nil;
 }
 
-- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase andTx:(BTTx *)tx coin:(Coin)coin{
+- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andTx:(BTTx *)tx coin:(Coin)coin{
     return nil;
 }
 
@@ -1073,11 +1091,11 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
 }
 
 
-- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase coin:(Coin)coin; {
+- (BTTx *)buildTxForAddress:(BTAddress *)address andScriptPubKey:(NSData *)scriptPubKey WithUnspendTxs:(NSArray *)unspendTxs andTx:(BTTx *)tx andChangeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey coin:(Coin)coin; {
     return nil;
 }
 
-- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase andTx:(BTTx *)tx coin:(Coin)coin{
+- (BTTx *)buildTxWithOutputs:(NSArray *)outs toAddresses:(NSArray *)addresses amounts:(NSArray *)amounts changeAddress:(NSString *)changeAddress dynamicFeeBase:(uint64_t)dynamicFeeBase isNoPrivKey:(BOOL)isNoPrivKey andTx:(BTTx *)tx coin:(Coin)coin{
     return nil;
 }
 @end

@@ -49,8 +49,9 @@
 @property(nonatomic, strong) BTPeer *downloadPeer;
 @property BOOL synchronizing;
 @property BOOL running;
-
 @property(readonly) BOOL doneSyncFromSPV;
+@property(nonatomic, strong) NSString *customPeerDnsOrIp;
+@property uint16_t customPeerPort;
 
 + (instancetype)instance;
 
@@ -70,5 +71,9 @@
 @property(nonatomic, strong) NSMutableSet *connectedPeers;
 
 - (int)waitingTaskCount;
+
+- (void)setCustomPeerDnsOrIp:(NSString *)dnsOrIp port:(uint16_t)port;
+
++ (NSArray *)getPeersFromCustomPeer:(NSString *)dnsOrIp port:(uint16_t)port;
 
 @end

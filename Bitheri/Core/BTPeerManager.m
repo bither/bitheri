@@ -50,7 +50,7 @@
 static const char *dns_seeds[] = { "testnet-seed.bitcoin.petertodd.org", "testnet-seed.bluematt.me" };
 #else // main net
 static const char *dns_seeds[] = {
-        "seed.bitcoin.sipa.be", "dnsseed.bluematt.me", "bitseed.xf2.org", "seed.bitcoinstats.com", "seed.bitnodes.io"
+        "seed.bitcoin.sipa.be", "seed.bitcoinstats.com", "dnsseed.bitcoin.dashjr.org", "seed.bitcoin.jonasschnelli.ch", "dnsseed.emzy.de", "seed.btc.petertodd.org"
 };
 #endif
 
@@ -124,6 +124,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 //                    }];
 
     return self;
+}
+
+- (void)setCustomPeerDnsOrIp:(NSString *)dnsOrIp port:(uint16_t)port {
+    self.customPeerDnsOrIp = dnsOrIp;
+    self.customPeerPort = port;
 }
 
 - (void)dealloc {
@@ -214,12 +219,22 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 #pragma mark - peer & sync
 
 - (NSArray *)bestPeersWithMaxPeerCount:(int)maxPeerCount {
-    NSArray *bestPeers = [[BTPeerProvider instance] getPeersWithLimit:maxPeerCount];
+    NSMutableArray *bestPeers = [NSMutableArray array];
+    NSArray *customPeers = [self getPeersFromCustomPeer];
+    [bestPeers addObjectsFromArray:customPeers];
+    if (bestPeers.count < maxPeerCount) {
+        [bestPeers addObjectsFromArray:[[BTPeerProvider instance] getPeersWithLimit:maxPeerCount - bestPeers.count]];
+    }
     if (bestPeers.count < maxPeerCount) {
         [[BTPeerProvider instance] recreate];
         [[BTPeerProvider instance] addPeers:bestPeers];
-        [[BTPeerProvider instance] addPeers:[self getPeersFromDns]];
-        bestPeers = [[BTPeerProvider instance] getPeersWithLimit:maxPeerCount];
+        NSArray *dnsPeers = [self getPeersFromDns];
+        [[BTPeerProvider instance] addPeers:dnsPeers];
+        if (dnsPeers.count > 0) {
+            [bestPeers removeAllObjects];
+            [bestPeers addObjectsFromArray:customPeers];
+            [bestPeers addObjectsFromArray:[[BTPeerProvider instance] getPeersWithLimit:maxPeerCount - bestPeers.count]];
+        }
     }
     return bestPeers;
 }
@@ -250,6 +265,27 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
     [[BTPeerProvider instance] addPeers:result];
     [[BTPeerProvider instance] cleanPeers];
+}
+
+- (NSArray *)getPeersFromCustomPeer {
+    return [BTPeerManager getPeersFromCustomPeer:_customPeerDnsOrIp port:_customPeerPort];
+}
+
++ (NSArray *)getPeersFromCustomPeer:(NSString *)dnsOrIp port:(uint16_t)port {
+    NSMutableArray *result = [NSMutableArray new];
+    if (dnsOrIp == NULL) {
+        return result;
+    }
+    NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+    struct hostent *h = gethostbyname([dnsOrIp UTF8String]);
+    for (int j = 0; h != NULL && h->h_addr_list[j] != NULL; j++) {
+        uint32_t addr = CFSwapInt32BigToHost(((struct in_addr *) h->h_addr_list[j])->s_addr);
+
+        // give dns peers a timestamp between 3 and 7 days ago
+        [result addObject:[[BTPeer alloc] initWithAddress:addr port:port
+                                                timestamp:now - 24 * 60 * 60 * (3 + drand48() * 4) services:NODE_NETWORK]];
+    }
+    return result;
 }
 
 - (void)start {

@@ -56,12 +56,12 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     NSString *_address;
 }
 
-- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isSyncComplete:(BOOL)isSyncComplete {
+- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isSyncComplete:(BOOL)isSyncComplete addMode:(AddressAddMode)addMode {
     BTKey *key = [BTKey keyWithBitcoinj:encryptPrivKey andPassphrase:passphrase];
-    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey isSyncComplete:isSyncComplete isXRandom:key.isFromXRandom] : nil;
+    return key ? [self initWithKey:key encryptPrivKey:encryptPrivKey isSyncComplete:isSyncComplete isXRandom:key.isFromXRandom addMode:addMode] : nil;
 }
 
-- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom {
+- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom addMode:(AddressAddMode)addMode {
     if (!(self = [super init])) return nil;
     _hasPrivKey = encryptPrivKey != nil;
     _encryptPrivKeyForCreate = encryptPrivKey;
@@ -71,10 +71,11 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _isFromXRandom = isXRandom;
     _txCount = 0;
     _recentlyTx = nil;
+    _addMode = addMode;
     return self;
 }
 
-- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom {
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom addMode:(AddressAddMode)addMode {
     if (!(self = [super init])) return nil;
 
     _hasPrivKey = hasPrivKey;
@@ -83,6 +84,7 @@ NSComparator const txComparator = ^NSComparisonResult(id obj1, id obj2) {
     _pubKey = pubKey;
     _isFromXRandom = isXRandom;
     _isSyncComplete = isSyncComplete;
+    _addMode = addMode;
     [self updateCache];
 
     return self;

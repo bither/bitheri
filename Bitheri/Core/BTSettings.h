@@ -177,6 +177,9 @@ typedef enum {
     HOT = 2
 } AppMode;
 
+typedef enum {
+    Other = 0, Create = 1, Import = 2, Clone = 3, DiceCreate = 4, BinaryCreate = 5
+} AddressAddMode;
 
 typedef void (^IdResponseBlock)(id response);
 

@@ -640,6 +640,10 @@
                                               andIsXRandom:address.isFromXRandom];
             success &= [BTAddressProvider addPasswordSeedWithPasswordSeed:[[BTPasswordSeed alloc] initWithAddress:address.address andEncryptStr:str] andDB:db];
         }
+        if (address.addMode != Other) {
+            sql = @"insert into address_add_modes(account_id,add_mode) values(?,?)";
+            success &= [db executeUpdate:sql, address.address, @(address.addMode)];
+        }
         if (success) {
             [db commit];
         } else {
@@ -660,11 +664,14 @@
             success &= [db executeUpdate:sql, address.address, address.encryptPrivKeyForCreate == nil ? [NSNull null] : address.encryptPrivKeyForCreate
                     , [NSString base58WithData:address.pubKey], @(address.isFromXRandom), @(address.isTrashed)
                     , @(address.isSyncComplete), @(address.sortTime)];
+            if (address.addMode != Other) {
+                sql = @"insert into address_add_modes(account_id,add_mode) values(?,?)";
+                success &= [db executeUpdate:sql, address.address, address.addMode];
+            }
         }
         if (passwordSeed != nil) {
             success &= [BTAddressProvider addPasswordSeedWithPasswordSeed:passwordSeed andDB:db];
         }
-
         if (success) {
             [db commit];
         } else {
@@ -941,6 +948,19 @@
         FMResultSet *rs = [db executeQuery:sql, @(seedId)];
         if ([rs next]) {
             result = [rs boolForColumnIndex:0];
+        }
+        [rs close];
+    }];
+    return result;
+}
+
+-(AddressAddMode)getAddressAddMode:(NSString *)accountId {
+    __block int result = 0;
+    [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"select add_mode from address_add_modes where account_id=?";
+        FMResultSet *rs = [db executeQuery:sql, accountId];
+        if ([rs next]) {
+            result = [rs intForColumnIndex:0];
         }
         [rs close];
     }];

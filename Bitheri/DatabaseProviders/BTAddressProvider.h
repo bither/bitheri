@@ -111,8 +111,12 @@
 - (void)updateAliasWithAddress:(NSString *)address andAlias:(NSString *)alias;
 
 -(int) getVanityLen:(NSString *)address;
+
 -(NSDictionary *)getVanityAddresses;
+
 -(void)updateVanityAddress:(NSString *)address andLen:(int)len;
+
+-(AddressAddMode)getAddressAddMode:(NSString *)accountId;
 
 #pragma mark - hd account
 

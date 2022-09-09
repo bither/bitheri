@@ -25,18 +25,21 @@
 #import "BTQRCodeUtil.h"
 #import "BTHDAccountUtil.h"
 #import "EncryptionException.h"
+#import "BTSettings.h"
 
 @class BTEncryptData;
 
 
 @interface BTHDAccountCold : NSObject
+
 @property BOOL isFromXRandom;
+@property AddressAddMode addMode;
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom;
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom addMode:(AddressAddMode)addMode;
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password;
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password addMode:(AddressAddMode)addMode;
 
-- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password;
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password addMode:(AddressAddMode)addMode;
 
 - (instancetype)initWithSeedId:(int)seedId;
 

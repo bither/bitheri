@@ -46,12 +46,13 @@
 @property(nonatomic, strong, readonly) BTTx *recentlyTx;
 
 @property(nonatomic, readonly) BOOL isCompressed;
+@property AddressAddMode addMode;
 
-- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isSyncComplete:(BOOL)isSyncComplete;
+- (instancetype)initWithBitcoinjKey:(NSString *)encryptPrivKey withPassphrase:(NSString *)passphrase isSyncComplete:(BOOL)isSyncComplete addMode:(AddressAddMode)addMode;
 
-- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom;
+- (instancetype)initWithKey:(BTKey *)key encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom addMode:(AddressAddMode)addMode;
 
-- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom;
+- (instancetype)initWithAddress:(NSString *)address encryptPrivKey:(NSString *)encryptPrivKey pubKey:(NSData *)pubKey hasPrivKey:(BOOL)hasPrivKey isSyncComplete:(BOOL)isSyncComplete isXRandom:(BOOL)isXRandom addMode:(AddressAddMode)addMode;
 
 - (instancetype)initWithWithPubKey:(NSString *)pubKey encryptPrivKey:(NSString *)encryptPrivKey isSyncComplete:(BOOL)isSyncComplete;
 

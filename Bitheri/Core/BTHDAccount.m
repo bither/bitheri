@@ -67,11 +67,11 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
 @implementation BTHDAccount
 
 - (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed password:(NSString *)password fromXRandom:(BOOL)fromXRandom andGenerationCallback:(void (^)(CGFloat progres))callback {
-    self = [self initWithMnemonicSeed:mnemonicSeed btBip39:nil password:password fromXRandom:fromXRandom syncedComplete:YES andGenerationCallback:callback];
+    self = [self initWithMnemonicSeed:mnemonicSeed btBip39:nil password:password fromXRandom:fromXRandom syncedComplete:YES addMode:Create andGenerationCallback:callback];
     return self;
 }
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password fromXRandom:(BOOL)fromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password fromXRandom:(BOOL)fromXRandom syncedComplete:(BOOL)isSyncedComplete addMode:(AddressAddMode)addMode andGenerationCallback:(void (^)(CGFloat progres))callback {
     self = [super init];
     if (self) {
         self.hdAccountId = -1;
@@ -93,7 +93,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [account clearPrivateKey];
         [master clearPrivateKey];
         [segwitAccount clearPrivateKey];
-        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:encryptedHDSeed fromXRandom:fromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:encryptedHDSeed fromXRandom:fromXRandom syncedComplete:isSyncedComplete addMode:addMode andGenerationCallback:callback];
     }
     return self;
 }
@@ -114,7 +114,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         [account clearPrivateKey];
         [master clearPrivateKey];
         [segwitAccount clearPrivateKey];
-        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] fromXRandom:encryptedMnemonicSeed.isXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:password encryptedMnemonicSeed:encryptedMnemonicSeed encryptedHDSeed:[[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:encryptedMnemonicSeed.isXRandom] fromXRandom:encryptedMnemonicSeed.isXRandom syncedComplete:isSyncedComplete addMode:Import andGenerationCallback:callback];
     }
     return self;
 }
@@ -135,7 +135,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         _isFromXRandom = isFromXRandom;
         BTBIP32Key *account = [[BTBIP32Key alloc] initWithMasterPubKey:accountExtendedPub];
         BTBIP32Key *segwitAccount = p2shp2wpkhAccountExtentedPub == nil ? nil : [[BTBIP32Key alloc] initWithMasterPubKey:p2shp2wpkhAccountExtentedPub];
-        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:nil encryptedMnemonicSeed:nil encryptedHDSeed:nil fromXRandom:isFromXRandom syncedComplete:isSyncedComplete andGenerationCallback:callback];
+        [self initHDAccountWithAccount:account segwitAccountKey:segwitAccount password:nil encryptedMnemonicSeed:nil encryptedHDSeed:nil fromXRandom:isFromXRandom syncedComplete:isSyncedComplete addMode:Other andGenerationCallback:callback];
     }
     return self;
 }
@@ -147,6 +147,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
         _isFromXRandom = [[BTHDAccountProvider instance] hdAccountIsXRandom:seedId];
         _hasSeed = [[BTHDAccountProvider instance] hasMnemonicSeed:self.hdAccountId];
         _preIssuedExternalIndex = [self issuedExternalIndexForPathType:[self getCurrentExternalPathType]];
+        self.addMode = [[BTAddressProvider instance] getAddressAddMode:[NSString stringWithFormat:@"%d", seedId]];
         [self updateBalance];
     }
     return self;
@@ -156,8 +157,9 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     return self.hdAccountId;
 }
 
-- (void)initHDAccountWithAccount:(BTBIP32Key *)accountKey segwitAccountKey:(BTBIP32Key *)segwitAccountKey password:(NSString *)password encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete andGenerationCallback:(void (^)(CGFloat progres))callback {
+- (void)initHDAccountWithAccount:(BTBIP32Key *)accountKey segwitAccountKey:(BTBIP32Key *)segwitAccountKey password:(NSString *)password encryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed encryptedHDSeed:(BTEncryptData *)encryptedHDSeed fromXRandom:(BOOL)isFromXRandom syncedComplete:(BOOL)isSyncedComplete addMode:(AddressAddMode)addMode andGenerationCallback:(void (^)(CGFloat progres))callback {
     _isFromXRandom = isFromXRandom;
+    self.addMode = addMode;
     CGFloat progress = 0;
     
     if (callback) {
@@ -242,7 +244,7 @@ NSComparator const hdTxComparator = ^NSComparisonResult(id obj1, id obj2) {
     [self wipeHDSeed];
     [self wipeMnemonicSeed];
     if (encryptedMnemonicSeed) {
-        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedDataOfPS.toEncryptedString addressOfPS:addressOfPs externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended]];
+        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:[encryptedMnemonicSeed toEncryptedString] encryptSeed:[encryptedHDSeed toEncryptedString] firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedDataOfPS.toEncryptedString addressOfPS:addressOfPs externalPub:[externalKey getPubKeyExtended] internalPub:[internalKey getPubKeyExtended] addMode:addMode];
         _hasSeed = YES;
         
         @try {

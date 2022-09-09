@@ -24,7 +24,7 @@ const int CURRENT_TX_DB_VERSION = 3;
 
 NSString *const ADDRESS_DB_VERSION = @"address_db_version";
 NSString *const ADDRESS_DB_NAME = @"address.sqlite";
-const int CURRENT_ADDRESS_DB_VERSION = 6;
+const int CURRENT_ADDRESS_DB_VERSION = 7;
 
 static BOOL canOpenTxDb;
 static BOOL canOpenAddressDb;
@@ -59,6 +59,7 @@ static BOOL canOpenAddressDb;
 @property (nonatomic, readonly) NSString *hdAccountSql;
 @property (nonatomic, readonly) NSString *vanityAddressSql;
 @property (nonatomic, readonly) NSString *hdAccountSegwitPubSql;
+@property (nonatomic, readonly) NSString *addressAddModesSql;
 
 @property (nonatomic, strong) FMDatabaseQueue *txQueue;
 @property (nonatomic, strong) FMDatabaseQueue *addressQueue;
@@ -191,9 +192,12 @@ static BOOL canOpenAddressDb;
             "(address text not null primary key"
             " , vanity_len integer );";
     _hdAccountSegwitPubSql = @"create table if not exists hd_account_segwit_pub "
-    "( hd_account_id integer not null primary key"
-    ", segwit_external_pub text not null"
-    ", segwit_internal_pub text not null);";
+            "( hd_account_id integer not null primary key"
+            ", segwit_external_pub text not null"
+            ", segwit_internal_pub text not null);";
+    _addressAddModesSql = @"create table if not exists address_add_modes "
+           "( account_id text not null primary key"
+           ", add_mode integer not null);";
     return self;
 }
 
@@ -287,10 +291,11 @@ static BOOL canOpenAddressDb;
                         success &= [self addressV4Tov5:db];
                     case 5:
                         success &= [self addressV5Tov6:db];
+                    case 6:
+                        success &= [self addressV6Tov7:db];
                         if (success) {
                             [self setAddressDbVersion];
                         }
-
                     default:
                         break;
                 }
@@ -347,6 +352,7 @@ static BOOL canOpenAddressDb;
         [db executeUpdate:self.hdAccountSql];
         [db executeUpdate:self.vanityAddressSql];
         [db executeUpdate:self.hdAccountSegwitPubSql];
+        [db executeUpdate:self.addressAddModesSql];
         [db commit];
         return YES;
     } else {
@@ -394,6 +400,17 @@ static BOOL canOpenAddressDb;
     if ([db open]) {
         [db beginTransaction];
         [db executeUpdate:self.hdAccountSegwitPubSql];
+        [db commit];
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+- (BOOL)addressV6Tov7:(FMDatabase *)db {
+    if ([db open]) {
+        [db beginTransaction];
+        [db executeUpdate:self.addressAddModesSql];
         [db commit];
         return YES;
     } else {

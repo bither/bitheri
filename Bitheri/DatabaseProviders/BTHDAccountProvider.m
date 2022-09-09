@@ -38,7 +38,7 @@
 - (int)addHDAccountWithEncryptedMnemonicSeed:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
                                 firstAddress:(NSString *)firstAddress isXRandom:(BOOL)isXRandom
                              encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPs
-                                 externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;{
+                                 externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub addMode:(AddressAddMode)addMode {
     __block int hdAccountId = -1;
     [[[BTDatabaseManager instance] getAddressDbQueue] inDatabase:^(FMDatabase *db) {
         [db beginTransaction];
@@ -57,10 +57,18 @@
             hdAccountId = [rs intForColumnIndex:0];
         }
         [rs close];
-        if (success) {
-            [db commit];
-        } else {
+        if (hdAccountId == -1) {
             [db rollback];
+        } else {
+            if (addMode != Other) {
+                sql = @"insert into address_add_modes(account_id,add_mode) values(?,?)";
+                success &= [db executeUpdate:sql, [NSString stringWithFormat:@"%d", hdAccountId], @(addMode)];
+            }
+            if (success) {
+                [db commit];
+            } else {
+                [db rollback];
+            }
         }
     }];
     return hdAccountId;

@@ -41,13 +41,14 @@
 
 @implementation BTHDAccountCold
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom {
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 password:(NSString *)password andFromXRandom:(BOOL)isFromXRandom addMode:(AddressAddMode)addMode {
     self = [super init];
     if (self) {
         self.mnemonicSeed = mnemonicSeed;
         self.btBip39 = bip39;
         self.hdSeed = [BTHDAccountCold seedFromMnemonic:mnemonicSeed btBip39:_btBip39];
         _isFromXRandom = isFromXRandom;
+        self.addMode = addMode;
         BTBIP32Key *master = [[BTBIP32Key alloc] initWithSeed:self.hdSeed];
         BTEncryptData *encryptedHDSeed = [[BTEncryptData alloc] initWithData:self.hdSeed andPassowrd:password andIsXRandom:isFromXRandom];
         BTEncryptData *encryptedMnemonicSeed = [[BTEncryptData alloc] initWithData:self.mnemonicSeed andPassowrd:password andIsXRandom:isFromXRandom];
@@ -69,7 +70,7 @@
         [master wipe];
         [self wipeHDSeed];
         [self wipeMnemonicSeed];
-        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:encryptedMnemonicSeed.toEncryptedString encryptSeed:encryptedHDSeed.toEncryptedString firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedDataOfPS.toEncryptedString addressOfPS:addressOfPs externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended];
+        self.hdAccountId = [[BTHDAccountProvider instance] addHDAccountWithEncryptedMnemonicSeed:encryptedMnemonicSeed.toEncryptedString encryptSeed:encryptedHDSeed.toEncryptedString firstAddress:firstAddress isXRandom:isFromXRandom encryptSeedOfPS:encryptedDataOfPS.toEncryptedString addressOfPS:addressOfPs externalPub:externalKey.getPubKeyExtended internalPub:internalKey.getPubKeyExtended addMode:addMode];
         [externalKey wipe];
         [internalKey wipe];
         
@@ -83,12 +84,12 @@
     return self;
 }
 
-- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password {
-    return [self initWithMnemonicSeed:mnemonicSeed btBip39:bip39 password:password andFromXRandom:NO];
+- (instancetype)initWithMnemonicSeed:(NSData *)mnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password addMode:(AddressAddMode)addMode {
+    return [self initWithMnemonicSeed:mnemonicSeed btBip39:bip39 password:password andFromXRandom:NO addMode:addMode];
 }
 
-- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password {
-    return [self initWithMnemonicSeed:[encryptedMnemonicSeed decrypt:password] btBip39:bip39 password:password andFromXRandom:encryptedMnemonicSeed.isXRandom];
+- (instancetype)initWithEncryptedMnemonicSeed:(BTEncryptData *)encryptedMnemonicSeed btBip39:(BTBIP39 *)bip39 andPassword:(NSString *)password addMode:(AddressAddMode)addMode {
+    return [self initWithMnemonicSeed:[encryptedMnemonicSeed decrypt:password] btBip39:bip39 password:password andFromXRandom:encryptedMnemonicSeed.isXRandom addMode:addMode];
 }
 
 - (instancetype)initWithSeedId:(int)seedId {

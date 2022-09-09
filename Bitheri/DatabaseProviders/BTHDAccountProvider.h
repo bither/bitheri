@@ -24,7 +24,7 @@
 - (int)addHDAccountWithEncryptedMnemonicSeed:(NSString *)encryptedMnemonicSeed encryptSeed:(NSString *)encryptSeed
                                 firstAddress:(NSString *)firstAddress isXRandom:(BOOL)isXRandom
                              encryptSeedOfPS:(NSString *)encryptSeedOfPs addressOfPS:(NSString *)addressOfPS
-                                 externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub;
+                                 externalPub:(NSData *)externalPub internalPub:(NSData *)internalPub addMode:(AddressAddMode)addMode;
 
 - (int)addMonitoredHDAccount:(NSString *)firstAddress isXRandom:(int)isXRandom externalPub:(NSData *)externalPub
                  internalPub:(NSData *)internalPub;

@@ -808,7 +808,7 @@
 }
 
 
-- (BTAddress *)formatAddress:(FMResultSet *)rs; {
+- (BTAddress *)formatAddress:(FMResultSet *)rs db:(FMDatabase *)db {
     NSString *address = [rs stringForColumn:@"address"];
     BOOL hasPrivKey = [rs boolForColumn:@"has_priv_key"];
     NSData *pubKey = [[rs stringForColumn:@"pub_key"] base58ToData];
@@ -825,7 +825,7 @@
     }
     [rsAddMode close];
     
-    BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address encryptPrivKey:nil pubKey:pubKey hasPrivKey:hasPrivKey isSyncComplete:isSyncComplete isXRandom:isFromXRandom];
+    BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address encryptPrivKey:nil pubKey:pubKey hasPrivKey:hasPrivKey isSyncComplete:isSyncComplete isXRandom:isFromXRandom addMode:addMode];
     btAddress.isTrashed = isTrashed;
     btAddress.sortTime = sortTime;
     return btAddress;

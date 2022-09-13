@@ -618,7 +618,7 @@
                 " from addresses order by sort_time desc";
         FMResultSet *rs = [db executeQuery:sql];
         while ([rs next]) {
-            [addresses addObject:[self formatAddress:rs]];
+            [addresses addObject:[self formatAddress:rs db:db]];
         }
         [rs close];
     }];
@@ -816,6 +816,15 @@
     BOOL isTrashed = [rs boolForColumn:@"is_trash"];
     BOOL isSyncComplete = [rs boolForColumn:@"is_synced"];
     long long int sortTime = [rs longLongIntForColumn:@"sort_time"];
+    
+    AddressAddMode addMode = Other;
+    NSString *sql = @"select add_mode from address_add_modes where account_id=?";
+    FMResultSet *rsAddMode = [db executeQuery:sql, address];
+    if ([rsAddMode next]) {
+        addMode = [rsAddMode intForColumnIndex:0];
+    }
+    [rsAddMode close];
+    
     BTAddress *btAddress = [[BTAddress alloc] initWithAddress:address encryptPrivKey:nil pubKey:pubKey hasPrivKey:hasPrivKey isSyncComplete:isSyncComplete isXRandom:isFromXRandom];
     btAddress.isTrashed = isTrashed;
     btAddress.sortTime = sortTime;

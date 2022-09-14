@@ -97,6 +97,7 @@
     if (self) {
         self.hdAccountId = seedId;
         _isFromXRandom = [[BTHDAccountProvider instance] hdAccountIsXRandom:self.hdAccountId];
+        self.addMode = [[BTAddressProvider instance] getAddressAddMode:[NSString stringWithFormat:@"%d", seedId]];
     }
     return self;
 }

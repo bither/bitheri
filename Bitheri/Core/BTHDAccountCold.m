@@ -202,7 +202,7 @@
     if (words == NULL || words.count == 0) {
         @throw [[EncryptionException alloc] initWithName:@"EncryptionException" reason:@"EncryptionException" userInfo:nil];
     }
-    BTBIP39 *bip39 = [BTBIP39 sharedInstance];
+    BTBIP39 *bip39 = [self getBip39];
     NSString *code = [bip39 toMnemonicWithArray:words];
     NSData *mnemonicCodeSeed = [bip39 toEntropy:code];
     if (mnemonicCodeSeed == NULL) {

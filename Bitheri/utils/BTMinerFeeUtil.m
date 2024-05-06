@@ -12,11 +12,12 @@
 
 @implementation BTMinerFeeUtil
 
-+ (uint64_t)getFinalMinerFee:(uint64_t)fee {
-    if (fee <= 0) {
-        return fee;
++ (uint64_t)getFinalMinerFee:(uint64_t)fee isNoPrivKey:(BOOL)isNoPrivKey {
+    long finalFee = MAX(fee, 1000);
+    if (isNoPrivKey == FALSE) {
+        return finalFee;
     }
-    NSString *feeHex = [BTMinerFeeUtil longToHex:fee];
+    NSString *feeHex = [BTMinerFeeUtil longToHex:finalFee];
     if (feeHex == NULL || feeHex.length == 0) {
         return fee;
     }
@@ -29,7 +30,7 @@
         }
     }
     if (isAddress == false) {
-        return fee;
+        return finalFee;
     }
     NSData *data = feeHex.hexToData;
     uint8_t first = 0;

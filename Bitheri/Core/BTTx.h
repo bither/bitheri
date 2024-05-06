@@ -60,6 +60,7 @@ typedef enum {
 @property(nonatomic, readwrite) BOOL isDetectBcc;
 @property(nonatomic, assign) BOOL isSegwitAddress;
 @property(nonatomic, strong) NSMutableArray *witnesses;
+@property(nonatomic, assign) uint estimationTxSize;
 
 + (instancetype)transactionWithMessage:(NSData *)message;
 

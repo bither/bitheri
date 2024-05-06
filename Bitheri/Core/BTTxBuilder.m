@@ -79,7 +79,7 @@
         NSArray *outs = [unspendOuts subarrayWithRange:NSMakeRange(i * count, MIN(count, unspendOuts.count - i * count))];
         NSArray *amounts = @[@([BTTxBuilder getAmount:outs])];
         BTTx *emptyWalletTx = [emptyWallet buildTxWithOutputs:outs toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:0 isNoPrivKey:true andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:coin];
-        if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
+        if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithSelectUnspentOuts:outs andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
             emptyWalletTx.coin = coin;
             [emptyWalletTxs addObject:emptyWalletTx];
         } else if (emptyWalletTx != nil) {
@@ -87,7 +87,7 @@
                 return nil;
             }
             return [self getEmptyWalletTxsWithOutputs:unspendOuts toAddresses:addresses changeAddress:changeAddress splitNumber:splitNumber + 1 coin:coin];
-        } 
+        }
     }
     return emptyWalletTxs;
 }
@@ -105,7 +105,7 @@
     }
 
     BTTx *emptyWalletTx = [emptyWallet buildTxWithOutputs:unspendOuts toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:BTC];
-    if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithInCount:emptyWalletTx.ins.count andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
+    if (emptyWalletTx != nil && [BTTxBuilder estimationTxSizeWithSelectUnspentOuts:unspendOuts andOutCount:emptyWalletTx.outs.count] <= TX_MAX_SIZE) {
         return emptyWalletTx;
     } else if (emptyWalletTx != nil) {
         *error = [NSError errorWithDomain:ERROR_DOMAIN code:ERR_TX_MAX_SIZE_CODE userInfo:nil];
@@ -124,7 +124,7 @@
     NSMutableArray *txs = [NSMutableArray new];
     for (NSObject <BTTxBuilderProtocol> *builder in txBuilders) {
         BTTx *tx = [builder buildTxWithOutputs:unspendOuts toAddresses:addresses amounts:amounts changeAddress:changeAddress dynamicFeeBase:dynamicFeeBase isNoPrivKey:isNoPrivKey andTx:[BTTxBuilder prepareTxWithAmounts:amounts andAddresses:addresses] coin:BTC];
-        if (tx != nil && [BTTxBuilder estimationTxSizeWithInCount:tx.ins.count andOutCount:tx.outs.count] <= TX_MAX_SIZE) {
+        if (tx != nil && [BTTxBuilder estimationTxSizeWithSelectUnspentOuts:unspendOuts andOutCount:tx.outs.count] <= TX_MAX_SIZE) {
             [txs addObject:tx];
         } else if (tx != nil) {
             mayTxMaxSize = YES;
@@ -346,8 +346,24 @@
     }
 }
 
-+ (size_t)estimationTxSizeWithInCount:(NSUInteger)inCount andOutCount:(NSUInteger)outCount; {
-    return (size_t) (10 + 149 * inCount + 34 * outCount);
++ (size_t)estimationTxSizeWithSelectUnspentOuts:(NSArray *)selectUnspentOuts andOutCount:(NSUInteger)outCount {
+    uint size = 10;
+    uint p2shCount = 0;
+    for (BTOut *out in selectUnspentOuts) {
+        size += 149;
+        if ([[[BTScript alloc] initWithProgram:out.outScript] isSentToP2SH]) {
+            size += 24;
+            p2shCount += 1;
+        }
+    }
+    size += 34 * outCount;
+    if (p2shCount > 0) {
+        uint baseTxSize = size - (SIG_SIZE + 33) * p2shCount;
+        uint weight = baseTxSize * 3 + size;
+        return round((float) weight / 4.0);
+    } else {
+        return size;
+    }
 }
 
 + (size_t)estimationTxSizeWithInCount:(NSUInteger)inCount andScriptPubKey:(NSData *)scriptPubKeyData andOuts:(NSArray *)outs andIsCompressed:(BOOL)isCompressed; {
@@ -484,17 +500,13 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     while (YES) {
         uint64_t fees = 0;
 
-        if (lastCalculatedSize >= 1000) {
+        if (lastCalculatedSize > 0) {
             // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
-            fees += (lastCalculatedSize / 1000 + 1) * feeBase;
-        }
-        if (needAtLeastReferenceFee && fees < feeBase) {
-            fees = feeBase;
+            [tx setEstimationTxSize:lastCalculatedSize];
+            fees += round(lastCalculatedSize * feeBase / 1000.0);
         }
         
-        if (isNoPrivKey) {
-            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
-        }
+        fees = [BTMinerFeeUtil getFinalMinerFee:fees isNoPrivKey:isNoPrivKey];
 
         valueNeeded = value + fees;
 
@@ -515,7 +527,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
                 needAtLeastReferenceFee = YES;
                 continue;
             }
-            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outs.count];
+            size_t s = [BTTxBuilder estimationTxSizeWithSelectUnspentOuts:selectedOuts andOutCount:tx.outs.count];
             if (total - value > CENT)
                 s += 34;
             if (!([BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s)) {
@@ -530,14 +542,6 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
         uint64_t change = [BTTxBuilder getAmount:selectedOuts] - valueNeeded;
         if (additionalValueSelected > 0)
             change += additionalValueSelected;
-
-        if (ensureMinRequiredFee && change != 0 && change < CENT && fees < feeBase) {
-            // This solution may fit into category 2, but it may also be category 3, we'll check that later
-            eitherCategory2Or3 = true;
-            additionalValueForNextCategory = CENT;
-            // If the change is smaller than the fee we want to add, this will be negative
-            change -= feeBase - fees;
-        }
 
         int size = 0;
         BTOut *changeOutput = nil;
@@ -566,8 +570,8 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             }
         }
 
-        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andOutCount:tx.outs.count];
-        if (size / 1000 > lastCalculatedSize / 1000 && feeBase > 0) {
+        size += [BTTxBuilder estimationTxSizeWithSelectUnspentOuts:selectedOuts andOutCount:tx.outs.count];
+        if (size > lastCalculatedSize && feeBase > 0) {
             lastCalculatedSize = size;
             // We need more fees anyway, just try again with the same additional value
             additionalValueForNextCategory = additionalValueSelected;
@@ -692,17 +696,13 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     while (YES) {
         uint64_t fees = 0;
 
-        if (lastCalculatedSize >= 1000) {
+        if (lastCalculatedSize > 0) {
             // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
-            fees += (lastCalculatedSize / 1000 + 1) * feeBase;
+            [tx setEstimationTxSize:lastCalculatedSize];
+            fees += round(lastCalculatedSize * feeBase / 1000.0);
         }
-        if (needAtLeastReferenceFee && fees < feeBase) {
-            fees = feeBase;
-        }
-        
-        if (isNoPrivKey) {
-            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
-        }
+
+        fees = [BTMinerFeeUtil getFinalMinerFee:fees isNoPrivKey:isNoPrivKey];
 
         valueNeeded = value + fees;
 
@@ -723,7 +723,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
                 needAtLeastReferenceFee = YES;
                 continue;
             }
-            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
+            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
             if (total - value > CENT)
                 s += 34;
             if (!([BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s)) {
@@ -738,14 +738,6 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
         uint64_t change = [BTTxBuilder getAmount:selectedOuts] - valueNeeded;
         if (additionalValueSelected > 0)
             change += additionalValueSelected;
-
-        if (ensureMinRequiredFee && change != 0 && change < CENT && fees < feeBase) {
-            // This solution may fit into category 2, but it may also be category 3, we'll check that later
-            eitherCategory2Or3 = true;
-            additionalValueForNextCategory = CENT;
-            // If the change is smaller than the fee we want to add, this will be negative
-            change -= feeBase - fees;
-        }
 
         int size = 0;
         BTOut *changeOutput = nil;
@@ -778,8 +770,8 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             }
         }
 
-        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
-        if (size / 1000 > lastCalculatedSize / 1000 && feeBase > 0) {
+        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
+        if (size > lastCalculatedSize && feeBase > 0) {
             lastCalculatedSize = size;
             // We need more fees anyway, just try again with the same additional value
             additionalValueForNextCategory = additionalValueSelected;
@@ -911,22 +903,18 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
         fees = feeBase;
     } else {
         // no fee logic
-        size_t s = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outs.count];
+        size_t s = [BTTxBuilder estimationTxSizeWithSelectUnspentOuts:outs andOutCount:tx.outs.count];
         if (!([BTTxBuilder getCoinDepth:outs] > TX_FREE_MIN_PRIORITY * s)) {
             fees = feeBase;
         }
     }
 
-    size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andOutCount:tx.outs.count];
-    if (size > 1000) {
-        fees = (size / 1000 + 1) * feeBase;
-    }
+    size_t size = [BTTxBuilder estimationTxSizeWithSelectUnspentOuts:outs andOutCount:tx.outs.count];
+    fees = round(size * feeBase / 1000.0);
 
     // note : like bitcoinj, empty wallet will not check min output
     if (fees > 0) {
-        if (isNoPrivKey) {
-            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
-        }
+        fees = [BTMinerFeeUtil getFinalMinerFee:fees isNoPrivKey:isNoPrivKey];
         BTTx *newTx = [BTTx new];
         for (NSUInteger i = 0; i < tx.outs.count; i++) {
             BTOut *out = tx.outs[i];
@@ -941,6 +929,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             [newTx addOutputAddress:out.outAddress amount:amount];
         }
         tx = newTx;
+        [tx setEstimationTxSize:size];
     }
     for (BTOut *outItem in outs) {
         [tx addInputHash:outItem.txHash index:outItem.outSn script:outItem.outScript];
@@ -981,15 +970,11 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     }
 
     size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
-    if (size > 1000) {
-        fees = (size / 1000 + 1) * feeBase;
-    }
+    fees = round(size * feeBase / 1000.0);
 
     // note : like bitcoinj, empty wallet will not check min output
     if (fees > 0) {
-        if (isNoPrivKey) {
-            fees = [BTMinerFeeUtil getFinalMinerFee:fees];
-        }
+        fees = [BTMinerFeeUtil getFinalMinerFee:fees isNoPrivKey:isNoPrivKey];
         BTTx *newTx = [BTTx new];
         for (NSUInteger i = 0; i < tx.outs.count; i++) {
             BTOut *out = tx.outs[i];
@@ -1004,6 +989,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             [newTx addOutputAddress:out.outAddress amount:amount];
         }
         tx = newTx;
+        [tx setEstimationTxSize:size];
     }
     for (BTOut *outItem in outs) {
         [tx addInputHash:outItem.txHash index:outItem.outSn script:scriptPubKey];
@@ -1039,13 +1025,11 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
     }
     
     size_t size = [BTTxBuilder estimationTxSizeWithInCount:outs.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
-    if (size > 1000) {
-        fees = (size / 1000 + 1) * feeBase;
-    }
+    fees = round(size * feeBase / 1000.0);
     
     // note : like bitcoinj, empty wallet will not check min output
     if (fees > 0) {
-        fees = [BTMinerFeeUtil getFinalMinerFee:fees];
+        fees = [BTMinerFeeUtil getFinalMinerFee:fees isNoPrivKey:address.hasPrivKey];
         BTTx *newTx = [BTTx new];
         for (NSUInteger i = 0; i < tx.outs.count; i++) {
             BTOut *out = tx.outs[i];

@@ -630,10 +630,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         }
 
         if ([self.downloadPeer isEqual:peer]) { // download peer disconnected
-            _connected = NO;
+            self->_connected = NO;
             [self.downloadPeer setSynchronising:NO];
-            self.downloadPeer = nil;
             [self syncStopped];
+            self.downloadPeer = nil;
             if (self.connectFailure > MAX_CONNECT_FAILURE_COUNT)
                 self.connectFailure = MAX_CONNECT_FAILURE_COUNT;
         }

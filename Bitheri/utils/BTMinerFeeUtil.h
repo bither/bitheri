@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface BTMinerFeeUtil : NSObject
 
-+ (uint64_t)getFinalMinerFee:(uint64_t)fee;
++ (uint64_t)getFinalMinerFee:(uint64_t)fee isNoPrivKey:(BOOL)isNoPrivKey;
 
 @end
 

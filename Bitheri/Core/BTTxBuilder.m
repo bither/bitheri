@@ -723,7 +723,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
                 needAtLeastReferenceFee = YES;
                 continue;
             }
-            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
+            size_t s = [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
             if (total - value > CENT)
                 s += 34;
             if (!([BTTxBuilder getCoinDepth:selectedOuts] > TX_FREE_MIN_PRIORITY * s)) {
@@ -770,7 +770,7 @@ NSComparator const unspentOutComparator = ^NSComparisonResult(id obj1, id obj2) 
             }
         }
 
-        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
+        size += [BTTxBuilder estimationTxSizeWithInCount:selectedOuts.count andScriptPubKey:scriptPubKey andOuts:tx.outs andIsCompressed:address.isCompressed];
         if (size > lastCalculatedSize && feeBase > 0) {
             lastCalculatedSize = size;
             // We need more fees anyway, just try again with the same additional value

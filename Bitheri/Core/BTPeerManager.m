@@ -100,7 +100,11 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     _q.name = @"net.bither.peermanager";
     _q.maxConcurrentOperationCount = 1;
     if ([_q respondsToSelector:@selector(setQualityOfService:)]) {
-        _q.qualityOfService = NSQualityOfServiceUserInitiated;
+        if (@available(iOS 8.0, *)) {
+            _q.qualityOfService = NSQualityOfServiceUserInitiated;
+        } else {
+            // Fallback on earlier versions
+        }
     }
     _txRelays = [NSMutableDictionary dictionary];
     _publishedTx = [NSMutableDictionary dictionary];
@@ -347,7 +351,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             [self sendPeerCountChangeNotification:self.connectedPeers.count];
             if (self.connectedPeers.count == 0) {
                 [self.downloadPeer setSynchronising:NO];
-                [self syncStopped];
+                [self syncStopped:NO];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [[NSNotificationCenter defaultCenter] postNotificationName:BTPeerManagerSyncFailedNotification
@@ -399,10 +403,12 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     }
 }
 
-- (void)syncStopped {
+- (void)syncStopped:(BOOL)isSendSyncProgress {
     self.synchronizing = NO;
     self.syncStartHeight = 0;
-    [self sendSyncProgressNotification];
+    if (isSendSyncProgress) {
+        [self sendSyncProgressNotification];
+    }
     if (self.taskId != UIBackgroundTaskInvalid) {
         [[UIApplication sharedApplication] endBackgroundTask:self.taskId];
         self.taskId = UIBackgroundTaskInvalid;
@@ -535,13 +541,13 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
     [self.q addOperationWithBlock:^{
         DDLogDebug(@"%@:%d connected with lastblock %d", peer.host, peer.peerPort, peer.versionLastBlock);
         self.connectFailure = 0;
-        if (!_connected) {
-            _connected = YES;
+        if (!self->_connected) {
+            self->_connected = YES;
             [self sendConnectedChangeNotification];
         }
 
         [peer connectSucceed];
-        _bloomFilter = nil; // make sure the bloom filter is updated
+        self->_bloomFilter = nil; // make sure the bloom filter is updated
         [peer sendFilterLoadMessage:[self peerBloomFilter:peer]];
 
         if (!self.doneSyncFromSPV && self.lastBlockHeight >= peer.versionLastBlock) {
@@ -584,6 +590,10 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         if (self.taskId == UIBackgroundTaskInvalid) { // start a background task for the chain sync
             self.taskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+                if (self->_taskId != UIBackgroundTaskInvalid) {
+                    [[UIApplication sharedApplication] endBackgroundTask:self->_taskId];
+                    self->_taskId = UIBackgroundTaskInvalid;
+                }
             }];
         }
 
@@ -632,8 +642,8 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         if ([self.downloadPeer isEqual:peer]) { // download peer disconnected
             self->_connected = NO;
             [self.downloadPeer setSynchronising:NO];
-            [self syncStopped];
             self.downloadPeer = nil;
+            [self syncStopped:NO];
             if (self.connectFailure > MAX_CONNECT_FAILURE_COUNT)
                 self.connectFailure = MAX_CONNECT_FAILURE_COUNT;
         }
@@ -724,7 +734,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         if (self.lastBlockHeight == peer.versionLastBlock) {
             [self.downloadPeer setSynchronising:NO];
-            [self syncStopped];
+            [self syncStopped:YES];
             [peer sendGetAddrMessage];
 
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -785,7 +795,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 
         if (block.blockNo == peer.versionLastBlock && block == self.blockChain.lastBlock) { // chain download is complete
             [self.downloadPeer setSynchronising:NO];
-            [self syncStopped];
+            [self syncStopped:YES];
             [peer sendGetAddrMessage]; // request a list of other bitcoin peers
 
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -848,7 +858,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
             [[BTAddressManager instance] blockChainChanged];
             if (self.blockChain.lastBlock.blockNo >= peer.versionLastBlock) { // chain download is complete
                 [self.downloadPeer setSynchronising:NO];
-                [self syncStopped];
+                [self syncStopped:YES];
                 [peer sendGetAddrMessage]; // request a list of other bitcoin peers
 
                 dispatch_async(dispatch_get_main_queue(), ^{

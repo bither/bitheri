@@ -327,7 +327,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
         return;
     
     [self.q addOperationWithBlock:^{
-        [self.connectedPeers minusSet:[self.connectedPeers objectsPassingTest:^BOOL(id obj, BOOL *stop) {
+        [self.connectedPeers minusSet:[[NSSet setWithSet:self.connectedPeers] objectsPassingTest:^BOOL(id obj, BOOL *stop) {
             return [obj status] == BTPeerStatusDisconnected;
         }]];
         [self maxPeerCountWithCompletion:^(int maxPeerCount) {
@@ -515,7 +515,7 @@ NSString *const BITHERI_DONE_SYNC_FROM_SPV = @"bitheri_done_sync_from_spv";
 //    [self.publishedTx removeObjectForKey:txHash];
     [self.publishedCallback removeObjectForKey:txHash];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(txTimeout:) object:txHash];
-    for (BTPeer *peer in self.connectedPeers) {
+    for (BTPeer *peer in [NSSet setWithSet:self.connectedPeers]) {
         [peer disconnectPeer];
     }
     if (callback) {

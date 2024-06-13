@@ -396,7 +396,9 @@
             FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:txItem.txHash]
                     , @(outItem.outSn)];
             if ([rs next]) {
-                [addressesTxsRels addObject:@[outItem.outAddress, [[rs stringForColumn:@"tx_hash"] base58ToData]]];
+                if (outItem.outAddress != nil) {
+                    [addressesTxsRels addObject:@[outItem.outAddress, [[rs stringForColumn:@"tx_hash"] base58ToData]]];
+                }
                 sql = @"update outs set out_status=? where tx_hash=? and out_sn=?";
                 success = [db executeUpdate:sql, @(spent), [NSString base58WithData:txItem.txHash], @(outItem.outSn)];
             }
@@ -497,7 +499,9 @@
                 FMResultSet *rs = [db executeQuery:sql, [NSString base58WithData:txItem.txHash]
                         , @(outItem.outSn)];
                 if ([rs next]) {
-                    [addressesTxsRels addObject:@[outItem.outAddress, [[rs stringForColumn:@"tx_hash"] base58ToData]]];
+                    if (outItem.outAddress != nil) {
+                        [addressesTxsRels addObject:@[outItem.outAddress, [[rs stringForColumn:@"tx_hash"] base58ToData]]];
+                    }
                 }
                 [rs close];
             }

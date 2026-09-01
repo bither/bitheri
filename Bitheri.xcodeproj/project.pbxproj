@@ -11,6 +11,7 @@
 		0A333FAD1A778F9B00F6EFF2 /* BTHDMPubsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A333FAC1A778F9B00F6EFF2 /* BTHDMPubsTest.m */; };
 		1BC274AE1F44DB054B95558C /* BTHDAccountCold.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */; };
 		1BC27BE1564E006216779DD1 /* DiceTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1BC27F81F7C4CFD1E87303CF /* DiceTest.m */; };
+		3D5D3C0E26AD254F0600D1D6 /* libPods-Bitheri.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EE0D62592482BE7E0B270581 /* libPods-Bitheri.a */; };
 		4005800B23B601600068E594 /* BTSegwitAddrData.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1C23B4D7A700AEECF3 /* BTSegwitAddrData.m */; };
 		4005800C23B601630068E594 /* BTBech32.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1D23B4D7A700AEECF3 /* BTBech32.m */; };
 		4005800D23B601650068E594 /* BTBech32Data.m in Sources */ = {isa = PBXBuildFile; fileRef = 40561B1A23B4D7A700AEECF3 /* BTBech32Data.m */; };
@@ -32,7 +33,6 @@
 		40F5367E25BEC3960026ACF2 /* EncryptionException.m in Sources */ = {isa = PBXBuildFile; fileRef = 40F5367D25BEC3960026ACF2 /* EncryptionException.m */; };
 		42796BF619446739002BC454 /* BTBlockChain.m in Sources */ = {isa = PBXBuildFile; fileRef = 42796BF519446739002BC454 /* BTBlockChain.m */; };
 		428DB454194ECA9C00C81A4B /* BTPasswordSeed.m in Sources */ = {isa = PBXBuildFile; fileRef = 428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */; };
-		983833E3E62E487BB1A66946 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A40D2AD541D849FE969335C0 /* libPods.a */; };
 		AC9BBD0119D2A27500E58BA7 /* BTPrivateKeyUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BBD0019D2A27500E58BA7 /* BTPrivateKeyUtil.m */; };
 		AC9BC60919D15B08003B88B5 /* BTQRCodeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */; };
 		AC9BC60A19D15B08003B88B5 /* BTUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60819D15B08003B88B5 /* BTUtils.m */; };
@@ -115,7 +115,6 @@
 		DA1543B9196FDB89007F629E /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DA1543B8196FDB89007F629E /* libz.dylib */; };
 		DA20E0401A778BB4001C9EE5 /* BTHDMKeychainRecover.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A29B0C51A761C380020BCD7 /* BTHDMKeychainRecover.m */; };
 		DA2154391A71F592000BD6D3 /* BIP39EnglishWords.plist in Resources */ = {isa = PBXBuildFile; fileRef = D61D082A93F0A14CFBF2BD43 /* BIP39EnglishWords.plist */; };
-		DA24941B19E14F66006CA994 /* libPods-OpenSSL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA24941A19E14F66006CA994 /* libPods-OpenSSL.a */; };
 		DA24941D19E1517C006CA994 /* BTQRCodeUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60619D15B07003B88B5 /* BTQRCodeUtil.m */; };
 		DA24941E19E151A5006CA994 /* BTUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BC60819D15B08003B88B5 /* BTUtils.m */; };
 		DA24941F19E16D95006CA994 /* BTPrivateKeyUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = AC9BBD0019D2A27500E58BA7 /* BTPrivateKeyUtil.m */; };
@@ -136,11 +135,8 @@
 		DA41E65D1957D0910038AFDB /* BTDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D02CCB956C40B84F4B889 /* BTDatabaseManager.m */; };
 		DA41E65F1957D0910038AFDB /* BTBlockProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D01DAC8BCD383607B7676 /* BTBlockProvider.m */; };
 		DA41E6601957D0910038AFDB /* BTPeerProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D07A59B0E01BFDF795D1F /* BTPeerProvider.m */; };
-		DA41E6671957D0B20038AFDB /* libPods-FMDB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA41E6621957D0B20038AFDB /* libPods-FMDB.a */; };
-		DA41E6691957D0B20038AFDB /* libPods-Reachability.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA41E6641957D0B20038AFDB /* libPods-Reachability.a */; };
 		DA41E66B195A884D0038AFDB /* BTSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D073CC13048357C70737F /* BTSettings.m */; };
 		DA41E66C195A95020038AFDB /* BTSendTest.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D010D3A723E51A5306A15 /* BTSendTest.m */; };
-		DA41E678195D65080038AFDB /* libPods-CocoaLumberjack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DA41E677195D65080038AFDB /* libPods-CocoaLumberjack.a */; };
 		DA6F188119663F3300259A89 /* BTScript.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D09477CB9EC34335869FA /* BTScript.m */; };
 		DA6F188219663F3300259A89 /* BTScriptBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D028E9EEAD28B9868E628 /* BTScriptBuilder.m */; };
 		DA6F188319663F3300259A89 /* BTScriptChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = D61D059FF8F45BEECE09DF93 /* BTScriptChunk.m */; };
@@ -192,7 +188,7 @@
 		1BC279F448C571E7950F2A30 /* BTHDAccountCold.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccountCold.h; sourceTree = "<group>"; };
 		1BC27B33AC7D786307F9FD68 /* BTHDAccountCold.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountCold.m; sourceTree = "<group>"; };
 		1BC27F81F7C4CFD1E87303CF /* DiceTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiceTest.m; sourceTree = "<group>"; };
-		215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
+		386F9756BE73391E931B0C89 /* Pods-Bitheri.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Bitheri.release.xcconfig"; path = "Target Support Files/Pods-Bitheri/Pods-Bitheri.release.xcconfig"; sourceTree = "<group>"; };
 		402B83121E62E73100379C39 /* BIP39ZhCNWords.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BIP39ZhCNWords.plist; sourceTree = "<group>"; };
 		402B83131E62E73100379C39 /* BIP39ZhTWWords.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BIP39ZhTWWords.plist; sourceTree = "<group>"; };
 		403C71F022295BC200E523D1 /* NSDictionary+Fromat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+Fromat.m"; sourceTree = "<group>"; };
@@ -219,8 +215,7 @@
 		42796BF519446739002BC454 /* BTBlockChain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTBlockChain.m; sourceTree = "<group>"; };
 		428DB452194ECA9C00C81A4B /* BTPasswordSeed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPasswordSeed.h; sourceTree = "<group>"; };
 		428DB453194ECA9C00C81A4B /* BTPasswordSeed.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTPasswordSeed.m; sourceTree = "<group>"; };
-		9F9268CD0BD91D08EA89841E /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
-		A40D2AD541D849FE969335C0 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		62C64CA4297273779B260FB5 /* Pods-Bitheri.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Bitheri.debug.xcconfig"; path = "Target Support Files/Pods-Bitheri/Pods-Bitheri.debug.xcconfig"; sourceTree = "<group>"; };
 		AC9BBCFF19D2A27500E58BA7 /* BTPrivateKeyUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTPrivateKeyUtil.h; sourceTree = "<group>"; };
 		AC9BBD0019D2A27500E58BA7 /* BTPrivateKeyUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTPrivateKeyUtil.m; sourceTree = "<group>"; };
 		AC9BC60519D15B07003B88B5 /* BTQRCodeUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTQRCodeUtil.h; sourceTree = "<group>"; };
@@ -338,13 +333,9 @@
 		DA1543B8196FDB89007F629E /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		DA24941419E14C5A006CA994 /* libPods.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPods.a; path = "Pods/build/Debug-iphoneos/libPods.a"; sourceTree = "<group>"; };
 		DA24941619E14CA1006CA994 /* libPods.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPods.a; path = "Pods/build/Debug-iphoneos/libPods.a"; sourceTree = "<group>"; };
-		DA24941A19E14F66006CA994 /* libPods-OpenSSL.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-OpenSSL.a"; path = "Pods/build/Debug-iphoneos/libPods-OpenSSL.a"; sourceTree = "<group>"; };
 		DA41E6611957D0B20038AFDB /* libPods-AFNetworking.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-AFNetworking.a"; path = "Pods/build/Release-iphoneos/libPods-AFNetworking.a"; sourceTree = "<group>"; };
-		DA41E6621957D0B20038AFDB /* libPods-FMDB.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-FMDB.a"; path = "Pods/build/Release-iphoneos/libPods-FMDB.a"; sourceTree = "<group>"; };
 		DA41E6631957D0B20038AFDB /* libPods-OpenSSL.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-OpenSSL.a"; path = "Pods/build/Release-iphoneos/libPods-OpenSSL.a"; sourceTree = "<group>"; };
-		DA41E6641957D0B20038AFDB /* libPods-Reachability.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-Reachability.a"; path = "Pods/build/Release-iphoneos/libPods-Reachability.a"; sourceTree = "<group>"; };
 		DA41E6651957D0B20038AFDB /* libPods.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPods.a; path = "Pods/build/Debug-iphoneos/libPods.a"; sourceTree = "<group>"; };
-		DA41E677195D65080038AFDB /* libPods-CocoaLumberjack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-CocoaLumberjack.a"; path = "Pods/build/Debug-iphoneos/libPods-CocoaLumberjack.a"; sourceTree = "<group>"; };
 		DAC2DBFB1953D98000C67B0B /* BTTxProviderTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTTxProviderTest.m; sourceTree = "<group>"; };
 		DAC2DBFD1953D9AB00C67B0B /* BTTxTestData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTTxTestData.h; sourceTree = "<group>"; };
 		DAC2DBFE1953D9AB00C67B0B /* BTTxTestData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTTxTestData.m; sourceTree = "<group>"; };
@@ -369,6 +360,7 @@
 		DC0B142D9883CDDFFEFC44D1 /* BTTxHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTTxHelper.m; sourceTree = "<group>"; };
 		DC0F53C1C57310746403BBB6 /* BTHDAccountAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTHDAccountAddress.m; sourceTree = "<group>"; };
 		DC0FCA2F4F88909B1495A197 /* BTHDAccount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTHDAccount.h; sourceTree = "<group>"; };
+		EE0D62592482BE7E0B270581 /* libPods-Bitheri.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Bitheri.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -379,7 +371,7 @@
 				DAE212F41B43AC1E00EBB760 /* libz.dylib in Frameworks */,
 				DADE542019334C8B00F5E4DD /* CoreGraphics.framework in Frameworks */,
 				DADE53F81933420300F5E4DD /* Foundation.framework in Frameworks */,
-				983833E3E62E487BB1A66946 /* libPods.a in Frameworks */,
+				3D5D3C0E26AD254F0600D1D6 /* libPods-Bitheri.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -388,10 +380,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DA1543B9196FDB89007F629E /* libz.dylib in Frameworks */,
-				DA41E678195D65080038AFDB /* libPods-CocoaLumberjack.a in Frameworks */,
-				DA41E6671957D0B20038AFDB /* libPods-FMDB.a in Frameworks */,
-				DA24941B19E14F66006CA994 /* libPods-OpenSSL.a in Frameworks */,
-				DA41E6691957D0B20038AFDB /* libPods-Reachability.a in Frameworks */,
 				DADE54061933420300F5E4DD /* XCTest.framework in Frameworks */,
 				DADE54091933420300F5E4DD /* UIKit.framework in Frameworks */,
 				DADE54071933420300F5E4DD /* Foundation.framework in Frameworks */,
@@ -416,16 +404,17 @@
 			path = Bech32;
 			sourceTree = "<group>";
 		};
-		4697C285C631B6C66D39F53C /* Pods */ = {
+		4DB96D55DA6CAF84AB9D5871 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */,
-				9F9268CD0BD91D08EA89841E /* Pods.release.xcconfig */,
+				62C64CA4297273779B260FB5 /* Pods-Bitheri.debug.xcconfig */,
+				386F9756BE73391E931B0C89 /* Pods-Bitheri.release.xcconfig */,
 			);
 			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
-		AC9BC60419D15B07003B88B5 /* Utils */ = {
+		AC9BC60419D15B07003B88B5 /* utils */ = {
 			isa = PBXGroup;
 			children = (
 				AC9BC60519D15B07003B88B5 /* BTQRCodeUtil.h */,
@@ -441,7 +430,7 @@
 				40862AB02690081D001FA440 /* BTMinerFeeUtil.h */,
 				40862AB12690081D001FA440 /* BTMinerFeeUtil.m */,
 			);
-			path = Utils;
+			path = utils;
 			sourceTree = "<group>";
 		};
 		D61D002175765644CACA12E0 /* Crypto */ = {
@@ -690,7 +679,7 @@
 				DADE53F51933420300F5E4DD /* Products */,
 				D61D0C524401974F95A196EC /* Bitheri.podspec */,
 				D61D004B1CC6183D2B64D388 /* Podfile */,
-				4697C285C631B6C66D39F53C /* Pods */,
+				4DB96D55DA6CAF84AB9D5871 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -706,23 +695,19 @@
 		DADE53F61933420300F5E4DD /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				DA24941A19E14F66006CA994 /* libPods-OpenSSL.a */,
 				DA24941619E14CA1006CA994 /* libPods.a */,
 				DA24941419E14C5A006CA994 /* libPods.a */,
 				DA1543B8196FDB89007F629E /* libz.dylib */,
 				DA1543B6196FDB55007F629E /* libbz2.1.0.dylib */,
-				DA41E677195D65080038AFDB /* libPods-CocoaLumberjack.a */,
 				DA41E6611957D0B20038AFDB /* libPods-AFNetworking.a */,
-				DA41E6621957D0B20038AFDB /* libPods-FMDB.a */,
 				DA41E6631957D0B20038AFDB /* libPods-OpenSSL.a */,
-				DA41E6641957D0B20038AFDB /* libPods-Reachability.a */,
 				DA41E6651957D0B20038AFDB /* libPods.a */,
 				DADE541F19334C8B00F5E4DD /* CoreGraphics.framework */,
 				DADE541D19334C8600F5E4DD /* UIKit.framework */,
 				DADE53F71933420300F5E4DD /* Foundation.framework */,
 				DADE54051933420300F5E4DD /* XCTest.framework */,
 				DADE54081933420300F5E4DD /* UIKit.framework */,
-				A40D2AD541D849FE969335C0 /* libPods.a */,
+				EE0D62592482BE7E0B270581 /* libPods-Bitheri.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -730,7 +715,7 @@
 		DADE53F91933420300F5E4DD /* Bitheri */ = {
 			isa = PBXGroup;
 			children = (
-				AC9BC60419D15B07003B88B5 /* Utils */,
+				AC9BC60419D15B07003B88B5 /* utils */,
 				DADE53FC1933420300F5E4DD /* Bitheri.h */,
 				DADE53FA1933420300F5E4DD /* Supporting Files */,
 				D61D089C25B3B2D7E9FAC83D /* Categories */,
@@ -790,11 +775,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = DADE54171933420300F5E4DD /* Build configuration list for PBXNativeTarget "Bitheri" */;
 			buildPhases = (
-				617A24674DDD4613A5D09D89 /* Check Pods Manifest.lock */,
+				33A0738E244DE3F3FB1FF558 /* [CP] Check Pods Manifest.lock */,
 				DADE53F01933420300F5E4DD /* Sources */,
 				DADE53F11933420300F5E4DD /* Frameworks */,
 				DADE53F21933420300F5E4DD /* CopyFiles */,
-				7494384FC6B044668F70DE66 /* Copy Pods Resources */,
 				DAFA70B91A71392300130717 /* Resources */,
 			);
 			buildRules = (
@@ -883,34 +867,26 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		617A24674DDD4613A5D09D89 /* Check Pods Manifest.lock */ = {
+		33A0738E244DE3F3FB1FF558 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
+			inputFileListPaths = (
 			);
-			name = "Check Pods Manifest.lock";
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Bitheri-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		7494384FC6B044668F70DE66 /* Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-resources.sh\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1110,7 +1086,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
@@ -1141,7 +1117,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1149,7 +1125,7 @@
 		};
 		DADE54181933420300F5E4DD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */;
+			baseConfigurationReference = 62C64CA4297273779B260FB5 /* Pods-Bitheri.debug.xcconfig */;
 			buildSettings = {
 				DSTROOT = /tmp/Bitheri.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1163,7 +1139,7 @@
 		};
 		DADE54191933420300F5E4DD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9F9268CD0BD91D08EA89841E /* Pods.release.xcconfig */;
+			baseConfigurationReference = 386F9756BE73391E931B0C89 /* Pods-Bitheri.release.xcconfig */;
 			buildSettings = {
 				DSTROOT = /tmp/Bitheri.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1177,7 +1153,6 @@
 		};
 		DADE541B1933420300F5E4DD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 215D60688EDC8FE4D63CA51A /* Pods.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1203,7 +1178,6 @@
 		};
 		DADE541C1933420300F5E4DD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9F9268CD0BD91D08EA89841E /* Pods.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (

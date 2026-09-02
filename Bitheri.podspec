@@ -10,12 +10,12 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.platform     = :ios
-  s.ios.deployment_target = '7.0'
+  s.ios.deployment_target = '15.6'
 
   s.source_files = 'Bitheri/Bitheri.{h,m}', 'Bitheri/{Models,Categories,Core,DatabaseProviders,Script,Bech32,Utils,Log}/*.{h,m}'
 
   s.dependency 'OpenSSL', '1.0.1j'
-  s.dependency 'Reachability', '~> 3.1.1'
+  s.dependency 'Reachability', '~> 3.7.7'
   s.dependency 'FMDB', '~> 2.3'
   s.dependency 'CocoaLumberjack', '~> 1.9.1'
 

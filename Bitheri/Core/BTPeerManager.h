@@ -68,7 +68,9 @@
 // transaction is considered verified when all peers have relayed it
 - (BOOL)transactionIsVerified:(NSData *)txHash;
 
-@property(nonatomic, strong) NSMutableSet *connectedPeers;
+// Returns an immutable snapshot. Peer membership is mutated internally on a
+// protected collection so callers can safely enumerate from any thread.
+@property(nonatomic, copy, readonly) NSSet *connectedPeers;
 
 - (int)waitingTaskCount;
 

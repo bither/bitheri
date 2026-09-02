@@ -137,6 +137,16 @@
 
 /// Encode segwit address
 - (NSString *)encode:(NSString *)hrp version:(int)version program:(NSData *)program {
+    // This coder implements the original Bech32 checksum used by witness v0.
+    // Witness v1+ requires Bech32m and must not be encoded as a v0 address.
+    if (version != 0) {
+        NSLog(@"Segwit version %d is not supported by this encoder", version);
+        return nil;
+    }
+    if (program.length < 2 || program.length > 40) {
+        NSLog(@"Program size %lu does not meet required range 2...40", (unsigned long)program.length);
+        return nil;
+    }
     NSData *data = [self convertBits:8 to:5 pad:true idata:program];
     if (!data) {
         return nil;

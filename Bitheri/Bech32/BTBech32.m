@@ -9,13 +9,13 @@
 #import "BTBech32.h"
 #import "NSMutableData+Bitcoin.h"
 
+static const uint8_t kBech32EncodingCharset[] = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+static const NSUInteger kBech32EncodingCharsetLength = sizeof(kBech32EncodingCharset) - 1;
+
 @interface BTBech32 ()
 
 /// Bech32 checksum delimiter
 @property(nonatomic, strong) NSString *checksumMarker;
-/// Bech32 character set for encoding
-@property(nonatomic, copy)   NSData   *encCharset;
-
 @end
 
 @implementation BTBech32
@@ -24,7 +24,6 @@
     self = [super init];
     if (self) {
         _checksumMarker = @"1";
-        _encCharset = [@"qpzry9x8gf2tvdw0s3jn54khce6mua7l" dataUsingEncoding:NSUTF8StringEncoding];
     }
     return self;
 }
@@ -113,11 +112,14 @@
     [combined appendData:checksum];
     NSMutableData *ret = [NSMutableData dataWithData:[hrpLower dataUsingEncoding:NSUTF8StringEncoding]];
     [ret appendData:[@"1" dataUsingEncoding:NSUTF8StringEncoding]];
-    const char *combinedBytes = [combined bytes];
-    const char *encCharsetBytes = [_encCharset bytes];
-    for (int i = 0; i < combined.length; i++) {
-        int c = (int) combinedBytes[i];
-        [ret appendUInt8:encCharsetBytes[c]];
+    const uint8_t *combinedBytes = combined.bytes;
+    for (NSUInteger i = 0; i < combined.length; i++) {
+        uint8_t c = combinedBytes[i];
+        if (c >= kBech32EncodingCharsetLength) {
+            NSLog(@"Invalid Bech32 data value %u at index %lu", c, (unsigned long)i);
+            return nil;
+        }
+        [ret appendUInt8:kBech32EncodingCharset[c]];
     }
     return [[NSString alloc] initWithData:ret encoding:NSUTF8StringEncoding];
 }

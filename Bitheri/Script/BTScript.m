@@ -98,7 +98,7 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
     NSUInteger pos = 0;
     
     if ([self isP2WPKHScriptHash] || [self isP2WSHScriptHash]) {
-        _version = [program UInt8AtOffset:0];
+        _version = 0;
     }
 
     while (pos < program.length) {
@@ -199,12 +199,14 @@ static NSArray *STANDARD_TRANSACTION_SCRIPT_CHUNKS = nil;
 
 - (BOOL)isP2WSHScriptHash {
     NSData *program = [self program];
-    return program.length == 34;
+    if (program.length != 34) return NO;
+    return [program UInt8AtOffset:0] == OP_0 && [program UInt8AtOffset:1] == 32;
 }
 
 - (BOOL)isP2WPKHScriptHash {
     NSData *program = [self program];
-    return program.length == 22;
+    if (program.length != 22) return NO;
+    return [program UInt8AtOffset:0] == OP_0 && [program UInt8AtOffset:1] == 20;
 }
 
 - (BOOL)isSentToOldMultiSig; {

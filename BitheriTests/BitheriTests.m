@@ -17,6 +17,9 @@
 //  limitations under the License.
 
 #import <XCTest/XCTest.h>
+#import "BTBech32.h"
+#import "BTSegwitAddrCoder.h"
+#import "BTScript.h"
 
 
 @interface BitheriTests : XCTestCase
@@ -24,6 +27,37 @@
 @end
 
 @implementation BitheriTests
+
+- (void)testBech32RejectsOutOfRangeDataValue
+{
+    uint8_t invalidValue = 32;
+    NSData *values = [NSData dataWithBytes:&invalidValue length:sizeof(invalidValue)];
+
+    XCTAssertNil([[[BTBech32 alloc] init] encode:@"bc" values:values]);
+}
+
+- (void)testSegwitEncoderRejectsOpcodeAsVersion
+{
+    NSData *program = [NSData dataWithLength:20];
+
+    XCTAssertNil([[[BTSegwitAddrCoder alloc] init] encode:@"bc" version:0x51 program:program]);
+}
+
+- (void)testSegwitEncoderStillEncodesVersionZeroProgram
+{
+    NSData *program = [NSData dataWithLength:20];
+
+    XCTAssertEqualObjects([[[BTSegwitAddrCoder alloc] init] encode:@"bc" version:0 program:program],
+                          @"bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9e75rs");
+}
+
+- (void)testTaprootOutputIsNotMisidentifiedAsP2WSH
+{
+    uint8_t taprootScript[34] = {0x51, 0x20};
+    BTScript *script = [[BTScript alloc] initWithProgram:[NSData dataWithBytes:taprootScript length:sizeof(taprootScript)]];
+
+    XCTAssertNil([script getToAddress]);
+}
 
 - (void)setUp
 {
